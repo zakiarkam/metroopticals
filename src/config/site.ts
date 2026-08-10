@@ -1,0 +1,62 @@
+/**
+ * Single source of truth for Metro Opticals brand + contact details.
+ * Update values here rather than hardcoding them in components.
+ */
+
+export const siteConfig = {
+  /** Short brand name used in UI. */
+  name: "Metro Opticals",
+  /** Registered legal entity, used on receipts and invoices. */
+  legalName: "Metro Opticals",
+  /** Domain shown to customers. */
+  domain: "metroopticals.lk",
+  /** Short tagline. */
+  tagline: "Eyewear, Lenses & Eye Care",
+  description:
+    "Metro Opticals is your trusted optical store for prescription eyeglasses, sunglasses, contact lenses and professional eye care in Sri Lanka.",
+
+  contact: {
+    email: "hello@metroopticals.lk",
+    /** Displayed phone number. */
+    phone: "011 234 5678",
+    /** tel: link format. */
+    phoneHref: "tel:+94112345678",
+    /** Digits only, for wa.me links. */
+    whatsapp: "94112345678",
+    address: "No 1, Main Street, Colombo, Sri Lanka.",
+  },
+
+  /**
+   * Bank details printed on invoices and receipts.
+   * TODO: replace with Metro Opticals' real account before going live.
+   */
+  banking: {
+    accountName: "Metro Opticals",
+    accountNumber: "0000000000",
+    bank: "Bank Name",
+    branch: "Branch Name",
+  },
+
+  social: {
+    facebook: "https://www.facebook.com/metroopticals",
+    instagram: "https://www.instagram.com/metroopticals",
+  },
+
+  /**
+   * Logo variants.
+   * - `logo`      full lockup for light backgrounds (dark "METRO" wordmark)
+   * - `logoOnDark` full lockup for dark backgrounds (white "METRO" wordmark)
+   * - `logoMark`  glasses icon only, no wordmark — for tight/square spaces
+   */
+  logo: "/images/logo/logo.png",
+  logoOnDark: "/images/logo/logo-dark-bg.png",
+  logoMark: "/images/logo/logo-mark.png",
+
+  /** 1200x630 social sharing card (Open Graph / Twitter). */
+  ogImage: "/images/logo/og-image.png",
+
+  /** Brand colours, kept in sync with the manifest and theme-color meta. */
+  themeColor: "#1a202c",
+} as const;
+
+export type SiteConfig = typeof siteConfig;

@@ -1,0 +1,65 @@
+pipeline {
+    agent any
+    
+    environment {
+        DOCKER_IMAGE = 'metroopticals'
+        ENV_FILE_CREDENTIALS_ID = 'metroopticals-env-file'
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+        
+        stage('Setup Environment') {
+            steps {
+                script {
+                    withCredentials([file(credentialsId: "${ENV_FILE_CREDENTIALS_ID}", variable: 'ENV_FILE')]) {
+                        sh 'cp $ENV_FILE .env'
+                    }
+                }
+            }
+        }
+        
+        stage('Build Images') {
+            steps {
+                sh 'docker-compose -f docker/docker/docker-compose.dev.yml build'
+            }
+        }
+        
+        stage('Start Services') {
+            steps {
+                sh 'docker-compose -f docker/docker/docker-compose.dev.yml up -d'
+            }
+        }
+        
+        stage('Run Migrations') {
+            steps {
+                sh '''
+                    sleep 15
+                    docker-compose -f docker/docker/docker-compose.dev.yml exec -T web-dev npx prisma migrate deploy
+                '''
+            }
+        }
+        
+        stage('Health Check') {
+            steps {
+                sh '''
+                    sleep 10
+                    curl -f http://localhost:3000/api/health
+                '''
+            }
+        }
+    }
+    
+    post {
+        always {
+            sh 'docker-compose -f docker/docker/docker-compose.dev.yml logs'
+        }
+        failure {
+            sh 'docker-compose -f docker/docker/docker-compose.dev.yml down -v'
+        }
+    }
+}

@@ -1,0 +1,62 @@
+services:
+
+  # ── Nginx reverse proxy ────────────────────────────────────────────────────
+  nginx:
+    image: nginx:alpine
+    container_name: metroopticals-nginx
+    restart: always
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      # All paths prefixed with ../ because this compose file lives in docker/
+      # and all config files live one level up at the project root ~/metroopticals/
+      - ../nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ../nginx/conf.d:/etc/nginx/conf.d:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - /var/www/certbot:/var/www/certbot:ro
+      - nginx-logs:/var/log/nginx
+    depends_on:
+      app-3001:
+        condition: service_healthy
+    networks:
+      - metro-net
+    healthcheck:
+      test: ["CMD-SHELL", "nginx -t && kill -0 $(cat /var/run/nginx.pid)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # ── Next.js application ────────────────────────────────────────────────────
+  app-3001:
+    image: ghcr.io/darts-ecommerce/metroopticals:${IMAGE_TAG:-develop}
+    container_name: metroopticals-app-3001
+    restart: always
+    ports:
+      - "127.0.0.1:3001:3000"
+    env_file:
+      - ../.env.3001
+    environment:
+      HOSTNAME: "0.0.0.0"
+      PORT: "3000"
+    networks:
+      - metro-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+volumes:
+  nginx-logs:
+    driver: local
+
+networks:
+  metro-net:
+    driver: bridge

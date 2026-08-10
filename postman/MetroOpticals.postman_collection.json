@@ -1,0 +1,562 @@
+{
+  "info": {
+    "_postman_id": "d2c7a3f1-3e6a-45b8-9b74-8f0c7d1c0abc",
+    "name": "Metro Opticals API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Postman collection for testing the Metro Opticals backend. Includes auth (with dynamic CSRF handling), public, customer-protected, and admin endpoints."
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "csrfToken", "value": "" },
+    { "key": "productId", "value": "" },
+    { "key": "cartItemId", "value": "" },
+    { "key": "wishlistItemId", "value": "" },
+    { "key": "orderId", "value": "" },
+    { "key": "categoryId", "value": "" },
+    { "key": "parentCategoryId", "value": "" },
+    { "key": "subcategoryId", "value": "" },
+    { "key": "categorySlug", "value": "" },
+    { "key": "subcategorySlug", "value": "" },
+    { "key": "productSlug", "value": "" },
+    { "key": "advertisementId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Signup",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/auth/signup", "host": ["{{baseUrl}}"], "path": ["api","auth","signup"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"testuser@example.com\",\n  \"password\": \"password123\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get CSRF",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/auth/csrf", "host": ["{{baseUrl}}"], "path": ["api","auth","csrf"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.environment.set('csrfToken', data.csrfToken);",
+                  "pm.collectionVariables.set('csrfToken', data.csrfToken);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Signin (Credentials)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get('csrfToken')) {",
+                  "  pm.sendRequest({ url: pm.environment.get('baseUrl') + '/api/auth/csrf', method: 'GET' }, (err, res) => {",
+                  "    if (!err) {",
+                  "      const t = res.json().csrfToken;",
+                  "      pm.environment.set('csrfToken', t);",
+                  "      pm.collectionVariables.set('csrfToken', t);",
+                  "    }",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/x-www-form-urlencoded" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/auth/callback/credentials", "host": ["{{baseUrl}}"], "path": ["api","auth","callback","credentials"] },
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "csrfToken", "value": "{{csrfToken}}" },
+                { "key": "email", "value": "{{userEmail}}" },
+                { "key": "password", "value": "{{userPassword}}" },
+                { "key": "callbackUrl", "value": "{{baseUrl}}" },
+                { "key": "json", "value": "true" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Session",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/auth/session", "host": ["{{baseUrl}}"], "path": ["api","auth","session"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Signout",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get('csrfToken')) {",
+                  "  pm.sendRequest({ url: pm.environment.get('baseUrl') + '/api/auth/csrf', method: 'GET' }, (err, res) => {",
+                  "    if (!err) {",
+                  "      const t = res.json().csrfToken;",
+                  "      pm.environment.set('csrfToken', t);",
+                  "      pm.collectionVariables.set('csrfToken', t);",
+                  "    }",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/x-www-form-urlencoded" } ],
+            "url": { "raw": "{{baseUrl}}/api/auth/signout", "host": ["{{baseUrl}}"], "path": ["api","auth","signout"] },
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [ { "key": "csrfToken", "value": "{{csrfToken}}" } ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": { "raw": "{{baseUrl}}/api/auth/forgot-password", "host": ["{{baseUrl}}"], "path": ["api","auth","forgot-password"] },
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{userEmail}}\"\n}" }
+          },
+          "response": []
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": { "raw": "{{baseUrl}}/api/auth/reset-password", "host": ["{{baseUrl}}"], "path": ["api","auth","reset-password"] },
+            "body": { "mode": "raw", "raw": "{\n  \"token\": \"<paste-token>\",\n  \"password\": \"newStrongPass123\"\n}" }
+          },
+          "response": []
+        }
+      ]
+    },
+
+    {
+      "name": "Public",
+      "item": [
+        {
+          "name": "Products - List",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/products?category={{categorySlug}}&search=&status=&page=1&limit=12",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","products"],
+              "query": [
+                { "key": "category", "value": "{{categorySlug}}" },
+                { "key": "search", "value": "" },
+                { "key": "status", "value": "" },
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "12" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Products - List by Parent Category (includes subcategories)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/products?category={{categorySlug}}&page=1&limit=12",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","products"],
+              "query": [
+                { "key": "category", "value": "{{categorySlug}}" },
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "12" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Products - List By Status",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/products/status?status=ACTIVE&page=1&limit=12",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","products","status"],
+              "query": [
+                { "key": "status", "value": "ACTIVE" },
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "12" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Products - Get by ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/products/{{productId}}", "host": ["{{baseUrl}}"], "path": ["api","products","{{productId}}"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Categories - List",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/categories", "host": ["{{baseUrl}}"], "path": ["api","categories"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Contact - Submit",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": { "raw": "{{baseUrl}}/api/contact", "host": ["{{baseUrl}}"], "path": ["api","contact"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Alice\",\n  \"email\": \"alice@example.com\",\n  \"phone\": \"555-1234\",\n  \"subject\": \"Question\",\n  \"message\": \"Hello there\"\n}"
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+
+    {
+      "name": "Customer",
+      "item": [
+        {
+          "name": "Cart - Get Items",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/cart", "host": ["{{baseUrl}}"], "path": ["api","cart"] } },
+          "response": []
+        },
+        {
+          "name": "Cart - Add Item",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": { "raw": "{{baseUrl}}/api/cart", "host": ["{{baseUrl}}"], "path": ["api","cart"] },
+            "body": { "mode": "raw", "raw": "{\n  \"productId\": \"{{productId}}\",\n  \"quantity\": 2\n}" }
+          },
+          "response": []
+        },
+        {
+          "name": "Cart - Update Item",
+          "request": {
+            "method": "PUT",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": { "raw": "{{baseUrl}}/api/cart/{{cartItemId}}", "host": ["{{baseUrl}}"], "path": ["api","cart","{{cartItemId}}"] },
+            "body": { "mode": "raw", "raw": "{\n  \"quantity\": 3\n}" }
+          },
+          "response": []
+        },
+        {
+          "name": "Cart - Remove Item",
+          "request": { "method": "DELETE", "url": { "raw": "{{baseUrl}}/api/cart/{{cartItemId}}", "host": ["{{baseUrl}}"], "path": ["api","cart","{{cartItemId}}"] } },
+          "response": []
+        },
+        {
+          "name": "Cart - Clear",
+          "request": { "method": "DELETE", "url": { "raw": "{{baseUrl}}/api/cart", "host": ["{{baseUrl}}"], "path": ["api","cart"] } },
+          "response": []
+        },
+
+        {
+          "name": "Wishlist - Get Items",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/wishlist", "host": ["{{baseUrl}}"], "path": ["api","wishlist"] } },
+          "response": []
+        },
+        {
+          "name": "Wishlist - Add Item",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": { "raw": "{{baseUrl}}/api/wishlist", "host": ["{{baseUrl}}"], "path": ["api","wishlist"] },
+            "body": { "mode": "raw", "raw": "{\n  \"productId\": \"{{productId}}\"\n}" }
+          },
+          "response": []
+        },
+        {
+          "name": "Wishlist - Remove Item",
+          "request": { "method": "DELETE", "url": { "raw": "{{baseUrl}}/api/wishlist/{{wishlistItemId}}", "host": ["{{baseUrl}}"], "path": ["api","wishlist","{{wishlistItemId}}"] } },
+          "response": []
+        },
+        {
+          "name": "Wishlist - Clear",
+          "request": { "method": "DELETE", "url": { "raw": "{{baseUrl}}/api/wishlist", "host": ["{{baseUrl}}"], "path": ["api","wishlist"] } },
+          "response": []
+        },
+
+        {
+          "name": "Orders - Create",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": { "raw": "{{baseUrl}}/api/orders", "host": ["{{baseUrl}}"], "path": ["api","orders"] },
+            "body": { "mode": "raw", "raw": "{\n  \"items\": [\n    { \"productId\": \"{{productId}}\", \"quantity\": 1, \"price\": 99.99 }\n  ],\n  \"shippingFee\": 10,\n  \"paymentMethod\": \"cash\",\n  \"shippingMethod\": \"dhl\",\n  \"notes\": \"Leave at the door\",\n  \"billingName\": \"John Doe\",\n  \"billingEmail\": \"john@example.com\",\n  \"billingPhone\": \"555-555-5555\",\n  \"billingAddress\": \"123 Main St\",\n  \"billingCity\": \"NYC\",\n  \"billingCountry\": \"USA\",\n  \"billingPostalCode\": \"10001\",\n  \"shippingName\": \"John Doe\",\n  \"shippingEmail\": \"john@example.com\",\n  \"shippingPhone\": \"555-555-5555\",\n  \"shippingAddress\": \"123 Main St\",\n  \"shippingCity\": \"NYC\",\n  \"shippingCountry\": \"USA\",\n  \"shippingPostalCode\": \"10001\"\n}" }
+          },
+          "response": []
+        },
+        {
+          "name": "Orders - List",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/orders?page=1&limit=10", "host": ["{{baseUrl}}"], "path": ["api","orders"], "query": [ { "key": "page", "value": "1" }, { "key": "limit", "value": "10" } ] }
+          },
+          "response": []
+        },
+        {
+          "name": "Orders - Get by ID",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/orders/{{orderId}}", "host": ["{{baseUrl}}"], "path": ["api","orders","{{orderId}}"] } },
+          "response": []
+        }
+      ]
+    },
+
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "Advertisements - Create",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": { "raw": "{{baseUrl}}/api/advertisements", "host": ["{{baseUrl}}"], "path": ["api","advertisements"] },
+            "body": { "mode": "raw", "raw": "{\n  \"productId\": \"{{productId}}\",\n  \"description\": \"Homepage hero banner\",\n  \"discountPercentage\": 25,\n  \"beforePrice\": 199.99,\n  \"images\": [\"https://cdn.example.com/ads/hero1.jpg\", \"https://cdn.example.com/ads/hero2.jpg\"],\n  \"status\": \"ACTIVE\"\n}" }
+          },
+          "response": []
+        },
+        {
+          "name": "Advertisements - List",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/advertisements?page=1&limit=12", "host": ["{{baseUrl}}"], "path": ["api","advertisements"], "query": [ {"key":"page","value":"1"}, {"key":"limit","value":"12"} ] }
+          },
+          "response": []
+        },
+        {
+          "name": "Advertisements - Get by ID",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/advertisements/{{advertisementId}}", "host": ["{{baseUrl}}"], "path": ["api","advertisements","{{advertisementId}}"] } },
+          "response": []
+        },
+        {
+          "name": "Advertisements - Update",
+          "request": {
+            "method": "PUT",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": { "raw": "{{baseUrl}}/api/advertisements/{{advertisementId}}", "host": ["{{baseUrl}}"], "path": ["api","advertisements","{{advertisementId}}"] },
+            "body": { "mode": "raw", "raw": "{\n  \"description\": \"Homepage banner (updated)\",\n  \"discountPercentage\": 30,\n  \"images\": [\"https://cdn.example.com/ads/hero1-upd.jpg\"]\n}" }
+          },
+          "response": []
+        },
+        {
+          "name": "Advertisements - Update Status",
+          "request": {
+            "method": "PATCH",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": { "raw": "{{baseUrl}}/api/advertisements/{{advertisementId}}/status", "host": ["{{baseUrl}}"], "path": ["api","advertisements","{{advertisementId}}","status"] },
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"INACTIVE\"\n}" }
+          },
+          "response": []
+        },
+        {
+          "name": "Advertisements - Delete",
+          "request": { "method": "DELETE", "url": { "raw": "{{baseUrl}}/api/advertisements/{{advertisementId}}", "host": ["{{baseUrl}}"], "path": ["api","advertisements","{{advertisementId}}"] } },
+          "response": []
+        },
+        {
+          "name": "Products - Create (with optional subcategoryId)",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": { "raw": "{{baseUrl}}/api/products", "host": ["{{baseUrl}}"], "path": ["api","products"] },
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"AeroRun 2\",\n  \"slug\": \"aerorun-2\",\n  \"description\": \"Lightweight road running shoe\",\n  \"price\": 119.99,\n  \"discountedPrice\": 99.99,\n  \"images\": [\"https://example.com/img1.jpg\"],\n  \"categoryId\": \"{{parentCategoryId}}\",\n  \"subcategoryId\": \"{{subcategoryId}}\",\n  \"stock\": 50,\n  \"status\": \"ACTIVE\"\n}" }
+          },
+          "response": []
+        },
+        {
+          "name": "Products - Update",
+          "request": {
+            "method": "PUT",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": { "raw": "{{baseUrl}}/api/products/{{productId}}", "host": ["{{baseUrl}}"], "path": ["api","products","{{productId}}"] },
+            "body": { "mode": "raw", "raw": "{\n  \"price\": 179.99,\n  \"stock\": 60\n}" }
+          },
+          "response": []
+        },
+        {
+          "name": "Products - Stock Increment (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": { "raw": "{{baseUrl}}/api/products/{{productId}}/stock", "host": ["{{baseUrl}}"], "path": ["api","products","{{productId}}","stock"] },
+            "body": { "mode": "raw", "raw": "{\n  \"count\": 5\n}" }
+          },
+          "response": []
+        },
+        {
+          "name": "Products - Stock Decrement (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": { "raw": "{{baseUrl}}/api/products/{{productId}}/stock/decrement", "host": ["{{baseUrl}}"], "path": ["api","products","{{productId}}","stock","decrement"] },
+            "body": { "mode": "raw", "raw": "{\n  \"count\": 2\n}" }
+          },
+          "response": []
+        },
+        {
+          "name": "Products - Update Status (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": { "raw": "{{baseUrl}}/api/products/{{productId}}/status", "host": ["{{baseUrl}}"], "path": ["api","products","{{productId}}","status"] },
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"INACTIVE\"\n}" }
+          },
+          "response": []
+        },
+        {
+          "name": "Products - Delete",
+          "request": { "method": "DELETE", "url": { "raw": "{{baseUrl}}/api/products/{{productId}}", "host": ["{{baseUrl}}"], "path": ["api","products","{{productId}}"] } },
+          "response": []
+        },
+        {
+          "name": "Categories - Create Parent",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": { "raw": "{{baseUrl}}/api/categories", "host": ["{{baseUrl}}"], "path": ["api","categories"] },
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Shoes\",\n  \"slug\": \"shoes\",\n  \"description\": \"All types of shoes\"\n}" }
+          },
+          "response": []
+        },
+        {
+          "name": "Categories - Create Subcategory",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": { "raw": "{{baseUrl}}/api/categories", "host": ["{{baseUrl}}"], "path": ["api","categories"] },
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Running Shoes\",\n  \"slug\": \"running-shoes\",\n  \"description\": \"Lightweight running shoes\",\n  \"parentId\": \"{{parentCategoryId}}\"\n}" }
+          },
+          "response": []
+        },
+        {
+          "name": "Categories - Update",
+          "request": {
+            "method": "PUT",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": { "raw": "{{baseUrl}}/api/categories/{{categoryId}}", "host": ["{{baseUrl}}"], "path": ["api","categories","{{categoryId}}"] },
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Accessories & More\"\n}" }
+          },
+          "response": []
+        },
+        {
+          "name": "Categories - Delete",
+          "request": { "method": "DELETE", "url": { "raw": "{{baseUrl}}/api/categories/{{categoryId}}", "host": ["{{baseUrl}}"], "path": ["api","categories","{{categoryId}}"] } },
+          "response": []
+        },
+        {
+          "name": "Users - List",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/users?search=&role=&page=1&limit=12",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","admin","users"],
+              "query": [
+                {"key":"search","value":""},
+                {"key":"role","value":""},
+                {"key":"page","value":"1"},
+                {"key":"limit","value":"12"}
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Users - Create",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": { "raw": "{{baseUrl}}/api/admin/users", "host": ["{{baseUrl}}"], "path": ["api","admin","users"] },
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Customer One\",\n  \"email\": \"customer1@example.com\",\n  \"password\": \"StrongPass123\",\n  \"role\": \"CUSTOMER\"\n}" }
+          },
+          "response": []
+        },
+        {
+          "name": "Users - Get by ID",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/admin/users/{{userId}}", "host": ["{{baseUrl}}"], "path": ["api","admin","users","{{userId}}"] } },
+          "response": []
+        },
+        {
+          "name": "Users - Update",
+          "request": {
+            "method": "PATCH",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": { "raw": "{{baseUrl}}/api/admin/users/{{userId}}", "host": ["{{baseUrl}}"], "path": ["api","admin","users","{{userId}}"] },
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Updated Name\",\n  \"role\": \"ADMIN\"\n}" }
+          },
+          "response": []
+        },
+        {
+          "name": "Users - Delete",
+          "request": { "method": "DELETE", "url": { "raw": "{{baseUrl}}/api/admin/users/{{userId}}", "host": ["{{baseUrl}}"], "path": ["api","admin","users","{{userId}}"] } },
+          "response": []
+        },
+        {
+          "name": "Orders - Update Status",
+          "request": {
+            "method": "PUT",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": { "raw": "{{baseUrl}}/api/orders/{{orderId}}", "host": ["{{baseUrl}}"], "path": ["api","orders","{{orderId}}"] },
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"CONFIRMED\"\n}" }
+          },
+          "response": []
+        },
+        {
+          "name": "Reports - JSON",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/admin/reports?month=2025-11&format=json", "host": ["{{baseUrl}}"], "path": ["api","admin","reports"], "query": [ {"key":"month","value":"2025-11"}, {"key":"format","value":"json"} ] } },
+          "response": []
+        },
+        {
+          "name": "Reports - Excel",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/admin/reports?month=2025-11&format=excel", "host": ["{{baseUrl}}"], "path": ["api","admin","reports"], "query": [ {"key":"month","value":"2025-11"}, {"key":"format","value":"excel"} ] } },
+          "response": []
+        },
+        {
+          "name": "Reports - PDF",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/admin/reports?month=2025-11&format=pdf", "host": ["{{baseUrl}}"], "path": ["api","admin","reports"], "query": [ {"key":"month","value":"2025-11"}, {"key":"format","value":"pdf"} ] } },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

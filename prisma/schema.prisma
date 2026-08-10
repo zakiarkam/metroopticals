@@ -1,0 +1,285 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  name          String?
+  email         String               @unique
+  emailVerified DateTime?
+  password      String?
+  image         String?
+  role          UserRole             @default(CUSTOMER)
+  customerType  CustomerType         @default(END_USER)
+  phone         String?
+  address       String?
+  city          String?
+  country       String?
+  postalCode    String?
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+  id            Int                  @id @default(autoincrement())
+  accounts      Account[]
+  cartItems     CartItem[]
+  orders        Order[]
+  resetTokens   PasswordResetToken[]
+  sessions      Session[]
+  wishlistItems WishlistItem[]
+
+  @@map("users")
+}
+
+model Account {
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  id                Int     @id @default(autoincrement())
+  userId            Int
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  sessionToken String   @unique
+  expires      DateTime
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+model PasswordResetToken {
+  token     String   @unique
+  expires   DateTime
+  createdAt DateTime @default(now())
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("password_reset_tokens")
+}
+
+model Category {
+  name                String
+  slug                String     @unique
+  description         String?
+  image               String?
+  status              String     @default("active")
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+  id                  Int        @id @default(autoincrement())
+  parentId            Int?
+  parent              Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children            Category[] @relation("CategoryHierarchy")
+  products            Product[]  @relation("ProductCategory")
+  subcategoryProducts Product[]  @relation("ProductSubcategory")
+
+  @@map("categories")
+}
+
+model Product {
+  title           String
+  slug            String          @unique
+  description     String?
+  price           Float
+  discountedPrice Float?
+  images          String[]
+  catalogueFile   String?
+  stock           Int             @default(0)
+  status          String          @default("ACTIVE")
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  unitType        ProductUnit     @default(PIECES)
+  id              Int             @id @default(autoincrement())
+  categoryId      Int?
+  subcategoryId   Int?
+  advertisements  Advertisement[]
+  cartItems       CartItem[]
+  orderItems      OrderItem[]
+  category        Category?       @relation("ProductCategory", fields: [categoryId], references: [id])
+  subcategory     Category?       @relation("ProductSubcategory", fields: [subcategoryId], references: [id])
+  wishlistItems   WishlistItem[]
+
+  @@index([categoryId])
+  @@index([subcategoryId])
+  @@index([status])
+  @@index([slug])
+  @@map("products")
+}
+
+model CartItem {
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@map("cart_items")
+}
+
+model WishlistItem {
+  createdAt DateTime @default(now())
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@map("wishlist_items")
+}
+
+model Order {
+  orderNumber        String      @unique
+  status             OrderStatus @default(PENDING)
+  totalAmount        Float
+  shippingFee        Float       @default(0)
+  subtotal           Float
+  paymentMethod      String?
+  shippingMethod     String?
+  notes              String?
+  billingName        String
+  billingEmail       String
+  billingPhone       String
+  billingAddress     String
+  billingCity        String
+  billingCountry     String
+  billingPostalCode  String?
+  shippingName       String
+  shippingEmail      String
+  shippingPhone      String
+  shippingAddress    String
+  shippingCity       String
+  shippingCountry    String
+  shippingPostalCode String?
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+  id                 Int         @id @default(autoincrement())
+  userId             Int
+  items              OrderItem[]
+  user               User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("orders")
+}
+
+model OrderItem {
+  quantity        Int
+  price           Float
+  discountedPrice Float?
+  createdAt       DateTime @default(now())
+  id              Int      @id @default(autoincrement())
+  orderId         Int
+  productId       Int
+  order           Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("order_items")
+}
+
+model ContactMessage {
+  name      String
+  email     String
+  phone     String?
+  subject   String?
+  message   String
+  status    String   @default("unread")
+  createdAt DateTime @default(now())
+  id        Int      @id @default(autoincrement())
+
+  @@map("contact_messages")
+}
+
+model Advertisement {
+  title      String
+  imageUrl   String
+  link       String?
+  placement  String
+  status     String    @default("active")
+  priority   Int       @default(0)
+  slot       Int       @default(1)
+  startDate  DateTime?
+  endDate    DateTime?
+  clickCount Int       @default(0)
+  viewCount  Int       @default(0)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  id         Int       @id @default(autoincrement())
+  productId  Int?
+  product    Product?  @relation(fields: [productId], references: [id])
+
+  @@index([status])
+  @@index([placement])
+  @@index([priority])
+  @@index([productId])
+  @@map("advertisements")
+}
+
+enum UserRole {
+  CUSTOMER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum ProductStatus {
+  ACTIVE
+  INACTIVE
+  OUT_OF_STOCK
+}
+
+enum ProductUnit {
+  METER
+  PIECES
+  BOX
+  DRUM
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum AdvertisementStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum CustomerType {
+  END_USER
+  WHOLESALER
+  RESELLER
+  INSTALLER
+  PROJECTS
+  COMPANY
+}

@@ -1,0 +1,64 @@
+pipeline {
+    agent any
+    
+    environment {
+        APP_NAME = 'metroopticals'
+        DOCKER_IMAGE = 'metroopticals'
+        ENV_FILE_CREDENTIALS_ID = 'metroopticals-env-file'
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+        
+        stage('Setup') {
+            steps {
+                script {
+                    withCredentials([file(credentialsId: "${ENV_FILE_CREDENTIALS_ID}", variable: 'ENV_FILE')]) {
+                        sh 'cp $ENV_FILE .env'
+                    }
+                }
+            }
+        }
+        
+        stage('Build') {
+            steps {
+                sh 'docker-compose -f docker/docker/docker-compose.yml -f docker/docker/docker-compose.prod.yml build'
+            }
+        }
+        
+        stage('Test') {
+            steps {
+                sh '''
+                    docker-compose -f docker/docker/docker-compose.dev.yml up -d postgres
+                    sleep 10
+                    docker-compose -f docker/docker/docker-compose.dev.yml exec -T postgres pg_isready -U metroopticals
+                    docker-compose -f docker/docker/docker-compose.dev.yml down -v
+                '''
+            }
+        }
+        
+        stage('Deploy') {
+            when {
+                branch 'main'
+            }
+            steps {
+                sh '''
+                    docker-compose -f docker/docker/docker-compose.yml -f docker/docker/docker-compose.prod.yml up -d
+                    docker-compose exec -T web npx prisma migrate deploy
+                    sleep 10
+                    curl -f http://localhost:3000/api/health
+                '''
+            }
+        }
+    }
+    
+    post {
+        always {
+            sh 'docker system prune -f || true'
+        }
+    }
+}
