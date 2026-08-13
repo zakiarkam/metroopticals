@@ -161,7 +161,7 @@ const OrderDetailDialog: React.FC<OrderDetailDialogProps> = ({
     children: React.ReactNode;
     right?: React.ReactNode;
   }) => (
-    <section className="rounded-xl border border-gray-3 bg-white shadow-sm overflow-hidden">
+    <section className="rounded-xl border border-gray-3 bg-gray-2 shadow-sm overflow-hidden">
       <div className="px-3 py-2 md:px-4 md:py-3 border-b border-gray-2 flex items-center justify-between gap-3">
         <h4 className="text-sm md:text-base font-semibold text-dark">
           {title}
@@ -181,7 +181,7 @@ const OrderDetailDialog: React.FC<OrderDetailDialogProps> = ({
     >
       <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-0 overflow-hidden">
         {/* Header (compact + responsive controls) */}
-        <DialogHeader className="sticky top-0 z-10 bg-white border-b border-gray-3">
+        <DialogHeader className="sticky top-0 z-10 bg-gray-2 border-b border-gray-3">
           <div className="px-3 py-2 md:px-4 md:py-3">
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0 flex-1">
@@ -236,7 +236,7 @@ const OrderDetailDialog: React.FC<OrderDetailDialogProps> = ({
           ) : order ? (
             <div className="space-y-4">
               {/* Summary header card */}
-              <div className="rounded-xl border border-gray-3 bg-white shadow-sm px-3 py-2 md:px-4 md:py-3">
+              <div className="rounded-xl border border-gray-3 bg-gray-2 shadow-sm px-3 py-2 md:px-4 md:py-3">
                 <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-2">
                   <div className="min-w-0">
                     <h3 className="text-sm md:text-base font-semibold text-dark">
@@ -315,7 +315,7 @@ const OrderDetailDialog: React.FC<OrderDetailDialogProps> = ({
                     return (
                       <div
                         key={item.id}
-                        className="rounded-lg border border-gray-3 bg-white p-3 md:p-4"
+                        className="rounded-lg border border-gray-3 bg-gray-2 p-3 md:p-4"
                       >
                         <div className="flex gap-3 md:gap-4">
                           <div className="h-16 w-16 md:h-20 md:w-20 shrink-0 overflow-hidden rounded-lg border border-gray-3 bg-gray-2">
@@ -437,7 +437,7 @@ const OrderDetailDialog: React.FC<OrderDetailDialogProps> = ({
         {/* Generating Overlay (compact + mobile friendly) */}
         {isGeneratingReceipt && (
           <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div className="w-full max-w-sm rounded-xl bg-white shadow-xl border border-gray-3">
+            <div className="w-full max-w-sm rounded-xl bg-gray-2 shadow-xl border border-gray-3">
               <div className="px-4 py-4">
                 <div className="flex items-center gap-3">
                   <div className="inline-block h-10 w-10 animate-spin rounded-full border-4 border-solid border-blue border-r-transparent" />

@@ -63,11 +63,6 @@ export async function GET() {
       priority: 1,
     },
     {
-      url: buildSiteUrl("/about"),
-      changeFrequency: "monthly",
-      priority: 0.6,
-    },
-    {
       url: buildSiteUrl("/contact"),
       changeFrequency: "monthly",
       priority: 0.6,

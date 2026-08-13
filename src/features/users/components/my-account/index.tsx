@@ -250,7 +250,7 @@ export default function MyAccount() {
             {/* RIGHT CONTENT */}
             <div className="flex-1 min-w-0">
               <div
-                className="bg-white rounded-xl shadow-1 p-5 sm:p-6"
+                className="bg-gray-2 rounded-xl shadow-1 p-5 sm:p-6 border border-gray-3"
                 role="tabpanel"
                 id="panel-account"
                 aria-labelledby="tab-account"
@@ -268,7 +268,7 @@ export default function MyAccount() {
                     <button
                       type="button"
                       onClick={handleEditClick}
-                      className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-3 bg-white text-dark transition hover:border-blue hover:text-blue"
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-3 bg-gray-2 text-dark transition hover:border-blue hover:text-blue"
                       aria-label="Edit details"
                       title="Edit details"
                     >
@@ -420,7 +420,7 @@ export default function MyAccount() {
                               firstName: e.target.value,
                             })
                           }
-                          className="w-full rounded-xl border border-gray-3 bg-white px-4 py-2.5 text-dark outline-none focus:border-blue focus:ring-2 focus:ring-blue/20"
+                          className="w-full rounded-xl border border-gray-3 bg-gray-2 px-4 py-2.5 text-dark outline-none focus:border-blue focus:ring-2 focus:ring-blue/20"
                           required
                         />
                       </div>
@@ -442,7 +442,7 @@ export default function MyAccount() {
                               lastName: e.target.value,
                             })
                           }
-                          className="w-full rounded-xl border border-gray-3 bg-white px-4 py-2.5 text-dark outline-none focus:border-blue focus:ring-2 focus:ring-blue/20"
+                          className="w-full rounded-xl border border-gray-3 bg-gray-2 px-4 py-2.5 text-dark outline-none focus:border-blue focus:ring-2 focus:ring-blue/20"
                           required
                         />
                       </div>
@@ -483,7 +483,7 @@ export default function MyAccount() {
                               phone: e.target.value,
                             })
                           }
-                          className="w-full rounded-xl border border-gray-3 bg-white px-4 py-2.5 text-dark outline-none focus:border-blue focus:ring-2 focus:ring-blue/20"
+                          className="w-full rounded-xl border border-gray-3 bg-gray-2 px-4 py-2.5 text-dark outline-none focus:border-blue focus:ring-2 focus:ring-blue/20"
                           required
                         />
                       </div>
@@ -504,7 +504,7 @@ export default function MyAccount() {
                               customerType: e.target.value as CustomerType,
                             })
                           }
-                          className="w-full rounded-xl border border-gray-3 bg-white px-4 py-2.5 text-dark outline-none focus:border-blue focus:ring-2 focus:ring-blue/20"
+                          className="w-full rounded-xl border border-gray-3 bg-gray-2 px-4 py-2.5 text-dark outline-none focus:border-blue focus:ring-2 focus:ring-blue/20"
                         >
                           {CUSTOMER_TYPE_OPTIONS.map((opt) => (
                             <option key={opt.value} value={opt.value}>
@@ -528,7 +528,7 @@ export default function MyAccount() {
                           onChange={(e) =>
                             setEditForm({ ...editForm, city: e.target.value })
                           }
-                          className="w-full rounded-xl border border-gray-3 bg-white px-4 py-2.5 text-dark outline-none focus:border-blue focus:ring-2 focus:ring-blue/20"
+                          className="w-full rounded-xl border border-gray-3 bg-gray-2 px-4 py-2.5 text-dark outline-none focus:border-blue focus:ring-2 focus:ring-blue/20"
                           required
                         />
                       </div>
@@ -550,7 +550,7 @@ export default function MyAccount() {
                               address: e.target.value,
                             })
                           }
-                          className="w-full rounded-xl border border-gray-3 bg-white px-4 py-2.5 text-dark outline-none focus:border-blue focus:ring-2 focus:ring-blue/20"
+                          className="w-full rounded-xl border border-gray-3 bg-gray-2 px-4 py-2.5 text-dark outline-none focus:border-blue focus:ring-2 focus:ring-blue/20"
                           required
                         />
                       </div>
@@ -572,7 +572,7 @@ export default function MyAccount() {
                               postalCode: e.target.value,
                             })
                           }
-                          className="w-full rounded-xl border border-gray-3 bg-white px-4 py-2.5 text-dark outline-none focus:border-blue focus:ring-2 focus:ring-blue/20"
+                          className="w-full rounded-xl border border-gray-3 bg-gray-2 px-4 py-2.5 text-dark outline-none focus:border-blue focus:ring-2 focus:ring-blue/20"
                           required
                         />
                       </div>
@@ -594,7 +594,7 @@ export default function MyAccount() {
                               country: e.target.value,
                             })
                           }
-                          className="w-full rounded-xl border border-gray-3 bg-white px-4 py-2.5 text-dark outline-none focus:border-blue focus:ring-2 focus:ring-blue/20"
+                          className="w-full rounded-xl border border-gray-3 bg-gray-2 px-4 py-2.5 text-dark outline-none focus:border-blue focus:ring-2 focus:ring-blue/20"
                           required
                         />
                       </div>

@@ -56,7 +56,9 @@ export const siteConfig = {
   ogImage: "/images/logo/og-image.png",
 
   /** Brand colours, kept in sync with the manifest and theme-color meta. */
-  themeColor: "#1a202c",
+  themeColor: "#0A0A0A",
+  /** Gold accent, sampled from the logo. */
+  accentColor: "#C09C6C",
 } as const;
 
 export type SiteConfig = typeof siteConfig;

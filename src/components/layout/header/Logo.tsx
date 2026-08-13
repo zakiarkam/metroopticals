@@ -9,7 +9,7 @@ const Logo = memo(function Logo() {
   return (
     <Link className="flex-shrink-0" href="/" aria-label="Go to Home">
       <Image
-        src={siteConfig.logo}
+        src={siteConfig.logoOnDark}
         alt={siteConfig.name}
         width={867}
         height={983}

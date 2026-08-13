@@ -107,7 +107,7 @@ const OrderConfirmationClient = () => {
     <section className="bg-gradient-to-b from-gray-50 to-gray-100 py-8">
       <SiteContainer>
         <div className="">
-          <div className="bg-gradient-to-br from-white to-gray-50 shadow-lg border border-gray-200 rounded-2xl p-6 sm:p-8">
+          <div className="bg-gradient-to-br from-gray-2 to-gray-50 shadow-lg border border-gray-200 rounded-2xl p-6 sm:p-8">
             <div className="mb-5">
               <svg
                 className="mx-auto h-14 w-14 text-green"
@@ -166,7 +166,7 @@ const OrderConfirmationClient = () => {
                 type="button"
                 onClick={handleDownloadInvoice}
                 disabled={isPrintPending}
-                className="block w-full font-semibold text-blue border border-blue py-3 px-6 rounded-lg bg-white hover:bg-blue-light-5 hover:text-blue transition-all text-center disabled:cursor-wait disabled:opacity-70"
+                className="block w-full font-semibold text-blue border border-blue py-3 px-6 rounded-lg bg-gray-2 hover:bg-blue-light-5 hover:text-blue transition-all text-center disabled:cursor-wait disabled:opacity-70"
               >
                 {isPrintPending ? "Preparing Invoice…" : "Download Invoice"}
               </button>
@@ -188,7 +188,7 @@ const OrderConfirmationClient = () => {
       </SiteContainer>
       {isPrintPending && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="rounded-lg bg-white p-6 shadow-xl">
+          <div className="rounded-lg bg-gray-2 p-6 shadow-xl border border-gray-3">
             <div className="text-center">
               <div className="inline-block h-10 w-10 animate-spin rounded-full border-4 border-solid border-blue border-r-transparent"></div>
               <p className="mt-3 text-sm font-semibold text-dark">

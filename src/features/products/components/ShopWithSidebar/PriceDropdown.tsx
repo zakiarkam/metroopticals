@@ -9,6 +9,9 @@ interface PriceDropdownProps {
   onPriceChange: (range: { from: number; to: number }) => void;
   minPrice: number;
   maxPrice: number;
+  /** Render bare, without the card chrome and its own "Price" header —
+   *  used when the parent filter panel already provides the section. */
+  embedded?: boolean;
 }
 
 export default function PriceDropdown({
@@ -16,11 +19,16 @@ export default function PriceDropdown({
   onPriceChange,
   minPrice,
   maxPrice,
+  embedded = false,
 }: PriceDropdownProps) {
   const [open, setOpen] = useState(true);
 
+  if (embedded) {
+    return <PriceBody {...{ priceRange, onPriceChange, minPrice, maxPrice }} />;
+  }
+
   return (
-    <div className="bg-white shadow-sm rounded-xl border border-gray-100">
+    <div className="bg-gray-2 shadow-sm rounded-xl border border-gray-100">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -76,6 +84,43 @@ export default function PriceDropdown({
             </span>
             <span className="block px-3 py-1.5">{priceRange.to}</span>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** The slider + read-outs, shared by the standalone card and embedded modes. */
+function PriceBody({
+  priceRange,
+  onPriceChange,
+  minPrice,
+  maxPrice,
+}: Omit<PriceDropdownProps, "embedded">) {
+  return (
+    <div>
+      <RangeSlider
+        min={minPrice}
+        max={maxPrice}
+        step={10}
+        value={[priceRange.from, priceRange.to]}
+        onInput={(values: number[]) =>
+          onPriceChange({
+            from: Math.floor(values[0]),
+            to: Math.ceil(values[1]),
+          })
+        }
+      />
+
+      <div className="price-amount flex items-center justify-between pt-4">
+        <div className="text-custom-xs text-dark-4 flex rounded border border-gray-3">
+          <span className="block border-r border-gray-3 px-2.5 py-1.5">Rs</span>
+          <span className="block px-3 py-1.5">{priceRange.from}</span>
+        </div>
+
+        <div className="text-custom-xs text-dark-4 flex rounded border border-gray-3">
+          <span className="block border-r border-gray-3 px-2.5 py-1.5">Rs</span>
+          <span className="block px-3 py-1.5">{priceRange.to}</span>
         </div>
       </div>
     </div>

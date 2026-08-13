@@ -85,7 +85,7 @@ const AccountSidebar = React.memo(function AccountSidebar({
 
   return (
     <div className="w-full xl:w-[360px]">
-      <div className="overflow-hidden rounded-2xl bg-white shadow-1">
+      <div className="overflow-hidden rounded-2xl bg-gray-2 shadow-1 border border-gray-3">
         <div className="space-y-3 border-b border-gray-3 px-6 py-6 sm:px-7">
           <div className="flex items-center gap-4">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue text-lg font-semibold uppercase text-white">

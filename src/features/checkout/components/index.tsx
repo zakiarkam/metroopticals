@@ -241,7 +241,7 @@ const Checkout = () => {
   if (cartItems.length === 0) {
     return (
       <>
-        <section className="py-8 bg-gradient-to-b from-gray-50 to-white">
+        <section className="py-8 bg-gradient-to-b from-gray-50 to-gray-1">
           <SiteContainer className="text-center">
             <h2 className="text-2xl font-bold text-dark mb-4">
               Your cart is empty
@@ -270,7 +270,7 @@ const Checkout = () => {
               {/* Left Column */}
               <div className="lg:flex-[0.65] w-full">
                 {/* Billing Details */}
-                <div className="bg-gradient-to-br from-white to-gray-50 shadow-lg border border-gray-200 rounded-2xl p-5 sm:p-6 lg:p-8">
+                <div className="bg-gradient-to-br from-gray-2 to-gray-50 shadow-lg border border-gray-200 rounded-2xl p-5 sm:p-6 lg:p-8">
                   <h2 className="font-bold text-dark text-2xl sm:text-3xl mb-5 bg-gradient-to-r from-blue to-blue-dark bg-clip-text text-transparent">
                     Billing Details
                   </h2>
@@ -293,7 +293,7 @@ const Checkout = () => {
                             firstName: e.target.value,
                           })
                         }
-                        className="rounded-lg border-2 border-gray-200 bg-white placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
+                        className="rounded-lg border-2 border-gray-200 bg-gray-2 placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
                       />
                     </div>
 
@@ -314,7 +314,7 @@ const Checkout = () => {
                             lastName: e.target.value,
                           })
                         }
-                        className="rounded-lg border-2 border-gray-200 bg-white placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
+                        className="rounded-lg border-2 border-gray-200 bg-gray-2 placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
                       />
                     </div>
                   </div>
@@ -333,7 +333,7 @@ const Checkout = () => {
                           email: e.target.value,
                         })
                       }
-                      className="rounded-lg border-2 border-gray-200 bg-white placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
+                      className="rounded-lg border-2 border-gray-200 bg-gray-2 placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
                     />
                   </div>
 
@@ -351,7 +351,7 @@ const Checkout = () => {
                           phone: e.target.value,
                         })
                       }
-                      className="rounded-lg border-2 border-gray-200 bg-white placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
+                      className="rounded-lg border-2 border-gray-200 bg-gray-2 placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
                     />
                   </div>
 
@@ -369,7 +369,7 @@ const Checkout = () => {
                           address: e.target.value,
                         })
                       }
-                      className="rounded-lg border-2 border-gray-200 bg-white placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
+                      className="rounded-lg border-2 border-gray-200 bg-gray-2 placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
                     />
                   </div>
 
@@ -388,7 +388,7 @@ const Checkout = () => {
                             city: e.target.value,
                           })
                         }
-                        className="rounded-lg border-2 border-gray-200 bg-white placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
+                        className="rounded-lg border-2 border-gray-200 bg-gray-2 placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
                       />
                     </div>
 
@@ -406,7 +406,7 @@ const Checkout = () => {
                             postalCode: e.target.value,
                           })
                         }
-                        className="rounded-lg border-2 border-gray-200 bg-white placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
+                        className="rounded-lg border-2 border-gray-200 bg-gray-2 placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
                       />
                     </div>
                   </div>
@@ -425,7 +425,7 @@ const Checkout = () => {
                           country: e.target.value,
                         })
                       }
-                      className="rounded-lg border-2 border-gray-200 bg-white placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
+                      className="rounded-lg border-2 border-gray-200 bg-gray-2 placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
                     />
                   </div>
 
@@ -443,7 +443,7 @@ const Checkout = () => {
                 </div>
 
                 {!sameAsBilling && (
-                  <div className="bg-gradient-to-br from-white to-gray-50 shadow-lg border border-gray-200 rounded-2xl p-5 sm:p-6 lg:p-8 mt-6">
+                  <div className="bg-gradient-to-br from-gray-2 to-gray-50 shadow-lg border border-gray-200 rounded-2xl p-5 sm:p-6 lg:p-8 mt-6">
                     <h2 className="font-bold text-dark text-2xl sm:text-3xl mb-5 bg-gradient-to-r from-blue to-blue-dark bg-clip-text text-transparent">
                       Shipping Details
                     </h2>
@@ -467,7 +467,7 @@ const Checkout = () => {
                               firstName: e.target.value,
                             })
                           }
-                          className="rounded-lg border-2 border-gray-200 bg-white placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
+                          className="rounded-lg border-2 border-gray-200 bg-gray-2 placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
                         />
                       </div>
 
@@ -489,7 +489,7 @@ const Checkout = () => {
                               lastName: e.target.value,
                             })
                           }
-                          className="rounded-lg border-2 border-gray-200 bg-white placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
+                          className="rounded-lg border-2 border-gray-200 bg-gray-2 placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
                         />
                       </div>
                     </div>
@@ -509,7 +509,7 @@ const Checkout = () => {
                             email: e.target.value,
                           })
                         }
-                        className="rounded-lg border-2 border-gray-200 bg-white placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
+                        className="rounded-lg border-2 border-gray-200 bg-gray-2 placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
                       />
                     </div>
 
@@ -528,7 +528,7 @@ const Checkout = () => {
                             phone: e.target.value,
                           })
                         }
-                        className="rounded-lg border-2 border-gray-200 bg-white placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
+                        className="rounded-lg border-2 border-gray-200 bg-gray-2 placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
                       />
                     </div>
 
@@ -547,7 +547,7 @@ const Checkout = () => {
                             address: e.target.value,
                           })
                         }
-                        className="rounded-lg border-2 border-gray-200 bg-white placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
+                        className="rounded-lg border-2 border-gray-200 bg-gray-2 placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
                       />
                     </div>
 
@@ -567,7 +567,7 @@ const Checkout = () => {
                               city: e.target.value,
                             })
                           }
-                          className="rounded-lg border-2 border-gray-200 bg-white placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
+                          className="rounded-lg border-2 border-gray-200 bg-gray-2 placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
                         />
                       </div>
 
@@ -589,7 +589,7 @@ const Checkout = () => {
                               postalCode: e.target.value,
                             })
                           }
-                          className="rounded-lg border-2 border-gray-200 bg-white placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
+                          className="rounded-lg border-2 border-gray-200 bg-gray-2 placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
                         />
                       </div>
                     </div>
@@ -609,14 +609,14 @@ const Checkout = () => {
                             country: e.target.value,
                           })
                         }
-                        className="rounded-lg border-2 border-gray-200 bg-white placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
+                        className="rounded-lg border-2 border-gray-200 bg-gray-2 placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
                       />
                     </div>
                   </div>
                 )}
 
                 {/* Notes */}
-                <div className="bg-gradient-to-br from-white to-gray-50 shadow-lg border border-gray-200 rounded-2xl p-5 sm:p-6 mt-6">
+                <div className="bg-gradient-to-br from-gray-2 to-gray-50 shadow-lg border border-gray-200 rounded-2xl p-5 sm:p-6 mt-6">
                   <label
                     htmlFor="notes"
                     className="block mb-2 font-medium text-dark text-sm"
@@ -628,14 +628,14 @@ const Checkout = () => {
                     onChange={(e) => setNotes(e.target.value)}
                     rows={5}
                     placeholder="Notes about your order, e.g. special notes for delivery."
-                    className="rounded-lg border-2 border-gray-200 bg-white placeholder:text-gray-400 w-full p-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10 resize-none"
+                    className="rounded-lg border-2 border-gray-200 bg-gray-2 placeholder:text-gray-400 w-full p-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10 resize-none"
                   />
                 </div>
               </div>
 
               {/* Right Column - Order Summary */}
               <div className="w-full lg:flex-[0.35]">
-                <div className="bg-gradient-to-br from-white to-gray-50 shadow-lg border border-gray-200 rounded-2xl">
+                <div className="bg-gradient-to-br from-gray-2 to-gray-50 shadow-lg border border-gray-200 rounded-2xl">
                   <div className="border-b border-gray-200 bg-gradient-to-r from-blue-light-5 to-blue-light-4 py-4 px-5 sm:px-6 rounded-t-2xl">
                     <h3 className="font-bold text-xl text-dark">Your Order</h3>
                   </div>
@@ -707,7 +707,7 @@ const Checkout = () => {
                 {/* Shipping Method temporarily disabled in checkout UI. */}
 
                 {/* Payment Method */}
-                <div className="bg-gradient-to-br from-white to-gray-50 shadow-lg border border-gray-200 rounded-2xl p-5 sm:p-6 mt-6">
+                <div className="bg-gradient-to-br from-gray-2 to-gray-50 shadow-lg border border-gray-200 rounded-2xl p-5 sm:p-6 mt-6">
                   <h3 className="font-bold text-lg text-dark mb-4">
                     Payment Method
                   </h3>

@@ -22,7 +22,7 @@ const AdminDashboard: React.FC = () => {
       <div className="mx-auto w-full max-w-[1400px] px-3 md:px-4 lg:px-6">
         <div className="space-y-4">
           {/* Header / Controls (compact + responsive) */}
-          <div className="rounded-xl border border-gray-3 bg-white shadow-sm">
+          <div className="rounded-xl border border-gray-3 bg-gray-2 shadow-sm">
             <div className="px-3 py-2 md:px-4 md:py-3">
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div className="min-w-0">

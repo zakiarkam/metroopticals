@@ -71,7 +71,7 @@ const MyOrdersTab: React.FC<MyOrdersTabProps> = ({ profile }) => {
   return (
     <div className="">
       <div
-        className="bg-white rounded-xl shadow-1 p-6 space-y-5"
+        className="bg-gray-2 rounded-xl shadow-1 p-6 space-y-5 border border-gray-3"
         aria-busy={isLoading}
       >
         <div className="flex flex-wrap items-center justify-between gap-4">
@@ -140,7 +140,7 @@ const MyOrdersTab: React.FC<MyOrdersTabProps> = ({ profile }) => {
 
       {isPrintPending && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="rounded-lg bg-white p-6 shadow-xl">
+          <div className="rounded-lg bg-gray-2 p-6 shadow-xl border border-gray-3">
             <div className="text-center">
               <div className="inline-block h-10 w-10 animate-spin rounded-full border-4 border-solid border-blue border-r-transparent"></div>
               <p className="mt-3 text-sm font-semibold text-dark">

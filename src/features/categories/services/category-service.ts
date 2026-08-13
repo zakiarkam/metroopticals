@@ -52,7 +52,6 @@ export async function getCategories(params?: GetCategoriesParams) {
         _count: {
           select: {
             products: true,
-            subcategoryProducts: true,
           },
         },
       },
@@ -72,7 +71,7 @@ export async function getCategories(params?: GetCategoriesParams) {
       ...cat,
       _count: {
         products:
-          (cat._count?.products || 0) + (cat._count?.subcategoryProducts || 0),
+          cat._count?.products || 0,
       },
     }));
 
@@ -101,7 +100,6 @@ export async function getCategories(params?: GetCategoriesParams) {
         _count: {
           select: {
             products: true,
-            subcategoryProducts: true,
           },
         },
       },
@@ -129,7 +127,6 @@ export async function getCategories(params?: GetCategoriesParams) {
       _count: {
         select: {
           products: true,
-          subcategoryProducts: true,
         },
       },
     },
@@ -164,7 +161,6 @@ async function getCategoriesWithFallbackStatusFilter(
       _count: {
         select: {
           products: true,
-          // subcategoryProducts: true,
         },
       },
     },
@@ -220,20 +216,11 @@ async function getActiveProductCounts(categoryIds: number[]) {
     return {};
   }
 
-  const [categoryCounts, subcategoryCounts] = await Promise.all([
+  const [categoryCounts] = await Promise.all([
     prisma.product.groupBy({
       by: ["categoryId"],
       where: {
         categoryId: { in: uniqueIds },
-      } satisfies Prisma.ProductWhereInput,
-      _count: {
-        _all: true,
-      },
-    }),
-    prisma.product.groupBy({
-      by: ["subcategoryId"],
-      where: {
-        subcategoryId: { in: uniqueIds },
       } satisfies Prisma.ProductWhereInput,
       _count: {
         _all: true,
@@ -251,10 +238,6 @@ async function getActiveProductCounts(categoryIds: number[]) {
   categoryCounts.forEach((entry: any) =>
     addCount(entry.categoryId ?? null, entry._count._all || 0)
   );
-  subcategoryCounts.forEach((entry: any) =>
-    addCount(entry.subcategoryId ?? null, entry._count._all || 0)
-  );
-
   return counts;
 }
 
@@ -265,7 +248,6 @@ export async function getCategoryById(id: number) {
       _count: {
         select: {
           products: true,
-          subcategoryProducts: true,
         },
       },
     },
@@ -337,7 +319,6 @@ export async function updateCategoryStatus(
       _count: {
         select: {
           products: true,
-          // subcategoryProducts: true,
         },
       },
     },

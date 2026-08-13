@@ -1,21 +1,11 @@
 "use client";
 
 import React, { memo } from "react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 interface SearchBarProps {
-  options: { label: string; value: string }[];
-  selectedCategory: string;
   searchQuery: string;
   setSearchQuery: (v: string) => void;
   onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
-  onCategorySelect: (v: string) => void;
 }
 
 function IconSearch(props: React.SVGProps<SVGSVGElement>) {
@@ -39,53 +29,29 @@ function IconSearch(props: React.SVGProps<SVGSVGElement>) {
 }
 
 const SearchBar = memo(function SearchBar({
-  options,
-  selectedCategory,
   searchQuery,
   setSearchQuery,
   onSubmit,
-  onCategorySelect,
 }: SearchBarProps) {
   return (
-    <form onSubmit={onSubmit} className="w-full">
-      <div className="flex w-full items-stretch rounded-lg border border-gray-3 bg-gray-1 overflow-visible">
-        <div className="min-w-[140px] sm:min-w-[170px]">
-          <Select value={selectedCategory} onValueChange={onCategorySelect}>
-            <SelectTrigger className="h-full rounded-none rounded-l-lg border-0 bg-gray-1 hover:bg-gray-50 text-sm font-medium text-dark focus:ring-0 focus:ring-offset-0">
-              <SelectValue placeholder="All Categories" />
-            </SelectTrigger>
-            <SelectContent className="max-w-[280px]">
-              {options.map((opt) => (
-                <SelectItem
-                  key={opt.value}
-                  value={opt.value}
-                  className="text-sm cursor-pointer"
-                >
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="relative flex min-w-0 flex-1 items-center">
-          <span className="absolute left-0 top-1/2 h-5 -translate-y-1/2 w-px bg-gray-4" />
-          <input
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            type="search"
-            placeholder="I am shopping for..."
-            autoComplete="off"
-            className="w-full bg-transparent py-2.5 pl-4 pr-10 outline-none"
-          />
-          <button
-            aria-label="Search"
-            type="submit"
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-dark/70 hover:text-blue transition-colors"
-          >
-            <IconSearch />
-          </button>
-        </div>
+    <form onSubmit={onSubmit} className="w-full" role="search">
+      <div className="relative flex w-full items-center rounded-full border border-gray-3 bg-gray-1 transition-colors focus-within:border-blue">
+        <button
+          aria-label="Search"
+          type="submit"
+          className="absolute left-4 top-1/2 -translate-y-1/2 text-dark-4 transition-colors hover:text-blue"
+        >
+          <IconSearch />
+        </button>
+        <input
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          type="search"
+          placeholder="I'm looking for..."
+          autoComplete="off"
+          aria-label="Search products"
+          className="w-full rounded-full bg-transparent py-2.5 pl-12 pr-5 outline-none"
+        />
       </div>
     </form>
   );

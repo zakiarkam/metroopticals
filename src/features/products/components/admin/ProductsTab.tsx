@@ -257,7 +257,7 @@ const ProductsTab: React.FC<ProductsTabProps> = ({
 
   return (
     <div className="space-y-7.5">
-      <div className="rounded-xl border border-gray-3 bg-white shadow-1">
+      <div className="rounded-xl border border-gray-3 bg-gray-2 shadow-1">
         <div className="flex flex-wrap items-center gap-4 border-b border-gray-3 px-5 py-4">
           <div>
             <h3 className="text-custom-lg font-semibold text-dark">
@@ -302,7 +302,7 @@ const ProductsTab: React.FC<ProductsTabProps> = ({
                     onClick={() => setStatusFilter(filter)}
                     className={`h-7 rounded-full px-3 text-custom-xs font-medium transition ${
                       statusFilter === filter
-                        ? "bg-white text-blue shadow-1"
+                        ? "bg-gray-2 text-blue shadow-1"
                         : "text-body hover:text-dark"
                     }`}
                   >
@@ -382,7 +382,7 @@ const ProductsTab: React.FC<ProductsTabProps> = ({
           <div className="min-w-[700px] md:min-w-[900px]">
             <div className="grid grid-cols-[2fr_1.2fr_1fr_1fr_1fr_1fr_168px] gap-4 border-b border-gray-3 px-5 py-3 text-custom-xs uppercase text-body tracking-wide">
               <span>Product</span>
-              <span>Category / Subcategory</span>
+              <span>Category / Brand</span>
               <span>Price</span>
               <span>Stock</span>
               <span>Status</span>
@@ -417,9 +417,9 @@ const ProductsTab: React.FC<ProductsTabProps> = ({
                         <span className="text-custom-sm text-dark font-medium">
                           {product.category.name}
                         </span>
-                        {product.subcategoryId && product.subcategory && (
+                        {product.brandId && product.brand && (
                           <span className="text-custom-xs text-body">
-                            → {product.subcategory.name}
+                            → {product.brand.name}
                           </span>
                         )}
                       </div>
@@ -669,7 +669,7 @@ const ProductsTab: React.FC<ProductsTabProps> = ({
                 title: duplicateSourceProduct.title,
                 slug: duplicateSourceProduct.slug,
                 categoryId: duplicateSourceProduct.categoryId,
-                subcategoryId: duplicateSourceProduct.subcategoryId ?? null,
+                brandId: duplicateSourceProduct.brandId ?? null,
                 price: duplicateSourceProduct.price,
                 discountedPrice:
                   duplicateSourceProduct.discountedPrice ?? undefined,

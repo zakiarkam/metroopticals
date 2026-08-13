@@ -11,6 +11,12 @@ import SiteContainer from "@/components/common/SiteContainer";
 import CustomSelect from "./CustomSelect";
 import CategoryDropdown from "./CategoryDropdown";
 import PriceDropdown from "./PriceDropdown";
+import type { ProductFacets } from "@/features/products/types/product";
+import ShopFilters, {
+  EMPTY_SELECTION,
+  useFacets,
+  type FilterSelection,
+} from "./ShopFilters";
 import SingleGridItem from "../Shop/SingleGridItem";
 import SingleListItem from "../Shop/SingleListItem";
 import { useProducts } from "@/features/products/hooks/use-products";
@@ -72,7 +78,7 @@ const ShopToolbar = React.memo(function ShopToolbar({
   showFiltersButton: boolean;
 }) {
   return (
-    <div className="rounded-xl bg-white shadow-sm px-3 py-3 mb-6">
+    <div className="rounded-xl bg-gray-2 shadow-sm px-3 py-3 mb-6 border border-gray-3">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center justify-between gap-3 w-full sm:w-auto">
           {showFiltersButton && (
@@ -198,6 +204,11 @@ const ShopSidebar = React.memo(function ShopSidebar({
   priceRange,
   setPriceRange,
   onClearAll,
+  facets,
+  facetsLoading,
+  filterSelection,
+  onFilterChange,
+  onClearFilters,
 }: {
   open: boolean;
   onClose: () => void;
@@ -211,19 +222,24 @@ const ShopSidebar = React.memo(function ShopSidebar({
   priceRange: { from: number; to: number };
   setPriceRange: (v: { from: number; to: number }) => void;
   onClearAll: () => void;
+  facets: ProductFacets | null;
+  facetsLoading: boolean;
+  filterSelection: FilterSelection;
+  onFilterChange: (next: FilterSelection) => void;
+  onClearFilters: () => void;
 }) {
   return (
     <div
       className={`sidebar-content fixed xl:z-1 z-[9999] left-0 top-0 xl:translate-x-0 xl:static xl:w-[320px] xl:flex-shrink-0 w-full ease-out duration-200 ${
         open
-          ? "translate-x-0 bg-white p-4 h-screen overflow-y-auto"
+          ? "translate-x-0 bg-gray-2 p-4 h-screen overflow-y-auto"
           : "-translate-x-full"
       }`}
       style={{ paddingTop: open ? stickyOffset : undefined }}
     >
       <form onSubmit={(e) => e.preventDefault()}>
         <div className="flex flex-col gap-5">
-          <div className="bg-white shadow-sm mt-4 xl:mt-0 rounded-xl py-3 px-4 border border-gray-100">
+          <div className="bg-gray-2 shadow-sm mt-4 xl:mt-0 rounded-xl py-3 px-4 border border-gray-100">
             <div className="flex items-center justify-between gap-3">
               <div className="flex  items-center gap-2">
                 <p className="text-sm font-medium text-dark">Filters : </p>
@@ -259,7 +275,7 @@ const ShopSidebar = React.memo(function ShopSidebar({
             </div>
           </div>
 
-          <div className="bg-white shadow-sm rounded-xl py-3 px-4 border border-gray-100">
+          <div className="bg-gray-2 shadow-sm rounded-xl py-3 px-4 border border-gray-100">
             <input
               type="text"
               value={searchTerm}
@@ -277,11 +293,21 @@ const ShopSidebar = React.memo(function ShopSidebar({
             />
           )}
 
-          <PriceDropdown
-            priceRange={priceRange}
-            onPriceChange={setPriceRange}
-            minPrice={PRICE_MIN}
-            maxPrice={PRICE_MAX}
+          <ShopFilters
+            facets={facets}
+            loading={facetsLoading}
+            selection={filterSelection}
+            onChange={onFilterChange}
+            onClearAll={onClearFilters}
+            priceSlot={
+              <PriceDropdown
+                priceRange={priceRange}
+                onPriceChange={setPriceRange}
+                minPrice={PRICE_MIN}
+                maxPrice={PRICE_MAX}
+                embedded
+              />
+            }
           />
         </div>
       </form>
@@ -303,6 +329,15 @@ export default function ShopWithSidebar() {
   const [sortBy, setSortBy] = useState("createdAt");
   const [currentPage, setCurrentPage] = useState(1);
 
+  /** Attribute filters (gender, brand, size, shape, colour, material, rim). */
+  const [filterSelection, setFilterSelection] =
+    useState<FilterSelection>(EMPTY_SELECTION);
+
+  const handleClearAttributeFilters = useCallback(
+    () => setFilterSelection(EMPTY_SELECTION),
+    []
+  );
+
   const priceEffectFirstRun = useRef(true);
   const searchEffectFirstRun = useRef(true);
   const prevSelectedCategoriesRef = useRef<string[]>([]);
@@ -316,6 +351,26 @@ export default function ShopWithSidebar() {
   });
 
   const { categories, loading: categoriesLoading } = useCategories();
+
+  // Facet counts follow the category scope, not the ticked attribute filters.
+  const { facets, loading: facetsLoading } = useFacets(
+    selectedCategories[0],
+    searchTerm || undefined
+  );
+
+  // Push attribute filters into the product query whenever they change.
+  const filterKey = JSON.stringify(filterSelection);
+  useEffect(() => {
+    const asParams = Object.fromEntries(
+      Object.entries(filterSelection).map(([k, v]) => [
+        k,
+        v.length ? v : undefined,
+      ])
+    );
+    setCurrentPage(1);
+    updateParams({ page: 1, ...asParams });
+    // filterKey captures deep changes; updateParams is stable.
+  }, [filterKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ✅ throttled sticky state updates (prevents scroll re-render spam)
   useThrottledScroll(
@@ -371,7 +426,7 @@ export default function ShopWithSidebar() {
     return () => clearTimeout(timer);
   }, [searchTerm, updateParams]);
 
-  // ✅ categories -> parent/subcategories mapping (your logic kept)
+  // ✅ categories -> parent/brands mapping (your logic kept)
   useEffect(() => {
     const hasSelection = selectedCategories.length > 0;
     const hadSelection = prevSelectedCategoriesRef.current.length > 0;
@@ -391,7 +446,7 @@ export default function ShopWithSidebar() {
 
     updateParams({
       categories: parentSlugs.length ? parentSlugs : undefined,
-      subcategories: childSlugs.length ? childSlugs : undefined,
+      brands: childSlugs.length ? childSlugs : undefined,
       page: 1,
     });
 
@@ -464,7 +519,7 @@ export default function ShopWithSidebar() {
   const stickyOffset = stickyMenu ? 16 : 0;
 
   return (
-    <section className="overflow-hidden relative pb-8 pt-4 lg:pt-8 xl:pt-8 bg-[#f3f4f6]">
+    <section className="overflow-hidden relative pb-8 pt-4 lg:pt-8 xl:pt-8 bg-gray-1">
       <SiteContainer>
         {error && (
           <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg">
@@ -486,6 +541,11 @@ export default function ShopWithSidebar() {
             priceRange={priceRange}
             setPriceRange={setPriceRange}
             onClearAll={handleClearFilters}
+            facets={facets}
+            facetsLoading={facetsLoading}
+            filterSelection={filterSelection}
+            onFilterChange={setFilterSelection}
+            onClearFilters={handleClearAttributeFilters}
           />
 
           <div className="flex-1 w-full">

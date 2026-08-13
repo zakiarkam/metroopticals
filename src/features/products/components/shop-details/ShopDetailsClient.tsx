@@ -15,6 +15,8 @@ import { getUnitLabel, resolveDisplayPrice } from "@/lib/utils/price";
 import { toast } from "react-hot-toast";
 import { useDiscountVisibility } from "@/features/cart/hooks/use-discount";
 import { Product } from "@/features/products/types/product";
+import { buildSpecRows } from "@/features/products/utils/eyewear";
+import FrameMeasurements from "./FrameMeasurements";
 
 const fallbackImage = "/images/placeholder-product.jpg";
 
@@ -106,6 +108,12 @@ const ShopDetailsClient = ({
 
   const canPurchase = (product?.stock ?? 0) > 0 && product?.status === "ACTIVE";
 
+  /** Frame specification rows; empty for non-eyewear products. */
+  const specRows = useMemo(
+    () => (product ? buildSpecRows(product) : []),
+    [product]
+  );
+
   const handleAddToCart = useCallback(async () => {
     if (!product || isAdding) return;
     if (!canPurchase) return;
@@ -152,7 +160,7 @@ const ShopDetailsClient = ({
     return (
       <section className="py-10">
         <SiteContainer>
-          <div className="rounded-lg border border-gray-200 bg-white p-8 text-center">
+          <div className="rounded-lg border border-gray-200 bg-gray-2 p-8 text-center">
             <h2 className="text-2xl font-semibold text-dark mb-3">
               Product not found
             </h2>
@@ -172,7 +180,7 @@ const ShopDetailsClient = ({
   }
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-slate-50 via-white to-slate-100 py-10">
+    <section className="relative overflow-hidden bg-gradient-to-b from-slate-50 via-gray-2 to-slate-100 py-10">
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -top-32 right-0 h-64 w-64 rounded-full bg-blue/10 blur-3xl" />
         <div className="absolute bottom-10 left-0 h-72 w-72 rounded-full bg-emerald-100/60 blur-3xl" />
@@ -198,7 +206,7 @@ const ShopDetailsClient = ({
 
           <div className="grid gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
             <div className="space-y-5">
-              <div className="relative aspect-square overflow-hidden rounded-3xl border border-white/80 bg-white shadow-2xl">
+              <div className="relative aspect-square overflow-hidden rounded-3xl border border-white/80 bg-gray-2 shadow-2xl">
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-50/40 via-transparent to-transparent" />
                 <Image
                   src={featuredImage}
@@ -244,10 +252,10 @@ const ShopDetailsClient = ({
               <div className="space-y-4">
                 <div className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.3em] text-blue">
                   <span>{product.category?.name ?? "Product"}</span>
-                  {product.subcategory?.name && (
+                  {product.brand?.name && (
                     <>
                       <span className="text-gray-300">|</span>
-                      <span>{product.subcategory.name}</span>
+                      <span>{product.brand.name}</span>
                     </>
                   )}
                 </div>
@@ -296,7 +304,27 @@ const ShopDetailsClient = ({
 
               <p className="text-body leading-7">{product.description}</p>
 
-              <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-1 space-y-4">
+              {specRows.length > 0 && (
+                <dl className="rounded-2xl border border-gray-3 bg-gray-2 p-5 shadow-1">
+                  {specRows.map((row, i) => (
+                    <div
+                      key={row.label}
+                      className={`flex items-baseline gap-4 py-2 ${
+                        i > 0 ? "border-t border-gray-3" : ""
+                      }`}
+                    >
+                      <dt className="w-28 shrink-0 text-sm text-body">
+                        {row.label}
+                      </dt>
+                      <dd className="text-sm font-medium text-dark">
+                        {row.value}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              )}
+
+              <div className="rounded-2xl border border-gray-200 bg-gray-2 p-6 shadow-1 space-y-4">
                 <div className="flex flex-wrap items-center gap-4">
                   <span className="text-sm font-semibold text-dark">
                     Quantity
@@ -305,7 +333,7 @@ const ShopDetailsClient = ({
                     <button
                       type="button"
                       onClick={() => handleQuantityChange(quantity - 1)}
-                      className="h-10 w-10 text-lg text-dark hover:bg-white"
+                      className="h-10 w-10 text-lg text-dark hover:bg-gray-2"
                     >
                       -
                     </button>
@@ -322,7 +350,7 @@ const ShopDetailsClient = ({
                     <button
                       type="button"
                       onClick={() => handleQuantityChange(quantity + 1)}
-                      className="h-10 w-10 text-lg text-dark hover:bg-white"
+                      className="h-10 w-10 text-lg text-dark hover:bg-gray-2"
                     >
                       +
                     </button>
@@ -357,7 +385,7 @@ const ShopDetailsClient = ({
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-1 space-y-2 text-sm text-body">
+              <div className="rounded-2xl border border-gray-200 bg-gray-2 p-6 shadow-1 space-y-2 text-sm text-body">
                 {product.slug && (
                   <p>
                     <span className="font-semibold text-dark">SKU Code:</span>{" "}
@@ -378,12 +406,12 @@ const ShopDetailsClient = ({
                     {product.category.name}
                   </p>
                 )}
-                {product.subcategory?.name && (
+                {product.brand?.name && (
                   <p>
                     <span className="font-semibold text-dark">
-                      Subcategory:
+                      Brand:
                     </span>{" "}
-                    {product.subcategory.name}
+                    {product.brand.name}
                   </p>
                 )}
                 {product.catalogueFile && (
@@ -405,6 +433,26 @@ const ShopDetailsClient = ({
               </div>
             </div>
           </div>
+
+          {/* Frame measurement diagram — eyewear products only */}
+          {(product.lensWidth != null ||
+            product.bridgeWidth != null ||
+            product.templeLength != null) && (
+            <div className="mt-10 rounded-2xl border border-gray-3 bg-gray-1 p-6 shadow-2 sm:p-8">
+              <h2 className="text-lg font-semibold text-dark">
+                Frame measurements
+              </h2>
+              <p className="mt-1 text-sm text-body">
+                Compare these with a pair you already own to check the fit.
+              </p>
+              <FrameMeasurements
+                className="mt-6"
+                lensWidth={product.lensWidth}
+                bridgeWidth={product.bridgeWidth}
+                templeLength={product.templeLength}
+              />
+            </div>
+          )}
         </div>
       </SiteContainer>
     </section>

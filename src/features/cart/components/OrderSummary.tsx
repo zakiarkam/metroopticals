@@ -20,7 +20,7 @@ const OrderSummary = () => {
   );
 
   return (
-    <div className="w-full lg:max-w-[370px] bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-lg border border-gray-200">
+    <div className="w-full lg:max-w-[370px] bg-gradient-to-br from-gray-2 to-gray-50 rounded-2xl shadow-lg border border-gray-200">
       <div className="border-b border-gray-200 bg-gradient-to-r from-blue-light-5 to-blue-light-4 py-4 px-5 sm:px-6 rounded-t-2xl">
         <p className="text-xs uppercase tracking-wider text-body font-semibold">
           Cart Summary

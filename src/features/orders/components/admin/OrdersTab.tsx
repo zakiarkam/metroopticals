@@ -230,7 +230,7 @@ const OrdersTab: React.FC<OrdersTabProps> = ({
   return (
     <div className="space-y-7.5">
       <div className="grid gap-7.5">
-        <div className="rounded-xl border border-gray-3 bg-white shadow-1 overflow-hidden">
+        <div className="rounded-xl border border-gray-3 bg-gray-2 shadow-1 overflow-hidden">
           <div className="flex flex-wrap items-center gap-4 border-b border-gray-3 px-5 py-4">
             <div>
               <h3 className="text-custom-lg font-semibold text-dark">
@@ -286,7 +286,7 @@ const OrdersTab: React.FC<OrdersTabProps> = ({
                     }
                     className={`h-7 rounded-full px-3 text-custom-xs font-medium transition whitespace-nowrap ${
                       statusFilter === filter
-                        ? "bg-white text-blue shadow-1"
+                        ? "bg-gray-2 text-blue shadow-1"
                         : "text-body hover:text-dark"
                     }`}
                   >
@@ -521,7 +521,7 @@ const OrdersTab: React.FC<OrdersTabProps> = ({
       {/* Loading Overlay */}
       {isGeneratingReceipt && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="rounded-lg bg-white p-8 shadow-xl">
+          <div className="rounded-lg bg-gray-2 p-8 shadow-xl border border-gray-3">
             <div className="text-center">
               <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-blue border-r-transparent"></div>
               <p className="mt-4 text-lg font-semibold text-dark">

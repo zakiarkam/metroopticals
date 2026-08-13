@@ -316,7 +316,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
         initial={false}
         animate={{ width: collapsed ? 80 : 288 }}
         transition={{ duration: 0.3, ease: "easeInOut" }}
-        className={`absolute left-0 top-0 z-50 flex h-screen flex-col overflow-y-hidden bg-white shadow-xl border-r border-gray-3 lg:static lg:translate-x-0 ${
+        className={`absolute left-0 top-0 z-50 flex h-screen flex-col overflow-y-hidden bg-gray-2 shadow-xl border-r border-gray-3 lg:static lg:translate-x-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         } transition-transform duration-300 ease-linear`}
       >
@@ -400,7 +400,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
                   className={`flex items-center gap-3 rounded-lg border px-4 py-3 transition-all duration-200 ${
                     pathname === item.href
                       ? "border-blue bg-blue text-white shadow-lg"
-                      : "border-gray-3 bg-white text-dark-2 shadow-md hover:shadow-lg hover:border-blue hover:text-blue hover:bg-blue-50"
+                      : "border-gray-3 bg-gray-2 text-dark-2 shadow-md hover:shadow-lg hover:border-blue hover:text-blue hover:bg-blue-50"
                   } ${collapsed ? "justify-center" : ""}`}
                   title={collapsed ? item.label : ""}
                 >
@@ -451,7 +451,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
                   </p>
                   <div className="flex flex-col gap-3">
                     <motion.label
-                      className="flex items-center justify-between rounded-lg bg-white px-4 py-3 shadow-1 cursor-pointer"
+                      className="flex items-center justify-between rounded-lg bg-gray-2 px-4 py-3 shadow-1 cursor-pointer border border-gray-3"
                       whileHover={{ scale: 1.02 }}
                       transition={{ duration: 0.2 }}
                     >
@@ -465,7 +465,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
                       />
                     </motion.label>
                     <motion.label
-                      className="flex items-center justify-between rounded-lg bg-white px-4 py-3 shadow-1 cursor-pointer"
+                      className="flex items-center justify-between rounded-lg bg-gray-2 px-4 py-3 shadow-1 cursor-pointer border border-gray-3"
                       whileHover={{ scale: 1.02 }}
                       transition={{ duration: 0.2 }}
                     >
@@ -491,7 +491,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="w-full flex items-center justify-center rounded-lg bg-white px-3 py-3 shadow-1 hover:bg-gray-2 transition-colors"
+                    className="w-full flex items-center justify-center rounded-lg bg-gray-2 px-3 py-3 shadow-1 hover:bg-gray-2 transition-colors border border-gray-3"
                     title="Automations"
                   >
                     <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">

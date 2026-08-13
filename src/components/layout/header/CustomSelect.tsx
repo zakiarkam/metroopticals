@@ -79,7 +79,7 @@ export default function CustomSelect({
           className="
             absolute left-0 top-full mt-2 z-50
             w-[min(280px,calc(100vw-16px))]
-            rounded-xl border border-gray-200 bg-white shadow-xl
+            rounded-xl border border-gray-200 bg-gray-2 shadow-xl
             overflow-hidden
           "
           role="listbox"

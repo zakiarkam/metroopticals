@@ -35,6 +35,23 @@ async function main() {
     },
   });
 
+  // ---------- Brands ----------
+  const brandData = [
+    { name: "Ray-Ban", slug: "ray-ban" },
+    { name: "Oakley", slug: "oakley" },
+    { name: "Vogue Eyewear", slug: "vogue-eyewear" },
+    { name: "Metro Essentials", slug: "metro-essentials" },
+  ];
+
+  const brands: Record<string, { id: number }> = {};
+  for (const data of brandData) {
+    brands[data.slug] = await prisma.brand.upsert({
+      where: { slug: data.slug },
+      update: {},
+      create: data,
+    });
+  }
+
   // ---------- Categories ----------
   const categoryData = [
     {
@@ -86,6 +103,17 @@ async function main() {
       stock: 40,
       categorySlug: "eyeglasses",
       unitType: "PIECES" as const,
+      brandSlug: "ray-ban",
+      gender: "UNISEX" as const,
+      frameColors: ["Matte Black", "Tortoise", "Navy"],
+      lensWidth: 50,
+      bridgeWidth: 17,
+      templeLength: 140,
+      frameColor: "Matte Black",
+      frameMaterial: "Acetate",
+      weightGrams: 11,
+      frameShape: "RECTANGLE" as const,
+      rimType: "FULL_RIM" as const,
     },
     {
       title: "Titanium Rimless Frame",
@@ -96,6 +124,17 @@ async function main() {
       stock: 20,
       categorySlug: "eyeglasses",
       unitType: "PIECES" as const,
+      brandSlug: "metro-essentials",
+      gender: "MEN" as const,
+      frameColors: ["Gunmetal", "Silver"],
+      lensWidth: 52,
+      bridgeWidth: 18,
+      templeLength: 145,
+      frameColor: "Gunmetal",
+      frameMaterial: "Titanium",
+      weightGrams: 9,
+      frameShape: "OVAL" as const,
+      rimType: "RIMLESS" as const,
     },
     {
       title: "Blue-Light Computer Glasses",
@@ -105,6 +144,17 @@ async function main() {
       stock: 60,
       categorySlug: "eyeglasses",
       unitType: "PIECES" as const,
+      brandSlug: "vogue-eyewear",
+      gender: "UNISEX" as const,
+      frameColors: ["Tortoise", "Black", "Crystal"],
+      lensWidth: 54,
+      bridgeWidth: 16,
+      templeLength: 142,
+      frameColor: "Tortoise",
+      frameMaterial: "TR90",
+      weightGrams: 14,
+      frameShape: "SQUARE" as const,
+      rimType: "FULL_RIM" as const,
     },
     {
       title: "Polarised Aviator Sunglasses",
@@ -115,6 +165,17 @@ async function main() {
       stock: 35,
       categorySlug: "sunglasses",
       unitType: "PIECES" as const,
+      brandSlug: "ray-ban",
+      gender: "MEN" as const,
+      frameColors: ["Gold", "Gunmetal"],
+      lensWidth: 58,
+      bridgeWidth: 14,
+      templeLength: 140,
+      frameColor: "Gold",
+      frameMaterial: "Metal",
+      weightGrams: 24,
+      frameShape: "AVIATOR" as const,
+      rimType: "FULL_RIM" as const,
     },
     {
       title: "Oversized Cat-Eye Sunglasses",
@@ -124,6 +185,17 @@ async function main() {
       stock: 25,
       categorySlug: "sunglasses",
       unitType: "PIECES" as const,
+      brandSlug: "vogue-eyewear",
+      gender: "WOMEN" as const,
+      frameColors: ["Havana", "Black", "Rose"],
+      lensWidth: 56,
+      bridgeWidth: 16,
+      templeLength: 145,
+      frameColor: "Havana",
+      frameMaterial: "Acetate",
+      weightGrams: 28,
+      frameShape: "CAT_EYE" as const,
+      rimType: "FULL_RIM" as const,
     },
     {
       title: "Daily Disposable Contact Lenses (30 Pack)",
@@ -152,6 +224,17 @@ async function main() {
       stock: 120,
       categorySlug: "reading-glasses",
       unitType: "PIECES" as const,
+      brandSlug: "metro-essentials",
+      gender: "UNISEX" as const,
+      frameColors: ["Black", "Burgundy"],
+      lensWidth: 48,
+      bridgeWidth: 19,
+      templeLength: 138,
+      frameColor: "Black",
+      frameMaterial: "Plastic",
+      weightGrams: 12,
+      frameShape: "RECTANGLE" as const,
+      rimType: "FULL_RIM" as const,
     },
     {
       title: "Lens Cleaning Kit",
@@ -173,7 +256,7 @@ async function main() {
     },
   ];
 
-  for (const { categorySlug, ...rest } of products) {
+  for (const { categorySlug, brandSlug, ...rest } of products as any[]) {
     const slug = slugify(rest.title);
 
     await prisma.product.upsert({
@@ -187,6 +270,7 @@ async function main() {
         category: {
           connect: { id: categories[categorySlug].id },
         },
+        ...(brandSlug ? { brand: { connect: { id: brands[brandSlug].id } } } : {}),
       },
     });
   }

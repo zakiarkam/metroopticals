@@ -149,7 +149,7 @@ function formatDate(d = new Date()) {
 function buttonPill({
   href,
   label,
-  bgColor = "#0067ff",
+  bgColor = "#A17C4C",
   textColor = "#ffffff",
 }: {
   href: string;
@@ -221,7 +221,7 @@ function renderEmailHeaderRow({
               style="display:block;border:0;outline:0;width:160px;height:auto;max-width:100%;" />
           </td>
           <td align="right" valign="middle" style="font-family:Poppins,Arial,Helvetica,sans-serif;font-size:14px;">
-            <a href="${escapeHtml(rightHref)}" target="_blank" style="color:#001942;text-decoration:none;">
+            <a href="${escapeHtml(rightHref)}" target="_blank" style="color:#1A1A1A;text-decoration:none;">
               ${escapeHtml(rightLabel)}
             </a>
           </td>
@@ -237,23 +237,23 @@ function renderEmailFooterRow() {
   const year = new Date().getFullYear();
   return `
   <tr>
-    <td style="background:#001942;padding:30px;text-align:center;">
+    <td style="background:#1A1A1A;padding:30px;text-align:center;">
       <p style="margin:0 0 10px;font-size:16px;color:#ffffff;font-weight:500;">
         ${escapeHtml(BRAND.name)}
       </p>
-      <p style="margin:0 0 15px;font-size:14px;color:#a8b4c8;">
+      <p style="margin:0 0 15px;font-size:14px;color:#B5AEA2;">
         ${escapeHtml(siteConfig.tagline)}
       </p>
-      <p style="margin:0;font-size:13px;color:#a8b4c8;">
+      <p style="margin:0;font-size:13px;color:#B5AEA2;">
         Email: <a href="mailto:${escapeHtml(
           BRAND.supportEmail
-        )}" style="color:#a8b4c8;text-decoration:none;">${escapeHtml(
+        )}" style="color:#B5AEA2;text-decoration:none;">${escapeHtml(
           BRAND.supportEmail
         )}</a>
         &nbsp;|&nbsp;
         Phone: <a href="tel:${escapeHtml(
           BRAND.supportPhone
-        )}" style="color:#a8b4c8;text-decoration:none;">${escapeHtml(
+        )}" style="color:#B5AEA2;text-decoration:none;">${escapeHtml(
           BRAND.supportPhoneLabel
         )}</a>
       </p>
@@ -351,7 +351,7 @@ function renderCustomerOrderEmail({
   const innerHtml = `
     <tr>
       <td style="padding:40px 30px;font-family:Poppins,Arial,Helvetica,sans-serif;">
-        <p style="margin:0 0 20px;font-size:18px;color:#001942;">
+        <p style="margin:0 0 20px;font-size:18px;color:#1A1A1A;">
           Hi ${safeBillingName},
         </p>
         <p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#333;">
@@ -362,7 +362,7 @@ function renderCustomerOrderEmail({
           <p style="margin:0;font-size:14px;color:#666;">
             <strong style="color:#10b981;">Order Number:</strong>
           </p>
-          <p style="margin:8px 0 0;font-size:20px;font-weight:600;color:#001942;">
+          <p style="margin:8px 0 0;font-size:20px;font-weight:600;color:#1A1A1A;">
             ${safeOrderNo}
           </p>
         </div>
@@ -379,7 +379,7 @@ function renderCustomerOrderEmail({
             If you have any questions, please
             <a href="${escapeHtml(
               `${baseUrl}/contact`
-            )}" style="color:#0067ff;text-decoration:none;">contact our support team</a>
+            )}" style="color:#A17C4C;text-decoration:none;">contact our support team</a>
             or reply to this email.
           </p>
         </div>
@@ -437,8 +437,8 @@ function renderOrderStatusUpdateEmail({
 
   const innerHtml = `
     <tr>
-      <td style="background:#ecf1fb;border-radius:12px;padding:36px 24px;text-align:center;">
-        <div style="font-family:Poppins,Arial,Helvetica,sans-serif;font-size:28px;font-weight:600;color:#001942;letter-spacing:-0.03em;">
+      <td style="background:#F7F2E9;border-radius:12px;padding:36px 24px;text-align:center;">
+        <div style="font-family:Poppins,Arial,Helvetica,sans-serif;font-size:28px;font-weight:600;color:#1A1A1A;letter-spacing:-0.03em;">
           ${escapeHtml(statusTitle)}
         </div>
         <div style="font-family:Poppins,Arial,Helvetica,sans-serif;font-size:13px;color:#53627a;margin-top:10px;">
@@ -449,7 +449,7 @@ function renderOrderStatusUpdateEmail({
 
     <tr>
       <td style="padding:34px 30px;font-family:Poppins,Arial,Helvetica,sans-serif;">
-        <p style="margin:0 0 18px;font-size:18px;color:#001942;">
+        <p style="margin:0 0 18px;font-size:18px;color:#1A1A1A;">
           Hi ${displayName},
         </p>
 
@@ -459,7 +459,7 @@ function renderOrderStatusUpdateEmail({
           <p style="margin:0;font-size:14px;color:#666;">
             <strong style="color:${statusColor};">Order Number:</strong>
           </p>
-          <p style="margin:8px 0 0;font-size:20px;font-weight:600;color:#001942;">
+          <p style="margin:8px 0 0;font-size:20px;font-weight:600;color:#1A1A1A;">
             ${safeOrderNo}
           </p>
         </div>
@@ -476,7 +476,7 @@ function renderOrderStatusUpdateEmail({
             If you have any questions, please
             <a href="${escapeHtml(
               contactUrl
-            )}" style="color:#0067ff;text-decoration:none;">contact our support team</a>
+            )}" style="color:#A17C4C;text-decoration:none;">contact our support team</a>
             or reply to this email.
           </p>
         </div>
@@ -549,23 +549,23 @@ export async function sendPasswordResetEmail(email: string, token: string) {
 
   const innerHtml = `
     <tr>
-      <td style="background:#ecf1fb;border-radius:12px;padding:40px 24px;text-align:center;">
-        <div style="font-family:Poppins,Arial,Helvetica,sans-serif;font-size:34px;font-weight:600;color:#001942;letter-spacing:-0.03em;">
+      <td style="background:#F7F2E9;border-radius:12px;padding:40px 24px;text-align:center;">
+        <div style="font-family:Poppins,Arial,Helvetica,sans-serif;font-size:34px;font-weight:600;color:#1A1A1A;letter-spacing:-0.03em;">
           Reset Your Password
         </div>
-        <div style="font-family:Poppins,Arial,Helvetica,sans-serif;font-size:14px;line-height:1.7;color:#001942;margin-top:12px;max-width:520px;margin-left:auto;margin-right:auto;">
+        <div style="font-family:Poppins,Arial,Helvetica,sans-serif;font-size:14px;line-height:1.7;color:#1A1A1A;margin-top:12px;max-width:520px;margin-left:auto;margin-right:auto;">
           We received a request to reset the password for your Metro Opticals account:
-          <span style="font-weight:600;color:#001942;">${safeEmail}</span>
+          <span style="font-weight:600;color:#1A1A1A;">${safeEmail}</span>
         </div>
       </td>
     </tr>
 
     <tr>
-      <td style="padding:22px 20px;background:#ecf1fb;">
+      <td style="padding:22px 20px;background:#F7F2E9;">
         <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background:#ffffff;border-radius:12px;">
           <tr>
-            <td style="padding:18px 16px;font-family:Poppins,Arial,Helvetica,sans-serif;color:#001942;">
-              <div style="font-size:16px;font-weight:600;color:#001942;line-height:1.6;">
+            <td style="padding:18px 16px;font-family:Poppins,Arial,Helvetica,sans-serif;color:#1A1A1A;">
+              <div style="font-size:16px;font-weight:600;color:#1A1A1A;line-height:1.6;">
                 Click the button below to reset your password.
               </div>
 
@@ -577,8 +577,8 @@ export async function sendPasswordResetEmail(email: string, token: string) {
                 If the button doesn’t work, copy and paste this link into your browser:
               </div>
 
-              <div style="margin-top:10px;padding:12px;background:#f9fafb;border-left:4px solid #0067ff;border-radius:12px;">
-                <a href="${safeResetUrl}" style="color:#0067ff;text-decoration:underline;word-break:break-all;font-size:13px;">
+              <div style="margin-top:10px;padding:12px;background:#f9fafb;border-left:4px solid #A17C4C;border-radius:12px;">
+                <a href="${safeResetUrl}" style="color:#A17C4C;text-decoration:underline;word-break:break-all;font-size:13px;">
                   ${safeResetUrl}
                 </a>
               </div>
@@ -602,7 +602,7 @@ export async function sendPasswordResetEmail(email: string, token: string) {
                   If you have any questions, please
                   <a href="${escapeHtml(
                     `${baseUrl}/contact`
-                  )}" style="color:#0067ff;text-decoration:none;">contact our support team</a>
+                  )}" style="color:#A17C4C;text-decoration:none;">contact our support team</a>
                   or reply to this email.
                 </p>
               </div>
@@ -655,11 +655,11 @@ function renderWelcomeEmail({
   const innerHtml = `
     <!-- Hero -->
     <tr>
-      <td style="background:#ecf1fb;border-radius:12px;padding:40px 24px;text-align:center;">
-        <div style="font-family:Poppins,Arial,Helvetica,sans-serif;font-size:34px;font-weight:600;color:#001942;letter-spacing:-0.03em;">
+      <td style="background:#F7F2E9;border-radius:12px;padding:40px 24px;text-align:center;">
+        <div style="font-family:Poppins,Arial,Helvetica,sans-serif;font-size:34px;font-weight:600;color:#1A1A1A;letter-spacing:-0.03em;">
           Welcome to Metro Opticals
         </div>
-        <div style="font-family:Poppins,Arial,Helvetica,sans-serif;font-size:16px;line-height:1.7;color:#001942;margin-top:14px;">
+        <div style="font-family:Poppins,Arial,Helvetica,sans-serif;font-size:16px;line-height:1.7;color:#1A1A1A;margin-top:14px;">
           Hi ${safeName}, we are thrilled you joined us. Everything you need for premium shopping is ready.
         </div>
         <p style="margin:18px auto 0;font-size:14px;line-height:1.7;color:#53627a;max-width:520px;">
@@ -712,9 +712,9 @@ function renderWelcomeEmail({
     <tr>
       <td style="padding:14px 0 0;">
         <table width="100%" cellpadding="0" cellspacing="0" role="presentation"
-          style="background:#ecf1fb;border-radius:20px;padding:22px 18px;">
+          style="background:#F7F2E9;border-radius:20px;padding:22px 18px;">
           <tr>
-            <td style="font-family:Poppins,Arial,Helvetica,sans-serif;color:#001942;">
+            <td style="font-family:Poppins,Arial,Helvetica,sans-serif;color:#1A1A1A;">
               <div style="font-size:18px;font-weight:600;letter-spacing:-0.03em;text-align:center;">
                 Account Details
               </div>
@@ -724,22 +724,22 @@ function renderWelcomeEmail({
                   <tr>
                     <td style="padding:10px 0;border-bottom:1px solid #e5e7eb;">
                       <div style="font-size:12px;color:#6b7280;letter-spacing:0.04em;text-transform:uppercase;">Name</div>
-                      <div style="font-size:15px;font-weight:600;color:#001942;margin-top:4px;">${safeName}</div>
+                      <div style="font-size:15px;font-weight:600;color:#1A1A1A;margin-top:4px;">${safeName}</div>
                     </td>
                   </tr>
                   <tr>
                     <td style="padding:10px 0;border-bottom:1px solid #e5e7eb;">
                       <div style="font-size:12px;color:#6b7280;letter-spacing:0.04em;text-transform:uppercase;">Email</div>
-                      <div style="font-size:15px;font-weight:600;color:#001942;margin-top:4px;">
-                        <a href="mailto:${safeEmail}" style="color:#0067ff;text-decoration:none;font-weight:600;">${safeEmail}</a>
+                      <div style="font-size:15px;font-weight:600;color:#1A1A1A;margin-top:4px;">
+                        <a href="mailto:${safeEmail}" style="color:#A17C4C;text-decoration:none;font-weight:600;">${safeEmail}</a>
                       </div>
                     </td>
                   </tr>
                   <tr>
                     <td style="padding:10px 0;">
                       <div style="font-size:12px;color:#6b7280;letter-spacing:0.04em;text-transform:uppercase;">Next step</div>
-                      <div style="margin-top:4px;font-size:15px;font-weight:600;color:#001942;">
-                        <a href="${safeLoginUrl}" style="color:#0067ff;text-decoration:none;font-weight:600;">Log in to your account</a>
+                      <div style="margin-top:4px;font-size:15px;font-weight:600;color:#1A1A1A;">
+                        <a href="${safeLoginUrl}" style="color:#A17C4C;text-decoration:none;font-weight:600;">Log in to your account</a>
                       </div>
                     </td>
                   </tr>
@@ -839,7 +839,7 @@ function renderAdminOrderEmail({
                     style="display:block;border:0;outline:0;width:64px;height:64px;border-radius:12px;object-fit:cover;background:#f3f4f6;box-shadow:0 2px 4px rgba(0,0,0,0.10);" />
                 </td>
                 <td valign="middle" style="font-family:Poppins,Arial,Helvetica,sans-serif;">
-                  <div style="font-weight:600;font-size:14px;color:#001942;line-height:1.4;">
+                  <div style="font-weight:600;font-size:14px;color:#1A1A1A;line-height:1.4;">
                     ${title}
                   </div>
                   <div style="font-size:12px;color:#6b7280;margin-top:4px;">
@@ -847,7 +847,7 @@ function renderAdminOrderEmail({
                   </div>
                 </td>
                 <td align="right" valign="middle" style="font-family:Poppins,Arial,Helvetica,sans-serif;white-space:nowrap;">
-                  <div style="font-size:14px;font-weight:700;color:#001942;">
+                  <div style="font-size:14px;font-weight:700;color:#1A1A1A;">
                     ${formatMoney(line, currency)}
                   </div>
                 </td>
@@ -903,7 +903,7 @@ function renderAdminOrderEmail({
                   <td align="right" valign="middle" style="font-family:Poppins,Arial,Helvetica,sans-serif;font-size:14px;">
                     <a href="${escapeHtml(
                       adminPanelUrl
-                    )}" target="_blank" style="color:#001942;text-decoration:none;">Open Admin Orders</a>
+                    )}" target="_blank" style="color:#1A1A1A;text-decoration:none;">Open Admin Orders</a>
                   </td>
                 </tr>
               </table>
@@ -912,18 +912,18 @@ function renderAdminOrderEmail({
 
           <!-- Header / Hero box (match customer look) -->
           <tr>
-            <td style="background:#ecf1fb;border-radius:12px;padding:36px 24px;text-align:center;">
-              <div style="font-family:Poppins,Arial,Helvetica,sans-serif;font-size:28px;font-weight:600;color:#001942;letter-spacing:-0.03em;">
+            <td style="background:#F7F2E9;border-radius:12px;padding:36px 24px;text-align:center;">
+              <div style="font-family:Poppins,Arial,Helvetica,sans-serif;font-size:28px;font-weight:600;color:#1A1A1A;letter-spacing:-0.03em;">
                 New Order Received
               </div>
-              <div style="font-family:Poppins,Arial,Helvetica,sans-serif;font-size:14px;line-height:1.7;color:#001942;margin-top:10px;">
+              <div style="font-family:Poppins,Arial,Helvetica,sans-serif;font-size:14px;line-height:1.7;color:#1A1A1A;margin-top:10px;">
                 Order <b>#${safeOrderNo}</b> • ${escapeHtml(formatDate())}
               </div>
 
               <div style="margin-top:16px;">
                 <!-- button (simple, email-safe) -->
                 <a href="${escapeHtml(adminPanelUrl)}" target="_blank"
-                  style="display:inline-block;background:#0067ff;color:#ffffff;text-decoration:none;padding:12px 18px;border-radius:999px;font-family:Poppins,Arial,Helvetica,sans-serif;font-weight:600;font-size:14px;">
+                  style="display:inline-block;background:#A17C4C;color:#ffffff;text-decoration:none;padding:12px 18px;border-radius:999px;font-family:Poppins,Arial,Helvetica,sans-serif;font-weight:600;font-size:14px;">
                   Open Admin Orders
                 </a>
               </div>
@@ -968,9 +968,9 @@ function renderAdminOrderEmail({
           <!-- Customer + Order info (styled card like customer email sections) -->
           <tr>
             <td style="padding:18px 0 0;">
-              <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background:#ecf1fb;border-radius:20px;padding:22px 18px;">
+              <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background:#F7F2E9;border-radius:20px;padding:22px 18px;">
                 <tr>
-                  <td style="font-family:Poppins,Arial,Helvetica,sans-serif;color:#001942;">
+                  <td style="font-family:Poppins,Arial,Helvetica,sans-serif;color:#1A1A1A;">
                     <div style="font-size:18px;font-weight:600;letter-spacing:-0.03em;text-align:center;">
                       Customer Details
                     </div>
@@ -980,14 +980,14 @@ function renderAdminOrderEmail({
                         <b>${escapeHtml(order.billingName)}</b><br/>
                         Email: <a href="mailto:${escapeHtml(
                           order.billingEmail
-                        )}" style="color:#0067ff;font-weight:600;text-decoration:none;">${escapeHtml(
+                        )}" style="color:#A17C4C;font-weight:600;text-decoration:none;">${escapeHtml(
                           order.billingEmail
                         )}</a><br/>
                         ${
                           order.billingPhone
                             ? `Phone: <a href="tel:${escapeHtml(
                                 order.billingPhone
-                              )}" style="color:#0067ff;font-weight:600;text-decoration:none;">${escapeHtml(
+                              )}" style="color:#A17C4C;font-weight:600;text-decoration:none;">${escapeHtml(
                                 order.billingPhone
                               )}</a><br/>`
                             : ""
@@ -997,7 +997,7 @@ function renderAdminOrderEmail({
 
                       ${
                         order.notes
-                          ? `<div style="margin-top:12px;background:#f8fafc;border-left:4px solid #0067ff;border-radius:12px;padding:12px;">
+                          ? `<div style="margin-top:12px;background:#f8fafc;border-left:4px solid #A17C4C;border-radius:12px;padding:12px;">
                                <div style="font-weight:600;margin-bottom:6px;">Notes</div>
                                <div style="color:#53627a;line-height:1.6;">${escapeHtml(
                                  order.notes
@@ -1015,9 +1015,9 @@ function renderAdminOrderEmail({
           <!-- Items card -->
           <tr>
             <td style="padding:14px 0 0;">
-              <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background:#ecf1fb;border-radius:20px;padding:22px 18px;">
+              <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background:#F7F2E9;border-radius:20px;padding:22px 18px;">
                 <tr>
-                  <td style="font-family:Poppins,Arial,Helvetica,sans-serif;color:#001942;">
+                  <td style="font-family:Poppins,Arial,Helvetica,sans-serif;color:#1A1A1A;">
                     <div style="font-size:18px;font-weight:600;letter-spacing:-0.03em;text-align:center;">
                       Items
                     </div>
@@ -1034,8 +1034,8 @@ function renderAdminOrderEmail({
                         <td style="background:#ffffff;border-radius:12px;padding:16px;">
                           <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
                             <tr>
-                              <td style="font-size:16px;color:#001942;">Subtotal</td>
-                              <td align="right" style="font-size:16px;color:#001942;font-weight:600;">
+                              <td style="font-size:16px;color:#1A1A1A;">Subtotal</td>
+                              <td align="right" style="font-size:16px;color:#1A1A1A;font-weight:600;">
                                 ${formatMoney(subtotal, currency)}
                               </td>
                             </tr>
@@ -1043,7 +1043,7 @@ function renderAdminOrderEmail({
                               discount > 0
                                 ? `
                             <tr>
-                              <td style="font-size:16px;color:#001942;padding-top:12px;">Discount</td>
+                              <td style="font-size:16px;color:#1A1A1A;padding-top:12px;">Discount</td>
                               <td align="right" style="font-size:16px;color:#00af48;padding-top:12px;font-weight:600;">
                                 -${formatMoney(discount, currency)}
                               </td>
@@ -1053,8 +1053,8 @@ function renderAdminOrderEmail({
                             }
 
                             <tr>
-                              <td style="font-size:16px;font-weight:700;color:#001942;padding-top:14px;">Total</td>
-                              <td align="right" style="font-size:16px;font-weight:700;color:#001942;padding-top:14px;">
+                              <td style="font-size:16px;font-weight:700;color:#1A1A1A;padding-top:14px;">Total</td>
+                              <td align="right" style="font-size:16px;font-weight:700;color:#1A1A1A;padding-top:14px;">
                                 ${formatMoney(total, currency)}
                               </td>
                             </tr>
@@ -1074,7 +1074,7 @@ function renderAdminOrderEmail({
             <td style="padding:18px 0 0;">
               <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
                 <tr>
-                  <td style="background:#0b1220;border-radius:14px;padding:26px 22px;text-align:center;">
+                  <td style="background:#0F0F0F;border-radius:14px;padding:26px 22px;text-align:center;">
                     <img src="${logoUrl}" width="170" alt="Metro Opticals"
                       style="display:block;margin:0 auto 12px;border:0;width:170px;height:auto;max-width:100%;" />
 
@@ -1236,7 +1236,7 @@ export async function sendContactFormEmail(
                       style="display:block;border:0;outline:0;width:160px;height:auto;max-width:100%;" />
                   </td>
                   <td align="right" valign="middle" style="font-family:Poppins,Arial,Helvetica,sans-serif;font-size:14px;">
-                    <a href="mailto:${safeEmail}" style="color:#001942;text-decoration:none;">Reply</a>
+                    <a href="mailto:${safeEmail}" style="color:#1A1A1A;text-decoration:none;">Reply</a>
                   </td>
                 </tr>
               </table>
@@ -1245,8 +1245,8 @@ export async function sendContactFormEmail(
 
           <!-- Hero box (same style language as renderCustomerOrderEmail) -->
           <tr>
-            <td style="background:#ecf1fb;border-radius:12px;padding:36px 24px;text-align:center;">
-              <div style="font-family:Poppins,Arial,Helvetica,sans-serif;font-size:28px;font-weight:600;color:#001942;letter-spacing:-0.03em;">
+            <td style="background:#F7F2E9;border-radius:12px;padding:36px 24px;text-align:center;">
+              <div style="font-family:Poppins,Arial,Helvetica,sans-serif;font-size:28px;font-weight:600;color:#1A1A1A;letter-spacing:-0.03em;">
                 New Contact Message
               </div>
               <div style="font-family:Poppins,Arial,Helvetica,sans-serif;font-size:13px;color:#53627a;margin-top:10px;">
@@ -1258,9 +1258,9 @@ export async function sendContactFormEmail(
           <!-- Details card (matches items/summary card style) -->
           <tr>
             <td style="padding:14px 0 0;">
-              <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background:#ecf1fb;border-radius:20px;padding:22px 18px;">
+              <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background:#F7F2E9;border-radius:20px;padding:22px 18px;">
                 <tr>
-                  <td style="font-family:Poppins,Arial,Helvetica,sans-serif;color:#001942;">
+                  <td style="font-family:Poppins,Arial,Helvetica,sans-serif;color:#1A1A1A;">
                     <div style="font-size:18px;font-weight:600;letter-spacing:-0.03em;text-align:center;">
                       Contact Details
                     </div>
@@ -1270,14 +1270,14 @@ export async function sendContactFormEmail(
                         <tr>
                           <td style="padding:10px 0;border-bottom:1px solid #e5e7eb;">
                             <div style="font-size:12px;color:#6b7280;letter-spacing:0.04em;text-transform:uppercase;">Name</div>
-                            <div style="font-size:15px;font-weight:600;color:#001942;margin-top:4px;">${safeName}</div>
+                            <div style="font-size:15px;font-weight:600;color:#1A1A1A;margin-top:4px;">${safeName}</div>
                           </td>
                         </tr>
                         <tr>
                           <td style="padding:10px 0;border-bottom:1px solid #e5e7eb;">
                             <div style="font-size:12px;color:#6b7280;letter-spacing:0.04em;text-transform:uppercase;">Email</div>
-                            <div style="font-size:15px;font-weight:600;color:#001942;margin-top:4px;">
-                              <a href="mailto:${safeEmail}" style="color:#0067ff;text-decoration:none;font-weight:600;">${safeEmail}</a>
+                            <div style="font-size:15px;font-weight:600;color:#1A1A1A;margin-top:4px;">
+                              <a href="mailto:${safeEmail}" style="color:#A17C4C;text-decoration:none;font-weight:600;">${safeEmail}</a>
                             </div>
                           </td>
                         </tr>
@@ -1288,10 +1288,10 @@ export async function sendContactFormEmail(
                         <tr>
                           <td style="padding:10px 0;border-bottom:1px solid #e5e7eb;">
                             <div style="font-size:12px;color:#6b7280;letter-spacing:0.04em;text-transform:uppercase;">Phone</div>
-                            <div style="font-size:15px;font-weight:600;color:#001942;margin-top:4px;">
+                            <div style="font-size:15px;font-weight:600;color:#1A1A1A;margin-top:4px;">
                               <a href="tel:${escapeHtml(
                                 contactData.phone
-                              )}" style="color:#0067ff;text-decoration:none;font-weight:600;">${safePhone}</a>
+                              )}" style="color:#A17C4C;text-decoration:none;font-weight:600;">${safePhone}</a>
                             </div>
                           </td>
                         </tr>
@@ -1309,8 +1309,8 @@ export async function sendContactFormEmail(
                         <tr>
                           <td style="padding:14px 0;">
                             <div style="font-size:12px;color:#6b7280;letter-spacing:0.04em;text-transform:uppercase;">Message</div>
-                            <div style="margin-top:10px;padding:14px;background:#f9fafb;border-left:4px solid #0067ff;border-radius:12px;">
-                              <div style="margin:0;color:#001942;font-size:14px;line-height:1.7;white-space:pre-wrap;">${safeMessage}</div>
+                            <div style="margin-top:10px;padding:14px;background:#f9fafb;border-left:4px solid #A17C4C;border-radius:12px;">
+                              <div style="margin:0;color:#1A1A1A;font-size:14px;line-height:1.7;white-space:pre-wrap;">${safeMessage}</div>
                             </div>
                           </td>
                         </tr>
@@ -1322,7 +1322,7 @@ export async function sendContactFormEmail(
                       <a href="mailto:${safeEmail}?subject=${encodeURIComponent(
                         contactData.subject || "Re: Your message"
                       )}"
-                        style="display:inline-block;background:#0067ff;color:#ffffff;text-decoration:none;padding:12px 18px;border-radius:999px;font-family:Poppins,Arial,Helvetica,sans-serif;font-weight:600;font-size:14px;">
+                        style="display:inline-block;background:#A17C4C;color:#ffffff;text-decoration:none;padding:12px 18px;border-radius:999px;font-family:Poppins,Arial,Helvetica,sans-serif;font-weight:600;font-size:14px;">
                         Reply via Email
                       </a>
 
@@ -1347,17 +1347,17 @@ export async function sendContactFormEmail(
 
                     <!-- Footer -->
           <tr>
-            <td style="background:#001942;padding:30px;text-align:center;">
+            <td style="background:#1A1A1A;padding:30px;text-align:center;">
               <p style="margin:0 0 10px;font-size:16px;color:#ffffff;font-weight:500;">
                 Metro Opticals
               </p>
-              <p style="margin:0 0 15px;font-size:14px;color:#a8b4c8;">
+              <p style="margin:0 0 15px;font-size:14px;color:#B5AEA2;">
                 ${escapeHtml(siteConfig.tagline)}
               </p>
-              <p style="margin:0;font-size:13px;color:#a8b4c8;">
-                Email: <a href="mailto:hello@metroopticals.lk" style="color:#a8b4c8;text-decoration:none;">hello@metroopticals.lk</a>
+              <p style="margin:0;font-size:13px;color:#B5AEA2;">
+                Email: <a href="mailto:hello@metroopticals.lk" style="color:#B5AEA2;text-decoration:none;">hello@metroopticals.lk</a>
                 &nbsp;|&nbsp;
-                Phone: <a href="tel:+94712822821" style="color:#a8b4c8;text-decoration:none;">+94 71 282 2821</a>
+                Phone: <a href="tel:+94712822821" style="color:#B5AEA2;text-decoration:none;">+94 71 282 2821</a>
               </p>
               <p style="margin:15px 0 0;font-size:12px;color:#6b7280;">
                 c ${year} Metro Opticals. All rights reserved.

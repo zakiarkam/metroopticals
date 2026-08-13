@@ -261,7 +261,7 @@ const ProfileTab: React.FC = () => {
   return (
     <div className="space-y-7.5">
       {/* Profile Header Card */}
-      <div className="rounded-xl border border-gray-3 bg-white shadow-1">
+      <div className="rounded-xl border border-gray-3 bg-gray-2 shadow-1">
         <div className="border-b border-gray-3 px-5 py-4">
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -525,7 +525,7 @@ const ProfileTab: React.FC = () => {
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={handleEditClick}
-                      className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-3 bg-white text-dark transition hover:border-blue hover:text-blue"
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-3 bg-gray-2 text-dark transition hover:border-blue hover:text-blue"
                       aria-label="Edit profile"
                       title="Edit profile"
                     >
@@ -798,7 +798,7 @@ const ProfileTab: React.FC = () => {
 
       {/* Change Password Section */}
       {!isGoogleAuthenticated && (
-        <div className="rounded-xl border border-gray-3 bg-white shadow-1">
+        <div className="rounded-xl border border-gray-3 bg-gray-2 shadow-1">
           <div className="border-b border-gray-3 px-5 py-4">
             <h3 className="text-custom-lg font-semibold text-dark">
               Change Password
@@ -1053,7 +1053,7 @@ const ProfileTab: React.FC = () => {
       )}
 
       {/* Security Settings */}
-      {/* <div className="rounded-xl border border-gray-3 bg-white shadow-1">
+      {/* <div className="rounded-xl border border-gray-3 bg-gray-2 shadow-1">
         <div className="border-b border-gray-3 px-5 py-4">
           <h3 className="text-custom-lg font-semibold text-dark">
             Security Settings
@@ -1077,7 +1077,7 @@ const ProfileTab: React.FC = () => {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="inline-flex items-center gap-2 rounded-lg border border-gray-3 bg-white px-4 py-2 text-custom-sm font-medium text-dark hover:border-blue hover:text-blue transition"
+                className="inline-flex items-center gap-2 rounded-lg border border-gray-3 bg-gray-2 px-4 py-2 text-custom-sm font-medium text-dark hover:border-blue hover:text-blue transition"
               >
                 Change Password
               </motion.button>
@@ -1107,7 +1107,7 @@ const ProfileTab: React.FC = () => {
       </div> */}
 
       {/* Activity Log */}
-      {/* <div className="rounded-xl border border-gray-3 bg-white shadow-1">
+      {/* <div className="rounded-xl border border-gray-3 bg-gray-2 shadow-1">
         <div className="border-b border-gray-3 px-5 py-4">
           <h3 className="text-custom-lg font-semibold text-dark">
             Recent Activity

@@ -274,7 +274,7 @@ const QuickViewModal = () => {
                       >
                         <path
                           d="M7 10L9 12L13 8"
-                          stroke="#22AD5C"
+                          stroke="#34C77B"
                           strokeWidth="2"
                           strokeLinecap="round"
                           strokeLinejoin="round"
@@ -428,11 +428,11 @@ const QuickViewModal = () => {
                   <h4 className="text-sm font-medium text-gray-600 mb-2">
                     Quantity
                   </h4>
-                  <div className="inline-flex w-full max-w-[220px] items-center gap-2 bg-white rounded-lg border border-gray-200 p-1 sm:w-auto sm:max-w-none">
+                  <div className="inline-flex w-full max-w-[220px] items-center gap-2 bg-gray-2 rounded-lg border border-gray-200 p-1 sm:w-auto sm:max-w-none">
                     <button
                       onClick={() => handleQuantityChange(quantity - 1)}
                       aria-label="Decrease quantity"
-                      className="flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 text-dark transition-all hover:bg-gray-200 hover:text-blue disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 text-dark transition-all hover:bg-gray-200 hover:text-blue disabled:opacity-50 disabled:cursor-not-allowed border border-gray-3"
                       disabled={quantity <= 1 || !isInStock}
                     >
                       <svg width="12" height="2" viewBox="0 0 16 2" fill="none">
@@ -451,7 +451,7 @@ const QuickViewModal = () => {
                     <button
                       onClick={() => handleQuantityChange(quantity + 1)}
                       aria-label="Increase quantity"
-                      className="flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 text-dark transition-all hover:bg-gray-200 hover:text-blue disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 text-dark transition-all hover:bg-gray-200 hover:text-blue disabled:opacity-50 disabled:cursor-not-allowed border border-gray-3"
                       disabled={quantity >= maxQuantity || !isInStock}
                     >
                       <svg

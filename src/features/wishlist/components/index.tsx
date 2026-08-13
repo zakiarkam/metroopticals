@@ -32,7 +32,7 @@ export const Wishlist = () => {
           </div>
 
           {!isAuthenticated && (
-            <div className="bg-white rounded-[10px] shadow-1 p-10 text-center">
+            <div className="bg-gray-2 rounded-[10px] shadow-1 p-10 text-center border border-gray-3">
               <p className="text-dark">
                 Please sign in to view and manage your wishlist.
               </p>
@@ -40,7 +40,7 @@ export const Wishlist = () => {
           )}
 
           {isAuthenticated && (
-            <div className="bg-white rounded-[10px] shadow-1">
+            <div className="bg-gray-2 rounded-[10px] shadow-1 border border-gray-3">
               {hasItems ? (
                 <div className="w-full overflow-x-auto">
                   <div className="min-w-[1170px]">

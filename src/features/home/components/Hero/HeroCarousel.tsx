@@ -177,7 +177,7 @@ const HeroCarousal = React.memo(({ ads }: HeroCarouselProps) => {
                     </div>
                     <a
                       href={slide.link}
-                      className="inline-flex w-fit items-center justify-center rounded-full bg-white/95 px-8 py-3 text-sm font-semibold text-dark transition duration-200 ease-out hover:bg-white"
+                      className="inline-flex w-fit items-center justify-center rounded-full bg-gray-2/95 px-8 py-3 text-sm font-semibold text-dark transition duration-200 ease-out hover:bg-gray-2 border border-gray-3"
                     >
                       Shop Now
                     </a>

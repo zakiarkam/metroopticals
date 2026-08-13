@@ -132,7 +132,7 @@ const RevenueTab: React.FC<RevenueTabProps> = ({ dateRange }) => {
         {metrics.map((metric) => (
           <div
             key={metric.label}
-            className="rounded-xl border border-gray-3 bg-white shadow-1 p-5"
+            className="rounded-xl border border-gray-3 bg-gray-2 shadow-1 p-5"
           >
             <p className="text-custom-xs uppercase text-body tracking-wide">
               {metric.label}
@@ -150,7 +150,7 @@ const RevenueTab: React.FC<RevenueTabProps> = ({ dateRange }) => {
       </div>
 
       <div className="grid gap-7.5 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-        <div className="rounded-xl border border-gray-3 bg-white shadow-1">
+        <div className="rounded-xl border border-gray-3 bg-gray-2 shadow-1">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-3 px-5 py-4">
             <div>
               <h3 className="text-custom-lg font-semibold text-dark">
@@ -231,7 +231,7 @@ const RevenueTab: React.FC<RevenueTabProps> = ({ dateRange }) => {
         </div>
 
         <div className="space-y-7.5">
-          <div className="rounded-xl border border-gray-3 bg-white shadow-1 p-5">
+          <div className="rounded-xl border border-gray-3 bg-gray-2 shadow-1 p-5">
             <div className="mb-5">
               <h3 className="text-custom-lg font-semibold text-dark">
                 Channel breakdown
@@ -247,7 +247,7 @@ const RevenueTab: React.FC<RevenueTabProps> = ({ dateRange }) => {
                     <span>{channel.label}</span>
                     <span className="font-semibold">{channel.value}</span>
                   </div>
-                  <div className="mt-2 h-2 rounded-full bg-gray-2 overflow-hidden">
+                  <div className="mt-2 h-2 rounded-full bg-gray-2 overflow-hidden border border-gray-3">
                     <div
                       className={`h-full ${channel.color}`}
                       style={{ width: `${channel.percent}%` }}
@@ -261,7 +261,7 @@ const RevenueTab: React.FC<RevenueTabProps> = ({ dateRange }) => {
             </div>
           </div>
 
-          <div className="rounded-xl border border-gray-3 bg-white shadow-1 p-5">
+          <div className="rounded-xl border border-gray-3 bg-gray-2 shadow-1 p-5">
             <div className="mb-5">
               <h3 className="text-custom-lg font-semibold text-dark">
                 Cost distribution
@@ -294,7 +294,7 @@ const RevenueTab: React.FC<RevenueTabProps> = ({ dateRange }) => {
         </div>
       </div>
 
-      <div className="rounded-xl border border-gray-3 bg-white shadow-1 p-5">
+      <div className="rounded-xl border border-gray-3 bg-gray-2 shadow-1 p-5">
         <div className="mb-5">
           <h3 className="text-custom-lg font-semibold text-dark">
             Top regions

@@ -35,7 +35,7 @@ export default async function SiteLayout({
     <SiteLayoutProviders>
       <Suspense
         fallback={
-          <header className="fixed left-0 top-0 w-full z-40 bg-white shadow-sm">
+          <header className="fixed left-0 top-0 w-full z-40 bg-gray-2 shadow-sm">
             <div className="mx-auto w-full max-w-[1600px] px-3 sm:px-4 lg:px-6">
               <div className="h-24 sm:h-28" />
             </div>

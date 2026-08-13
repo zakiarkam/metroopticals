@@ -92,13 +92,13 @@ const SingleGridItem = ({ item }: { item: ProductItemData }) => {
   return (
     <div className="group">
       <div
-        className="relative flex h-full flex-col overflow-hidden rounded-[10px] border border-slate-200 bg-white  transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl cursor-pointer"
+        className="relative flex h-full flex-col overflow-hidden rounded-[10px] border border-gray-3 bg-gray-2 shadow-2 transition-all duration-300 hover:-translate-y-1 hover:border-blue/40 hover:bg-gray-8 hover:shadow-gold cursor-pointer"
         onClick={() => {
           openModal();
           handleQuickViewUpdate();
         }}
       >
-        <div className="relative aspect-square w-full overflow-hidden bg-gray-50 p-3">
+        <div className="relative aspect-square w-full overflow-hidden bg-gray-1 p-3">
           <div
             aria-hidden
             className="absolute inset-0 bg-gradient-to-br from-blue-50/30 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100"
@@ -122,7 +122,7 @@ const SingleGridItem = ({ item }: { item: ProductItemData }) => {
               }}
               aria-label="Add to wishlist"
               disabled={isSavingWishlist || isInWishlist(item.id)}
-              className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/30 bg-white/95 text-dark shadow-lg backdrop-blur-sm transition hover:border-blue hover:bg-white hover:text-blue disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex h-10 w-10 items-center justify-center rounded-lg border border-blue/30 bg-gray-2/95 text-dark shadow-lg backdrop-blur-sm transition hover:border-blue hover:bg-gray-2 hover:text-blue disabled:cursor-not-allowed disabled:opacity-60"
             >
               <svg
                 className="fill-current"
@@ -147,7 +147,7 @@ const SingleGridItem = ({ item }: { item: ProductItemData }) => {
                 handleQuickViewUpdate();
               }}
               aria-label="Quick view"
-              className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/30 bg-white/95 text-dark shadow-lg backdrop-blur-sm transition hover:border-blue hover:bg-white hover:text-blue"
+              className="flex h-10 w-10 items-center justify-center rounded-lg border border-blue/30 bg-gray-2/95 text-dark shadow-lg backdrop-blur-sm transition hover:border-blue hover:bg-gray-2 hover:text-blue"
             >
               <svg
                 className="fill-current"

@@ -8,7 +8,7 @@ export default function AuthPageSkeleton() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-2 px-4 py-8">
       <div className="w-full max-w-5xl">
-        <div className="grid overflow-hidden rounded-3xl bg-white shadow-lg lg:grid-cols-[1.05fr_0.95fr]">
+        <div className="grid overflow-hidden rounded-3xl bg-gray-2 shadow-lg lg:grid-cols-[1.05fr_0.95fr] border border-gray-3">
           {/* LEFT: Illustration panel skeleton (matches your actual left panel) */}
           <div className="hidden flex-col gap-6 rounded-l-3xl bg-gradient-to-br from-blue to-blue-light-3 p-6 text-white shadow-lg lg:flex">
             <div className="space-y-3">

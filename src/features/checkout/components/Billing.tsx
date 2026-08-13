@@ -14,7 +14,7 @@ const Billing = () => {
         Billing details
       </h2>
 
-      <div className="bg-white shadow-1 rounded-[10px] p-4 sm:p-8.5">
+      <div className="bg-gray-2 shadow-1 rounded-[10px] p-4 sm:p-8.5 border border-gray-3">
         <div className="flex flex-col lg:flex-row gap-5 sm:gap-8 mb-5">
           <div className="w-full">
             <label htmlFor="firstName" className="block mb-2.5">
@@ -26,7 +26,7 @@ const Billing = () => {
               name="firstName"
               id="firstName"
               placeholder="Jhon"
-              className="rounded-lg border-2 border-gray-200 bg-white placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
+              className="rounded-lg border-2 border-gray-200 bg-gray-2 placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
             />
           </div>
 
@@ -40,7 +40,7 @@ const Billing = () => {
               name="lastName"
               id="lastName"
               placeholder="Deo"
-              className="rounded-lg border-2 border-gray-200 bg-white placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
+              className="rounded-lg border-2 border-gray-200 bg-gray-2 placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
             />
           </div>
         </div>
@@ -54,7 +54,7 @@ const Billing = () => {
             type="text"
             name="companyName"
             id="companyName"
-            className="rounded-lg border-2 border-gray-200 bg-white placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
+            className="rounded-lg border-2 border-gray-200 bg-gray-2 placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
           />
         </div>
 
@@ -87,7 +87,7 @@ const Billing = () => {
             name="address"
             id="address"
             placeholder="House number and street name"
-            className="rounded-lg border-2 border-gray-200 bg-white placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
+            className="rounded-lg border-2 border-gray-200 bg-gray-2 placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
           />
 
           <div className="mt-5">
@@ -96,7 +96,7 @@ const Billing = () => {
               name="address"
               id="addressTwo"
               placeholder="Apartment, suite, unit, etc. (optional)"
-              className="rounded-lg border-2 border-gray-200 bg-white placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
+              className="rounded-lg border-2 border-gray-200 bg-gray-2 placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
             />
           </div>
         </div>
@@ -110,7 +110,7 @@ const Billing = () => {
             type="text"
             name="town"
             id="town"
-            className="rounded-lg border-2 border-gray-200 bg-white placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
+            className="rounded-lg border-2 border-gray-200 bg-gray-2 placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
           />
         </div>
 
@@ -123,7 +123,7 @@ const Billing = () => {
             type="text"
             name="country"
             id="country"
-            className="rounded-lg border-2 border-gray-200 bg-white placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
+            className="rounded-lg border-2 border-gray-200 bg-gray-2 placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
           />
         </div>
 
@@ -136,7 +136,7 @@ const Billing = () => {
             type="text"
             name="phone"
             id="phone"
-            className="rounded-lg border-2 border-gray-200 bg-white placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
+            className="rounded-lg border-2 border-gray-200 bg-gray-2 placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
           />
         </div>
 
@@ -149,7 +149,7 @@ const Billing = () => {
             type="email"
             name="email"
             id="email"
-            className="rounded-lg border-2 border-gray-200 bg-white placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
+            className="rounded-lg border-2 border-gray-200 bg-gray-2 placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
           />
         </div>
 
@@ -179,7 +179,7 @@ const Billing = () => {
                       width="16"
                       height="16"
                       rx="4"
-                      fill="#3C50E0"
+                      fill="#C09C6C"
                     />
                     <path
                       fillRule="evenodd"

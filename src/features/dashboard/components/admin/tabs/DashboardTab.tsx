@@ -245,7 +245,7 @@ const DashboardTab: React.FC<DashboardTabProps> = ({ dateRange }) => {
         {metrics.map((metric) => (
           <div
             key={metric.label}
-            className="rounded-xl border border-gray-3 bg-white shadow-sm px-3 py-2 md:px-4 md:py-3 min-w-0"
+            className="rounded-xl border border-gray-3 bg-gray-2 shadow-sm px-3 py-2 md:px-4 md:py-3 min-w-0"
           >
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0 flex-1">
@@ -311,7 +311,7 @@ const DashboardTab: React.FC<DashboardTabProps> = ({ dateRange }) => {
           />
 
           {/* Reports (compact, consistent buttons) */}
-          <div className="rounded-xl border border-gray-3 bg-white shadow-sm overflow-hidden">
+          <div className="rounded-xl border border-gray-3 bg-gray-2 shadow-sm overflow-hidden">
             <div className="px-3 py-2 md:px-4 md:py-3 border-b border-gray-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="min-w-0">
                 <h3 className="text-sm md:text-base font-semibold text-dark">
@@ -345,7 +345,7 @@ const DashboardTab: React.FC<DashboardTabProps> = ({ dateRange }) => {
                       type="month"
                       value={reportMonth}
                       onChange={(event) => setReportMonth(event.target.value)}
-                      className="h-9 rounded-md border border-gray-3 bg-white px-3 text-xs text-dark focus:border-blue focus:outline-none focus:ring-2 focus:ring-blue/20"
+                      className="h-9 rounded-md border border-gray-3 bg-gray-2 px-3 text-xs text-dark focus:border-blue focus:outline-none focus:ring-2 focus:ring-blue/20"
                     />
                   </div>
                   <div className="flex flex-col gap-1">
@@ -354,7 +354,7 @@ const DashboardTab: React.FC<DashboardTabProps> = ({ dateRange }) => {
                       type="date"
                       value={reportStartDate}
                       onChange={(event) => setReportStartDate(event.target.value)}
-                      className="h-9 rounded-md border border-gray-3 bg-white px-3 text-xs text-dark focus:border-blue focus:outline-none focus:ring-2 focus:ring-blue/20"
+                      className="h-9 rounded-md border border-gray-3 bg-gray-2 px-3 text-xs text-dark focus:border-blue focus:outline-none focus:ring-2 focus:ring-blue/20"
                     />
                   </div>
                   <div className="flex flex-col gap-1">
@@ -363,7 +363,7 @@ const DashboardTab: React.FC<DashboardTabProps> = ({ dateRange }) => {
                       type="date"
                       value={reportEndDate}
                       onChange={(event) => setReportEndDate(event.target.value)}
-                      className="h-9 rounded-md border border-gray-3 bg-white px-3 text-xs text-dark focus:border-blue focus:outline-none focus:ring-2 focus:ring-blue/20"
+                      className="h-9 rounded-md border border-gray-3 bg-gray-2 px-3 text-xs text-dark focus:border-blue focus:outline-none focus:ring-2 focus:ring-blue/20"
                     />
                   </div>
                 </div>

@@ -27,10 +27,10 @@ const staticSlides = [
 ];
 
 const heroStats = [
-  { id: "experience", value: "20+", label: "Years Experience" },
-  { id: "offices", value: "3", label: "Global Offices" },
-  { id: "customers", value: "1000+", label: "Customers" },
-  { id: "products", value: "500+", label: "Products" },
+  { id: "frames", value: "500+", label: "Frames In Store" },
+  { id: "turnaround", value: "2-3", label: "Days To Collect" },
+  { id: "customers", value: "1000+", label: "Happy Customers" },
+  { id: "warranty", value: "12", label: "Month Warranty" },
 ];
 
 const mobileBanners = [
@@ -130,10 +130,10 @@ const HomeUpperHero = React.memo(() => {
                 key={stat.id}
                 className="flex flex-col items-center gap-1 text-center bg-gradient-to-t from-blue-light-5 to-blue-light-4 border border-blue-light-3 rounded-2xl px-5 py-4 shadow-sm hover:shadow-md transition-all"
               >
-                <span className="text-xl font-semibold text-[#0A2D6C]">
+                <span className="text-xl font-semibold text-blue">
                   {stat.value}
                 </span>
-                <span className="text-[12px] font-bold uppercase tracking-wide text-[#4D5563]">
+                <span className="text-[12px] font-bold uppercase tracking-wide text-dark-4">
                   {stat.label}
                 </span>
               </div>
@@ -142,7 +142,7 @@ const HomeUpperHero = React.memo(() => {
         </SiteContainer>
       </div>
 
-      <div className="absolute bottom-0 left-0 right-0 h-28 bg-gradient-to-t from-white to-transparent" />
+      <div className="absolute bottom-0 left-0 right-0 h-28 bg-gradient-to-t from-gray-1 to-transparent" />
 
       {/* keep your pagination styling */}
       <style jsx global>{`

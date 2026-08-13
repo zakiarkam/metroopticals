@@ -60,7 +60,7 @@ const FAQPage = () => {
   return (
     <section className="overflow-hidden py-8 bg-gray-2">
       <SiteContainer>
-        <div className="rounded-xl bg-white p-6 sm:p-10 shadow-1">
+        <div className="rounded-xl bg-gray-2 p-6 sm:p-10 shadow-1 border border-gray-3">
           <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] items-start">
             <div className="space-y-6">
               <div>

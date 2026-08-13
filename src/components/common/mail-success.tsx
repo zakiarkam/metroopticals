@@ -8,7 +8,7 @@ const MailSuccess = () => {
     <>
       <section className="overflow-hidden py-8 bg-gray-2">
         <SiteContainer>
-          <div className="bg-white rounded-xl shadow-1 px-4 py-10 sm:py-15 lg:py-20 xl:py-25">
+          <div className="bg-gray-2 rounded-xl shadow-1 px-4 py-10 sm:py-15 lg:py-20 xl:py-25 border border-gray-3">
             <div className="text-center">
               <h2 className="font-bold text-blue text-4xl lg:text-[45px] lg:leading-[57px] mb-5">
                 Successful!

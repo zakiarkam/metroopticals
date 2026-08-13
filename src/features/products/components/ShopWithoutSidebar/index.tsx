@@ -31,10 +31,10 @@ const ShopWithoutSidebar = () => {
       ? searchFilter.trim()
       : undefined;
   const searchParamsString = searchParams.toString();
-  const normalizedSubcategories = useMemo(() => {
+  const normalizedBrandies = useMemo(() => {
     const params = new URLSearchParams(searchParamsString);
-    const values = params.getAll("subcategories");
-    const single = params.get("subcategory");
+    const values = params.getAll("brands");
+    const single = params.get("brand");
     const allValues = [...values];
     if (single) {
       allValues.push(single);
@@ -52,17 +52,17 @@ const ShopWithoutSidebar = () => {
     return Array.from(new Set(sanitized));
   }, [searchParamsString]);
 
-  const effectiveCategory = normalizedSubcategories.length
+  const effectiveCategory = normalizedBrandies.length
     ? undefined
     : normalizedCategory;
 
-  const [selectedSubcategories, setSelectedSubcategories] = useState<string[]>(
-    normalizedSubcategories
+  const [selectedBrandies, setSelectedBrandies] = useState<string[]>(
+    normalizedBrandies
   );
 
   useEffect(() => {
-    setSelectedSubcategories(normalizedSubcategories);
-  }, [normalizedSubcategories]);
+    setSelectedBrandies(normalizedBrandies);
+  }, [normalizedBrandies]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -87,9 +87,9 @@ const ShopWithoutSidebar = () => {
     };
   }, []);
 
-  const { parentCategory, subcategories } = useMemo(() => {
+  const { parentCategory, brands } = useMemo(() => {
     if (!normalizedCategory) {
-      return { parentCategory: undefined, subcategories: [] };
+      return { parentCategory: undefined, brands: [] };
     }
 
     const parent = categories.find(
@@ -100,23 +100,23 @@ const ShopWithoutSidebar = () => {
       ? categories.filter((category) => category.parentId === parent.id)
       : [];
 
-    return { parentCategory: parent, subcategories: children };
+    return { parentCategory: parent, brands: children };
   }, [categories, normalizedCategory]);
 
-  const handleSubcategoryToggle = (slug: string) => {
-    const allSubcategorySlugs = subcategories.map((item) => item.slug);
+  const handleBrandyToggle = (slug: string) => {
+    const allBrandySlugs = brands.map((item) => item.slug);
     const isAllSelected =
-      !!normalizedCategory && selectedSubcategories.length === 0;
+      !!normalizedCategory && selectedBrandies.length === 0;
 
     if (normalizedCategory && isAllSelected) {
-      const nextSelection = allSubcategorySlugs.filter((item) => item !== slug);
-      setSelectedSubcategories(nextSelection);
+      const nextSelection = allBrandySlugs.filter((item) => item !== slug);
+      setSelectedBrandies(nextSelection);
 
       updateParams({
         page: 1,
         category: undefined,
         search: normalizedSearch,
-        subcategories: nextSelection.length ? nextSelection : undefined,
+        brands: nextSelection.length ? nextSelection : undefined,
       });
       setCurrentPage(1);
 
@@ -125,11 +125,11 @@ const ShopWithoutSidebar = () => {
         params.set("category", normalizedCategory);
       }
       if (nextSelection.length) {
-        params.set("subcategories", nextSelection.join(","));
+        params.set("brands", nextSelection.join(","));
       } else {
-        params.delete("subcategories");
+        params.delete("brands");
       }
-      params.delete("subcategory");
+      params.delete("brand");
 
       const queryString = params.toString();
       router.push(
@@ -139,7 +139,7 @@ const ShopWithoutSidebar = () => {
       return;
     }
 
-    const nextSelectionSet = new Set(selectedSubcategories);
+    const nextSelectionSet = new Set(selectedBrandies);
 
     if (nextSelectionSet.has(slug)) {
       nextSelectionSet.delete(slug);
@@ -149,15 +149,15 @@ const ShopWithoutSidebar = () => {
 
     const nextSelection = Array.from(nextSelectionSet);
     const shouldUseParent =
-      normalizedCategory && nextSelection.length === allSubcategorySlugs.length;
+      normalizedCategory && nextSelection.length === allBrandySlugs.length;
 
-    setSelectedSubcategories(shouldUseParent ? [] : nextSelection);
+    setSelectedBrandies(shouldUseParent ? [] : nextSelection);
 
     updateParams({
       page: 1,
       category: shouldUseParent ? normalizedCategory : undefined,
       search: normalizedSearch,
-      subcategories:
+      brands:
         shouldUseParent || nextSelection.length === 0
           ? undefined
           : nextSelection,
@@ -167,7 +167,7 @@ const ShopWithoutSidebar = () => {
     const params = new URLSearchParams(searchParams.toString());
     if (shouldUseParent) {
       params.set("category", normalizedCategory ?? "");
-      params.delete("subcategories");
+      params.delete("brands");
     } else {
       if (normalizedCategory) {
         params.set("category", normalizedCategory);
@@ -175,31 +175,31 @@ const ShopWithoutSidebar = () => {
         params.delete("category");
       }
       if (nextSelection.length) {
-        params.set("subcategories", nextSelection.join(","));
+        params.set("brands", nextSelection.join(","));
       } else {
-        params.delete("subcategories");
+        params.delete("brands");
       }
     }
 
-    params.delete("subcategory");
+    params.delete("brand");
 
     const queryString = params.toString();
     router.push(`/shop-without-sidebar${queryString ? `?${queryString}` : ""}`);
     setProductSidebar(false);
   };
 
-  const handleSubcategoryClear = () => {
+  const handleBrandyClear = () => {
     const params = new URLSearchParams(searchParams.toString());
-    params.delete("subcategories");
-    params.delete("subcategory");
+    params.delete("brands");
+    params.delete("brand");
     const queryString = params.toString();
 
-    setSelectedSubcategories([]);
+    setSelectedBrandies([]);
     updateParams({
       page: 1,
       category: normalizedCategory,
       search: normalizedSearch,
-      subcategories: undefined,
+      brands: undefined,
     });
     setCurrentPage(1);
 
@@ -212,8 +212,8 @@ const ShopWithoutSidebar = () => {
     limit: 16,
     ...(effectiveCategory ? { category: effectiveCategory } : {}),
     ...(normalizedSearch ? { search: normalizedSearch } : {}),
-    ...(normalizedSubcategories.length
-      ? { subcategories: normalizedSubcategories }
+    ...(normalizedBrandies.length
+      ? { brands: normalizedBrandies }
       : {}),
   });
 
@@ -265,14 +265,14 @@ const ShopWithoutSidebar = () => {
       page: 1,
       category: effectiveCategory,
       search: normalizedSearch,
-      subcategories: normalizedSubcategories.length
-        ? normalizedSubcategories
+      brands: normalizedBrandies.length
+        ? normalizedBrandies
         : undefined,
     });
   }, [
     effectiveCategory,
     normalizedSearch,
-    normalizedSubcategories,
+    normalizedBrandies,
     updateParams,
   ]);
 
@@ -285,7 +285,7 @@ const ShopWithoutSidebar = () => {
   return (
     <>
       {/* <Breadcrumb title={"Explore All Products"} pages={["Shop"]} /> */}
-      <section className="overflow-hidden relative py-8 bg-[#f3f4f6]">
+      <section className="overflow-hidden relative py-8 bg-gray-1">
         <SiteContainer>
           {error && (
             <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg">
@@ -294,20 +294,20 @@ const ShopWithoutSidebar = () => {
           )}
 
           <div className="flex flex-col lg:flex-row gap-7.5">
-            {subcategories.length > 0 && (
+            {brands.length > 0 && (
               <aside className="hidden lg:block w-full lg:w-[310px] lg:sticky lg:top-28 lg:self-start">
-                <SubcategoryFilter
+                <BrandyFilter
                   parentName={parentCategory?.name}
-                  subcategories={subcategories}
-                  selectedSubcategories={selectedSubcategories}
+                  brands={brands}
+                  selectedBrandies={selectedBrandies}
                   isParentSelected={!!normalizedCategory}
-                  onToggle={handleSubcategoryToggle}
-                  onClear={handleSubcategoryClear}
+                  onToggle={handleBrandyToggle}
+                  onClear={handleBrandyClear}
                 />
               </aside>
             )}
             <div className="w-full lg:flex-1">
-              <div className="rounded-lg bg-white shadow-1 pl-3 pr-2.5 py-2.5 mb-6">
+              <div className="rounded-lg bg-gray-2 shadow-1 pl-3 pr-2.5 py-2.5 mb-6 border border-gray-3">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center justify-between gap-4 w-full sm:w-auto">
                     <button
@@ -433,7 +433,7 @@ const ShopWithoutSidebar = () => {
                 <ProductsLoadingSkeleton
                   variant={productStyle as "grid" | "list"}
                   count={16}
-                  columns={subcategories.length > 0 ? 3 : 4}
+                  columns={brands.length > 0 ? 3 : 4}
                 />
               )}
 
@@ -443,7 +443,7 @@ const ShopWithoutSidebar = () => {
                   className={`${
                     productStyle === "grid"
                       ? `grid grid-cols-1 sm:grid-cols-2 ${
-                          subcategories.length > 0
+                          brands.length > 0
                             ? "lg:grid-cols-3"
                             : "lg:grid-cols-4"
                         } gap-x-7.5 gap-y-9`
@@ -503,7 +503,7 @@ const ShopWithoutSidebar = () => {
         </SiteContainer>
       </section>
 
-      {subcategories.length > 0 && (
+      {brands.length > 0 && (
         <>
           <div
             className={`fixed inset-0 z-40 bg-black/40 transition-opacity duration-200 xl:hidden ${
@@ -515,7 +515,7 @@ const ShopWithoutSidebar = () => {
           />
 
           <div
-            className={`sidebar-content fixed top-0 left-0 z-50 h-full w-full max-w-[310px] bg-white px-5 py-6 shadow-1 overflow-y-auto transition-transform duration-200 xl:hidden ${
+            className={`sidebar-content fixed top-0 left-0 z-50 h-full w-full max-w-[310px] bg-gray-2 px-5 py-6 shadow-1 overflow-y-auto transition-transform duration-200 xl:hidden ${
               productSidebar ? "translate-x-0" : "-translate-x-full"
             }`}
           >
@@ -530,13 +530,13 @@ const ShopWithoutSidebar = () => {
               </button>
             </div>
 
-            <SubcategoryFilter
+            <BrandyFilter
               parentName={parentCategory?.name}
-              subcategories={subcategories}
-              selectedSubcategories={selectedSubcategories}
+              brands={brands}
+              selectedBrandies={selectedBrandies}
               isParentSelected={!!normalizedCategory}
-              onToggle={handleSubcategoryToggle}
-              onClear={handleSubcategoryClear}
+              onToggle={handleBrandyToggle}
+              onClear={handleBrandyClear}
             />
           </div>
         </>
@@ -548,42 +548,42 @@ const ShopWithoutSidebar = () => {
 const getCategoryProductCount = (category: Category) =>
   category.productCount ?? category._count?.products ?? 0;
 
-interface SubcategoryFilterProps {
+interface BrandyFilterProps {
   parentName?: string;
-  subcategories: Category[];
-  selectedSubcategories: string[];
+  brands: Category[];
+  selectedBrandies: string[];
   isParentSelected: boolean;
   onToggle: (slug: string) => void;
   onClear: () => void;
 }
 
-interface SubcategoryButtonProps {
+interface BrandyButtonProps {
   label: string;
   count: number;
   isSelected: boolean;
   onSelect: () => void;
 }
 
-const SubcategoryFilter = ({
+const BrandyFilter = ({
   parentName,
-  subcategories,
-  selectedSubcategories,
+  brands,
+  selectedBrandies,
   isParentSelected,
   onToggle,
   onClear,
-}: SubcategoryFilterProps) => {
-  const isAllSelected = isParentSelected && selectedSubcategories.length === 0;
+}: BrandyFilterProps) => {
+  const isAllSelected = isParentSelected && selectedBrandies.length === 0;
 
   return (
-    <div className="bg-white shadow-1 rounded-lg mb-6">
+    <div className="bg-gray-2 shadow-1 rounded-lg mb-6 border border-gray-3">
       <div className="flex items-center justify-between px-6 py-4 border-b border-gray-2">
         <div>
-          <p className="text-dark font-semibold">Subcategories</p>
+          <p className="text-dark font-semibold">Brands</p>
           {parentName && (
             <p className="text-custom-xs text-body">Options for {parentName}</p>
           )}
         </div>
-        {selectedSubcategories.length > 0 && (
+        {selectedBrandies.length > 0 && (
           <button
             type="button"
             onClick={onClear}
@@ -595,25 +595,25 @@ const SubcategoryFilter = ({
       </div>
 
       <div className="flex flex-col gap-3 px-6 py-5">
-        <SubcategoryButton
-          label="All subcategories"
-          count={subcategories.reduce(
+        <BrandyButton
+          label="All brands"
+          count={brands.reduce(
             (total, category) => total + getCategoryProductCount(category),
             0
           )}
-          isSelected={isAllSelected || selectedSubcategories.length === 0}
+          isSelected={isAllSelected || selectedBrandies.length === 0}
           onSelect={onClear}
         />
 
-        {subcategories.map((subcategory) => (
-          <SubcategoryButton
-            key={subcategory.id}
-            label={subcategory.name}
-            count={getCategoryProductCount(subcategory)}
+        {brands.map((brand) => (
+          <BrandyButton
+            key={brand.id}
+            label={brand.name}
+            count={getCategoryProductCount(brand)}
             isSelected={
-              isAllSelected || selectedSubcategories.includes(subcategory.slug)
+              isAllSelected || selectedBrandies.includes(brand.slug)
             }
-            onSelect={() => onToggle(subcategory.slug)}
+            onSelect={() => onToggle(brand.slug)}
           />
         ))}
       </div>
@@ -621,12 +621,12 @@ const SubcategoryFilter = ({
   );
 };
 
-const SubcategoryButton = ({
+const BrandyButton = ({
   label,
   count,
   isSelected,
   onSelect,
-}: SubcategoryButtonProps) => (
+}: BrandyButtonProps) => (
   <button
     type="button"
     onClick={onSelect}
@@ -637,7 +637,7 @@ const SubcategoryButton = ({
     <div className="flex items-center gap-2">
       <div
         className={`cursor-pointer flex items-center justify-center rounded w-4 h-4 border ${
-          isSelected ? "border-blue bg-blue" : "bg-white border-gray-3"
+          isSelected ? "border-blue bg-blue" : "bg-gray-2 border-gray-3"
         }`}
       >
         <svg

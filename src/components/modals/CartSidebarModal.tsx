@@ -52,7 +52,7 @@ const CartSidebarModal = () => {
       )}
 
       <div
-        className={`fixed right-0 top-0 z-999999 flex h-screen w-full max-w-[400px] flex-col bg-white shadow-lg transition-transform duration-300 ${
+        className={`fixed right-0 top-0 z-999999 flex h-screen w-full max-w-[400px] flex-col bg-gray-2 shadow-lg transition-transform duration-300 ${
           isCartModalOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
@@ -268,7 +268,7 @@ const CartSidebarModal = () => {
                         closeCartModal();
                       }
                     }}
-                    className={`block w-full rounded-lg border border-gray-3 bg-white py-3 text-center font-medium text-dark hover:bg-gray-1 ${
+                    className={`block w-full rounded-lg border border-gray-3 bg-gray-2 py-3 text-center font-medium text-dark hover:bg-gray-1 ${
                       hasUnavailableItems ? "opacity-50 cursor-not-allowed" : ""
                     }`}
                   >

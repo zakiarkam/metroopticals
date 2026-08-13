@@ -2,7 +2,7 @@
  * ✅ OPTIMIZED HOME PAGE - Dynamic imports + InView for heavy sections
  *
  * Keeps this file as a Server Component (best for performance).
- * - HomeUpperHero loads immediately (above the fold)
+ * - Hero3D loads immediately (above the fold)
  * - Other sections code-split with dynamic()
  * - BestSeller + Countdown load only when in view (IntersectionObserver)
  *
@@ -19,7 +19,7 @@ import type { Advertisement } from "@/features/advertisements/types/advertisemen
 import HomeSectionSkeleton from "./HomeSectionSkeleton";
 
 // ✅ Above-the-fold
-import HomeUpperHero from "./HomeUpperHero";
+import Hero3D from "./Hero3D";
 
 // ✅ Code-split (server-rendered, separate bundles)
 const Categories = dynamic(() => import("./Categories"), {
@@ -67,7 +67,7 @@ const Home = async () => {
 
   return (
     <main>
-      <HomeUpperHero />
+      <Hero3D />
       <Categories />
 
       <AdSlot ads={position0} />

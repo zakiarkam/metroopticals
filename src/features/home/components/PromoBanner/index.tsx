@@ -64,7 +64,7 @@ const PromoBanner = React.memo(({ ads }: { ads: Advertisement[] }) => {
   return (
     <section className="overflow-hidden py-8">
       <div className="mx-auto w-full px-4 sm:px-6 md:px-8 lg:px-10">
-        <div className="relative z-1 overflow-hidden rounded-lg bg-[#F5F5F7] py-6 lg:py-8 xl:py-10 px-4 sm:px-6 lg:px-8 xl:px-10 mb-4">
+        <div className="relative z-1 overflow-hidden rounded-lg bg-gray-1 py-6 lg:py-8 xl:py-10 px-4 sm:px-6 lg:px-8 xl:px-10 mb-4">
           <div className="flex justify-center lg:hidden mb-6">
             <Image
               src={mainCard.image}
@@ -119,7 +119,7 @@ const PromoBanner = React.memo(({ ads }: { ads: Advertisement[] }) => {
           {smallCards.map((card) => (
             <div
               key={card.id}
-              className="relative z-1 overflow-hidden rounded-lg bg-white py-10 xl:py-16 px-4 sm:px-7.5 xl:px-10"
+              className="relative z-1 overflow-hidden rounded-lg bg-gray-2 py-10 xl:py-16 px-4 sm:px-7.5 xl:px-10 border border-gray-3"
             >
               <div className="block sm:hidden mb-4">
                 <Image

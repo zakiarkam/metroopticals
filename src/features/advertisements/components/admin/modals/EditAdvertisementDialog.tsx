@@ -263,7 +263,7 @@ const EditAdvertisementDialog: React.FC<EditAdvertisementDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleDialogOpenChange}>
-      <DialogContent className="w-full max-w-2xl rounded-xl bg-white p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-full max-w-2xl rounded-xl bg-gray-2 p-6 shadow-xl max-h-[90vh] overflow-y-auto border border-gray-3">
         <DialogHeader className="mb-6 px-0">
           <DialogTitle className="text-xl font-semibold text-dark">
             Edit Advertisement

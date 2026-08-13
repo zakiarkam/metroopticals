@@ -91,7 +91,7 @@ const CounDown = React.memo(({ advertisement }: CountdownProps) => {
             <div className="flex-1 max-w-[480px] w-full">
               {/* Badge */}
               <span className="inline-flex items-center gap-1.5 bg-blue text-white text-xs font-semibold uppercase tracking-widest px-3 py-1.5 rounded-full mb-5">
-                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                <span className="w-1.5 h-1.5 rounded-full bg-gray-2 animate-pulse border border-gray-3" />
                 Limited Deal
               </span>
 
@@ -183,7 +183,7 @@ const CounDown = React.memo(({ advertisement }: CountdownProps) => {
                 <div
                   className="absolute inset-0 overflow-hidden flex items-center justify-center"
                   style={{
-                    background: "#E1E8FF",
+                    background: "#2A2419",
                     borderRadius: "58% 42% 52% 48% / 48% 54% 46% 52%",
                   }}
                 >
@@ -196,7 +196,7 @@ const CounDown = React.memo(({ advertisement }: CountdownProps) => {
                       width: 60,
                       height: 60,
                       backgroundImage:
-                        "radial-gradient(circle, #3C50E0 1.3px, transparent 1.3px)",
+                        "radial-gradient(circle, #C09C6C 1.3px, transparent 1.3px)",
                       backgroundSize: "10px 10px",
                       opacity: 0.3,
                     }}

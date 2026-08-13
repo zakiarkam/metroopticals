@@ -4,9 +4,9 @@ import { siteConfig } from "@/config/site";
 
 const AuthIllustrationPanel = () => {
   return (
-    <div className="hidden flex-col gap-6 rounded-l-3xl bg-gradient-to-br from-blue to-blue-light-3 p-6 text-white shadow-lg lg:flex">
+    <div className="hidden flex-col gap-6 rounded-l-3xl bg-gradient-to-br from-blue-light-3 via-gray-2 to-gray-1 p-6 text-white shadow-lg lg:flex border-r border-blue/20">
       <div className="space-y-3">
-        <p className="text-[10px] font-semibold uppercase tracking-widest text-blue-light-5">
+        <p className="text-[10px] font-semibold uppercase tracking-widest text-blue">
           {siteConfig.name}
         </p>
         <h2 className="text-2xl font-semibold leading-snug">
@@ -19,7 +19,7 @@ const AuthIllustrationPanel = () => {
       </div>
 
       <div className="flex flex-1 items-center justify-center">
-        <div className="relative h-64 w-full overflow-hidden rounded-2xl bg-white/10 p-4">
+        <div className="relative h-64 w-full overflow-hidden rounded-2xl bg-black/30 border border-blue/15 p-4">
           <Image
             src={siteConfig.logoOnDark}
             alt={siteConfig.name}

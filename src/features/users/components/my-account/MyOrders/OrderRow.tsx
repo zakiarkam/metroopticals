@@ -78,7 +78,7 @@ const OrderRow: React.FC<OrderRowProps> = ({
     .join(" ");
 
   return (
-    <article className="flex flex-col gap-5 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+    <article className="flex flex-col gap-5 rounded-2xl border border-gray-200 bg-gray-2 p-5 shadow-sm">
       <div className="flex flex-wrap items-center gap-6">
         <div className="w-20">
           {imageUrl ? (

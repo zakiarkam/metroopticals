@@ -26,8 +26,8 @@ const SingleItem = React.memo(({ item }: { item: Category }) => {
       href={`/shop-without-sidebar?category=${item.slug}`}
       className="group flex w-full flex-col items-center gap-3 px-3 py-4 text-center transition-all duration-300 hover:-translate-y-1 sm:px-5 sm:py-6"
     >
-      <div className="relative flex w-28 items-center justify-center rounded-full bg-white p-1 shadow-[0_8px_20px_rgba(0,0,0,0.08)]">
-        <div className="relative flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border border-gray-4 bg-white">
+      <div className="relative flex w-28 items-center justify-center rounded-full bg-gray-2 p-1 shadow-[0_8px_20px_rgba(0,0,0,0.08)] border border-gray-3">
+        <div className="relative flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border border-gray-4 bg-gray-2">
           {imageUrl ? (
             <Image
               src={imageUrl}
@@ -111,7 +111,7 @@ const Categories = React.memo(() => {
                   <g clipPath="url(#clip0_834_7356)">
                     <path
                       d="M3.94024 13.4474C2.6523 12.1595 2.00832 11.5155 1.7687 10.68C1.52908 9.84449 1.73387 8.9571 2.14343 7.18231L2.37962 6.15883C2.72419 4.66569 2.89648 3.91912 3.40771 3.40789C3.91894 2.89666 4.66551 2.72437 6.15865 2.3798L7.18213 2.14361C8.95692 1.73405 9.84431 1.52927 10.6798 1.76889C11.5153 2.00851 12.1593 2.65248 13.4472 3.94042L14.9719 5.46512C17.2128 7.70594 18.3332 8.82635 18.3332 10.2186C18.3332 11.6109 17.2128 12.7313 14.9719 14.9721C12.7311 17.2129 11.6107 18.3334 10.2184 18.3334C8.82617 18.3334 7.70576 17.2129 5.46494 14.9721L3.94024 13.4474Z"
-                      stroke="#3C50E0"
+                      stroke="#C09C6C"
                       strokeWidth="1.5"
                     />
                     <circle
@@ -119,12 +119,12 @@ const Categories = React.memo(() => {
                       cy="7.39917"
                       r="1.66667"
                       transform="rotate(-45 7.17245 7.39917)"
-                      stroke="#3C50E0"
+                      stroke="#C09C6C"
                       strokeWidth="1.5"
                     />
                     <path
                       d="M9.61837 15.4164L15.4342 9.6004"
-                      stroke="#3C50E0"
+                      stroke="#C09C6C"
                       strokeWidth="1.5"
                       strokeLinecap="round"
                     />

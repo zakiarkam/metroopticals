@@ -44,7 +44,7 @@ const CustomSelect = ({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-between gap-3 min-w-[130px] sm:min-w-[200px] text-align-left px-4 py-2.5 bg-white border border-gray-3 rounded-lg text-custom-sm text-dark hover:border-blue focus:outline-none focus:border-blue"
+        className="flex items-center justify-between gap-3 min-w-[130px] sm:min-w-[200px] text-align-left px-4 py-2.5 bg-gray-2 border border-gray-3 rounded-lg text-custom-sm text-dark hover:border-blue focus:outline-none focus:border-blue"
       >
         <span>{selectedOption?.label || placeholder}</span>
         <svg
@@ -64,7 +64,7 @@ const CustomSelect = ({
       </button>
 
       {isOpen && (
-        <div className="absolute z-10 top-full left-0 right-0 mt-2 bg-white border border-gray-3 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+        <div className="absolute z-10 top-full left-0 right-0 mt-2 bg-gray-2 border border-gray-3 rounded-lg shadow-lg max-h-60 overflow-y-auto">
           {options.map((option) => (
             <button
               key={option.value}

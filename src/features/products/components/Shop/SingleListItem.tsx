@@ -78,7 +78,7 @@ const SingleListItem = ({ item }: { item: ProductItemData }) => {
 
   return (
     <div
-      className="bg-white rounded-lg shadow-1 p-4 cursor-pointer hover:shadow-2 transition-shadow"
+      className="bg-gray-2 rounded-lg shadow-1 p-4 cursor-pointer hover:shadow-2 transition-shadow border border-gray-3"
       onClick={() => {
         openModal();
         handleQuickViewUpdate();
@@ -87,7 +87,7 @@ const SingleListItem = ({ item }: { item: ProductItemData }) => {
       <div className="flex flex-col sm:flex-row gap-6">
         {/* Product Image */}
         <div className="sm:max-w-[200px] w-full flex-shrink-0">
-          <div className="relative overflow-hidden flex items-center justify-center rounded-lg bg-[#F6F7FB] aspect-square">
+          <div className="relative overflow-hidden flex items-center justify-center rounded-lg bg-gray-1 aspect-square">
             <Image
               src={primaryImage}
               alt={item.title}
@@ -184,7 +184,7 @@ const SingleListItem = ({ item }: { item: ProductItemData }) => {
                   handleQuickViewUpdate();
                 }}
                 aria-label="Quick view"
-                className="flex items-center justify-center w-9 h-9 rounded-[5px] shadow-1 ease-out duration-200 text-dark bg-gray-1 hover:text-blue hover:bg-white"
+                className="flex items-center justify-center w-9 h-9 rounded-[5px] shadow-1 ease-out duration-200 text-dark bg-gray-1 hover:text-blue hover:bg-gray-2 border border-gray-3"
               >
                 <svg
                   className="fill-current"

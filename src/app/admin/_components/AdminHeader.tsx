@@ -57,9 +57,9 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
 
   return (
     <header
-      className={`sticky top-0 z-40 flex w-full bg-white border-b transition-all duration-300 ${
+      className={`sticky top-0 z-40 flex w-full bg-gray-2 border-b transition-all duration-300 ${
         scrolled
-          ? "border-gray-3 shadow-lg bg-gradient-to-b from-white to-gray-50"
+          ? "border-gray-3 shadow-lg bg-gradient-to-b from-gray-2 to-gray-50"
           : "border-gray-3 shadow-md"
       }`}
     >
@@ -67,7 +67,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
         <div className="flex items-center gap-2 sm:gap-4">
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="block rounded-lg border border-gray-3 bg-white p-1.5 shadow-md hover:shadow-lg hover:border-blue hover:bg-blue-50 transition-all duration-200 lg:hidden"
+            className="block rounded-lg border border-gray-3 bg-gray-2 p-1.5 shadow-md hover:shadow-lg hover:border-blue hover:bg-blue-50 transition-all duration-200 lg:hidden"
           >
             <svg
               className="h-5 w-5"
@@ -101,7 +101,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
           <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
             <Link
               href="/"
-              className="inline-flex items-center gap-2 rounded-lg border border-gray-3 bg-white px-4 py-2 text-custom-sm font-medium text-dark shadow-md hover:shadow-lg hover:border-blue hover:text-blue hover:bg-blue-50 transition-all duration-200"
+              className="inline-flex items-center gap-2 rounded-lg border border-gray-3 bg-gray-2 px-4 py-2 text-custom-sm font-medium text-dark shadow-md hover:shadow-lg hover:border-blue hover:text-blue hover:bg-blue-50 transition-all duration-200"
               target="_blank"
             >
               <svg
@@ -185,7 +185,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
-                    className="absolute right-0 top-12 z-50 w-56 rounded-lg border border-gray-3 bg-white shadow-xl overflow-hidden"
+                    className="absolute right-0 top-12 z-50 w-56 rounded-lg border border-gray-3 bg-gray-2 shadow-xl overflow-hidden"
                   >
                     <div className="border-b border-gray-3 px-4 py-3">
                       <p className="text-custom-sm font-medium text-dark">

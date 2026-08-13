@@ -180,7 +180,7 @@ const AdvertisementsTab: React.FC<AdvertisementsTabProps> = ({ dateRange }) => {
   // Responsive controls: stack vertically on mobile, horizontally on md+
   return (
     <div className="space-y-7.5">
-      <div className="rounded-xl border border-gray-3 bg-white shadow-1">
+      <div className="rounded-xl border border-gray-3 bg-gray-2 shadow-1">
         <div className="flex flex-wrap items-center gap-4 border-b border-gray-3 px-5 py-4">
           <div>
             <h3 className="text-custom-lg font-semibold text-dark">
@@ -223,7 +223,7 @@ const AdvertisementsTab: React.FC<AdvertisementsTabProps> = ({ dateRange }) => {
                   onClick={() => setStatusFilter(filter as typeof statusFilter)}
                   className={`h-7 rounded-full px-3 text-custom-xs font-medium transition ${
                     statusFilter === filter
-                      ? "bg-white text-blue shadow-1"
+                      ? "bg-gray-2 text-blue shadow-1"
                       : "text-body hover:text-dark"
                   }`}
                 >
@@ -313,7 +313,7 @@ const AdvertisementsTab: React.FC<AdvertisementsTabProps> = ({ dateRange }) => {
                     key={ad.id}
                     className="grid grid-cols-[80px_2fr_1fr_1fr_120px_100px_100px_120px] gap-4 px-3 md:px-5 py-4 text-custom-sm border-b border-gray-2 last:border-0 items-center hover:bg-gray-1 transition"
                   >
-                    <div className="relative h-12 w-16 rounded-md overflow-hidden bg-gray-2">
+                    <div className="relative h-12 w-16 rounded-md overflow-hidden bg-gray-2 border border-gray-3">
                       <Image
                         src={ad.imageUrl}
                         alt={ad.title}

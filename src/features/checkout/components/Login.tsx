@@ -4,7 +4,7 @@ const Login = () => {
   const [dropdown, setDropdown] = useState(false);
 
   return (
-    <div className="bg-white shadow-1 rounded-[10px]">
+    <div className="bg-gray-2 shadow-1 rounded-[10px] border border-gray-3">
       <div
         onClick={() => setDropdown(!dropdown)}
         className={`cursor-pointer flex items-center gap-0.5 py-5 px-5.5 ${
@@ -53,7 +53,7 @@ const Login = () => {
             type="text"
             name="name"
             id="name"
-            className="rounded-lg border-2 border-gray-200 bg-white placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
+            className="rounded-lg border-2 border-gray-200 bg-gray-2 placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
           />
         </div>
 
@@ -67,7 +67,7 @@ const Login = () => {
             name="password"
             id="password"
             autoComplete="on"
-            className="rounded-lg border-2 border-gray-200 bg-white placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
+            className="rounded-lg border-2 border-gray-200 bg-gray-2 placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
           />
         </div>
 

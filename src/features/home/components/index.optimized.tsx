@@ -12,7 +12,7 @@ import dynamic from "next/dynamic";
 import { Suspense } from "react";
 import Hero from "./Hero";
 import Categories from "./Categories";
-import HomeUpperHero from "./HomeUpperHero";
+import Hero3D from "./Hero3D";
 import NewArrival from "./NewArrivals";
 import PromoBanner from "./PromoBanner";
 import { getHomeAdvertisements } from "@/features/advertisements/services/advertisement-service";
@@ -47,7 +47,7 @@ const Home = async () => {
   return (
     <main>
       {/* ⚡ Critical above-the-fold content (loaded immediately) */}
-      <HomeUpperHero />
+      <Hero3D />
       <Categories />
       <Hero ads={hero} />
       <NewArrival />

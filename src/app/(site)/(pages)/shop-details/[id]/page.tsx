@@ -133,7 +133,7 @@ const ShopDetailsPage = async ({ params }: ShopDetailsPageProps) => {
         ? product.updatedAt
         : product.updatedAt.toISOString(),
     category: serializeCategory(product.category),
-    subcategory: serializeCategory(product.subcategory ?? null),
+    brand: product.brand ?? null,
   };
 
   const jsonLd = {

@@ -20,81 +20,199 @@ const config: Config = {
         xl: "0",
       },
     },
+    /**
+     * Metro Opticals — black & gold theme.
+     *
+     * The token NAMES are inherited from the original light theme and are used
+     * across ~250 files, so they are kept and their VALUES remapped instead:
+     *   - `blue*`  is the gold accent (buttons, links, highlights)
+     *   - `gray-1..3` are dark surfaces (page, card, border) — they get DARKER
+     *     as the number grows in the original, so the scale is inverted here
+     *   - `dark*` and `body` are light text on those surfaces
+     * Gold values are sampled from the logo (dominant tone #C09C6C).
+     */
     colors: {
       current: "currentColor",
       transparent: "transparent",
       white: "#FFFFFF",
-      body: "#6C6F93",
+      /** Default body copy — warm off-white, softened for long reading. */
+      body: "#B5AEA2",
       meta: {
-        "2": "#495270",
-        "3": "#606882",
-        "4": "#8D93A5",
-        "5": "#BBBEC9",
-        DEFAULT: "#F7F9FC",
+        "2": "#CFC7B8",
+        "3": "#B5AEA2",
+        "4": "#8A8377",
+        "5": "#5C564C",
+        DEFAULT: "#141414",
       },
+      /** Headings and high-emphasis text (light, on dark surfaces). */
       dark: {
-        "2": "#495270",
-        "3": "#606882",
-        "4": "#8D93A5",
-        "5": "#BBBEC9",
-        DEFAULT: "#1C274C",
+        "2": "#EDE7DA",
+        "3": "#CFC7B8",
+        "4": "#A79F92",
+        "5": "#7A7368",
+        DEFAULT: "#F5F1E8",
       },
+      /** Surfaces, from page background up through raised cards. */
       gray: {
-        "1": "#F9FAFB",
-        "2": "#F3F4F6",
-        "3": "#E5E7EB",
-        "4": "#D1D5DB",
-        "5": "#9CA3AF",
-        "6": "#6B7280",
-        "7": "#374151",
-        DEFAULT: "#F3F5F6",
+        /*
+         * Elevation ladder. Dark UI conveys height with LIGHTNESS, not
+         * shadow, so each step is a clearly visible jump rather than the
+         * near-identical values a light theme can get away with.
+         *   gray-1 page  →  gray-2 card  →  gray-8 raised/hover
+         */
+        "1": "#0A0A0A", // page background (recessed)
+        "2": "#17171A", // card / section surface
+        "3": "#2E2E33", // borders, dividers
+        "4": "#3D3D43", // stronger borders, disabled fills
+        "5": "#8A8377", // muted text
+        "6": "#A79F92", // secondary text
+        "7": "#CFC7B8", // near-heading text
+        "8": "#212126", // raised surface (hover, popovers, table headers)
+        DEFAULT: "#17171A",
+        /*
+         * Components also use Tailwind's default numeric gray scale
+         * (bg-gray-200, border-gray-200, text-gray-400, …). Because a custom
+         * `colors.gray` replaces the default entirely, those keys are defined
+         * here too — INVERTED, so low numbers are dark surfaces and high
+         * numbers are light text, matching how they're used in a dark theme.
+         */
+        "50": "#17171A",
+        "100": "#212126",
+        "200": "#2E2E33",
+        "300": "#3D3D43",
+        "400": "#8A8377",
+        "500": "#9A9286",
+        "600": "#B5AEA2",
+        "700": "#CFC7B8",
+        "800": "#EDE7DA",
+        "900": "#F5F1E8",
       },
+      /** Gold accent — sampled from the logo. Replaces the old blue. */
       blue: {
-        DEFAULT: "#3C50E0",
-        dark: "#1C3FB7",
-        light: "#5475E5",
-        "light-2": "#8099EC",
-        "light-3": "#ADBCF2",
-        "light-4": "#C3CEF6",
-        "light-5": "#E1E8FF",
+        DEFAULT: "#C09C6C",
+        dark: "#A17C4C",
+        light: "#D0B183",
+        "light-2": "#DCC79C",
+        "light-3": "#3A3227",
+        "light-4": "#2A2419",
+        "light-5": "#1C1811",
+        // numeric scale: low = dark gold-tinted fill, high = bright gold
+        "50": "#1C1811",
+        "100": "#2A2419",
+        "200": "#3A3227",
+        "300": "#5C4E3A",
+        "400": "#A17C4C",
+        "500": "#C09C6C",
+        "600": "#D0B183",
+        "700": "#DCC79C",
+        "800": "#E8DAB9",
+        "900": "#F3EDDC",
       },
+      /**
+       * Status colours. The vivid tones stay bright enough to read on black,
+       * while the former pale tints (`light-3`..`light-6`) are inverted into
+       * dark, desaturated fills so badges don't glare on dark surfaces.
+       */
       red: {
-        DEFAULT: "#F23030",
-        dark: "#E10E0E",
-        light: "#F56060",
-        "light-2": "#F89090",
-        "light-3": "#FBC0C0",
-        "light-4": "#FDD8D8",
-        "light-5": "#FEEBEB",
-        "light-6": "#FEF3F3",
+        DEFAULT: "#F65454",
+        dark: "#FF7A7A",
+        light: "#F87171",
+        "light-2": "#8C3232",
+        "light-3": "#5E2424",
+        "light-4": "#401A1A",
+        "light-5": "#2E1414",
+        "light-6": "#241010",
+        // numeric scale: low = dark fill, high = bright text
+        "50": "#2E1414",
+        "100": "#401A1A",
+        "200": "#5E2424",
+        "300": "#8C3232",
+        "400": "#E06565",
+        "500": "#F65454",
+        "600": "#FF7A7A",
+        "700": "#FF9B9B",
+        "800": "#FFBDBD",
+        "900": "#FFD9D9",
       },
       green: {
-        DEFAULT: "#22AD5C",
-        dark: "#1A8245",
-        light: "#2CD673",
-        "light-2": "#57DE8F",
-        "light-3": "#82E6AC",
-        "light-4": "#ACEFC8",
-        "light-5": "#C2F3D6",
-        "light-6": "#DAF8E6",
+        DEFAULT: "#34C77B",
+        dark: "#5BD897",
+        light: "#4ADE80",
+        "light-2": "#1F6B44",
+        "light-3": "#17532F",
+        "light-4": "#123D24",
+        "light-5": "#0E2E1C",
+        "light-6": "#0B2416",
+        "50": "#0E2E1C",
+        "100": "#123D24",
+        "200": "#17532F",
+        "300": "#1F6B44",
+        "400": "#2FB56F",
+        "500": "#34C77B",
+        "600": "#4ADE80",
+        "700": "#7BE9A6",
+        "800": "#A6F0C4",
+        "900": "#CFF7DF",
       },
       yellow: {
-        DEFAULT: "#FBBF24",
-        dark: "#F59E0B",
-        "dark-2": "#D97706",
-        light: "#FCD34D",
-        "light-1": "#FDE68A",
-        "light-2": "#FEF3C7",
-        "light-4": "#FFFBEB",
+        DEFAULT: "#E8B450",
+        dark: "#F3C765",
+        "dark-2": "#D9A63C",
+        light: "#F0CC7A",
+        "light-1": "#6B5426",
+        "light-2": "#4A3A1B",
+        "light-4": "#2E2412",
+        "50": "#2E2412",
+        "100": "#4A3A1B",
+        "200": "#6B5426",
+        "300": "#8F7133",
+        "400": "#D9A63C",
+        "500": "#E8B450",
+        "600": "#F0CC7A",
+        "700": "#F5DA9C",
+        "800": "#FAE8BF",
+        "900": "#FDF4DF",
       },
       teal: {
-        DEFAULT: "#02AAA4",
-        dark: "#06A09B",
+        DEFAULT: "#2FB8B2",
+        dark: "#4FCEC8",
       },
       orange: {
-        DEFAULT: "#F27430",
-        dark: "#E1580E",
+        DEFAULT: "#F08A4B",
+        dark: "#F5A470",
+        "50": "#33200F",
+        "100": "#4A2E15",
+        "200": "#6B4420",
+        "300": "#9C6330",
+        "400": "#E07C3C",
+        "500": "#F08A4B",
+        "600": "#F5A470",
+        "700": "#F8BE97",
+        "800": "#FBD6BD",
+        "900": "#FDEBE0",
       },
+      purple: {
+        "100": "#2A1F3D",
+        "300": "#4A3866",
+        "600": "#B79BE8",
+        "700": "#C9B4EF",
+      },
+      emerald: {
+        "50": "#0E2E1C",
+        "100": "#123D24",
+        "200": "#17532F",
+        "600": "#4ADE80",
+        "700": "#7BE9A6",
+      },
+      slate: {
+        "50": "#17171A",
+        "100": "#212126",
+        "200": "#2E2E33",
+        "700": "#CFC7B8",
+        "800": "#EDE7DA",
+        "900": "#F5F1E8",
+      },
+      black: "#000000",
     },
     screens: {
       xsm: "375px",
@@ -229,18 +347,52 @@ const config: Config = {
         "99999": "99999",
         "999999": "999999",
       },
+      /*
+       * Dark-theme elevation.
+       *
+       * On a light theme, cards separate from the page with a grey drop
+       * shadow. On black that is invisible — so each level pairs a real
+       * shadow (for depth below) with a 1px top highlight (`inset 0 1px 0`)
+       * that catches "light" on the upper edge, plus a hairline ring. This
+       * is what actually reads as a raised surface on dark UI.
+       */
       boxShadow: {
-        "1": "0px 1px 2px 0px rgba(166, 175, 195, 0.25)",
-        "2": "0px 6px 24px 0px rgba(235, 238, 251, 0.40), 0px 2px 4px 0px rgba(148, 163, 184, 0.05)",
-        "3": "0px 2px 16px 0px rgba(13, 10, 44, 0.12)",
+        // level 1 — subtle lift (list rows, inputs)
+        "1": "0 1px 2px 0 rgba(0,0,0,0.60), inset 0 1px 0 0 rgba(255,255,255,0.04)",
+        // level 2 — standard card
+        "2": "0 4px 16px -2px rgba(0,0,0,0.70), 0 2px 6px -2px rgba(0,0,0,0.50), inset 0 1px 0 0 rgba(255,255,255,0.05)",
+        // level 3 — raised panel / popover
+        "3": "0 12px 32px -6px rgba(0,0,0,0.80), 0 4px 10px -3px rgba(0,0,0,0.60), inset 0 1px 0 0 rgba(255,255,255,0.06)",
+        // level 4 — modals and dialogs
+        "4": "0 24px 60px -12px rgba(0,0,0,0.90), 0 8px 20px -6px rgba(0,0,0,0.70), inset 0 1px 0 0 rgba(255,255,255,0.07)",
+        // gold-tinted glow for hover / focus emphasis
+        gold: "0 8px 28px -6px rgba(192,156,108,0.30), 0 0 0 1px rgba(192,156,108,0.30)",
+        "gold-sm": "0 0 0 1px rgba(192,156,108,0.35)",
         testimonial:
-          "0px 0px 4px 0px rgba(148, 163, 184, 0.10), 0px 6px 12px 0px rgba(224, 227, 238, 0.45)",
-        breadcrumb: "0px 1px 0px 0px #E5E7EB, 0px -1px 0px 0px #E5E7EB",
+          "0 4px 16px -2px rgba(0,0,0,0.70), inset 0 1px 0 0 rgba(255,255,255,0.05)",
+        breadcrumb: "0 1px 0 0 #262626, 0 -1px 0 0 #262626",
         range:
-          "0px 0px 1px 0px rgba(33, 37, 41, 0.08), 0px 2px 2px 0px rgba(33, 37, 41, 0.06)",
-        filter: "0px 1px 0px 0px #E5E7EB",
-        list: "1px 0px 0px 0px #E5E7EB",
-        input: "inset 0 0 0 2px #3C50E0",
+          "0 1px 3px 0 rgba(0,0,0,0.70), inset 0 1px 0 0 rgba(255,255,255,0.10)",
+        filter: "0 1px 0 0 #262626",
+        list: "1px 0 0 0 #262626",
+        input: "inset 0 0 0 2px #C09C6C",
+
+        /*
+         * Override Tailwind's DEFAULT shadow scale. The stock values are tuned
+         * for light backgrounds (low-opacity black) and are effectively
+         * invisible on #0A0A0A — the app uses shadow-lg/md/xl in ~170 places,
+         * so redefining them here fixes every one of those at once.
+         */
+        sm: "0 1px 2px 0 rgba(0,0,0,0.60), inset 0 1px 0 0 rgba(255,255,255,0.03)",
+        DEFAULT:
+          "0 2px 6px -1px rgba(0,0,0,0.65), inset 0 1px 0 0 rgba(255,255,255,0.04)",
+        md: "0 4px 12px -2px rgba(0,0,0,0.70), inset 0 1px 0 0 rgba(255,255,255,0.05)",
+        lg: "0 10px 24px -4px rgba(0,0,0,0.75), 0 3px 8px -3px rgba(0,0,0,0.55), inset 0 1px 0 0 rgba(255,255,255,0.05)",
+        xl: "0 18px 40px -8px rgba(0,0,0,0.82), 0 6px 14px -4px rgba(0,0,0,0.62), inset 0 1px 0 0 rgba(255,255,255,0.06)",
+        "2xl":
+          "0 28px 64px -12px rgba(0,0,0,0.90), 0 10px 22px -6px rgba(0,0,0,0.70), inset 0 1px 0 0 rgba(255,255,255,0.07)",
+        inner: "inset 0 2px 4px 0 rgba(0,0,0,0.55)",
+        none: "none",
       },
       keyframes: {
         shimmer: {

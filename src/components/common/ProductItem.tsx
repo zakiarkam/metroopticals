@@ -124,7 +124,7 @@ const ProductItem = ({ item, hoverActions = false }: ProductItemProps) => {
   const displayDescription = item.description ?? "";
 
   const cardHoverClasses = hoverActions
-    ? "group transition-all duration-500 ease-in-out hover:-translate-y-1  hover:ring-2 hover:ring-[#fbfcff]/20"
+    ? "group transition-all duration-500 ease-in-out hover:-translate-y-1  hover:ring-2 hover:ring-gray-3/20"
     : "";
 
   const overlayButtonClasses = hoverActions
@@ -138,14 +138,14 @@ const ProductItem = ({ item, hoverActions = false }: ProductItemProps) => {
   return (
     <div className="w-full">
       <div
-        className={`overflow-hidden rounded-[2px] bg-white shadow-md ring-1 ring-[#F6F7FB] cursor-pointer ${cardHoverClasses}`}
+        className={`overflow-hidden rounded-[2px] bg-gray-2 shadow-md ring-1 ring-gray-3 cursor-pointer ${cardHoverClasses}`}
         onClick={() => {
           openModal();
           handleQuickViewUpdate();
         }}
       >
-        <div className="relative h-[280px] rounded-t-[2px] bg-[#fbfcff] p-2 ">
-          <div className="relative h-full rounded-[2px] bg-[#fbfcff] overflow-hidden">
+        <div className="relative h-[280px] rounded-t-[2px] bg-gray-1 p-2 ">
+          <div className="relative h-full rounded-[2px] bg-gray-1 overflow-hidden">
             <div
               className={`absolute right-4 top-4 flex items-center gap-3 z-20 ${overlayButtonClasses}`}
               onClick={(e) => e.stopPropagation()}
@@ -207,8 +207,8 @@ const ProductItem = ({ item, hoverActions = false }: ProductItemProps) => {
             </div>
           </div>
         </div>
-        <div className="relative -mt-10 rounded-t-[2px] bg-white px-6 pb-6 pt-6 shadow-[0_-10px_30px_rgba(0,0,0,0.08)]">
-          <div className="flex items-center justify-between text-[8px] font-semibold uppercase tracking-[0.3em] text-[#8D93A5]">
+        <div className="relative -mt-10 rounded-t-[2px] bg-gray-2 px-6 pb-6 pt-6 shadow-[0_-10px_30px_rgba(0,0,0,0.08)] border border-gray-3">
+          <div className="flex items-center justify-between text-[8px] font-semibold uppercase tracking-[0.3em] text-dark-4">
             <span>{categoryName}</span>
           </div>
           <h3

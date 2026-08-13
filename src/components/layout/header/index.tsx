@@ -11,20 +11,19 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { useSelector } from "react-redux";
+import { Headset, Heart } from "lucide-react";
 
 import AccountMenu from "./AccountMenu";
 import CartButton from "./CartButton";
-import Dropdown from "./Dropdown";
 import Logo from "./Logo";
-import { menuData } from "./menuData";
 import SearchBar from "./SearchBar";
-import SupportBlock from "./SupportBlock";
 
 import { useCartModalContext } from "@/app/context/CartSidebarModalContext";
 import { useCategories } from "@/features/categories/hooks/use-categories";
-import { selectTotalPrice } from "@/store/features/cart-slice";
 import { useAppSelector } from "@/store/store";
+
+/** Nav entries are limited so the row never wraps awkwardly on laptops. */
+const MAX_NAV_CATEGORIES = 7;
 
 /* ----------------------------- utils ----------------------------- */
 
@@ -98,13 +97,7 @@ function useLockBodyScroll(locked: boolean) {
 
 function IconMenu({ open }: { open: boolean }) {
   return open ? (
-    <svg
-      width="22"
-      height="22"
-      viewBox="0 0 24 24"
-      fill="none"
-      aria-hidden="true"
-    >
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path
         d="M6 6l12 12M18 6L6 18"
         stroke="currentColor"
@@ -113,13 +106,7 @@ function IconMenu({ open }: { open: boolean }) {
       />
     </svg>
   ) : (
-    <svg
-      width="22"
-      height="22"
-      viewBox="0 0 24 24"
-      fill="none"
-      aria-hidden="true"
-    >
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path
         d="M4 7h16M4 12h16M4 17h16"
         stroke="currentColor"
@@ -138,41 +125,54 @@ const Container = ({ children }: { children: React.ReactNode }) => (
   </div>
 );
 
+type NavItem = { label: string; href: string };
+
 const NavLinks = ({
-  sticky,
+  items,
   pathname,
+  currentCategory,
   onNavigate,
+  vertical = false,
 }: {
-  sticky: boolean;
+  items: NavItem[];
   pathname: string;
+  currentCategory: string;
   onNavigate?: () => void;
+  vertical?: boolean;
 }) => (
-  <nav>
-    <ul className="flex flex-wrap items-center  justify-self-center gap-5">
-      {menuData.map((menuItem, i) =>
-        menuItem.submenu ? (
-          <Dropdown key={i} menuItem={menuItem} stickyMenu={sticky} />
-        ) : (
-          <li
-            key={i}
-            className={`group relative ${
-              pathname === menuItem.path
-                ? "before:w-full"
-                : "before:w-0 hover:before:w-full"
-            } before:h-[3px] before:bg-blue before:absolute before:left-0 before:-top-2 before:rounded-b-[3px] before:ease-out before:duration-200`}
-          >
+  <nav aria-label="Product categories">
+    <ul
+      className={
+        vertical
+          ? "flex flex-col gap-1"
+          : "flex flex-wrap items-center justify-center gap-x-7 gap-y-2"
+      }
+    >
+      {items.map((item) => {
+        // A category is active when its slug matches the current ?category=.
+        const slug = item.href.split("category=")[1];
+        const isActive = slug
+          ? currentCategory === slug
+          : pathname === item.href.split("?")[0];
+
+        return (
+          <li key={item.href}>
             <Link
-              href={menuItem.path}
+              href={item.href}
               onClick={onNavigate}
-              className={`hover:text-blue text-sm font-medium text-dark flex transition-colors ${
-                sticky ? "xl:py-3" : "xl:py-4"
-              } ${pathname === menuItem.path ? "text-blue" : ""}`}
+              className={`block whitespace-nowrap text-sm font-medium transition-colors ${
+                vertical ? "rounded-lg px-3 py-2 hover:bg-gray-8" : "py-3"
+              } ${
+                isActive
+                  ? "text-blue"
+                  : "text-dark hover:text-blue"
+              }`}
             >
-              {menuItem.title}
+              {item.label}
             </Link>
           </li>
-        )
-      )}
+        );
+      })}
     </ul>
   </nav>
 );
@@ -198,7 +198,6 @@ export default function Header() {
   const { categories } = useCategories();
 
   const product = useAppSelector((state) => state.cartReducer.items);
-  const totalPrice = useSelector(selectTotalPrice);
 
   // ✅ Close mobile nav on route change
   useEffect(() => setNavigationOpen(false), [pathname]);
@@ -213,14 +212,24 @@ export default function Header() {
     setSearchQuery((prev) => (prev === nextSearch ? prev : nextSearch));
   }, [queryKey, searchParams]);
 
-  const options = useMemo(() => {
-    return [
-      { label: "All Categories", value: "0" },
-      ...(categories || [])
-        .filter((c) => !c.parentId)
-        .map((c) => ({ label: c.name, value: c.slug })),
-    ];
-  }, [categories]);
+  /** Top-level categories only — brands would overflow the nav row. */
+  const topLevelCategories = useMemo(
+    () => (categories || []).filter((c) => !c.parentId),
+    [categories]
+  );
+
+  // "Shop" lands on the filterable listing; each category deep-links into the
+  // listing that reads ?category= so the filter is applied on arrival.
+  const navItems = useMemo<NavItem[]>(
+    () => [
+      { label: "Shop", href: "/shop-with-sidebar" },
+      ...topLevelCategories.slice(0, MAX_NAV_CATEGORIES).map((c) => ({
+        label: c.name,
+        href: `/shop-without-sidebar?category=${encodeURIComponent(c.slug)}`,
+      })),
+    ],
+    [topLevelCategories]
+  );
 
   const navigateToShop = useCallback(
     (categoryValue?: string, query?: string) => {
@@ -248,49 +257,66 @@ export default function Header() {
     await signOut({ callbackUrl: "/log-in" });
   }, []);
 
+  const iconButton =
+    "inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-3 text-dark transition-colors hover:border-blue hover:text-blue";
+
   return (
     <header
       ref={headerRef}
-      className={`fixed left-0 top-0 w-full z-40 bg-white transition-all duration-200 shadow-sm ${
-        stickyMenu ? "shadow-md" : ""
+      className={`fixed left-0 top-0 w-full z-40 bg-gray-2 transition-all duration-200 ${
+        stickyMenu ? "shadow-lg" : "shadow-sm"
       }`}
     >
       <Container>
-        {/* TOP ROW */}
+        {/* MAIN ROW */}
         <div
-          className={`flex flex-col gap-3 lg:gap-4 ${stickyMenu ? "py-3 sm:py-4" : "py-4 sm:py-5"}`}
+          className={`flex flex-col gap-3 lg:gap-4 ${
+            stickyMenu ? "py-3" : "py-4"
+          }`}
         >
           <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3 w-full">
+            <div className="flex items-center gap-4 min-w-0 flex-1">
               <Logo />
 
               {/* Desktop search */}
               <div className="hidden lg:block w-full max-w-[820px]">
                 <SearchBar
-                  options={options}
-                  selectedCategory={selectedCategory}
                   searchQuery={searchQuery}
                   setSearchQuery={setSearchQuery}
                   onSubmit={handleSearchSubmit}
-                  onCategorySelect={(v) => navigateToShop(v, searchQuery)}
                 />
               </div>
             </div>
 
             {/* Right actions */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
               <AccountMenu onLogout={handleLogout} />
 
-              <CartButton
-                count={product.length}
-                totalPrice={totalPrice}
-                onOpen={openCartModal}
-              />
+              <Link
+                href="/contact"
+                className={`hidden sm:inline-flex ${iconButton}`}
+                aria-label="Contact us"
+                title="Contact us"
+              >
+                <Headset className="h-5 w-5" />
+              </Link>
+
+              <Link
+                href="/wishlist"
+                className={`hidden sm:inline-flex ${iconButton}`}
+                aria-label="Wishlist"
+                title="Wishlist"
+              >
+                <Heart className="h-5 w-5" />
+              </Link>
+
+              <CartButton count={product.length} onOpen={openCartModal} />
 
               {/* Mobile menu toggle */}
               <button
                 aria-label="Toggle navigation"
-                className="md:hidden inline-flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+                aria-expanded={navigationOpen}
+                className="md:hidden inline-flex h-10 w-10 items-center justify-center rounded-lg border border-gray-3 text-dark hover:border-blue hover:text-blue transition-colors"
                 onClick={() => setNavigationOpen((s) => !s)}
               >
                 <IconMenu open={navigationOpen} />
@@ -301,26 +327,22 @@ export default function Header() {
           {/* Mobile search */}
           <div className="lg:hidden">
             <SearchBar
-              options={options}
-              selectedCategory={selectedCategory}
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}
               onSubmit={handleSearchSubmit}
-              onCategorySelect={(v) => navigateToShop(v, searchQuery)}
             />
           </div>
         </div>
       </Container>
 
-      {/* NAV ROW */}
-      <div className="border-t border-gray-200">
+      {/* CATEGORY NAV ROW */}
+      <div className="hidden md:block border-t border-gray-3">
         <Container>
-          <div className="flex items-center justify-between md:py-2">
-            <div className="hidden md:block">
-              <NavLinks sticky={stickyMenu} pathname={pathname} />
-            </div>
-            <SupportBlock />
-          </div>
+          <NavLinks
+            items={navItems}
+            pathname={pathname}
+            currentCategory={selectedCategory}
+          />
         </Container>
       </div>
 
@@ -328,18 +350,39 @@ export default function Header() {
       {navigationOpen && (
         <>
           <div
-            className="fixed  left-0 right-0 bottom-0 z-30"
+            className="fixed left-0 right-0 bottom-0 z-30"
             style={{ top: "var(--site-header-height)" }}
             onClick={() => setNavigationOpen(false)}
           />
-          <div className="md:hidden  border-t border-gray-200 bg-white shadow-sm relative z-40">
+          <div className="md:hidden border-t border-gray-3 bg-gray-2 shadow-lg relative z-40">
             <Container>
-              <div className="py-6">
+              <div className="py-4">
                 <NavLinks
-                  sticky={stickyMenu}
+                  items={navItems}
                   pathname={pathname}
+                  currentCategory={selectedCategory}
                   onNavigate={() => setNavigationOpen(false)}
+                  vertical
                 />
+
+                <div className="mt-3 flex items-center gap-2 border-t border-gray-3 pt-3">
+                  <Link
+                    href="/contact"
+                    onClick={() => setNavigationOpen(false)}
+                    className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-gray-3 py-2.5 text-sm font-medium text-dark hover:border-blue hover:text-blue transition-colors"
+                  >
+                    <Headset className="h-4 w-4" />
+                    Contact
+                  </Link>
+                  <Link
+                    href="/wishlist"
+                    onClick={() => setNavigationOpen(false)}
+                    className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-gray-3 py-2.5 text-sm font-medium text-dark hover:border-blue hover:text-blue transition-colors"
+                  >
+                    <Heart className="h-4 w-4" />
+                    Wishlist
+                  </Link>
+                </div>
               </div>
             </Container>
           </div>

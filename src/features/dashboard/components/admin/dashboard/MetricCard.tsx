@@ -19,15 +19,15 @@ const MetricCard: React.FC<MetricCardProps> = ({
 }) => {
   if (isLoading) {
     return (
-      <div className="rounded-xl border border-gray-3 bg-white shadow-1 p-5 animate-pulse">
-        <div className="h-4 bg-gray-2 rounded w-1/2 mb-3"></div>
-        <div className="h-8 bg-gray-2 rounded w-3/4"></div>
+      <div className="rounded-xl border border-gray-3 bg-gray-2 shadow-1 p-5 animate-pulse">
+        <div className="h-4 bg-gray-2 rounded w-1/2 mb-3 border border-gray-3"></div>
+        <div className="h-8 bg-gray-2 rounded w-3/4 border border-gray-3"></div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col justify-between rounded-xl bg-white shadow-1 p-4 sm:p-6 border border-gray-3">
+    <div className="flex flex-col justify-between rounded-xl bg-gray-2 shadow-1 p-4 sm:p-6 border border-gray-3">
       <div className="flex items-start justify-between">
         <div>
           <p className="text-custom-xs uppercase text-body tracking-wide">

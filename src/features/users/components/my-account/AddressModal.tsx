@@ -44,7 +44,7 @@ export default function AddressModal({ isOpen, closeModal }: Props) {
     >
       <div className="flex min-h-full items-center justify-center">
         <div
-          className="w-full max-w-3xl rounded-xl bg-white shadow-3 p-5 sm:p-7.5 relative"
+          className="w-full max-w-3xl rounded-xl bg-gray-2 shadow-3 p-5 sm:p-7.5 relative border border-gray-3"
           onMouseDown={(e) => e.stopPropagation()}
           role="document"
         >
