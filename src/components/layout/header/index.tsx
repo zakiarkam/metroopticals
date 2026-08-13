@@ -11,7 +11,8 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { Headset, Heart } from "lucide-react";
+import { Eye, Headset, Heart, Phone } from "lucide-react";
+import { siteConfig } from "@/config/site";
 
 import AccountMenu from "./AccountMenu";
 import CartButton from "./CartButton";
@@ -145,7 +146,7 @@ const NavLinks = ({
       className={
         vertical
           ? "flex flex-col gap-1"
-          : "flex flex-wrap items-center justify-center gap-x-7 gap-y-2"
+          : "flex flex-wrap items-center justify-center gap-x-8 gap-y-1"
       }
     >
       {items.map((item) => {
@@ -160,21 +161,64 @@ const NavLinks = ({
             <Link
               href={item.href}
               onClick={onNavigate}
-              className={`block whitespace-nowrap text-sm font-medium transition-colors ${
-                vertical ? "rounded-lg px-3 py-2 hover:bg-gray-8" : "py-3"
-              } ${
-                isActive
-                  ? "text-blue"
-                  : "text-dark hover:text-blue"
+              aria-current={isActive ? "page" : undefined}
+              className={`relative block whitespace-nowrap text-[13.5px] font-medium capitalize transition-colors ${
+                vertical
+                  ? `rounded-lg px-3 py-2.5 ${
+                      isActive
+                        ? "bg-blue/10 text-blue"
+                        : "text-dark hover:bg-gray-8 hover:text-blue"
+                    }`
+                  : `py-3.5 ${isActive ? "text-blue" : "text-dark hover:text-blue"}`
               }`}
             >
               {item.label}
+              {/* active underline, desktop row only */}
+              {!vertical && isActive && (
+                <span
+                  aria-hidden
+                  className="absolute inset-x-0 bottom-0 h-[2px] rounded-full bg-blue"
+                />
+              )}
             </Link>
           </li>
         );
       })}
     </ul>
   </nav>
+);
+
+/**
+ * Slim announcement strip above the header.
+ *
+ * Carries the two things that convert best on an optical storefront — the free
+ * eye test and the phone number — without stealing room from the search bar.
+ */
+const AnnouncementBar = () => (
+  <div className="hidden border-b border-gray-3 bg-gray-1 sm:block">
+    <div className="mx-auto flex w-full max-w-[1600px] items-center justify-between gap-4 px-3 py-2 sm:px-4 lg:px-6">
+      <p className="flex items-center gap-2 text-[11.5px] font-medium text-dark-4">
+        <Eye className="h-3.5 w-3.5 text-blue" />
+        Free eye test with every pair · Island-wide delivery in 2 days
+      </p>
+
+      <div className="flex items-center gap-5 text-[11.5px] font-medium">
+        <a
+          href={siteConfig.contact.phoneHref}
+          className="flex items-center gap-1.5 text-dark-4 transition-colors hover:text-blue"
+        >
+          <Phone className="h-3.5 w-3.5" />
+          {siteConfig.contact.phone}
+        </a>
+        <Link
+          href="/faq"
+          className="hidden text-dark-4 transition-colors hover:text-blue md:block"
+        >
+          Help
+        </Link>
+      </div>
+    </div>
+  </div>
 );
 
 /* ----------------------------- Header ---------------------------- */
@@ -263,10 +307,14 @@ export default function Header() {
   return (
     <header
       ref={headerRef}
-      className={`fixed left-0 top-0 w-full z-40 bg-gray-2 transition-all duration-200 ${
-        stickyMenu ? "shadow-lg" : "shadow-sm"
+      className={`fixed left-0 top-0 z-40 w-full border-b border-gray-3 bg-gray-2 transition-shadow duration-200 ${
+        stickyMenu ? "shadow-3" : "shadow-none"
       }`}
     >
+      {/* The announcement strip collapses away once the page is scrolled, so the
+          sticky header stays compact without losing it on first paint. */}
+      {!stickyMenu && <AnnouncementBar />}
+
       <Container>
         {/* MAIN ROW */}
         <div

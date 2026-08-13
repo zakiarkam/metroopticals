@@ -1,5 +1,8 @@
 import React from "react";
 import Image from "next/image";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
+
 import type { Advertisement } from "@/features/advertisements/types/advertisement";
 import { getProductImageUrl } from "@/lib/storageUtils";
 import { resolveDisplayPrice } from "@/lib/utils/price";
@@ -15,6 +18,12 @@ type PromoCard = {
   originalPrice?: number;
   hasDiscount: boolean;
 };
+
+const money = (value: number) =>
+  `Rs ${Number(value ?? 0).toLocaleString("en-LK", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
 
 const buildCard = (ad: Advertisement, canViewDiscount: boolean): PromoCard => {
   const product = ad.product;
@@ -34,8 +43,8 @@ const buildCard = (ad: Advertisement, canViewDiscount: boolean): PromoCard => {
   );
   const label =
     priceData.hasDiscount && priceData.discountPercent !== null
-      ? `Up to ${priceData.discountPercent}% Off`
-      : ad.title || "Promo Deal";
+      ? `Up to ${priceData.discountPercent}% off`
+      : ad.title || "Featured deal";
   const link = ad.link || (product ? `/shop-details/${product.id}` : "#");
 
   return {
@@ -51,120 +60,119 @@ const buildCard = (ad: Advertisement, canViewDiscount: boolean): PromoCard => {
   };
 };
 
+/**
+ * Advertisement slot rendered between home sections.
+ *
+ * The first ad becomes a wide feature panel; up to two more render as a pair
+ * beneath it. Prices are LKR — the previous version printed `$`.
+ */
 const PromoBanner = React.memo(({ ads }: { ads: Advertisement[] }) => {
-  if (!ads || ads.length === 0) {
-    return null;
-  }
+  if (!ads || ads.length === 0) return null;
 
-  const mainAd = ads[0];
-  const secondaryAds = ads.slice(1, 3);
-  const mainCard = buildCard(mainAd, true);
-  const smallCards = secondaryAds.map((ad) => buildCard(ad, true));
+  const mainCard = buildCard(ads[0], true);
+  const smallCards = ads.slice(1, 3).map((ad) => buildCard(ad, true));
 
   return (
-    <section className="overflow-hidden py-8">
-      <div className="mx-auto w-full px-4 sm:px-6 md:px-8 lg:px-10">
-        <div className="relative z-1 overflow-hidden rounded-lg bg-gray-1 py-6 lg:py-8 xl:py-10 px-4 sm:px-6 lg:px-8 xl:px-10 mb-4">
-          <div className="flex justify-center lg:hidden mb-6">
-            <Image
-              src={mainCard.image}
-              alt={mainCard.title}
-              className="w-full max-w-[320px] h-auto object-contain"
-              width={320}
-              height={320}
-            />
-          </div>
-          <div className="max-w-[550px] w-full">
-            <span className="block font-medium text-xl text-dark mb-3 break-words leading-snug">
-              {mainCard.title}
+    <section className="py-4 sm:py-6">
+      <div className="mx-auto w-full max-w-[1560px] px-4 sm:px-6 lg:px-10">
+        {/* ------------------------- feature panel ------------------------- */}
+        <div className="relative grid overflow-hidden rounded-3xl border border-gray-3 bg-gray-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.85fr)]">
+          <div className="relative z-10 flex flex-col justify-center p-7 sm:p-10 lg:p-12">
+            <span className="w-fit rounded-full border border-blue/30 bg-blue/10 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.16em] text-blue">
+              {mainCard.label}
             </span>
 
-            <h2 className="font-bold text-xl lg:text-heading-4 xl:text-heading-3 text-dark mb-5 break-words leading-tight">
-              {mainCard.label}
+            <h2 className="mt-5 text-[1.6rem] font-bold leading-[1.12] tracking-tight text-dark sm:text-[2.1rem]">
+              {mainCard.title}
             </h2>
 
-            <div className="flex items-center gap-2 mb-4">
-              <span className="font-bold text-xl text-blue">
-                ${mainCard.price.toFixed(2)}
+            <p className="mt-3 max-w-lg text-[14px] leading-relaxed text-body line-clamp-3">
+              {mainCard.description}
+            </p>
+
+            <div className="mt-6 flex flex-wrap items-baseline gap-3">
+              <span className="text-[1.7rem] font-bold leading-none text-dark">
+                {money(mainCard.price)}
               </span>
               {mainCard.hasDiscount && mainCard.originalPrice !== undefined && (
-                <span className="text-sm text-dark-4 line-through">
-                  ${mainCard.originalPrice.toFixed(2)}
+                <span className="text-[15px] font-medium text-dark-5 line-through">
+                  {money(mainCard.originalPrice)}
                 </span>
               )}
             </div>
 
-            <p className="text-sm text-dark-4 mb-6 leading-relaxed break-words">
-              {mainCard.description}
-            </p>
-
-            <a
+            <Link
               href={mainCard.link}
-              className="inline-flex font-medium text-custom-sm text-white bg-blue py-[11px] px-9.5 rounded-md ease-out duration-200 hover:bg-blue-dark mt-7.5"
+              className="group mt-8 inline-flex h-12 w-fit items-center gap-2 rounded-xl bg-blue px-8 text-[14px] font-bold text-gray-1 transition-colors hover:bg-blue-light"
             >
-              Buy Now
-            </a>
+              Shop this deal
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            </Link>
           </div>
 
-          <Image
-            src={mainCard.image}
-            alt={mainCard.title}
-            className="hidden lg:block absolute bottom-0 right-4 lg:right-26 -z-1"
-            width={274}
-            height={350}
-          />
-        </div>
-
-        <div className="grid gap-7.5 grid-cols-1 lg:grid-cols-2">
-          {smallCards.map((card) => (
+          <div className="relative min-h-[240px] overflow-hidden bg-gray-1 lg:min-h-[380px]">
             <div
-              key={card.id}
-              className="relative z-1 overflow-hidden rounded-lg bg-gray-2 py-10 xl:py-16 px-4 sm:px-7.5 xl:px-10 border border-gray-3"
-            >
-              <div className="block sm:hidden mb-4">
-                <Image
-                  src={card.image}
-                  alt={card.title}
-                  className="w-full h-auto object-cover rounded-md"
-                  width={240}
-                  height={240}
-                />
-              </div>
-              <Image
-                src={card.image}
-                alt={card.title}
-                className="hidden sm:block absolute top-1/2 -translate-y-1/2 left-3 sm:left-10 -z-1"
-                width={240}
-                height={240}
-              />
-
-              <div className="text-right">
-                <span className="block text-lg text-dark mb-1.5 break-words leading-snug">
-                  {card.title}
-                </span>
-                <p className="font-semibold text-custom-1 text-teal mb-2">
-                  {card.label}
-                </p>
-                <div className="flex items-center justify-end gap-2 mb-3">
-                  <span className="font-bold text-lg text-teal">
-                    ${card.price.toFixed(2)}
-                  </span>
-                  {card.hasDiscount && card.originalPrice !== undefined && (
-                    <span className="text-sm text-dark-4 line-through">
-                      ${card.originalPrice.toFixed(2)}
-                    </span>
-                  )}
-                </div>
-                <a
-                  href={card.link}
-                  className="inline-flex font-medium text-custom-sm text-white bg-teal py-2.5 px-8.5 rounded-md ease-out duration-200 hover:bg-teal-dark"
-                >
-                  Grab Now
-                </a>
-              </div>
-            </div>
-          ))}
+              aria-hidden
+              className="pointer-events-none absolute inset-0"
+              style={{
+                background:
+                  "radial-gradient(60% 60% at 50% 50%, rgba(192,156,108,0.18) 0%, transparent 72%)",
+              }}
+            />
+            <Image
+              src={mainCard.image}
+              alt={mainCard.title}
+              fill
+              sizes="(max-width: 1024px) 100vw, 45vw"
+              className="object-contain p-8 drop-shadow-[0_28px_45px_rgba(0,0,0,0.6)]"
+            />
+          </div>
         </div>
+
+        {/* ------------------------- secondary pair ------------------------- */}
+        {smallCards.length > 0 && (
+          <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+            {smallCards.map((card) => (
+              <Link
+                key={card.id}
+                href={card.link}
+                className="group flex items-center gap-5 overflow-hidden rounded-2xl border border-gray-3 bg-gray-2 p-5 transition-colors hover:border-blue/45 sm:gap-7 sm:p-6"
+              >
+                <div className="relative h-[110px] w-[110px] shrink-0 overflow-hidden rounded-xl bg-gray-1 sm:h-[130px] sm:w-[130px]">
+                  <Image
+                    src={card.image}
+                    alt={card.title}
+                    fill
+                    sizes="130px"
+                    className="object-contain p-3 transition-transform duration-500 group-hover:scale-105"
+                  />
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-blue">
+                    {card.label}
+                  </span>
+                  <h3 className="mt-2 line-clamp-2 text-[16px] font-semibold capitalize leading-snug text-dark transition-colors group-hover:text-blue">
+                    {card.title}
+                  </h3>
+
+                  <div className="mt-3 flex flex-wrap items-baseline gap-2">
+                    <span className="text-[17px] font-bold text-dark">
+                      {money(card.price)}
+                    </span>
+                    {card.hasDiscount && card.originalPrice !== undefined && (
+                      <span className="text-[13px] font-medium text-dark-5 line-through">
+                        {money(card.originalPrice)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <ArrowRight className="h-5 w-5 shrink-0 text-gray-4 transition-all group-hover:translate-x-0.5 group-hover:text-blue" />
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

@@ -97,8 +97,11 @@ function PriceBody({
   minPrice,
   maxPrice,
 }: Omit<PriceDropdownProps, "embedded">) {
+  const amount = (value: number) =>
+    value.toLocaleString("en-LK", { maximumFractionDigits: 0 });
+
   return (
-    <div>
+    <div className="px-2 pb-1">
       <RangeSlider
         min={minPrice}
         max={maxPrice}
@@ -112,16 +115,23 @@ function PriceBody({
         }
       />
 
-      <div className="price-amount flex items-center justify-between pt-4">
-        <div className="text-custom-xs text-dark-4 flex rounded border border-gray-3">
-          <span className="block border-r border-gray-3 px-2.5 py-1.5">Rs</span>
-          <span className="block px-3 py-1.5">{priceRange.from}</span>
-        </div>
-
-        <div className="text-custom-xs text-dark-4 flex rounded border border-gray-3">
-          <span className="block border-r border-gray-3 px-2.5 py-1.5">Rs</span>
-          <span className="block px-3 py-1.5">{priceRange.to}</span>
-        </div>
+      <div className="price-amount mt-5 flex items-center gap-3">
+        {[
+          { caption: "From", value: priceRange.from },
+          { caption: "Up to", value: priceRange.to },
+        ].map((bound) => (
+          <div
+            key={bound.caption}
+            className="flex-1 rounded-lg border border-gray-3 bg-gray-1 px-3 py-2"
+          >
+            <span className="block text-[10px] font-bold uppercase tracking-[0.12em] text-dark-5">
+              {bound.caption}
+            </span>
+            <span className="mt-0.5 block text-[13px] font-semibold text-dark">
+              Rs {amount(bound.value)}
+            </span>
+          </div>
+        ))}
       </div>
     </div>
   );

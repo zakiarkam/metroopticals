@@ -72,16 +72,20 @@ const Section = ({
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className="flex w-full items-center justify-between py-4 text-left"
+        className="group flex w-full items-center justify-between py-4 text-left"
       >
-        <span className="text-base font-semibold text-dark">{title}</span>
-        {open ? (
-          <Minus className="h-4 w-4 text-body" aria-hidden="true" />
-        ) : (
-          <Plus className="h-4 w-4 text-body" aria-hidden="true" />
-        )}
+        <span className="text-[13.5px] font-bold uppercase tracking-[0.1em] text-dark">
+          {title}
+        </span>
+        <span className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-gray-3 text-dark-4 transition-colors group-hover:border-blue group-hover:text-blue">
+          {open ? (
+            <Minus className="h-3.5 w-3.5" aria-hidden="true" />
+          ) : (
+            <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+          )}
+        </span>
       </button>
-      {open && <div className="pb-4 space-y-2.5">{children}</div>}
+      {open && <div className="space-y-1 pb-4">{children}</div>}
     </div>
   );
 };
@@ -97,17 +101,23 @@ const CheckboxRow = ({
   checked: boolean;
   onToggle: () => void;
 }) => (
-  <label className="flex cursor-pointer items-center gap-3 text-sm">
+  <label
+    className={`flex cursor-pointer items-center gap-3 rounded-lg px-2 py-2 text-[13px] transition-colors hover:bg-gray-8 ${
+      checked ? "bg-blue/[0.08]" : ""
+    }`}
+  >
     <input
       type="checkbox"
       checked={checked}
       onChange={onToggle}
-      className="h-4 w-4 shrink-0 cursor-pointer accent-[#C09C6C]"
+      className="h-[15px] w-[15px] shrink-0 cursor-pointer accent-[#C09C6C]"
     />
-    <span className={checked ? "text-dark font-medium" : "text-body"}>
+    <span
+      className={`capitalize ${checked ? "font-semibold text-blue" : "text-body"}`}
+    >
       {label}
     </span>
-    <span className="ml-auto text-custom-xs text-dark-5">({count})</span>
+    <span className="ml-auto text-[11px] font-medium text-dark-5">{count}</span>
   </label>
 );
 
@@ -211,19 +221,23 @@ export default function ShopFilters({
   }, [facets]);
 
   return (
-    <aside className="rounded-xl border border-gray-3 bg-gray-2 px-5 shadow-2">
+    <aside className="rounded-2xl border border-gray-3 bg-gray-2 px-4 shadow-2">
       <div className="flex items-center justify-between border-b border-gray-3 py-4">
-        <h2 className="text-lg font-semibold text-dark">
-          Filters{" "}
-          <span className="text-body font-normal">({activeCount})</span>
+        <h2 className="flex items-center gap-2 text-[13.5px] font-bold uppercase tracking-[0.1em] text-dark">
+          Refine
+          {activeCount > 0 && (
+            <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-blue px-1.5 text-[11px] font-bold text-gray-1">
+              {activeCount}
+            </span>
+          )}
         </h2>
         {activeCount > 0 && (
           <button
             type="button"
             onClick={onClearAll}
-            className="text-custom-xs font-medium text-blue hover:underline"
+            className="text-[12px] font-semibold text-blue transition-opacity hover:opacity-80"
           >
-            Clear all
+            Reset
           </button>
         )}
       </div>
@@ -231,7 +245,7 @@ export default function ShopFilters({
       {loading && !facets ? (
         <div className="space-y-3 py-5">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="h-4 animate-pulse rounded bg-gray-3" />
+            <div key={i} className="h-4 animate-pulse rounded bg-gray-8" />
           ))}
         </div>
       ) : (

@@ -1,6 +1,8 @@
 "use client";
 import React from "react";
 import Image from "next/image";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination } from "swiper/modules";
 import "swiper/css";
@@ -35,13 +37,6 @@ const deterministicShuffle = (items: string[], seed: number) => {
   }
   return array;
 };
-
-const collageLayouts = [
-  { top: -26, left: -20, rotation: -10, width: 154, height: 152 },
-  { bottom: -24, right: -18, rotation: 8, width: 184, height: 184 },
-  { top: 36, right: -30, rotation: -6, width: 88, height: 70 },
-  { bottom: -6, left: -34, rotation: 12, width: 156, height: 86 },
-];
 
 interface HeroCarouselProps {
   ads: Advertisement[];
@@ -121,119 +116,95 @@ const buildHeroSlides = (
   });
 };
 
+const money = (value: number) =>
+  `Rs ${Number(value ?? 0).toLocaleString("en-LK", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+
+/**
+ * Advertisement carousel for the `hero` placement.
+ *
+ * Slides are a straightforward split: copy on the left, product on a gold-lit
+ * plate on the right. The previous version scattered up to three extra product
+ * photos around the main one at hard-coded rotations, which collided with the
+ * copy at most viewport widths.
+ */
 const HeroCarousal = React.memo(({ ads }: HeroCarouselProps) => {
   const slides = React.useMemo(() => buildHeroSlides(ads, true), [ads]);
 
-  if (slides.length === 0) {
-    return null;
-  }
+  if (slides.length === 0) return null;
 
   return (
     <Swiper
-      spaceBetween={30}
+      spaceBetween={0}
       centeredSlides
-      autoplay={{
-        delay: 2500,
-        disableOnInteraction: false,
-      }}
-      pagination={{
-        clickable: true,
-      }}
+      loop={slides.length > 1}
+      autoplay={{ delay: 5000, disableOnInteraction: false }}
+      pagination={{ clickable: true }}
       modules={[Autoplay, Pagination]}
       className="hero-carousel"
     >
-      {slides.map((slide) => {
-        const collageExtraImages = slide.images.slice(1, 4);
-        return (
-          <SwiperSlide key={slide.id}>
-            <div className="flex flex-col gap-10 rounded-[20px] px-4 py-10 sm:flex-row sm:items-center sm:gap-10 sm:px-6 lg:px-8">
-              <div className="flex-1">
-                <div className="flex flex-col gap-6 rounded-[18px] bg-gradient-to-br from-black/70 to-black/30 px-6 py-8 text-white shadow-[0_30px_60px_rgba(0,0,0,0.55)] backdrop-blur-lg">
-                  <span className="text-xl font-semibold uppercase tracking-[0.4em] text-white/80">
-                    {slide.badge}
+      {slides.map((slide) => (
+        <SwiperSlide key={slide.id}>
+          <div className="grid items-center gap-8 px-6 py-10 sm:px-10 sm:py-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.85fr)] lg:gap-12 lg:px-14">
+            <div>
+              <span className="inline-flex w-fit rounded-full border border-blue/40 bg-black/40 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-blue backdrop-blur">
+                {slide.badge}
+              </span>
+
+              <h2 className="mt-5 text-[1.7rem] font-bold leading-[1.1] tracking-tight text-white sm:text-[2.3rem]">
+                <Link href={slide.link} className="transition-opacity hover:opacity-90">
+                  {slide.title}
+                </Link>
+              </h2>
+
+              <p className="mt-4 max-w-lg text-[14px] leading-relaxed text-white/75 line-clamp-3">
+                {slide.description}
+              </p>
+
+              {slide.price ? (
+                <div className="mt-6 flex flex-wrap items-baseline gap-3">
+                  <span className="text-[1.7rem] font-bold leading-none text-white">
+                    {money(slide.price)}
                   </span>
-
-                  <div className="space-y-3">
-                    <h1 className="text-2xl font-semibold leading-tight text-white sm:text-4xl">
-                      <a href={slide.link}>{slide.title}</a>
-                    </h1>
-                    <p className="text-sm leading-relaxed text-white/80 sm:text-base">
-                      {slide.description}
-                    </p>
-                  </div>
-
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-4">
-                      {slide.price ? (
-                        <span className="text-xl font-semibold text-white sm:text-3xl">
-                          Rs {slide.price.toLocaleString()}
-                        </span>
-                      ) : null}
-                      {slide.originalPrice ? (
-                        <span className="text-sm text-white/60 line-through">
-                          Rs {slide.originalPrice.toLocaleString()}
-                        </span>
-                      ) : null}
-                    </div>
-                    <a
-                      href={slide.link}
-                      className="inline-flex w-fit items-center justify-center rounded-full bg-gray-2/95 px-8 py-3 text-sm font-semibold text-dark transition duration-200 ease-out hover:bg-gray-2 border border-gray-3"
-                    >
-                      Shop Now
-                    </a>
-                  </div>
+                  {slide.originalPrice ? (
+                    <span className="text-[15px] font-medium text-white/50 line-through">
+                      {money(slide.originalPrice)}
+                    </span>
+                  ) : null}
                 </div>
-              </div>
+              ) : null}
 
-              <div className="flex flex-1 items-center justify-center">
-                <div className="w-full max-w-[360px]">
-                  <div className="relative">
-                    <div className="relative overflow-hidden rounded-[20px] border border-white/20">
-                      <Image
-                        src={slide.primaryImage}
-                        alt={slide.title}
-                        width={360}
-                        height={360}
-                        className="h-[320px] w-full object-cover"
-                      />
-                    </div>
-
-                    {collageExtraImages.length > 0 &&
-                      collageExtraImages.map((image, index) => {
-                        const layout =
-                          collageLayouts[index % collageLayouts.length];
-                        const style = {
-                          top: layout.top,
-                          left: layout.left,
-                          bottom: layout.bottom,
-                          right: layout.right,
-                          width: layout.width,
-                          height: layout.height,
-                          transform: `rotate(${layout.rotation}deg)`,
-                        };
-                        return (
-                          <div
-                            key={`${slide.id}-${image}-${index}`}
-                            className="absolute overflow-hidden rounded-[14px] bg-white/10 shadow-[0_25px_60px_rgba(0,0,0,0.45)]"
-                            style={style}
-                          >
-                            <Image
-                              src={image}
-                              alt={`${slide.title} collage ${index + 1}`}
-                              width={64}
-                              height={64}
-                              className="h-full w-full object-cover"
-                            />
-                          </div>
-                        );
-                      })}
-                  </div>
-                </div>
-              </div>
+              <Link
+                href={slide.link}
+                className="group mt-8 inline-flex h-12 w-fit items-center gap-2 rounded-xl bg-blue px-8 text-[14px] font-bold text-gray-1 transition-colors hover:bg-blue-light"
+              >
+                Shop now
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+              </Link>
             </div>
-          </SwiperSlide>
-        );
-      })}
+
+            <div className="relative mx-auto aspect-square w-full max-w-[380px]">
+              <div
+                aria-hidden
+                className="pointer-events-none absolute inset-0"
+                style={{
+                  background:
+                    "radial-gradient(52% 52% at 50% 50%, rgba(192,156,108,0.30) 0%, transparent 72%)",
+                }}
+              />
+              <Image
+                src={slide.primaryImage}
+                alt={slide.title}
+                fill
+                sizes="(max-width: 1024px) 80vw, 380px"
+                className="object-contain drop-shadow-[0_30px_50px_rgba(0,0,0,0.7)]"
+              />
+            </div>
+          </div>
+        </SwiperSlide>
+      ))}
     </Swiper>
   );
 });

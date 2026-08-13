@@ -1,12 +1,15 @@
 "use client";
-import React, { useCallback, useRef, useEffect } from "react";
+
+import React, { useCallback, useRef } from "react";
 import Image from "next/image";
-import { Swiper, SwiperSlide } from "swiper/react";
 import Link from "next/link";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+
 import { useCategories } from "@/features/categories/hooks/use-categories";
 import { getCategoryImageUrl } from "@/lib/storageUtils";
+import { Section, SectionHeading } from "@/components/common/Section";
 
-// Import Swiper styles
 import "swiper/css/navigation";
 import "swiper/css";
 
@@ -18,205 +21,146 @@ type Category = {
   productCount?: number;
 };
 
-const SingleItem = React.memo(({ item }: { item: Category }) => {
+/**
+ * Category rail.
+ *
+ * Tiles are portrait cards rather than the old circular avatars — eyewear is
+ * wide, and a circle crops the temples off every frame photo.
+ */
+const CategoryTile = React.memo(({ item }: { item: Category }) => {
   const imageUrl = getCategoryImageUrl(item.image);
 
   return (
     <Link
       href={`/shop-without-sidebar?category=${item.slug}`}
-      className="group flex w-full flex-col items-center gap-3 px-3 py-4 text-center transition-all duration-300 hover:-translate-y-1 sm:px-5 sm:py-6"
+      className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-gray-3 bg-gray-2 transition-all duration-300 hover:-translate-y-1 hover:border-blue/45 hover:shadow-gold"
     >
-      <div className="relative flex w-28 items-center justify-center rounded-full bg-gray-2 p-1 shadow-[0_8px_20px_rgba(0,0,0,0.08)] border border-gray-3">
-        <div className="relative flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border border-gray-4 bg-gray-2">
-          {imageUrl ? (
-            <Image
-              src={imageUrl}
-              alt={`${item.name} category`}
-              width={96}
-              height={96}
-              sizes="(max-width: 768px) 80vw, 96px"
-              className="object-contain p-2"
-            />
-          ) : (
-            <span className="text-3xl font-semibold text-gray-400">
-              {item.name.charAt(0).toUpperCase()}
-            </span>
-          )}
-        </div>
+      <div className="relative flex aspect-[5/4] items-center justify-center overflow-hidden bg-gray-1 p-5">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+          style={{
+            background:
+              "radial-gradient(65% 65% at 50% 55%, rgba(192,156,108,0.22) 0%, transparent 72%)",
+          }}
+        />
+
+        {imageUrl ? (
+          <Image
+            src={imageUrl}
+            alt={`${item.name} category`}
+            width={280}
+            height={224}
+            sizes="(max-width: 768px) 60vw, 220px"
+            className="relative h-full w-full object-contain transition-transform duration-500 group-hover:scale-110"
+          />
+        ) : (
+          <span className="relative text-4xl font-bold text-gray-4">
+            {item.name.charAt(0).toUpperCase()}
+          </span>
+        )}
       </div>
-      <p className="text-sm sm:text-md capitalize font-semibold text-dark group-hover:text-blue line-clamp-2 max-w-full sm:max-w-[160px] text-center break-words">
-        {item.name}
-      </p>
-      <p className="text-[9px] sm:text-[10px] -mt-2 font-semibold tracking-[0.2em] sm:tracking-[0.3em] text-gray-400">
-        {item.productCount ? `${item.productCount} PRODUCTS` : "NO PRODUCTS"}
-      </p>
+
+      <div className="flex flex-1 flex-col items-center justify-center gap-1 border-t border-gray-3 px-3 py-4 text-center">
+        <p className="line-clamp-1 text-[13.5px] font-semibold capitalize text-dark transition-colors group-hover:text-blue">
+          {item.name}
+        </p>
+        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-dark-5">
+          {item.productCount ? `${item.productCount} items` : "Coming soon"}
+        </p>
+      </div>
     </Link>
   );
 });
 
-SingleItem.displayName = "CategoryItem";
+CategoryTile.displayName = "CategoryTile";
+
+const NavButton = ({
+  direction,
+  onClick,
+}: {
+  direction: "prev" | "next";
+  onClick: () => void;
+}) => (
+  <button
+    type="button"
+    onClick={onClick}
+    aria-label={direction === "prev" ? "Previous categories" : "Next categories"}
+    className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-3 bg-gray-2 text-dark transition-colors hover:border-blue hover:text-blue"
+  >
+    {direction === "prev" ? (
+      <ChevronLeft className="h-[18px] w-[18px]" />
+    ) : (
+      <ChevronRight className="h-[18px] w-[18px]" />
+    )}
+  </button>
+);
 
 const Categories = React.memo(() => {
-  const sliderRef = useRef(null);
+  const sliderRef = useRef<any>(null);
   const { categories, loading, error } = useCategories();
-  const parentCategories = categories.filter((category) => !category.parentId);
+  const parentCategories = (categories || []).filter(
+    (category: any) => !category.parentId
+  );
 
-  const handlePrev = useCallback(() => {
-    if (!sliderRef.current) return;
-    sliderRef.current.swiper.slidePrev();
-  }, []);
-
-  const handleNext = useCallback(() => {
-    if (!sliderRef.current) return;
-    sliderRef.current.swiper.slideNext();
-  }, []);
-
-  useEffect(() => {
-    if (sliderRef.current) {
-      sliderRef.current.swiper.init();
-    }
-  }, []);
+  const handlePrev = useCallback(() => sliderRef.current?.swiper?.slidePrev(), []);
+  const handleNext = useCallback(() => sliderRef.current?.swiper?.slideNext(), []);
 
   if (loading) {
     return (
-      <section className="overflow-hidden pt-8">
-        <div className="mx-auto w-full px-4 sm:px-6 md:px-8 lg:px-10 pb-8 border-b border-gray-3">
-          <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue"></div>
-          </div>
+      <Section>
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div
+              key={i}
+              className="h-[220px] animate-pulse rounded-2xl border border-gray-3 bg-gray-2"
+            />
+          ))}
         </div>
-      </section>
+      </Section>
     );
   }
 
-  if (error || parentCategories.length === 0) {
-    return null;
-  }
+  if (error || parentCategories.length === 0) return null;
 
   return (
-    <section className="overflow-hidden pt-8">
-      <div className="mx-auto w-full px-4 sm:px-6 md:px-8 lg:px-10 pb-8">
-        <div className="swiper categories-carousel common-carousel">
-          {/* <!-- section title --> */}
-          <div className="mb-6 flex items-center justify-between">
-            <div>
-              <span className="flex items-center gap-2.5 font-medium text-dark mb-1.5">
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 20 20"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <g clipPath="url(#clip0_834_7356)">
-                    <path
-                      d="M3.94024 13.4474C2.6523 12.1595 2.00832 11.5155 1.7687 10.68C1.52908 9.84449 1.73387 8.9571 2.14343 7.18231L2.37962 6.15883C2.72419 4.66569 2.89648 3.91912 3.40771 3.40789C3.91894 2.89666 4.66551 2.72437 6.15865 2.3798L7.18213 2.14361C8.95692 1.73405 9.84431 1.52927 10.6798 1.76889C11.5153 2.00851 12.1593 2.65248 13.4472 3.94042L14.9719 5.46512C17.2128 7.70594 18.3332 8.82635 18.3332 10.2186C18.3332 11.6109 17.2128 12.7313 14.9719 14.9721C12.7311 17.2129 11.6107 18.3334 10.2184 18.3334C8.82617 18.3334 7.70576 17.2129 5.46494 14.9721L3.94024 13.4474Z"
-                      stroke="#C09C6C"
-                      strokeWidth="1.5"
-                    />
-                    <circle
-                      cx="7.17245"
-                      cy="7.39917"
-                      r="1.66667"
-                      transform="rotate(-45 7.17245 7.39917)"
-                      stroke="#C09C6C"
-                      strokeWidth="1.5"
-                    />
-                    <path
-                      d="M9.61837 15.4164L15.4342 9.6004"
-                      stroke="#C09C6C"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                    />
-                  </g>
-                  <defs>
-                    <clipPath id="clip0_834_7356">
-                      <rect width="20" height="20" fill="white" />
-                    </clipPath>
-                  </defs>
-                </svg>
-                Categories
-              </span>
-              <h2 className="font-semibold text-xl xl:text-heading-5 text-dark">
-                Browse by Category
-              </h2>
-            </div>
+    <Section>
+      <SectionHeading
+        eyebrow="Browse the range"
+        title="Shop by category"
+        description="Prescription frames, sunglasses, contact lenses and everything that keeps them clean."
+        href="/shop-with-sidebar"
+      />
 
-            <div className="flex items-center gap-3">
-              <button onClick={handlePrev} className="swiper-button-prev">
-                <svg
-                  className="fill-current"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    fillRule="evenodd"
-                    clipRule="evenodd"
-                    d="M15.4881 4.43057C15.8026 4.70014 15.839 5.17361 15.5694 5.48811L9.98781 12L15.5694 18.5119C15.839 18.8264 15.8026 19.2999 15.4881 19.5695C15.1736 19.839 14.7001 19.8026 14.4306 19.4881L8.43056 12.4881C8.18981 12.2072 8.18981 11.7928 8.43056 11.5119L14.4306 4.51192C14.7001 4.19743 15.1736 4.161 15.4881 4.43057Z"
-                    fill=""
-                  />
-                </svg>
-              </button>
+      <div className="relative">
+        <Swiper
+          ref={sliderRef}
+          slidesPerView={6}
+          spaceBetween={16}
+          breakpoints={{
+            0: { slidesPerView: 1.5, spaceBetween: 12 },
+            480: { slidesPerView: 2.2, spaceBetween: 12 },
+            640: { slidesPerView: 3, spaceBetween: 16 },
+            1000: { slidesPerView: 4, spaceBetween: 16 },
+            1200: { slidesPerView: 6, spaceBetween: 16 },
+          }}
+          className="!pb-1"
+        >
+          {parentCategories.map((item: Category) => (
+            <SwiperSlide key={item.id} className="!h-auto">
+              <CategoryTile item={item} />
+            </SwiperSlide>
+          ))}
+        </Swiper>
 
-              <button onClick={handleNext} className="swiper-button-next">
-                <svg
-                  className="fill-current"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    fillRule="evenodd"
-                    clipRule="evenodd"
-                    d="M8.51192 4.43057C8.82641 4.161 9.29989 4.19743 9.56946 4.51192L15.5695 11.5119C15.8102 11.7928 15.8102 12.2072 15.5695 12.4881L9.56946 19.4881C9.29989 19.8026 8.82641 19.839 8.51192 19.5695C8.19743 19.2999 8.161 18.8264 8.43057 18.5119L14.0122 12L8.43057 5.48811C8.161 5.17361 8.19743 4.70014 8.51192 4.43057Z"
-                    fill=""
-                  />
-                </svg>
-              </button>
-            </div>
+        {parentCategories.length > 2 && (
+          <div className="mt-6 flex items-center justify-center gap-3">
+            <NavButton direction="prev" onClick={handlePrev} />
+            <NavButton direction="next" onClick={handleNext} />
           </div>
-
-          <Swiper
-            ref={sliderRef}
-            slidesPerView={6}
-            spaceBetween={20}
-            breakpoints={{
-              0: {
-                slidesPerView: 1.4,
-                spaceBetween: 12,
-              },
-              480: {
-                slidesPerView: 2,
-                spaceBetween: 12,
-              },
-              640: {
-                slidesPerView: 3,
-                spaceBetween: 15,
-              },
-              1000: {
-                slidesPerView: 4,
-                spaceBetween: 20,
-              },
-              1200: {
-                slidesPerView: 6,
-                spaceBetween: 20,
-              },
-            }}
-          >
-            {parentCategories.map((item, key) => (
-              <SwiperSlide key={key}>
-                <SingleItem item={item} />
-              </SwiperSlide>
-            ))}
-          </Swiper>
-        </div>
+        )}
       </div>
-    </section>
+    </Section>
   );
 });
 

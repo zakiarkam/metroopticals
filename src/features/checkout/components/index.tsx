@@ -1,16 +1,163 @@
 "use client";
+
+import React, { useEffect, useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { toast } from "react-hot-toast";
+import {
+  Banknote,
+  Landmark,
+  Loader2,
+  Lock,
+  MapPin,
+  MessageSquare,
+  ShoppingCart,
+  Truck,
+  User,
+} from "lucide-react";
+
 import { createOrder } from "@/features/orders/api/order-api";
 import { useCachedSession } from "@/features/auth/hooks/use-cached-session";
 import { useCart } from "@/features/cart/hooks/use-cart";
 import { normalizeImageArray } from "@/lib/storageUtils";
-import Image from "next/image";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
-import { toast } from "react-hot-toast";
 import SiteContainer from "@/components/common/SiteContainer";
+import PageHero from "@/components/common/PageHero";
+import EmptyState from "@/components/common/EmptyState";
 
 const CHECKOUT_DRAFT_KEY = "metro_checkout_draft_v1";
+
+const money = (value: number) =>
+  `Rs ${Number(value ?? 0).toLocaleString("en-LK", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+
+/* ------------------------------ form atoms ------------------------------ */
+
+const inputClasses =
+  "h-11 w-full rounded-xl border border-gray-3 bg-gray-1 px-4 text-[14px] text-dark outline-none transition-colors placeholder:text-dark-5 hover:border-gray-4 focus:border-blue";
+
+/** One labelled text input. Extracted because checkout repeats it 16 times. */
+function Field({
+  id,
+  label,
+  value,
+  onChange,
+  type = "text",
+  required = false,
+  placeholder,
+  autoComplete,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  type?: string;
+  required?: boolean;
+  placeholder?: string;
+  autoComplete?: string;
+}) {
+  return (
+    <div className="w-full">
+      <label
+        htmlFor={id}
+        className="mb-2 block text-[12.5px] font-semibold text-dark"
+      >
+        {label}{" "}
+        {required ? (
+          <span className="text-red">*</span>
+        ) : (
+          <span className="font-normal text-dark-5">(optional)</span>
+        )}
+      </label>
+      <input
+        id={id}
+        type={type}
+        required={required}
+        value={value}
+        placeholder={placeholder}
+        autoComplete={autoComplete}
+        onChange={(e) => onChange(e.target.value)}
+        className={inputClasses}
+      />
+    </div>
+  );
+}
+
+/** Titled card that groups a step of the form. */
+function Panel({
+  icon: Icon,
+  title,
+  description,
+  children,
+  className = "",
+}: {
+  icon: React.ElementType;
+  title: string;
+  description?: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <section
+      className={`rounded-2xl border border-gray-3 bg-gray-2 shadow-2 ${className}`}
+    >
+      <div className="flex items-start gap-3.5 border-b border-gray-3 px-5 py-4 sm:px-6">
+        <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-blue/25 bg-blue/10 text-blue">
+          <Icon className="h-[18px] w-[18px]" />
+        </span>
+        <div>
+          <h2 className="text-[15px] font-bold text-dark">{title}</h2>
+          {description && (
+            <p className="mt-0.5 text-[12.5px] text-dark-5">{description}</p>
+          )}
+        </div>
+      </div>
+
+      <div className="p-5 sm:p-6">{children}</div>
+    </section>
+  );
+}
+
+/* -------------------------------- page --------------------------------- */
+
+type Details = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  address: string;
+  city: string;
+  country: string;
+  postalCode: string;
+};
+
+const EMPTY_DETAILS: Details = {
+  firstName: "",
+  lastName: "",
+  email: "",
+  phone: "",
+  address: "",
+  city: "",
+  country: "",
+  postalCode: "",
+};
+
+const PAYMENT_OPTIONS = [
+  {
+    value: "cod",
+    label: "Cash on hand",
+    hint: "Pay when you collect or on delivery.",
+    icon: Banknote,
+  },
+  {
+    value: "bank_transfer",
+    label: "Bank transfer",
+    hint: "We'll email the account details with your invoice.",
+    icon: Landmark,
+  },
+];
 
 const Checkout = () => {
   const router = useRouter();
@@ -21,27 +168,9 @@ const Checkout = () => {
   const shippingFee = 0;
   const shippingMethod = "standard";
 
-  const [billingDetails, setBillingDetails] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    address: "",
-    city: "",
-    country: "",
-    postalCode: "",
-  });
-
-  const [shippingDetails, setShippingDetails] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    address: "",
-    city: "",
-    country: "",
-    postalCode: "",
-  });
+  const [billingDetails, setBillingDetails] = useState<Details>(EMPTY_DETAILS);
+  const [shippingDetails, setShippingDetails] =
+    useState<Details>(EMPTY_DETAILS);
 
   const [sameAsBilling, setSameAsBilling] = useState(true);
   const [notes, setNotes] = useState("");
@@ -130,16 +259,14 @@ const Checkout = () => {
     isClient,
   ]);
 
-  const calculateSubtotal = () => {
-    return cartItems.reduce(
-      (sum, item) => sum + item.discountedPrice * item.quantity,
+  const calculateSubtotal = () =>
+    cartItems.reduce(
+      (sum: number, item: { discountedPrice: number; quantity: number }) =>
+        sum + item.discountedPrice * item.quantity,
       0
     );
-  };
 
-  const calculateTotal = () => {
-    return calculateSubtotal();
-  };
+  const calculateTotal = () => calculateSubtotal();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -188,7 +315,7 @@ const Checkout = () => {
       const shipping = sameAsBilling ? billingDetails : shippingDetails;
 
       const orderData = {
-        items: cartItems.map((item) => ({
+        items: cartItems.map((item: any) => ({
           productId: item.productId ?? item.id, // Use productId if available, fallback to id
           quantity: item.quantity,
           price: item.discountedPrice,
@@ -232,8 +359,8 @@ const Checkout = () => {
 
   if (status === "loading") {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue"></div>
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-blue" />
       </div>
     );
   }
@@ -241,509 +368,314 @@ const Checkout = () => {
   if (cartItems.length === 0) {
     return (
       <>
-        <section className="py-8 bg-gradient-to-b from-gray-50 to-gray-1">
-          <SiteContainer className="text-center">
-            <h2 className="text-2xl font-bold text-dark mb-4">
-              Your cart is empty
-            </h2>
-            <p className="text-body mb-6">
-              Add items to your cart before checking out.
-            </p>
-            <button
-              onClick={() => router.push("/shop-with-sidebar")}
-              className="inline-flex font-bold text-white bg-gradient-to-r from-blue to-blue-dark py-3.5 px-8 rounded-lg hover:shadow-lg hover:scale-[1.02] transition-all"
-            >
-              Continue Shopping
-            </button>
+        <PageHero
+          eyebrow="Step 2 of 2"
+          title="Checkout"
+          crumbs={[{ label: "Cart", href: "/cart" }, { label: "Checkout" }]}
+        />
+        <section className="bg-gray-1 py-10 lg:py-14">
+          <SiteContainer>
+            <EmptyState
+              icon={<ShoppingCart className="h-7 w-7" />}
+              title="Your cart is empty"
+              description="Add a frame to your cart before checking out."
+              action={{ label: "Continue shopping", href: "/shop-with-sidebar" }}
+            />
           </SiteContainer>
         </section>
       </>
     );
   }
 
+  /** Renders one address block; used for both billing and shipping. */
+  const addressFields = (
+    prefix: "billing" | "shipping",
+    details: Details,
+    setDetails: React.Dispatch<React.SetStateAction<Details>>
+  ) => {
+    const set = (key: keyof Details) => (value: string) =>
+      setDetails((prev) => ({ ...prev, [key]: value }));
+
+    return (
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <Field
+          id={`${prefix}FirstName`}
+          label="First name"
+          required
+          value={details.firstName}
+          onChange={set("firstName")}
+          autoComplete="given-name"
+        />
+        <Field
+          id={`${prefix}LastName`}
+          label="Last name"
+          required
+          value={details.lastName}
+          onChange={set("lastName")}
+          autoComplete="family-name"
+        />
+        <Field
+          id={`${prefix}Email`}
+          label="Email"
+          type="email"
+          required
+          value={details.email}
+          onChange={set("email")}
+          autoComplete="email"
+        />
+        <Field
+          id={`${prefix}Phone`}
+          label="Phone"
+          type="tel"
+          required
+          value={details.phone}
+          onChange={set("phone")}
+          autoComplete="tel"
+        />
+        <div className="sm:col-span-2">
+          <Field
+            id={`${prefix}Address`}
+            label="Address"
+            required
+            value={details.address}
+            onChange={set("address")}
+            autoComplete="street-address"
+          />
+        </div>
+        <Field
+          id={`${prefix}City`}
+          label="City"
+          required
+          value={details.city}
+          onChange={set("city")}
+          autoComplete="address-level2"
+        />
+        <Field
+          id={`${prefix}PostalCode`}
+          label="Postal code"
+          value={details.postalCode}
+          onChange={set("postalCode")}
+          autoComplete="postal-code"
+        />
+        <div className="sm:col-span-2">
+          <Field
+            id={`${prefix}Country`}
+            label="Country"
+            value={details.country}
+            onChange={set("country")}
+            autoComplete="country-name"
+          />
+        </div>
+      </div>
+    );
+  };
+
   return (
     <>
-      <section className="overflow-hidden py-8 bg-gradient-to-b from-gray-50 to-gray-100">
+      <PageHero
+        eyebrow="Step 2 of 2"
+        title="Checkout"
+        description="Confirm where the order goes and how you'd like to pay. Nothing is charged until we confirm your prescription."
+        crumbs={[{ label: "Cart", href: "/cart" }, { label: "Checkout" }]}
+      />
+
+      <section className="bg-gray-1 py-10 lg:py-14">
         <SiteContainer>
           <form onSubmit={handleSubmit}>
-            <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
-              {/* Left Column */}
-              <div className="lg:flex-[0.65] w-full">
-                {/* Billing Details */}
-                <div className="bg-gradient-to-br from-gray-2 to-gray-50 shadow-lg border border-gray-200 rounded-2xl p-5 sm:p-6 lg:p-8">
-                  <h2 className="font-bold text-dark text-2xl sm:text-3xl mb-5 bg-gradient-to-r from-blue to-blue-dark bg-clip-text text-transparent">
-                    Billing Details
-                  </h2>
+            <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-8">
+              {/* ------------------------ left column ------------------------ */}
+              <div className="flex flex-col gap-6">
+                <Panel
+                  icon={User}
+                  title="Billing details"
+                  description="Who the invoice is made out to."
+                >
+                  {addressFields("billing", billingDetails, setBillingDetails)}
 
-                  <div className="flex flex-col lg:flex-row gap-4 mb-4">
-                    <div className="w-full">
-                      <label
-                        htmlFor="firstName"
-                        className="block mb-2 font-medium text-dark text-sm"
-                      >
-                        First Name <span className="text-red">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={billingDetails.firstName}
-                        onChange={(e) =>
-                          setBillingDetails({
-                            ...billingDetails,
-                            firstName: e.target.value,
-                          })
-                        }
-                        className="rounded-lg border-2 border-gray-200 bg-gray-2 placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
-                      />
-                    </div>
-
-                    <div className="w-full">
-                      <label
-                        htmlFor="lastName"
-                        className="block mb-2 font-medium text-dark text-sm"
-                      >
-                        Last Name <span className="text-red">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={billingDetails.lastName}
-                        onChange={(e) =>
-                          setBillingDetails({
-                            ...billingDetails,
-                            lastName: e.target.value,
-                          })
-                        }
-                        className="rounded-lg border-2 border-gray-200 bg-gray-2 placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="mb-5">
-                    <label htmlFor="email" className="block mb-2.5">
-                      Email <span className="text-red">*</span>
-                    </label>
-                    <input
-                      type="email"
-                      required
-                      value={billingDetails.email}
-                      onChange={(e) =>
-                        setBillingDetails({
-                          ...billingDetails,
-                          email: e.target.value,
-                        })
-                      }
-                      className="rounded-lg border-2 border-gray-200 bg-gray-2 placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
-                    />
-                  </div>
-
-                  <div className="mb-5">
-                    <label htmlFor="phone" className="block mb-2.5">
-                      Phone <span className="text-red">*</span>
-                    </label>
-                    <input
-                      type="tel"
-                      required
-                      value={billingDetails.phone}
-                      onChange={(e) =>
-                        setBillingDetails({
-                          ...billingDetails,
-                          phone: e.target.value,
-                        })
-                      }
-                      className="rounded-lg border-2 border-gray-200 bg-gray-2 placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
-                    />
-                  </div>
-
-                  <div className="mb-5">
-                    <label htmlFor="address" className="block mb-2.5">
-                      Address <span className="text-red">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={billingDetails.address}
-                      onChange={(e) =>
-                        setBillingDetails({
-                          ...billingDetails,
-                          address: e.target.value,
-                        })
-                      }
-                      className="rounded-lg border-2 border-gray-200 bg-gray-2 placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
-                    />
-                  </div>
-
-                  <div className="flex flex-col lg:flex-row gap-5 sm:gap-8 mb-5">
-                    <div className="w-full">
-                      <label htmlFor="city" className="block mb-2.5">
-                        City <span className="text-red">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={billingDetails.city}
-                        onChange={(e) =>
-                          setBillingDetails({
-                            ...billingDetails,
-                            city: e.target.value,
-                          })
-                        }
-                        className="rounded-lg border-2 border-gray-200 bg-gray-2 placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
-                      />
-                    </div>
-
-                    <div className="w-full">
-                      <label htmlFor="postalCode" className="block mb-2.5">
-                        Postal Code{" "}
-                        <span className="text-dark-4 text-xs">(optional)</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={billingDetails.postalCode}
-                        onChange={(e) =>
-                          setBillingDetails({
-                            ...billingDetails,
-                            postalCode: e.target.value,
-                          })
-                        }
-                        className="rounded-lg border-2 border-gray-200 bg-gray-2 placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="mb-5">
-                    <label htmlFor="country" className="block mb-2.5">
-                      Country{" "}
-                      <span className="text-dark-4 text-xs">(optional)</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={billingDetails.country}
-                      onChange={(e) =>
-                        setBillingDetails({
-                          ...billingDetails,
-                          country: e.target.value,
-                        })
-                      }
-                      className="rounded-lg border-2 border-gray-200 bg-gray-2 placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
-                    />
-                  </div>
-
-                  <label className="flex items-center gap-2 mt-5">
+                  <label className="mt-5 flex cursor-pointer items-center gap-3 rounded-xl border border-gray-3 bg-gray-1 px-4 py-3.5">
                     <input
                       type="checkbox"
                       checked={sameAsBilling}
                       onChange={(e) => setSameAsBilling(e.target.checked)}
-                      className="h-4 w-4 rounded border-gray-3 text-blue focus:ring-2 focus:ring-blue/20"
+                      className="h-4 w-4 accent-[#C09C6C]"
                     />
-                    <span className="text-custom-sm text-dark">
-                      Shipping address same as billing
+                    <span className="text-[13.5px] font-medium text-dark">
+                      Deliver to this address
                     </span>
                   </label>
-                </div>
+                </Panel>
 
                 {!sameAsBilling && (
-                  <div className="bg-gradient-to-br from-gray-2 to-gray-50 shadow-lg border border-gray-200 rounded-2xl p-5 sm:p-6 lg:p-8 mt-6">
-                    <h2 className="font-bold text-dark text-2xl sm:text-3xl mb-5 bg-gradient-to-r from-blue to-blue-dark bg-clip-text text-transparent">
-                      Shipping Details
-                    </h2>
-
-                    <div className="flex flex-col lg:flex-row gap-4 mb-4">
-                      <div className="w-full">
-                        <label
-                          htmlFor="shippingFirstName"
-                          className="block mb-2 font-medium text-dark text-sm"
-                        >
-                          First Name <span className="text-red">*</span>
-                        </label>
-                        <input
-                          id="shippingFirstName"
-                          type="text"
-                          required
-                          value={shippingDetails.firstName}
-                          onChange={(e) =>
-                            setShippingDetails({
-                              ...shippingDetails,
-                              firstName: e.target.value,
-                            })
-                          }
-                          className="rounded-lg border-2 border-gray-200 bg-gray-2 placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
-                        />
-                      </div>
-
-                      <div className="w-full">
-                        <label
-                          htmlFor="shippingLastName"
-                          className="block mb-2 font-medium text-dark text-sm"
-                        >
-                          Last Name <span className="text-red">*</span>
-                        </label>
-                        <input
-                          id="shippingLastName"
-                          type="text"
-                          required
-                          value={shippingDetails.lastName}
-                          onChange={(e) =>
-                            setShippingDetails({
-                              ...shippingDetails,
-                              lastName: e.target.value,
-                            })
-                          }
-                          className="rounded-lg border-2 border-gray-200 bg-gray-2 placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="mb-5">
-                      <label htmlFor="shippingEmail" className="block mb-2.5">
-                        Email <span className="text-red">*</span>
-                      </label>
-                      <input
-                        id="shippingEmail"
-                        type="email"
-                        required
-                        value={shippingDetails.email}
-                        onChange={(e) =>
-                          setShippingDetails({
-                            ...shippingDetails,
-                            email: e.target.value,
-                          })
-                        }
-                        className="rounded-lg border-2 border-gray-200 bg-gray-2 placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
-                      />
-                    </div>
-
-                    <div className="mb-5">
-                      <label htmlFor="shippingPhone" className="block mb-2.5">
-                        Phone <span className="text-red">*</span>
-                      </label>
-                      <input
-                        id="shippingPhone"
-                        type="tel"
-                        required
-                        value={shippingDetails.phone}
-                        onChange={(e) =>
-                          setShippingDetails({
-                            ...shippingDetails,
-                            phone: e.target.value,
-                          })
-                        }
-                        className="rounded-lg border-2 border-gray-200 bg-gray-2 placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
-                      />
-                    </div>
-
-                    <div className="mb-5">
-                      <label htmlFor="shippingAddress" className="block mb-2.5">
-                        Address <span className="text-red">*</span>
-                      </label>
-                      <input
-                        id="shippingAddress"
-                        type="text"
-                        required
-                        value={shippingDetails.address}
-                        onChange={(e) =>
-                          setShippingDetails({
-                            ...shippingDetails,
-                            address: e.target.value,
-                          })
-                        }
-                        className="rounded-lg border-2 border-gray-200 bg-gray-2 placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
-                      />
-                    </div>
-
-                    <div className="flex flex-col lg:flex-row gap-5 sm:gap-8 mb-5">
-                      <div className="w-full">
-                        <label htmlFor="shippingCity" className="block mb-2.5">
-                          City <span className="text-red">*</span>
-                        </label>
-                        <input
-                          id="shippingCity"
-                          type="text"
-                          required
-                          value={shippingDetails.city}
-                          onChange={(e) =>
-                            setShippingDetails({
-                              ...shippingDetails,
-                              city: e.target.value,
-                            })
-                          }
-                          className="rounded-lg border-2 border-gray-200 bg-gray-2 placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
-                        />
-                      </div>
-
-                      <div className="w-full">
-                        <label
-                          htmlFor="shippingPostalCode"
-                          className="block mb-2.5"
-                        >
-                          Postal Code{" "}
-                          <span className="text-dark-4 text-xs">(optional)</span>
-                        </label>
-                        <input
-                          id="shippingPostalCode"
-                          type="text"
-                          value={shippingDetails.postalCode}
-                          onChange={(e) =>
-                            setShippingDetails({
-                              ...shippingDetails,
-                              postalCode: e.target.value,
-                            })
-                          }
-                          className="rounded-lg border-2 border-gray-200 bg-gray-2 placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="mb-5">
-                      <label htmlFor="shippingCountry" className="block mb-2.5">
-                        Country{" "}
-                        <span className="text-dark-4 text-xs">(optional)</span>
-                      </label>
-                      <input
-                        id="shippingCountry"
-                        type="text"
-                        value={shippingDetails.country}
-                        onChange={(e) =>
-                          setShippingDetails({
-                            ...shippingDetails,
-                            country: e.target.value,
-                          })
-                        }
-                        className="rounded-lg border-2 border-gray-200 bg-gray-2 placeholder:text-gray-400 w-full py-2.5 px-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10"
-                      />
-                    </div>
-                  </div>
+                  <Panel
+                    icon={MapPin}
+                    title="Delivery address"
+                    description="Where the finished glasses should be sent."
+                  >
+                    {addressFields(
+                      "shipping",
+                      shippingDetails,
+                      setShippingDetails
+                    )}
+                  </Panel>
                 )}
 
-                {/* Notes */}
-                <div className="bg-gradient-to-br from-gray-2 to-gray-50 shadow-lg border border-gray-200 rounded-2xl p-5 sm:p-6 mt-6">
-                  <label
-                    htmlFor="notes"
-                    className="block mb-2 font-medium text-dark text-sm"
-                  >
-                    Order Notes (optional)
-                  </label>
+                <Panel
+                  icon={MessageSquare}
+                  title="Order notes"
+                  description="Prescription details, delivery instructions, anything else."
+                >
                   <textarea
+                    id="notes"
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     rows={5}
-                    placeholder="Notes about your order, e.g. special notes for delivery."
-                    className="rounded-lg border-2 border-gray-200 bg-gray-2 placeholder:text-gray-400 w-full p-4 outline-none duration-200 hover:border-gray-300 focus:border-blue focus:shadow-lg focus:ring-2 focus:ring-blue/10 resize-none"
+                    placeholder="e.g. My prescription is from January 2026 — I'll email a photo. Please call before delivery."
+                    className="w-full resize-none rounded-xl border border-gray-3 bg-gray-1 p-4 text-[14px] leading-relaxed text-dark outline-none transition-colors placeholder:text-dark-5 hover:border-gray-4 focus:border-blue"
                   />
-                </div>
+                </Panel>
               </div>
 
-              {/* Right Column - Order Summary */}
-              <div className="w-full lg:flex-[0.35]">
-                <div className="bg-gradient-to-br from-gray-2 to-gray-50 shadow-lg border border-gray-200 rounded-2xl">
-                  <div className="border-b border-gray-200 bg-gradient-to-r from-blue-light-5 to-blue-light-4 py-4 px-5 sm:px-6 rounded-t-2xl">
-                    <h3 className="font-bold text-xl text-dark">Your Order</h3>
+              {/* ------------------------ right column ------------------------ */}
+              <div className="flex flex-col gap-6 lg:sticky lg:top-32">
+                <section className="overflow-hidden rounded-2xl border border-gray-3 bg-gray-2 shadow-2">
+                  <div className="border-b border-gray-3 px-5 py-4 sm:px-6">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-blue">
+                      Review
+                    </p>
+                    <h2 className="mt-1.5 text-lg font-bold text-dark">
+                      Your order
+                    </h2>
                   </div>
 
-                  <div className="pt-2.5 pb-8.5 px-4 sm:px-8.5">
-                    <div className="flex items-center justify-between py-5 border-b border-gray-3">
-                      <h4 className="font-medium text-dark">Product</h4>
-                      <h4 className="font-medium text-dark">Subtotal</h4>
-                    </div>
-
-                    {cartItems.map((item) => {
+                  <ul className="divide-y divide-gray-3 px-5 sm:px-6">
+                    {cartItems.map((item: any) => {
                       const previewImages = normalizeImageArray(
                         item.imgs?.previews ?? []
                       );
                       const displayImage =
                         previewImages[0] || "/images/placeholder-product.jpg";
-                      const productUrl = item.productId
-                        ? `/shop-details/${item.productId}`
-                        : `/shop-details/${item.id}`;
+                      const productUrl = `/shop-details/${
+                        item.productId ?? item.id
+                      }`;
 
                       return (
-                        <div
+                        <li
                           key={item.id}
-                          className="flex items-center justify-between py-5 border-b border-gray-3"
+                          className="flex items-center gap-3.5 py-4"
                         >
-                          <div className="flex items-center gap-3">
+                          <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-gray-3 bg-gray-1">
                             <Image
                               src={displayImage}
                               alt={item.title}
-                              width={50}
-                              height={50}
-                              className="rounded"
+                              fill
+                              sizes="56px"
+                              className="object-contain p-1.5"
                             />
-                            <div>
-                              <p className="text-dark capitalize">
-                                <Link
-                                  href={productUrl}
-                                  className="hover:text-blue"
-                                >
-                                  {item.title && item.title.length > 20
-                                    ? `${item.title.substring(0, 20)}..`
-                                    : item.title}
-                                </Link>
-                              </p>
-                              <p className="text-custom-xs text-body">
-                                Qty: {item.quantity}
-                              </p>
-                            </div>
+                            <span className="absolute -right-1 -top-1 grid h-5 min-w-[20px] place-items-center rounded-full bg-blue px-1 text-[10px] font-bold text-gray-1">
+                              {item.quantity}
+                            </span>
                           </div>
-                          <p className="text-dark text-sm">
-                            Rs -{" "}
-                            {(item.discountedPrice * item.quantity).toFixed(2)}
-                          </p>
-                        </div>
+
+                          <Link
+                            href={productUrl}
+                            className="line-clamp-2 min-w-0 flex-1 text-[13px] font-medium capitalize text-dark transition-colors hover:text-blue"
+                          >
+                            {item.title}
+                          </Link>
+
+                          <span className="shrink-0 text-[13.5px] font-semibold text-dark">
+                            {money(item.discountedPrice * item.quantity)}
+                          </span>
+                        </li>
                       );
                     })}
+                  </ul>
 
-                    {/* Shipping fee temporarily disabled in checkout UI. */}
+                  <div className="space-y-3 border-t border-gray-3 px-5 py-5 sm:px-6">
+                    <div className="flex items-center justify-between text-[14px]">
+                      <span className="text-dark-4">Subtotal</span>
+                      <span className="font-semibold text-dark">
+                        {money(calculateSubtotal())}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-[14px]">
+                      <span className="flex items-center gap-1.5 text-dark-4">
+                        <Truck className="h-4 w-4" />
+                        Delivery
+                      </span>
+                      <span className="font-semibold text-green">Free</span>
+                    </div>
 
-                    <div className="flex items-center justify-between pt-5">
-                      <p className="font-medium text-lg text-dark">Total</p>
-                      <p className="font-medium text-lg text-blue">
-                        Rs - {calculateTotal().toFixed(2)}
-                      </p>
+                    <div className="flex items-baseline justify-between rounded-xl border border-blue/25 bg-blue/[0.08] px-4 py-4">
+                      <span className="text-[15px] font-bold text-dark">
+                        Total
+                      </span>
+                      <span className="text-xl font-bold text-blue">
+                        {money(calculateTotal())}
+                      </span>
                     </div>
                   </div>
-                </div>
+                </section>
 
-                {/* Shipping Method temporarily disabled in checkout UI. */}
-
-                {/* Payment Method */}
-                <div className="bg-gradient-to-br from-gray-2 to-gray-50 shadow-lg border border-gray-200 rounded-2xl p-5 sm:p-6 mt-6">
-                  <h3 className="font-bold text-lg text-dark mb-4">
-                    Payment Method
-                  </h3>
-                  <div className="space-y-3">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="payment"
-                        value="cod"
-                        checked={paymentMethod === "cod"}
-                        onChange={(e) => setPaymentMethod(e.target.value)}
-                        className="h-4 w-4"
-                      />
-                      <span>Cash on Hand</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="payment"
-                        value="bank_transfer"
-                        checked={paymentMethod === "bank_transfer"}
-                        onChange={(e) => setPaymentMethod(e.target.value)}
-                        className="h-4 w-4"
-                      />
-                      <span>Bank Transfer</span>
-                    </label>
+                <Panel icon={Banknote} title="Payment method">
+                  <div className="space-y-2.5">
+                    {PAYMENT_OPTIONS.map(
+                      ({ value, label, hint, icon: Icon }) => {
+                        const active = paymentMethod === value;
+                        return (
+                          <label
+                            key={value}
+                            className={`flex cursor-pointer items-start gap-3 rounded-xl border px-4 py-3.5 transition-colors ${
+                              active
+                                ? "border-blue bg-blue/[0.08]"
+                                : "border-gray-3 bg-gray-1 hover:border-blue/50"
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              name="payment"
+                              value={value}
+                              checked={active}
+                              onChange={(e) => setPaymentMethod(e.target.value)}
+                              className="mt-0.5 h-4 w-4 accent-[#C09C6C]"
+                            />
+                            <span className="min-w-0">
+                              <span className="flex items-center gap-2 text-[13.5px] font-semibold text-dark">
+                                <Icon className="h-4 w-4 text-blue" />
+                                {label}
+                              </span>
+                              <span className="mt-0.5 block text-[12px] leading-relaxed text-dark-5">
+                                {hint}
+                              </span>
+                            </span>
+                          </label>
+                        );
+                      }
+                    )}
                   </div>
-                </div>
+                </Panel>
 
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full flex justify-center font-bold text-white bg-gradient-to-r from-blue to-blue-dark py-3.5 px-6 rounded-lg ease-out duration-200 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] mt-6 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-                >
-                  {isSubmitting ? "Processing..." : "Place Order"}
-                </button>
+                <div>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="inline-flex h-13 w-full items-center justify-center gap-2 rounded-xl bg-blue text-[15px] font-bold text-gray-1 transition-colors hover:bg-blue-light disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="h-[18px] w-[18px] animate-spin" />
+                        Placing order…
+                      </>
+                    ) : (
+                      `Place order · ${money(calculateTotal())}`
+                    )}
+                  </button>
+
+                  <p className="mt-3 flex items-center justify-center gap-1.5 text-[11.5px] text-dark-5">
+                    <Lock className="h-3.5 w-3.5" />
+                    Your details are stored securely and never shared
+                  </p>
+                </div>
               </div>
             </div>
           </form>

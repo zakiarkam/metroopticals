@@ -1,10 +1,17 @@
-import React from "react";
+"use client";
+
+import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { Loader2, ShoppingBag, X } from "lucide-react";
+
 import { useWishlist } from "@/features/wishlist/hooks/use-wishlist";
 import { useCart } from "@/features/cart/hooks/use-cart";
 import { normalizeImageArray } from "@/lib/storageUtils";
-import { getUnitLabel } from "@/lib/utils/price";
+import {
+  AVAILABILITY_PILL_CLASSES,
+  getAvailability,
+} from "@/features/products/utils/availability";
 
 type WishlistItemProps = {
   item: {
@@ -24,9 +31,25 @@ type WishlistItemProps = {
   };
 };
 
+const money = (value: number) =>
+  `Rs ${Number(value ?? 0).toLocaleString("en-LK", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+
+/**
+ * Wishlist tile.
+ *
+ * The old wishlist was a 1170px-wide table that forced horizontal scrolling on
+ * anything smaller than a laptop. A card grid carries the same four facts —
+ * image, name, price, stock — and works down to a phone.
+ */
 const SingleItem = ({ item }: WishlistItemProps) => {
   const { removeFromWishlist } = useWishlist();
   const { addToCart } = useCart();
+  const [isAdding, setIsAdding] = useState(false);
+  const [isRemoving, setIsRemoving] = useState(false);
+
   const productUrl = `/shop-details/${item.id}`;
 
   const rawImages =
@@ -34,13 +57,18 @@ const SingleItem = ({ item }: WishlistItemProps) => {
     item.imgs?.previews?.filter(Boolean) ||
     [];
   const images = normalizeImageArray(rawImages);
-  const unitLabel = getUnitLabel(item.unitType);
+  const availability = getAvailability(item.status, item.stock);
 
-  const handleRemoveFromWishlist = async () => {
+  const handleRemove = async () => {
+    if (isRemoving) return;
+    setIsRemoving(true);
     await removeFromWishlist(item.id);
+    setIsRemoving(false);
   };
 
   const handleAddToCart = async () => {
+    if (isAdding || !availability.canBuy) return;
+    setIsAdding(true);
     await addToCart(
       {
         id: item.id,
@@ -50,141 +78,84 @@ const SingleItem = ({ item }: WishlistItemProps) => {
         images,
         stock: item.stock ?? 0,
         status: item.status,
-      },
+      } as never,
       1
     );
+    setIsAdding(false);
   };
 
-  const inStock = item.status === "ACTIVE" && (item.stock ?? 0) > 0;
-  const isActive = item.status === "ACTIVE";
-  const isInactive = item.status === "INACTIVE";
-  const isOutOfStock = item.status === "OUT_OF_STOCK";
-
   return (
-    <div className="flex items-center border-t border-gray-3 py-5 px-10">
-      <div className="min-w-[83px]">
-        <button
-          onClick={() => handleRemoveFromWishlist()}
-          aria-label="button for remove product from wishlist"
-          className="flex items-center justify-center rounded-lg max-w-[38px] w-full h-9.5 bg-gray-2 border border-gray-3 ease-out duration-200 hover:bg-red-light-6 hover:border-red-light-4 hover:text-red"
+    <article
+      className={`group relative flex h-full flex-col overflow-hidden rounded-2xl border border-gray-3 bg-gray-2 shadow-2 transition-all duration-300 hover:border-blue/45 ${
+        isRemoving ? "opacity-50" : ""
+      }`}
+    >
+      <button
+        type="button"
+        onClick={handleRemove}
+        disabled={isRemoving}
+        aria-label={`Remove ${item.title} from wishlist`}
+        className="absolute right-3 top-3 z-20 inline-flex h-9 w-9 items-center justify-center rounded-full border border-gray-3 bg-gray-2/95 text-dark-4 backdrop-blur transition-colors hover:border-red hover:text-red"
+      >
+        <X className="h-4 w-4" />
+      </button>
+
+      <Link
+        href={productUrl}
+        className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-gray-1 p-6"
+      >
+        <Image
+          src={images[0] || "/images/placeholder-product.jpg"}
+          alt={item.title}
+          width={420}
+          height={315}
+          sizes="(max-width: 640px) 90vw, 300px"
+          className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-105"
+        />
+      </Link>
+
+      <div className="flex flex-1 flex-col gap-2.5 border-t border-gray-3 p-5">
+        <span
+          className={`w-fit rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.1em] ${
+            AVAILABILITY_PILL_CLASSES[availability.tone]
+          }`}
         >
-          <svg
-            className="fill-current"
-            width="22"
-            height="22"
-            viewBox="0 0 22 22"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
+          {availability.label}
+        </span>
+
+        <h3 className="text-[14.5px] font-semibold capitalize leading-snug text-dark">
+          <Link
+            href={productUrl}
+            className="line-clamp-2 transition-colors hover:text-blue"
           >
-            <path
-              d="M9.19509 8.22222C8.92661 7.95374 8.49131 7.95374 8.22282 8.22222C7.95433 8.49071 7.95433 8.92601 8.22282 9.1945L10.0284 11L8.22284 12.8056C7.95435 13.074 7.95435 13.5093 8.22284 13.7778C8.49133 14.0463 8.92663 14.0463 9.19511 13.7778L11.0006 11.9723L12.8061 13.7778C13.0746 14.0463 13.5099 14.0463 13.7784 13.7778C14.0469 13.5093 14.0469 13.074 13.7784 12.8055L11.9729 11L13.7784 9.19451C14.0469 8.92603 14.0469 8.49073 13.7784 8.22224C13.5099 7.95376 13.0746 7.95376 12.8062 8.22224L11.0006 10.0278L9.19509 8.22222Z"
-              fill=""
-            />
-            <path
-              fillRule="evenodd"
-              clipRule="evenodd"
-              d="M11.0007 1.14587C5.55835 1.14587 1.14648 5.55773 1.14648 11C1.14648 16.4423 5.55835 20.8542 11.0007 20.8542C16.443 20.8542 20.8548 16.4423 20.8548 11C20.8548 5.55773 16.443 1.14587 11.0007 1.14587ZM2.52148 11C2.52148 6.31713 6.31774 2.52087 11.0007 2.52087C15.6836 2.52087 19.4798 6.31713 19.4798 11C19.4798 15.683 15.6836 19.4792 11.0007 19.4792C6.31774 19.4792 2.52148 15.683 2.52148 11Z"
-              fill=""
-            />
-          </svg>
-        </button>
-      </div>
+            {item.title}
+          </Link>
+        </h3>
 
-      <div className="min-w-[387px]">
-        <div className="flex items-center justify-between gap-5">
-          <div className="w-full flex items-center gap-5.5">
-            <div className="flex items-center justify-center rounded-[5px] bg-gray-2 max-w-[80px] w-full h-17.5 border border-gray-3">
-              <Image
-                src={images[0] || "/images/placeholder-product.jpg"}
-                alt="product"
-                width={200}
-                height={200}
-              />
-            </div>
-
-            <div>
-              <h3 className="text-dark ease-out duration-200 hover:text-blue">
-                <Link href={productUrl} className="capitalize">
-                  {item.title.length > 20
-                    ? item.title.substring(0, 20) + "..."
-                    : item.title}
-                </Link>
-              </h3>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="min-w-[205px]">
-        <p className="text-dark">
-          Rs - {item.discountedPrice}.00{" "}
-          {/* <span className="text-xs text-body">{unitLabel}</span> */}
+        <p className="mt-auto pt-1 text-[16px] font-bold text-dark">
+          {money(item.discountedPrice || item.price)}
         </p>
-      </div>
 
-      <div className="min-w-[265px]">
-        <div className="flex items-center gap-1.5">
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 20 20"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M9.99935 14.7917C10.3445 14.7917 10.6243 14.5119 10.6243 14.1667V9.16669C10.6243 8.82151 10.3445 8.54169 9.99935 8.54169C9.65417 8.54169 9.37435 8.82151 9.37435 9.16669V14.1667C9.37435 14.5119 9.65417 14.7917 9.99935 14.7917Z"
-              fill="#F65454"
-            />
-            <path
-              d="M9.99935 5.83335C10.4596 5.83335 10.8327 6.20645 10.8327 6.66669C10.8327 7.12692 10.4596 7.50002 9.99935 7.50002C9.53911 7.50002 9.16602 7.12692 9.16602 6.66669C9.16602 6.20645 9.53911 5.83335 9.99935 5.83335Z"
-              fill="#F65454"
-            />
-            <path
-              fillRule="evenodd"
-              clipRule="evenodd"
-              d="M1.04102 10C1.04102 5.05247 5.0518 1.04169 9.99935 1.04169C14.9469 1.04169 18.9577 5.05247 18.9577 10C18.9577 14.9476 14.9469 18.9584 9.99935 18.9584C5.0518 18.9584 1.04102 14.9476 1.04102 10ZM9.99935 2.29169C5.74215 2.29169 2.29102 5.74283 2.29102 10C2.29102 14.2572 5.74215 17.7084 9.99935 17.7084C14.2565 17.7084 17.7077 14.2572 17.7077 10C17.7077 5.74283 14.2565 2.29169 9.99935 2.29169Z"
-              fill="#F65454"
-            />
-          </svg>
-
-          <span
-            className={`${
-              isInactive
-                ? "text-orange-600"
-                : isOutOfStock
-                  ? "text-red-600"
-                  : inStock
-                    ? "text-green-600"
-                    : "text-red-600"
-            }`}
-          >
-            {isInactive
-              ? "Inactive"
-              : isOutOfStock
-                ? "Out of Stock"
-                : inStock
-                  ? "In Stock"
-                  : "Out of Stock"}
-          </span>
-        </div>
-      </div>
-
-      <div className="min-w-[150px] lg:ml-15 flex justify-end">
         <button
-          onClick={() => handleAddToCart()}
-          disabled={!inStock || !isActive}
-          className="inline-flex text-dark hover:text-white bg-gray-1 border border-gray-3 py-2.5 px-6 rounded-md ease-out duration-200 hover:bg-blue hover:border-gray-3 disabled:opacity-50 disabled:cursor-not-allowed"
+          type="button"
+          onClick={handleAddToCart}
+          disabled={isAdding || !availability.canBuy}
+          className="mt-2 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-blue text-[13px] font-bold text-gray-1 transition-colors hover:bg-blue-light disabled:cursor-not-allowed disabled:bg-gray-8 disabled:text-dark-5"
         >
-          {isInactive
-            ? "Inactive"
-            : isOutOfStock
-              ? "Out of Stock"
-              : !inStock
-                ? "Out of Stock"
-                : "Add to Cart"}
+          {isAdding ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Adding…
+            </>
+          ) : (
+            <>
+              {availability.canBuy && <ShoppingBag className="h-4 w-4" />}
+              {availability.actionLabel}
+            </>
+          )}
         </button>
       </div>
-    </div>
+    </article>
   );
 };
 

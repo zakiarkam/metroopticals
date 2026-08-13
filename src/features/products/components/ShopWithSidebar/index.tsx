@@ -7,7 +7,16 @@ import React, {
   useRef,
   useState,
 } from "react";
+import {
+  LayoutGrid,
+  PackageSearch,
+  Rows3,
+  Search,
+  SlidersHorizontal,
+  X,
+} from "lucide-react";
 import SiteContainer from "@/components/common/SiteContainer";
+import PageHero from "@/components/common/PageHero";
 import CustomSelect from "./CustomSelect";
 import CategoryDropdown from "./CategoryDropdown";
 import PriceDropdown from "./PriceDropdown";
@@ -77,23 +86,24 @@ const ShopToolbar = React.memo(function ShopToolbar({
   onOpenFilters: () => void;
   showFiltersButton: boolean;
 }) {
+  const viewButton = (style: ProductStyle) =>
+    `inline-flex h-10 w-10 items-center justify-center rounded-lg border transition-colors ${
+      productStyle === style
+        ? "border-blue bg-blue text-gray-1"
+        : "border-gray-3 bg-gray-1 text-dark hover:border-blue hover:text-blue"
+    }`;
+
   return (
-    <div className="rounded-xl bg-gray-2 shadow-sm px-3 py-3 mb-6 border border-gray-3">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center justify-between gap-3 w-full sm:w-auto">
+    <div className="mb-6 rounded-2xl border border-gray-3 bg-gray-2 p-3 shadow-2 sm:p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-1 items-center gap-3">
           {showFiltersButton && (
             <button
+              type="button"
               onClick={onOpenFilters}
-              className="sm:hidden inline-flex items-center gap-2 px-4 py-2 bg-blue text-white rounded-lg"
+              className="inline-flex h-10 items-center gap-2 rounded-lg border border-gray-3 px-4 text-[13px] font-semibold text-dark transition-colors hover:border-blue hover:text-blue xl:hidden"
             >
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                <path
-                  d="M2.25 4.5H15.75M2.25 9H15.75M2.25 13.5H15.75"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                />
-              </svg>
+              <SlidersHorizontal className="h-4 w-4" />
               Filters
             </button>
           )}
@@ -103,90 +113,43 @@ const ShopToolbar = React.memo(function ShopToolbar({
             value={sortBy}
             onChange={setSortBy}
           />
-
-          <p className="hidden sm:block text-sm text-body ">
-            Showing{" "}
-            <span className="text-dark  font-medium">
-              {showing} of {total ?? showing}
-            </span>{" "}
-            Products
-          </p>
         </div>
 
-        <div className="hidden sm:flex items-center gap-2.5">
-          {showFiltersButton && (
-            <button
-              onClick={onOpenFilters}
-              className="xl:hidden inline-flex items-center gap-2 px-4 py-2 bg-blue text-white rounded-lg"
-            >
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                <path
-                  d="M2.25 4.5H15.75M2.25 9H15.75M2.25 13.5H15.75"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                />
-              </svg>
-              Filters
-            </button>
-          )}
+        <div className="flex items-center gap-4">
+          <p className="hidden text-[13px] text-dark-4 sm:block">
+            <span className="font-semibold text-dark">{showing}</span> of{" "}
+            <span className="font-semibold text-dark">{total ?? showing}</span>{" "}
+            products
+          </p>
 
-          <div className="flex items-center gap-2.5">
+          <div className="hidden items-center gap-2 sm:flex">
             <button
+              type="button"
               onClick={() => setProductStyle("grid")}
               aria-label="Grid view"
-              className={`${
-                productStyle === "grid"
-                  ? "bg-blue border-blue text-white"
-                  : "text-dark bg-gray-1 border-gray-3"
-              } flex items-center justify-center w-10.5 h-9 rounded-[6px] border ease-out duration-200 hover:bg-blue hover:border-blue hover:text-white`}
+              aria-pressed={productStyle === "grid"}
+              className={viewButton("grid")}
             >
-              <svg
-                className="fill-current"
-                width="18"
-                height="18"
-                viewBox="0 0 18 18"
-                fill="none"
-              >
-                <rect x="1" y="1" width="6" height="6" rx="1" />
-                <rect x="11" y="1" width="6" height="6" rx="1" />
-                <rect x="1" y="11" width="6" height="6" rx="1" />
-                <rect x="11" y="11" width="6" height="6" rx="1" />
-              </svg>
+              <LayoutGrid className="h-[18px] w-[18px]" />
             </button>
-
             <button
+              type="button"
               onClick={() => setProductStyle("list")}
               aria-label="List view"
-              className={`${
-                productStyle === "list"
-                  ? "bg-blue border-blue text-white"
-                  : "text-dark bg-gray-1 border-gray-3"
-              } flex items-center justify-center w-10.5 h-9 rounded-[6px] border ease-out duration-200 hover:bg-blue hover:border-blue hover:text-white`}
+              aria-pressed={productStyle === "list"}
+              className={viewButton("list")}
             >
-              <svg
-                className="fill-current"
-                width="18"
-                height="18"
-                viewBox="0 0 18 18"
-                fill="none"
-              >
-                <rect x="1" y="2" width="16" height="3" rx="1" />
-                <rect x="1" y="7.5" width="16" height="3" rx="1" />
-                <rect x="1" y="13" width="16" height="3" rx="1" />
-              </svg>
+              <Rows3 className="h-[18px] w-[18px]" />
             </button>
           </div>
         </div>
       </div>
 
-      <div className="flex justify-center sm:hidden mt-3 text-sm text-body">
-        Showing{" "}
-        <span className="text-dark font-medium">
-          {showing} of {total ?? showing}
-        </span>{" "}
-        Products
-      </div>
+      <p className="mt-3 text-center text-[13px] text-dark-4 sm:hidden">
+        <span className="font-semibold text-dark">{showing}</span> of{" "}
+        <span className="font-semibold text-dark">{total ?? showing}</span>{" "}
+        products
+      </p>
     </div>
   );
 });
@@ -230,58 +193,48 @@ const ShopSidebar = React.memo(function ShopSidebar({
 }) {
   return (
     <div
-      className={`sidebar-content fixed xl:z-1 z-[9999] left-0 top-0 xl:translate-x-0 xl:static xl:w-[320px] xl:flex-shrink-0 w-full ease-out duration-200 ${
+      className={`sidebar-content fixed left-0 top-0 z-[9999] w-full duration-200 ease-out xl:static xl:z-1 xl:w-[318px] xl:flex-shrink-0 xl:translate-x-0 ${
         open
-          ? "translate-x-0 bg-gray-2 p-4 h-screen overflow-y-auto"
+          ? "h-screen translate-x-0 overflow-y-auto bg-gray-1 p-4"
           : "-translate-x-full"
       }`}
       style={{ paddingTop: open ? stickyOffset : undefined }}
     >
       <form onSubmit={(e) => e.preventDefault()}>
-        <div className="flex flex-col gap-5">
-          <div className="bg-gray-2 shadow-sm mt-4 xl:mt-0 rounded-xl py-3 px-4 border border-gray-100">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex  items-center gap-2">
-                <p className="text-sm font-medium text-dark">Filters : </p>
-                <button
-                  type="button"
-                  onClick={onClearAll}
-                  className="text-blue text-sm hover:underline"
-                >
-                  Clear All
-                </button>
-              </div>
+        <div className="flex flex-col gap-4">
+          <div className="mt-4 flex items-center justify-between gap-3 rounded-2xl border border-gray-3 bg-gray-2 px-4 py-3 xl:mt-0">
+            <p className="flex items-center gap-2 text-[13px] font-bold uppercase tracking-[0.14em] text-dark">
+              <SlidersHorizontal className="h-4 w-4 text-blue" />
+              Filters
+            </p>
 
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={onClearAll}
+                className="text-[12.5px] font-semibold text-blue transition-opacity hover:opacity-80"
+              >
+                Clear all
+              </button>
               <button
                 type="button"
                 onClick={onClose}
                 aria-label="Close filters"
-                className="xl:hidden flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-3 text-dark transition-colors hover:border-blue hover:text-blue xl:hidden"
               >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={3}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
+                <X className="h-4 w-4" />
               </button>
             </div>
           </div>
 
-          <div className="bg-gray-2 shadow-sm rounded-xl py-3 px-4 border border-gray-100">
+          <div className="relative rounded-2xl border border-gray-3 bg-gray-2 p-3">
+            <Search className="pointer-events-none absolute left-6 top-1/2 h-4 w-4 -translate-y-1/2 text-dark-5" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search products..."
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-blue"
+              placeholder="Search frames…"
+              className="w-full rounded-xl border border-gray-3 bg-gray-1 py-2.5 pl-9 pr-3 text-[13.5px] text-dark outline-none transition-colors placeholder:text-dark-5 focus:border-blue"
             />
           </div>
 
@@ -519,15 +472,23 @@ export default function ShopWithSidebar() {
   const stickyOffset = stickyMenu ? 16 : 0;
 
   return (
-    <section className="overflow-hidden relative pb-8 pt-4 lg:pt-8 xl:pt-8 bg-gray-1">
-      <SiteContainer>
-        {error && (
-          <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg">
-            {error}
-          </div>
-        )}
+    <>
+      <PageHero
+        eyebrow="The collection"
+        title="Shop all eyewear"
+        description="Prescription frames, sunglasses and contact lenses — filter by shape, size, material or budget to narrow it down."
+        crumbs={[{ label: "Shop" }]}
+      />
 
-        <div className="flex flex-col gap-6 xl:flex-row">
+      <section className="relative overflow-hidden bg-gray-1 pb-16 pt-8">
+        <SiteContainer>
+          {error && (
+            <div className="mb-5 rounded-2xl border border-red/30 bg-red/10 px-5 py-4 text-[14px] text-red">
+              {error}
+            </div>
+          )}
+
+          <div className="flex flex-col gap-6 xl:flex-row xl:gap-8">
           <ShopSidebar
             open={productSidebar}
             onClose={() => setProductSidebar(false)}
@@ -572,8 +533,8 @@ export default function ShopWithSidebar() {
               <div
                 className={
                   productStyle === "grid"
-                    ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-8"
-                    : "flex flex-col gap-6"
+                    ? "grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3"
+                    : "flex flex-col gap-4"
                 }
               >
                 {data.products.map((item, idx) =>
@@ -587,31 +548,23 @@ export default function ShopWithSidebar() {
             )}
 
             {!loading && data.products.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-16">
-                <svg
-                  className="w-16 h-16 text-gray-400 mb-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
-                  />
-                </svg>
-                <h3 className="text-xl font-semibold text-dark mb-2">
-                  No Products Found
+              <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-3 bg-gray-2/60 px-6 py-16 text-center">
+                <span className="mb-5 inline-flex h-16 w-16 items-center justify-center rounded-2xl border border-gray-3 bg-gray-1 text-blue">
+                  <PackageSearch className="h-7 w-7" />
+                </span>
+                <h3 className="text-lg font-semibold text-dark">
+                  No frames match those filters
                 </h3>
-                <p className="text-body mb-4">
-                  Try adjusting your filters or search terms
+                <p className="mt-2 max-w-md text-[14px] leading-relaxed text-body">
+                  Try widening the price range or clearing a filter or two —
+                  there is a good chance we stock something close.
                 </p>
                 <button
+                  type="button"
                   onClick={handleClearFilters}
-                  className="px-6 py-2 bg-blue text-white rounded-lg hover:bg-blue-dark"
+                  className="mt-6 inline-flex h-11 items-center justify-center rounded-xl bg-blue px-7 text-[13px] font-bold text-gray-1 transition-colors hover:bg-blue-light"
                 >
-                  Clear Filters
+                  Clear all filters
                 </button>
               </div>
             )}
@@ -626,9 +579,10 @@ export default function ShopWithSidebar() {
                 showItemsPerPage={false}
               />
             )}
+            </div>
           </div>
-        </div>
-      </SiteContainer>
-    </section>
+        </SiteContainer>
+      </section>
+    </>
   );
 }

@@ -1,19 +1,28 @@
 "use client";
-import React, { useState } from "react";
+
+import React, { useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useDispatch } from "react-redux";
+import { Eye, FileText, Heart, Loader2, ShoppingBag } from "lucide-react";
+
 import { useModalContext } from "@/app/context/QuickViewModalContext";
 import { updateQuickView } from "@/store/features/quickView-slice";
 import { updateproductDetails } from "@/store/features/product-details";
-import { useDispatch } from "react-redux";
-import { AppDispatch } from "@/store/store";
+import type { AppDispatch } from "@/store/store";
 import { useCart } from "@/features/cart/hooks/use-cart";
+import { useWishlist } from "@/features/wishlist/hooks/use-wishlist";
+import { useDiscountVisibility } from "@/features/cart/hooks/use-discount";
+import { resolveDisplayPrice } from "@/lib/utils/price";
 import {
   getProductCatalogueUrl,
   normalizeImageArray,
 } from "@/lib/storageUtils";
-import { getUnitLabel, resolveDisplayPrice } from "@/lib/utils/price";
-import { useDiscountVisibility } from "@/features/cart/hooks/use-discount";
+import {
+  AVAILABILITY_PILL_CLASSES,
+  getAvailability,
+} from "@/features/products/utils/availability";
+import { PRODUCT_FALLBACK_IMAGE } from "@/components/common/ProductCard";
 
 type ProductItemData = {
   id: number;
@@ -27,28 +36,46 @@ type ProductItemData = {
   stock?: number;
   catalogueFile?: string | null;
   status?: string;
+  category?: { name?: string } | null;
+  brand?: { name?: string } | null;
 };
 
+const money = (value: number) =>
+  `Rs ${Number(value ?? 0).toLocaleString("en-LK", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+
+/** Wide row used by the shop list view — same content as the grid card, laid out horizontally. */
 const SingleListItem = ({ item }: { item: ProductItemData }) => {
   const { openModal } = useModalContext();
   const dispatch = useDispatch<AppDispatch>();
   const { addToCart, isAuthenticated } = useCart();
-  const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const { addToWishlist, isInWishlist } = useWishlist();
+  const canViewDiscount = useDiscountVisibility();
 
-  const resolvedImages = normalizeImageArray(item.images);
-  const primaryImage =
-    resolvedImages.length > 0
-      ? resolvedImages[0]
-      : "/images/placeholder-product.jpg";
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const images = useMemo(
+    () => normalizeImageArray(item.images ?? []),
+    [item.images]
+  );
+  const primaryImage = images[0] ?? PRODUCT_FALLBACK_IMAGE;
   const catalogueUrl = getProductCatalogueUrl(item.catalogueFile);
 
-  const handleQuickViewUpdate = () => {
-    dispatch(updateQuickView({ ...item } as any));
-  };
+  const { displayPrice, hasDiscount, discountPercent } = resolveDisplayPrice(
+    item.price,
+    item.discountedPrice ?? null,
+    canViewDiscount
+  );
+  const availability = getAvailability(item.status, item.stock);
+  const saved = isInWishlist(item.id);
+
+  const payload = { ...item, images };
 
   const handleAddToCart = async () => {
-    if (isAddingToCart) return;
-
+    if (isAddingToCart || !availability.canBuy) return;
     setIsAddingToCart(true);
     await addToCart(
       {
@@ -56,183 +83,152 @@ const SingleListItem = ({ item }: { item: ProductItemData }) => {
         title: item.title,
         price: item.price,
         discountedPrice: item.discountedPrice ?? item.price,
-        images: resolvedImages,
-        stock: item.stock || 0,
-      },
+        images,
+        stock: item.stock ?? 0,
+      } as never,
       1
     );
     setIsAddingToCart(false);
   };
 
-  const handleProductDetails = () => {
-    dispatch(updateproductDetails({ ...item } as any));
+  const handleSave = async () => {
+    if (isSaving || saved) return;
+    setIsSaving(true);
+    await addToWishlist({
+      id: item.id,
+      title: item.title,
+      price: item.price,
+      discountedPrice: item.discountedPrice ?? item.price,
+      images,
+      stock: item.stock ?? 0,
+    } as never);
+    setIsSaving(false);
   };
 
-  const canViewDiscount = useDiscountVisibility();
-  const { displayPrice, hasDiscount } = resolveDisplayPrice(
-    item.price,
-    item.discountedPrice ?? null,
-    canViewDiscount
-  );
-  const unitLabel = getUnitLabel(item.unitType);
-
   return (
-    <div
-      className="bg-gray-2 rounded-lg shadow-1 p-4 cursor-pointer hover:shadow-2 transition-shadow border border-gray-3"
-      onClick={() => {
-        openModal();
-        handleQuickViewUpdate();
-      }}
-    >
-      <div className="flex flex-col sm:flex-row gap-6">
-        {/* Product Image */}
-        <div className="sm:max-w-[200px] w-full flex-shrink-0">
-          <div className="relative overflow-hidden flex items-center justify-center rounded-lg bg-gray-1 aspect-square">
-            <Image
-              src={primaryImage}
-              alt={item.title}
-              width={200}
-              height={200}
-              className="object-cover"
-            />
-          </div>
+    <article className="group flex flex-col gap-5 rounded-2xl border border-gray-3 bg-gray-2 p-4 shadow-2 transition-colors duration-300 hover:border-blue/40 sm:flex-row sm:p-5">
+      <Link
+        href={`/shop-details/${item.id}`}
+        onClick={() => dispatch(updateproductDetails(payload as never))}
+        className="relative aspect-[4/3] w-full shrink-0 overflow-hidden rounded-xl bg-gray-1 sm:aspect-square sm:w-[190px]"
+      >
+        <Image
+          src={primaryImage}
+          alt={item.title}
+          fill
+          sizes="(max-width: 640px) 90vw, 190px"
+          className="object-contain p-4 transition-transform duration-500 group-hover:scale-105"
+        />
+        {hasDiscount && discountPercent ? (
+          <span className="absolute left-2.5 top-2.5 rounded-full bg-blue px-2 py-0.5 text-[10px] font-bold text-gray-1">
+            −{discountPercent}%
+          </span>
+        ) : null}
+      </Link>
+
+      <div className="flex min-w-0 flex-1 flex-col">
+        <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-dark-4">
+          <span className="truncate">{item.category?.name || "Eyewear"}</span>
+          {item.brand?.name && (
+            <>
+              <span className="text-gray-4">·</span>
+              <span className="truncate text-blue/80">{item.brand.name}</span>
+            </>
+          )}
         </div>
 
-        {/* Product Info */}
-        <div className="flex-1 flex flex-col">
-          {/* <div className="flex items-center gap-2.5 mb-2">
-            <div className="flex items-center gap-1">
-              {[...Array(5)].map((_, i) => (
-                <Image
-                  key={i}
-                  src="/images/icons/icon-star.svg"
-                  alt="star"
-                  width={14}
-                  height={14}
-                />
-              ))}
-            </div>
-            <p className="text-custom-sm">({item.reviews || 0})</p>
-          </div> */}
-
-          <h3
-            className="font-medium capitalize text-xl text-dark ease-out duration-200 hover:text-blue mb-2 cursor-pointer"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleProductDetails();
-            }}
+        <h3 className="mt-1.5 text-lg font-semibold capitalize leading-snug text-dark">
+          <Link
+            href={`/shop-details/${item.id}`}
+            onClick={() => dispatch(updateproductDetails(payload as never))}
+            className="transition-colors hover:text-blue"
           >
-            <Link href={`/shop-details/${item.id}`}>{item.title}</Link>
-          </h3>
+            {item.title}
+          </Link>
+        </h3>
 
-          {item.description && (
-            <p className="text-custom-sm text-body mb-4 line-clamp-2">
-              {item.description}
-            </p>
-          )}
+        {item.description && (
+          <p className="mt-2 line-clamp-2 text-[13.5px] leading-relaxed text-body">
+            {item.description}
+          </p>
+        )}
 
-          <div className="flex flex-wrap items-center justify-between gap-4 mt-auto">
-            <div className="flex flex-col gap-1">
-              <span className="flex items-center gap-2 font-medium text-lg">
-                <span className="text-dark">Rs - {displayPrice}.00</span>
-                {/* <span className="text-xs text-body">{unitLabel}</span> */}
-                {hasDiscount && (
-                  <span className="text-dark-4 line-through">
-                    Rs - {item.price}.00
-                  </span>
-                )}
-              </span>
-              <span
-                className={`text-xs font-semibold uppercase tracking-wide ${
-                  item.status === "INACTIVE"
-                    ? "text-orange-600"
-                    : item.status === "OUT_OF_STOCK"
-                      ? "text-red-600"
-                      : item.stock
-                        ? "text-green-600"
-                        : "text-red-600"
-                }`}
-              >
-                {item.status === "INACTIVE"
-                  ? "Inactive"
-                  : item.status === "OUT_OF_STOCK"
-                    ? "Out of Stock"
-                    : item.stock
-                      ? "In Stock"
-                      : "Out of Stock"}
-              </span>
-              {catalogueUrl && isAuthenticated && (
-                <a
-                  href={catalogueUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-xs font-medium text-blue hover:underline"
-                >
-                  View product catalogue
-                </a>
-              )}
-            </div>
-
-            <div
-              className="flex items-center gap-2.5"
-              onClick={(e) => e.stopPropagation()}
+        <div className="mt-3 flex flex-wrap items-center gap-2.5">
+          <span
+            className={`rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.1em] ${
+              AVAILABILITY_PILL_CLASSES[availability.tone]
+            }`}
+          >
+            {availability.label}
+          </span>
+          {catalogueUrl && isAuthenticated && (
+            <a
+              href={catalogueUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-blue hover:underline"
             >
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  openModal();
-                  handleQuickViewUpdate();
-                }}
-                aria-label="Quick view"
-                className="flex items-center justify-center w-9 h-9 rounded-[5px] shadow-1 ease-out duration-200 text-dark bg-gray-1 hover:text-blue hover:bg-gray-2 border border-gray-3"
-              >
-                <svg
-                  className="fill-current"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 16 16"
-                  fill="none"
-                >
-                  <path
-                    fillRule="evenodd"
-                    clipRule="evenodd"
-                    d="M8.00016 5.5C6.61945 5.5 5.50016 6.61929 5.50016 8C5.50016 9.38071 6.61945 10.5 8.00016 10.5C9.38087 10.5 10.5002 9.38071 10.5002 8C10.5002 6.61929 9.38087 5.5 8.00016 5.5ZM6.50016 8C6.50016 7.17157 7.17174 6.5 8.00016 6.5C8.82859 6.5 9.50016 7.17157 9.50016 8C9.50016 8.82842 8.82859 9.5 8.00016 9.5C7.17174 9.5 6.50016 8.82842 6.50016 8Z"
-                    fill=""
-                  />
-                  <path
-                    fillRule="evenodd"
-                    clipRule="evenodd"
-                    d="M8.00016 2.16666C4.99074 2.16666 2.96369 3.96946 1.78721 5.49791L1.76599 5.52546C1.49992 5.87102 1.25487 6.18928 1.08862 6.5656C0.910592 6.96858 0.833496 7.40779 0.833496 8C0.833496 8.5922 0.910592 9.03142 1.08862 9.4344C1.25487 9.81072 1.49992 10.129 1.76599 10.4745L1.78721 10.5021C2.96369 12.0305 4.99074 13.8333 8.00016 13.8333C11.0096 13.8333 13.0366 12.0305 14.2131 10.5021L14.2343 10.4745C14.5004 10.129 14.7455 9.81072 14.9117 9.4344C15.0897 9.03142 15.1668 8.5922 15.1668 8C15.1668 7.40779 15.0897 6.96858 14.9117 6.5656C14.7455 6.18927 14.5004 5.87101 14.2343 5.52545L14.2131 5.49791C13.0366 3.96946 11.0096 2.16666 8.00016 2.16666ZM2.57964 6.10786C3.66592 4.69661 5.43374 3.16666 8.00016 3.16666C10.5666 3.16666 12.3344 4.69661 13.4207 6.10786C13.7131 6.48772 13.8843 6.7147 13.997 6.9697C14.1023 7.20801 14.1668 7.49929 14.1668 8C14.1668 8.50071 14.1023 8.79199 13.997 9.0303C13.8843 9.28529 13.7131 9.51227 13.4207 9.89213C12.3344 11.3034 10.5666 12.8333 8.00016 12.8333C5.43374 12.8333 3.66592 11.3034 2.57964 9.89213C2.28725 9.51227 2.11599 9.28529 2.00334 9.0303C1.89805 8.79199 1.8335 8.50071 1.8335 8C1.8335 7.49929 1.89805 7.20801 2.00334 6.9697C2.11599 6.7147 2.28725 6.48772 2.57964 6.10786Z"
-                    fill=""
-                  />
-                </svg>
-              </button>
+              <FileText className="h-3.5 w-3.5" />
+              Catalogue
+            </a>
+          )}
+        </div>
 
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleAddToCart();
-                }}
-                disabled={
-                  isAddingToCart || !item.stock || item.status !== "ACTIVE"
-                }
-                className="inline-flex font-medium text-custom-sm py-2.5 px-5 rounded-[5px] bg-blue text-white ease-out duration-200 hover:bg-blue-dark disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isAddingToCart
-                  ? "Adding..."
-                  : item.status === "INACTIVE"
-                    ? "Inactive"
-                    : item.status === "OUT_OF_STOCK"
-                      ? "Out of Stock"
-                      : !item.stock
-                        ? "Out of Stock"
-                        : "Add to cart"}
-              </button>
-            </div>
+        <div className="mt-4 flex flex-wrap items-end justify-between gap-4 border-t border-gray-3 pt-4">
+          <div className="flex flex-wrap items-baseline gap-2">
+            <span className="text-xl font-bold text-dark">
+              {money(displayPrice)}
+            </span>
+            {hasDiscount && (
+              <span className="text-[13px] font-medium text-dark-5 line-through">
+                {money(item.price)}
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                dispatch(updateQuickView(payload as never));
+                openModal();
+              }}
+              aria-label="Quick view"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-gray-3 text-dark transition-colors hover:border-blue hover:text-blue"
+            >
+              <Eye className="h-[18px] w-[18px]" />
+            </button>
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={isSaving || saved}
+              aria-label={saved ? "Saved to wishlist" : "Save to wishlist"}
+              className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-gray-3 text-dark transition-colors hover:border-blue hover:text-blue disabled:cursor-not-allowed disabled:border-blue/40 disabled:text-blue"
+            >
+              <Heart className={`h-[18px] w-[18px] ${saved ? "fill-blue" : ""}`} />
+            </button>
+            <button
+              type="button"
+              onClick={handleAddToCart}
+              disabled={isAddingToCart || !availability.canBuy}
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-blue px-6 text-[13px] font-bold text-gray-1 transition-colors hover:bg-blue-light disabled:cursor-not-allowed disabled:bg-gray-8 disabled:text-dark-5"
+            >
+              {isAddingToCart ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Adding…
+                </>
+              ) : (
+                <>
+                  {availability.canBuy && <ShoppingBag className="h-4 w-4" />}
+                  {availability.actionLabel}
+                </>
+              )}
+            </button>
           </div>
         </div>
       </div>
-    </div>
+    </article>
   );
 };
 

@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
+import { Loader2, PackageOpen } from "lucide-react";
+import EmptyState from "@/components/common/EmptyState";
 import { Order } from "@/features/orders/types/order";
 import { User } from "@/features/users/types/user";
 import OrderRow from "./OrderRow";
@@ -69,91 +70,91 @@ const MyOrdersTab: React.FC<MyOrdersTabProps> = ({ profile }) => {
   }, [profile?.address, profile?.city, profile?.country, profile?.postalCode]);
 
   return (
-    <div className="">
+    <>
       <div
-        className="bg-gray-2 rounded-xl shadow-1 p-6 space-y-5 border border-gray-3"
+        className="overflow-hidden rounded-2xl border border-gray-3 bg-gray-2 shadow-2"
         aria-busy={isLoading}
       >
-        <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-gray-3 px-5 py-4 sm:px-6">
           <div>
-            <p className="text-custom-xs text-body">My Orders</p>
-            <p className="text-dark text-lg font-semibold">Order history</p>
-          </div>
-          <div className="text-right text-custom-xs text-dark-2">
-            <p>Total orders: {totalOrders}</p>
-            <p>
-              Showing {orders.length} of {totalOrders}
+            <h2 className="text-[15px] font-bold text-dark">Order history</h2>
+            <p className="mt-0.5 text-[12.5px] text-dark-5">
+              Every order you have placed with us
             </p>
           </div>
+          <p className="text-[12.5px] text-dark-5">
+            <span className="font-semibold text-dark">{orders.length}</span> of{" "}
+            <span className="font-semibold text-dark">{totalOrders}</span>
+          </p>
         </div>
 
-        {isLoading ? (
-          <div className="space-y-3 py-4" aria-live="polite" role="status">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <div
-                key={i}
-                className="h-16 w-full animate-pulse rounded-xl bg-gray-1 border border-gray-3"
-              />
-            ))}
-          </div>
-        ) : error ? (
-          <p className="py-10 text-center text-custom-sm text-red" role="alert">
-            {(error as any)?.data?.message ||
-              (error as any)?.data ||
-              (error as any)?.error ||
-              "Failed to load orders"}
-          </p>
-        ) : orders.length === 0 ? (
-          <div className="py-10 text-center text-custom-sm text-body">
-            <p>You haven&apos;t placed any orders yet.</p>
-            <Link
-              href="/"
-              className="mt-3 inline-flex items-center justify-center rounded-full border border-blue px-5 py-2 text-custom-sm font-semibold text-blue hover:bg-blue hover:text-white"
+        <div className="p-5 sm:p-6">
+          {isLoading ? (
+            <div className="space-y-4" aria-live="polite" role="status">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="h-[168px] w-full animate-pulse rounded-2xl border border-gray-3 bg-gray-1"
+                />
+              ))}
+            </div>
+          ) : error ? (
+            <div
+              className="rounded-2xl border border-red/30 bg-red/10 px-5 py-4 text-[13.5px] text-red"
+              role="alert"
             >
-              Continue shopping
-            </Link>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {orders.map((order) => (
-              <OrderRow
-                key={order.id}
-                order={order}
-                onPrintInvoice={handlePrintInvoice}
-                isPrintPending={isPrintPending}
-              />
-            ))}
-          </div>
-        )}
+              {(error as any)?.data?.message ||
+                (error as any)?.data ||
+                (error as any)?.error ||
+                "Failed to load orders"}
+            </div>
+          ) : orders.length === 0 ? (
+            <EmptyState
+              icon={<PackageOpen className="h-7 w-7" />}
+              title="No orders yet"
+              description="Once you place an order it will appear here, along with its invoice and status."
+              action={{ label: "Start shopping", href: "/shop-with-sidebar" }}
+            />
+          ) : (
+            <div className="space-y-4">
+              {orders.map((order) => (
+                <OrderRow
+                  key={order.id}
+                  order={order}
+                  onPrintInvoice={handlePrintInvoice}
+                  isPrintPending={isPrintPending}
+                />
+              ))}
+            </div>
+          )}
 
-        {totalPages > 1 && (
-          <Pagination
-            currentPage={page}
-            totalPages={totalPages}
-            totalItems={totalOrders}
-            itemsPerPage={PAGE_LIMIT}
-            onPageChange={setPage}
-            showItemsPerPage={false}
-          />
-        )}
+          {totalPages > 1 && (
+            <Pagination
+              currentPage={page}
+              totalPages={totalPages}
+              totalItems={totalOrders}
+              itemsPerPage={PAGE_LIMIT}
+              onPageChange={setPage}
+              showItemsPerPage={false}
+            />
+          )}
+        </div>
       </div>
 
       {isPrintPending && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="rounded-lg bg-gray-2 p-6 shadow-xl border border-gray-3">
-            <div className="text-center">
-              <div className="inline-block h-10 w-10 animate-spin rounded-full border-4 border-solid border-blue border-r-transparent"></div>
-              <p className="mt-3 text-sm font-semibold text-dark">
-                Preparing download...
-              </p>
-              <p className="mt-1 text-xs text-body">
-                Your receipt will download automatically
-              </p>
-            </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div className="rounded-2xl border border-gray-3 bg-gray-2 px-8 py-7 text-center shadow-4">
+            <Loader2 className="mx-auto h-8 w-8 animate-spin text-blue" />
+            <p className="mt-4 text-[14px] font-semibold text-dark">
+              Preparing download…
+            </p>
+            <p className="mt-1 text-[12.5px] text-body">
+              Your receipt will download automatically.
+            </p>
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 };
 

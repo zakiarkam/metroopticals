@@ -5,7 +5,16 @@ import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { clearUserSession } from "@/lib/sessionStorage";
 import { useCachedSession } from "@/features/auth/hooks/use-cached-session";
+import {
+  AlertCircle,
+  Check,
+  CheckCircle2,
+  Loader2,
+  LogOut,
+  Pencil,
+} from "lucide-react";
 import SiteContainer from "@/components/common/SiteContainer";
+import PageHero from "@/components/common/PageHero";
 import InlineSpinner from "@/components/common/InlineSpinner";
 import { useDispatch } from "react-redux";
 import { api } from "@/store/services/api";
@@ -233,11 +242,51 @@ export default function MyAccount() {
   const email = userForUI?.email || "";
   const role = (session?.user as any)?.role || "CUSTOMER";
 
+  /** Read-only field tile. */
+  const detailTile = (
+    label: string,
+    value?: string | null,
+    hint?: string,
+    span = false
+  ) => (
+    <div
+      key={label}
+      className={`rounded-xl border border-gray-3 bg-gray-1 px-4 py-3.5 ${
+        span ? "sm:col-span-2" : ""
+      }`}
+    >
+      <p className="text-[10.5px] font-bold uppercase tracking-[0.14em] text-dark-5">
+        {label}
+      </p>
+      <p className="mt-1.5 break-words text-[14px] font-semibold text-dark">
+        {value || <span className="font-normal text-dark-5">Not provided</span>}
+      </p>
+      {hint && <p className="mt-1 text-[11px] text-dark-5">{hint}</p>}
+    </div>
+  );
+
   return (
-    <div>
-      <section className="bg-gray-2 py-6 sm:py-8">
+    <>
+      <PageHero
+        eyebrow="Your account"
+        title={fullName || "My account"}
+        description="Keep your contact and delivery details up to date so orders reach you without a phone call."
+        crumbs={[{ label: "My account" }]}
+        actions={
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="inline-flex h-11 items-center gap-2 rounded-xl border border-gray-3 px-5 text-[13px] font-semibold text-dark transition-colors hover:border-red hover:text-red"
+          >
+            <LogOut className="h-4 w-4" />
+            Sign out
+          </button>
+        }
+      />
+
+      <section className="bg-gray-1 py-10 lg:py-14">
         <SiteContainer>
-          <div className="flex flex-col gap-6 xl:flex-row">
+          <div className="flex flex-col gap-6 xl:flex-row xl:gap-8">
             <AccountSidebar
               name={fullName}
               email={email}
@@ -248,148 +297,62 @@ export default function MyAccount() {
             />
 
             {/* RIGHT CONTENT */}
-            <div className="flex-1 min-w-0">
+            <div className="min-w-0 flex-1">
               <div
-                className="bg-gray-2 rounded-xl shadow-1 p-5 sm:p-6 border border-gray-3"
+                className="overflow-hidden rounded-2xl border border-gray-3 bg-gray-2 shadow-2"
                 role="tabpanel"
                 id="panel-account"
                 aria-labelledby="tab-account"
               >
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center justify-between gap-4 border-b border-gray-3 px-5 py-4 sm:px-6">
                   <div>
-                    <h2 className="text-dark font-semibold text-lg">
-                      Account Details
+                    <h2 className="text-[15px] font-bold text-dark">
+                      Account details
                     </h2>
-                    <p className="text-custom-xs text-body mt-0.5">
-                      Manage your personal information
+                    <p className="mt-0.5 text-[12.5px] text-dark-5">
+                      Your personal and delivery information
                     </p>
                   </div>
                   {!isEditingDetails && (
                     <button
                       type="button"
                       onClick={handleEditClick}
-                      className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-3 bg-gray-2 text-dark transition hover:border-blue hover:text-blue"
-                      aria-label="Edit details"
-                      title="Edit details"
+                      className="inline-flex h-10 items-center gap-2 rounded-xl border border-gray-3 px-4 text-[13px] font-semibold text-dark transition-colors hover:border-blue hover:text-blue"
                     >
-                      <svg
-                        className="h-4 w-4"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.6"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        aria-hidden="true"
-                      >
-                        <path d="M12 20h9" />
-                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
-                      </svg>
+                      <Pencil className="h-4 w-4" />
+                      Edit
                     </button>
                   )}
                 </div>
 
+                <div className="p-5 sm:p-6">
                 {saveSuccess && (
-                  <div className="mb-4 rounded-xl bg-green-light-6 border border-green p-4 flex items-start gap-3">
-                    <svg
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      className="text-green shrink-0 mt-0.5"
-                    >
-                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                      <polyline points="22 4 12 14.01 9 11.01" />
-                    </svg>
-                    <div>
-                      <p className="font-semibold text-green">
-                        Profile updated successfully!
-                      </p>
-                    </div>
+                  <div className="mb-5 flex items-start gap-2.5 rounded-xl border border-green/30 bg-green/10 px-4 py-3.5">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green" />
+                    <p className="text-[13px] font-semibold text-green">
+                      Profile updated successfully.
+                    </p>
                   </div>
                 )}
 
                 {!isEditingDetails ? (
                   <div>
                     <div className="grid gap-3 sm:grid-cols-2">
-                      <div className="rounded-xl bg-gray-1 p-3 border border-gray-3">
-                        <p className="text-custom-xs text-body mb-1">
-                          Full Name
-                        </p>
-                        <p className="font-semibold text-dark">
-                          {profile?.name || fullName}
-                        </p>
-                      </div>
-
-                      <div className="rounded-xl bg-gray-1 p-3 border border-gray-3">
-                        <p className="text-custom-xs text-body mb-0.5">
-                          Email Address
-                        </p>
-                        <p className="font-semibold text-dark break-all">
-                          {email}
-                        </p>
-                        <p className="text-[10px] text-body mt-0.5">
-                          Email cannot be changed
-                        </p>
-                      </div>
-
-                      <div className="rounded-xl bg-gray-1 p-3 border border-gray-3">
-                        <p className="text-custom-xs text-body mb-0.5">
-                          Phone Number
-                        </p>
-                        <p className="font-semibold text-dark">
-                          {profile?.phone || "Not provided"}
-                        </p>
-                      </div>
-
-                      <div className="rounded-xl bg-gray-1 p-3 border border-gray-3">
-                        <p className="text-custom-xs text-body mb-0.5">
-                          Customer Type
-                        </p>
-                        <p className="font-semibold text-dark">
-                          {CUSTOMER_TYPE_LABELS[profile?.customerType || "END_USER"]}
-                        </p>
-                      </div>
-
-                      <div className="rounded-xl bg-gray-1 p-3 border border-gray-3">
-                        <p className="text-custom-xs text-body mb-0.5">City</p>
-                        <p className="font-semibold text-dark">
-                          {profile?.city || "Not provided"}
-                        </p>
-                      </div>
-
-                      <div className="rounded-xl bg-gray-1 p-3 border border-gray-3">
-                        <p className="text-custom-xs text-body mb-0.5">
-                          Address
-                        </p>
-                        <p className="font-semibold text-dark">
-                          {profile?.address || "Not provided"}
-                        </p>
-                      </div>
-
-                      <div className="rounded-xl bg-gray-1 p-3 border border-gray-3">
-                        <p className="text-custom-xs text-body mb-0.5">
-                          Postal Code
-                        </p>
-                        <p className="font-semibold text-dark">
-                          {profile?.postalCode || "Not provided"}
-                        </p>
-                      </div>
-
-                      <div className="rounded-xl bg-gray-1 p-3 border border-gray-3 sm:col-span-2">
-                        <p className="text-custom-xs text-body mb-0.5">
-                          Country
-                        </p>
-                        <p className="font-semibold text-dark">
-                          {profile?.country || "Not provided"}
-                        </p>
-                      </div>
+                      {detailTile("Full name", profile?.name || fullName)}
+                      {detailTile("Email address", email, "Email cannot be changed")}
+                      {detailTile("Phone number", profile?.phone)}
+                      {detailTile(
+                        "Customer type",
+                        CUSTOMER_TYPE_LABELS[profile?.customerType || "END_USER"]
+                      )}
+                      {detailTile("City", profile?.city)}
+                      {detailTile("Postal code", profile?.postalCode)}
+                      {detailTile("Address", profile?.address, undefined, true)}
+                      {detailTile("Country", profile?.country, undefined, true)}
                     </div>
 
                     {profileError && (
-                      <p className="text-sm text-red" role="alert">
+                      <p className="mt-4 text-[13px] text-red" role="alert">
                         {profileError}
                       </p>
                     )}
@@ -397,8 +360,9 @@ export default function MyAccount() {
                 ) : (
                   <form onSubmit={handleSaveDetails} className="space-y-4">
                     {saveError && (
-                      <div className="rounded-xl bg-red-light-6 border border-red p-3">
-                        <p className="text-sm text-red">{saveError}</p>
+                      <div className="flex items-start gap-2.5 rounded-xl border border-red/30 bg-red/10 px-4 py-3.5">
+                        <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red" />
+                        <p className="text-[13px] text-red">{saveError}</p>
                       </div>
                     )}
 
@@ -406,7 +370,7 @@ export default function MyAccount() {
                       <div>
                         <label
                           htmlFor="edit-firstname"
-                          className="block mb-2 text-sm font-medium text-dark"
+                          className="mb-2 block text-[12.5px] font-semibold text-dark"
                         >
                           First Name
                         </label>
@@ -420,7 +384,7 @@ export default function MyAccount() {
                               firstName: e.target.value,
                             })
                           }
-                          className="w-full rounded-xl border border-gray-3 bg-gray-2 px-4 py-2.5 text-dark outline-none focus:border-blue focus:ring-2 focus:ring-blue/20"
+                          className="h-11 w-full rounded-xl border border-gray-3 bg-gray-1 px-4 text-[14px] text-dark outline-none transition-colors hover:border-gray-4 focus:border-blue"
                           required
                         />
                       </div>
@@ -428,7 +392,7 @@ export default function MyAccount() {
                       <div>
                         <label
                           htmlFor="edit-lastname"
-                          className="block mb-2 text-sm font-medium text-dark"
+                          className="mb-2 block text-[12.5px] font-semibold text-dark"
                         >
                           Last Name
                         </label>
@@ -442,7 +406,7 @@ export default function MyAccount() {
                               lastName: e.target.value,
                             })
                           }
-                          className="w-full rounded-xl border border-gray-3 bg-gray-2 px-4 py-2.5 text-dark outline-none focus:border-blue focus:ring-2 focus:ring-blue/20"
+                          className="h-11 w-full rounded-xl border border-gray-3 bg-gray-1 px-4 text-[14px] text-dark outline-none transition-colors hover:border-gray-4 focus:border-blue"
                           required
                         />
                       </div>
@@ -450,7 +414,7 @@ export default function MyAccount() {
                       <div>
                         <label
                           htmlFor="edit-email"
-                          className="block mb-2 text-sm font-medium text-dark"
+                          className="mb-2 block text-[12.5px] font-semibold text-dark"
                         >
                           Email Address
                         </label>
@@ -459,9 +423,9 @@ export default function MyAccount() {
                           type="email"
                           value={editForm.email}
                           disabled
-                          className="w-full rounded-xl border border-gray-3 bg-gray-1 px-4 py-2.5 text-dark-2 cursor-not-allowed"
+                          className="h-11 w-full cursor-not-allowed rounded-xl border border-gray-3 bg-gray-8 px-4 text-[14px] text-dark-5"
                         />
-                        <p className="text-[11px] text-body mt-1">
+                        <p className="mt-1.5 text-[11px] text-dark-5">
                           Email cannot be changed
                         </p>
                       </div>
@@ -469,7 +433,7 @@ export default function MyAccount() {
                       <div>
                         <label
                           htmlFor="edit-phone"
-                          className="block mb-2 text-sm font-medium text-dark"
+                          className="mb-2 block text-[12.5px] font-semibold text-dark"
                         >
                           Phone Number
                         </label>
@@ -483,7 +447,7 @@ export default function MyAccount() {
                               phone: e.target.value,
                             })
                           }
-                          className="w-full rounded-xl border border-gray-3 bg-gray-2 px-4 py-2.5 text-dark outline-none focus:border-blue focus:ring-2 focus:ring-blue/20"
+                          className="h-11 w-full rounded-xl border border-gray-3 bg-gray-1 px-4 text-[14px] text-dark outline-none transition-colors hover:border-gray-4 focus:border-blue"
                           required
                         />
                       </div>
@@ -491,7 +455,7 @@ export default function MyAccount() {
                       <div>
                         <label
                           htmlFor="edit-customer-type"
-                          className="block mb-2 text-sm font-medium text-dark"
+                          className="mb-2 block text-[12.5px] font-semibold text-dark"
                         >
                           Customer Type
                         </label>
@@ -504,7 +468,7 @@ export default function MyAccount() {
                               customerType: e.target.value as CustomerType,
                             })
                           }
-                          className="w-full rounded-xl border border-gray-3 bg-gray-2 px-4 py-2.5 text-dark outline-none focus:border-blue focus:ring-2 focus:ring-blue/20"
+                          className="h-11 w-full rounded-xl border border-gray-3 bg-gray-1 px-4 text-[14px] text-dark outline-none transition-colors hover:border-gray-4 focus:border-blue"
                         >
                           {CUSTOMER_TYPE_OPTIONS.map((opt) => (
                             <option key={opt.value} value={opt.value}>
@@ -517,7 +481,7 @@ export default function MyAccount() {
                       <div>
                         <label
                           htmlFor="edit-city"
-                          className="block mb-2 text-sm font-medium text-dark"
+                          className="mb-2 block text-[12.5px] font-semibold text-dark"
                         >
                           City
                         </label>
@@ -528,7 +492,7 @@ export default function MyAccount() {
                           onChange={(e) =>
                             setEditForm({ ...editForm, city: e.target.value })
                           }
-                          className="w-full rounded-xl border border-gray-3 bg-gray-2 px-4 py-2.5 text-dark outline-none focus:border-blue focus:ring-2 focus:ring-blue/20"
+                          className="h-11 w-full rounded-xl border border-gray-3 bg-gray-1 px-4 text-[14px] text-dark outline-none transition-colors hover:border-gray-4 focus:border-blue"
                           required
                         />
                       </div>
@@ -536,7 +500,7 @@ export default function MyAccount() {
                       <div>
                         <label
                           htmlFor="edit-address"
-                          className="block mb-2 text-sm font-medium text-dark"
+                          className="mb-2 block text-[12.5px] font-semibold text-dark"
                         >
                           Address
                         </label>
@@ -550,7 +514,7 @@ export default function MyAccount() {
                               address: e.target.value,
                             })
                           }
-                          className="w-full rounded-xl border border-gray-3 bg-gray-2 px-4 py-2.5 text-dark outline-none focus:border-blue focus:ring-2 focus:ring-blue/20"
+                          className="h-11 w-full rounded-xl border border-gray-3 bg-gray-1 px-4 text-[14px] text-dark outline-none transition-colors hover:border-gray-4 focus:border-blue"
                           required
                         />
                       </div>
@@ -558,7 +522,7 @@ export default function MyAccount() {
                       <div>
                         <label
                           htmlFor="edit-postal"
-                          className="block mb-2 text-sm font-medium text-dark"
+                          className="mb-2 block text-[12.5px] font-semibold text-dark"
                         >
                           Postal Code
                         </label>
@@ -572,7 +536,7 @@ export default function MyAccount() {
                               postalCode: e.target.value,
                             })
                           }
-                          className="w-full rounded-xl border border-gray-3 bg-gray-2 px-4 py-2.5 text-dark outline-none focus:border-blue focus:ring-2 focus:ring-blue/20"
+                          className="h-11 w-full rounded-xl border border-gray-3 bg-gray-1 px-4 text-[14px] text-dark outline-none transition-colors hover:border-gray-4 focus:border-blue"
                           required
                         />
                       </div>
@@ -580,7 +544,7 @@ export default function MyAccount() {
                       <div className="sm:col-span-2">
                         <label
                           htmlFor="edit-country"
-                          className="block mb-2 text-sm font-medium text-dark"
+                          className="mb-2 block text-[12.5px] font-semibold text-dark"
                         >
                           Country
                         </label>
@@ -594,7 +558,7 @@ export default function MyAccount() {
                               country: e.target.value,
                             })
                           }
-                          className="w-full rounded-xl border border-gray-3 bg-gray-2 px-4 py-2.5 text-dark outline-none focus:border-blue focus:ring-2 focus:ring-blue/20"
+                          className="h-11 w-full rounded-xl border border-gray-3 bg-gray-1 px-4 text-[14px] text-dark outline-none transition-colors hover:border-gray-4 focus:border-blue"
                           required
                         />
                       </div>
@@ -604,45 +568,17 @@ export default function MyAccount() {
                       <button
                         type="submit"
                         disabled={isSaving}
-                        className="inline-flex items-center gap-2 rounded-full bg-blue px-6 py-3 text-sm font-semibold text-white hover:bg-blue-dark disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="inline-flex h-11 items-center gap-2 rounded-xl bg-blue px-7 text-[13px] font-bold text-gray-1 transition-colors hover:bg-blue-light disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         {isSaving ? (
                           <>
-                            <svg
-                              className="animate-spin h-4 w-4"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                            >
-                              <circle
-                                className="opacity-25"
-                                cx="12"
-                                cy="12"
-                                r="10"
-                                stroke="currentColor"
-                                strokeWidth="4"
-                              />
-                              <path
-                                className="opacity-75"
-                                fill="currentColor"
-                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                              />
-                            </svg>
-                            Saving...
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Saving…
                           </>
                         ) : (
                           <>
-                            <svg
-                              width="16"
-                              height="16"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              aria-hidden="true"
-                            >
-                              <polyline points="20 6 9 17 4 12" />
-                            </svg>
-                            Save Changes
+                            <Check className="h-4 w-4" />
+                            Save changes
                           </>
                         )}
                       </button>
@@ -650,18 +586,19 @@ export default function MyAccount() {
                         type="button"
                         onClick={handleCancelEdit}
                         disabled={isSaving}
-                        className="inline-flex items-center gap-2 rounded-full border border-gray-3 px-6 py-3 text-sm font-semibold text-dark hover:border-blue hover:text-blue disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="inline-flex h-11 items-center gap-2 rounded-xl border border-gray-3 px-7 text-[13px] font-semibold text-dark transition-colors hover:border-blue hover:text-blue disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         Cancel
                       </button>
                     </div>
                   </form>
                 )}
+                </div>
               </div>
             </div>
           </div>
         </SiteContainer>
       </section>
-    </div>
+    </>
   );
 }

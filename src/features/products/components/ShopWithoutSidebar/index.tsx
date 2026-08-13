@@ -1,7 +1,15 @@
 "use client";
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import Breadcrumb from "@/components/common/Breadcrumb";
+import {
+  LayoutGrid,
+  PackageSearch,
+  Rows3,
+  SlidersHorizontal,
+  X,
+} from "lucide-react";
 import SiteContainer from "@/components/common/SiteContainer";
+import PageHero from "@/components/common/PageHero";
+import EmptyState from "@/components/common/EmptyState";
 import SingleGridItem from "../Shop/SingleGridItem";
 import SingleListItem from "../Shop/SingleListItem";
 import CustomSelect from "../ShopWithSidebar/CustomSelect";
@@ -282,20 +290,44 @@ const ShopWithoutSidebar = () => {
   };
 
 
+  const viewButton = (style: string) =>
+    `inline-flex h-10 w-10 items-center justify-center rounded-lg border transition-colors ${
+      productStyle === style
+        ? "border-blue bg-blue text-gray-1"
+        : "border-gray-3 bg-gray-1 text-dark hover:border-blue hover:text-blue"
+    }`;
+
   return (
     <>
-      {/* <Breadcrumb title={"Explore All Products"} pages={["Shop"]} /> */}
-      <section className="overflow-hidden relative py-8 bg-gray-1">
+      <PageHero
+        eyebrow={normalizedSearch ? "Search results" : "The collection"}
+        title={
+          normalizedSearch
+            ? `Results for “${normalizedSearch}”`
+            : (parentCategory?.name ?? "Explore all eyewear")
+        }
+        description={
+          parentCategory?.name
+            ? `Every ${parentCategory.name.toLowerCase()} we currently stock, with lens and bridge measurements on each listing.`
+            : "Prescription frames, sunglasses and contact lenses — sorted however you like."
+        }
+        crumbs={[
+          { label: "Shop", href: "/shop-with-sidebar" },
+          { label: parentCategory?.name ?? normalizedSearch ?? "All products" },
+        ]}
+      />
+
+      <section className="relative overflow-hidden bg-gray-1 pb-16 pt-8">
         <SiteContainer>
           {error && (
-            <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg">
+            <div className="mb-5 rounded-2xl border border-red/30 bg-red/10 px-5 py-4 text-[14px] text-red">
               {error}
             </div>
           )}
 
-          <div className="flex flex-col lg:flex-row gap-7.5">
+          <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
             {brands.length > 0 && (
-              <aside className="hidden lg:block w-full lg:w-[310px] lg:sticky lg:top-28 lg:self-start">
+              <aside className="hidden w-full lg:sticky lg:top-32 lg:block lg:w-[300px] lg:self-start">
                 <BrandyFilter
                   parentName={parentCategory?.name}
                   brands={brands}
@@ -307,125 +339,72 @@ const ShopWithoutSidebar = () => {
               </aside>
             )}
             <div className="w-full lg:flex-1">
-              <div className="rounded-lg bg-gray-2 shadow-1 pl-3 pr-2.5 py-2.5 mb-6 border border-gray-3">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex items-center justify-between gap-4 w-full sm:w-auto">
-                    <button
-                      onClick={() => setProductSidebar(true)}
-                      className="sm:hidden flex items-center gap-2 px-4 py-2 bg-blue text-white rounded-lg"
-                      type="button"
-                    >
-                      <svg
-                        className="fill-current"
-                        width="18"
-                        height="18"
-                        viewBox="0 0 18 18"
-                        fill="none"
+              <div className="mb-6 rounded-2xl border border-gray-3 bg-gray-2 p-3 shadow-2 sm:p-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex flex-1 items-center gap-3">
+                    {brands.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setProductSidebar(true)}
+                        className="inline-flex h-10 items-center gap-2 rounded-lg border border-gray-3 px-4 text-[13px] font-semibold text-dark transition-colors hover:border-blue hover:text-blue lg:hidden"
                       >
-                        <path
-                          d="M2.25 4.5H15.75M2.25 9H15.75M2.25 13.5H15.75"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                        />
-                      </svg>
-                      Filters
-                    </button>
+                        <SlidersHorizontal className="h-4 w-4" />
+                        Brands
+                      </button>
+                    )}
 
                     <CustomSelect
                       options={options}
                       value={sortBy}
                       onChange={setSortBy}
                     />
-
-                    <p className="hidden sm:block">
-                      Showing{" "}
-                      <span className="text-dark">
-                        {data.products.length} of {data.pagination?.total || 0}
-                      </span>{" "}
-                      Products
-                    </p>
                   </div>
 
-                  <div className="hidden sm:flex items-center gap-2.5">
-                    <button
-                      onClick={() => setProductSidebar(true)}
-                      className="xl:hidden flex items-center gap-2 px-4 py-2 bg-blue text-white rounded-lg"
-                      type="button"
-                    >
-                      <svg
-                        className="fill-current"
-                        width="18"
-                        height="18"
-                        viewBox="0 0 18 18"
-                        fill="none"
-                      >
-                        <path
-                          d="M2.25 4.5H15.75M2.25 9H15.75M2.25 13.5H15.75"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                        />
-                      </svg>
-                      Filters
-                    </button>
-                    <div className="hidden sm:flex items-center gap-2.5">
-                      <button
-                        onClick={() => setProductStyle("grid")}
-                        aria-label="button for product grid tab"
-                        className={`${
-                          productStyle === "grid"
-                            ? "bg-blue border-blue text-white"
-                            : "text-dark bg-gray-1 border-gray-3"
-                        } flex items-center justify-center w-10.5 h-9 rounded-[5px] border ease-out duration-200 hover:bg-blue hover:border-blue hover:text-white`}
-                      >
-                        <svg
-                          className="fill-current"
-                          width="18"
-                          height="18"
-                          viewBox="0 0 18 18"
-                          fill="none"
-                        >
-                          <rect x="1" y="1" width="6" height="6" rx="1" />
-                          <rect x="11" y="1" width="6" height="6" rx="1" />
-                          <rect x="1" y="11" width="6" height="6" rx="1" />
-                          <rect x="11" y="11" width="6" height="6" rx="1" />
-                        </svg>
-                      </button>
+                  <div className="flex items-center gap-4">
+                    <p className="hidden text-[13px] text-dark-4 sm:block">
+                      <span className="font-semibold text-dark">
+                        {data.products.length}
+                      </span>{" "}
+                      of{" "}
+                      <span className="font-semibold text-dark">
+                        {data.pagination?.total || 0}
+                      </span>{" "}
+                      products
+                    </p>
 
+                    <div className="hidden items-center gap-2 sm:flex">
                       <button
-                        onClick={() => setProductStyle("list")}
-                        aria-label="button for product list tab"
-                        className={`${
-                          productStyle === "list"
-                            ? "bg-blue border-blue text-white"
-                            : "text-dark bg-gray-1 border-gray-3"
-                        } flex items-center justify-center w-10.5 h-9 rounded-[5px] border ease-out duration-200 hover:bg-blue hover:border-blue hover:text-white`}
+                        type="button"
+                        onClick={() => setProductStyle("grid")}
+                        aria-label="Grid view"
+                        aria-pressed={productStyle === "grid"}
+                        className={viewButton("grid")}
                       >
-                        <svg
-                          className="fill-current"
-                          width="18"
-                          height="18"
-                          viewBox="0 0 18 18"
-                          fill="none"
-                        >
-                          <rect x="1" y="2" width="16" height="3" rx="1" />
-                          <rect x="1" y="7.5" width="16" height="3" rx="1" />
-                          <rect x="1" y="13" width="16" height="3" rx="1" />
-                        </svg>
+                        <LayoutGrid className="h-[18px] w-[18px]" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setProductStyle("list")}
+                        aria-label="List view"
+                        aria-pressed={productStyle === "list"}
+                        className={viewButton("list")}
+                      >
+                        <Rows3 className="h-[18px] w-[18px]" />
                       </button>
                     </div>
                   </div>
                 </div>
-                <div className="flex justify-center sm:hidden mt-3">
-                  <p>
-                    Showing{" "}
-                    <span className="text-dark">
-                      {data.products.length} of {data.pagination?.total || 0}
-                    </span>{" "}
-                    Products
-                  </p>
-                </div>
+
+                <p className="mt-3 text-center text-[13px] text-dark-4 sm:hidden">
+                  <span className="font-semibold text-dark">
+                    {data.products.length}
+                  </span>{" "}
+                  of{" "}
+                  <span className="font-semibold text-dark">
+                    {data.pagination?.total || 0}
+                  </span>{" "}
+                  products
+                </p>
               </div>
 
               {/* Loading State */}
@@ -442,12 +421,12 @@ const ShopWithoutSidebar = () => {
                 <div
                   className={`${
                     productStyle === "grid"
-                      ? `grid grid-cols-1 sm:grid-cols-2 ${
+                      ? `grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 ${
                           brands.length > 0
                             ? "lg:grid-cols-3"
-                            : "lg:grid-cols-4"
-                        } gap-x-7.5 gap-y-9`
-                      : "flex flex-col gap-7.5"
+                            : "lg:grid-cols-3 xl:grid-cols-4"
+                        }`
+                      : "flex flex-col gap-4"
                   }`}
                 >
                   {data.products.map((item, key) =>
@@ -462,27 +441,19 @@ const ShopWithoutSidebar = () => {
 
               {/* Empty State */}
               {!loading && data.products.length === 0 && (
-                <div className="flex flex-col items-center justify-center py-20">
-                  <svg
-                    className="w-16 h-16 text-gray-400 mb-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
-                    />
-                  </svg>
-                  <h3 className="text-xl font-semibold text-dark mb-2">
-                    No Products Found
-                  </h3>
-                  <p className="text-body mb-4">
-                    Please check back later for new products
-                  </p>
-                </div>
+                <EmptyState
+                  icon={<PackageSearch className="h-7 w-7" />}
+                  title={
+                    normalizedSearch
+                      ? `Nothing matches “${normalizedSearch}”`
+                      : "No products here yet"
+                  }
+                  description="Try a different search term or browse the full range — we restock every week."
+                  action={{
+                    label: "Browse all frames",
+                    href: "/shop-with-sidebar",
+                  }}
+                />
               )}
 
               {/* Pagination */}
@@ -515,18 +486,22 @@ const ShopWithoutSidebar = () => {
           />
 
           <div
-            className={`sidebar-content fixed top-0 left-0 z-50 h-full w-full max-w-[310px] bg-gray-2 px-5 py-6 shadow-1 overflow-y-auto transition-transform duration-200 xl:hidden ${
+            className={`sidebar-content fixed left-0 top-0 z-50 h-full w-full max-w-[320px] overflow-y-auto bg-gray-1 px-4 py-6 shadow-4 transition-transform duration-200 lg:hidden ${
               productSidebar ? "translate-x-0" : "-translate-x-full"
             }`}
           >
-            <div className="flex items-center justify-between mb-6">
-              <p className="text-lg font-semibold">Filters</p>
+            <div className="mb-5 flex items-center justify-between">
+              <p className="flex items-center gap-2 text-[13.5px] font-bold uppercase tracking-[0.1em] text-dark">
+                <SlidersHorizontal className="h-4 w-4 text-blue" />
+                Brands
+              </p>
               <button
                 type="button"
                 onClick={() => setProductSidebar(false)}
-                className="text-blue hover:underline"
+                aria-label="Close filters"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-3 text-dark transition-colors hover:border-blue hover:text-blue"
               >
-                Close
+                <X className="h-4 w-4" />
               </button>
             </div>
 
@@ -575,26 +550,30 @@ const BrandyFilter = ({
   const isAllSelected = isParentSelected && selectedBrandies.length === 0;
 
   return (
-    <div className="bg-gray-2 shadow-1 rounded-lg mb-6 border border-gray-3">
-      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-2">
+    <div className="rounded-2xl border border-gray-3 bg-gray-2 shadow-2">
+      <div className="flex items-center justify-between gap-3 border-b border-gray-3 px-5 py-4">
         <div>
-          <p className="text-dark font-semibold">Brands</p>
+          <p className="text-[13.5px] font-bold uppercase tracking-[0.1em] text-dark">
+            Brands
+          </p>
           {parentName && (
-            <p className="text-custom-xs text-body">Options for {parentName}</p>
+            <p className="mt-1 text-[11.5px] capitalize text-dark-5">
+              within {parentName}
+            </p>
           )}
         </div>
         {selectedBrandies.length > 0 && (
           <button
             type="button"
             onClick={onClear}
-            className="text-custom-xs text-blue hover:underline"
+            className="text-[12px] font-semibold text-blue transition-opacity hover:opacity-80"
           >
-            Clear
+            Reset
           </button>
         )}
       </div>
 
-      <div className="flex flex-col gap-3 px-6 py-5">
+      <div className="flex flex-col gap-1 p-3">
         <BrandyButton
           label="All brands"
           count={brands.reduce(
@@ -630,14 +609,14 @@ const BrandyButton = ({
   <button
     type="button"
     onClick={onSelect}
-    className={`${
-      isSelected ? "text-blue" : "text-dark"
-    } group flex items-center justify-between ease-out duration-200 hover:text-blue w-full`}
+    className={`flex w-full items-center justify-between gap-3 rounded-lg px-2 py-2 text-[13px] transition-colors hover:bg-gray-8 ${
+      isSelected ? "bg-blue/[0.08]" : ""
+    }`}
   >
-    <div className="flex items-center gap-2">
-      <div
-        className={`cursor-pointer flex items-center justify-center rounded w-4 h-4 border ${
-          isSelected ? "border-blue bg-blue" : "bg-gray-2 border-gray-3"
+    <span className="flex items-center gap-2.5">
+      <span
+        className={`flex h-[15px] w-[15px] shrink-0 items-center justify-center rounded-[4px] border transition-colors ${
+          isSelected ? "border-blue bg-blue" : "border-gray-4 bg-gray-1"
         }`}
       >
         <svg
@@ -650,24 +629,22 @@ const BrandyButton = ({
         >
           <path
             d="M8.33317 2.5L3.74984 7.08333L1.6665 5"
-            stroke="white"
+            stroke="#0A0A0A"
             strokeWidth="1.94437"
             strokeLinecap="round"
             strokeLinejoin="round"
           />
         </svg>
-      </div>
+      </span>
 
-      <span className="text-body">{label}</span>
-    </div>
-
-    <span
-      className={`${
-        isSelected ? "text-white bg-blue" : "text-dark bg-gray-2"
-      } inline-flex rounded-[30px] text-custom-xs px-2 ease-out duration-200`}
-    >
-      {count}
+      <span
+        className={`capitalize ${isSelected ? "font-semibold text-blue" : "text-body"}`}
+      >
+        {label}
+      </span>
     </span>
+
+    <span className="text-[11px] font-medium text-dark-5">{count}</span>
   </button>
 );
 

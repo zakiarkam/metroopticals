@@ -1,61 +1,73 @@
 "use client";
+
 import React from "react";
 import Link from "next/link";
 import { useSelector } from "react-redux";
+import { AlertTriangle, ArrowRight, Lock } from "lucide-react";
+
 import { selectTotalPrice } from "@/store/features/cart-slice";
 import { useCart } from "@/features/cart/hooks/use-cart";
+import { getAvailability } from "@/features/products/utils/availability";
 
+const money = (value: number) =>
+  `Rs ${Number(value ?? 0).toLocaleString("en-LK", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+
+/** Sticky totals panel beside the cart list. */
 const OrderSummary = () => {
   const { cartItems } = useCart();
   const totalPrice = useSelector(selectTotalPrice);
-  const itemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-  const finalTotal = totalPrice;
+  const itemCount = cartItems.reduce(
+    (sum: number, item: { quantity: number }) => sum + item.quantity,
+    0
+  );
 
-  // Check if any items are unavailable
   const hasUnavailableItems = cartItems.some(
-    (item: any) =>
-      item.status === "INACTIVE" ||
-      item.status === "OUT_OF_STOCK" ||
-      (typeof item.stock === "number" && item.stock === 0)
+    (item: { status?: string; stock?: number }) =>
+      !getAvailability(item.status, item.stock).canBuy
   );
 
   return (
-    <div className="w-full lg:max-w-[370px] bg-gradient-to-br from-gray-2 to-gray-50 rounded-2xl shadow-lg border border-gray-200">
-      <div className="border-b border-gray-200 bg-gradient-to-r from-blue-light-5 to-blue-light-4 py-4 px-5 sm:px-6 rounded-t-2xl">
-        <p className="text-xs uppercase tracking-wider text-body font-semibold">
-          Cart Summary
+    <div className="overflow-hidden rounded-2xl border border-gray-3 bg-gray-2 shadow-2 lg:sticky lg:top-32">
+      <div className="border-b border-gray-3 px-6 py-4">
+        <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-blue">
+          Cart summary
         </p>
-        <h3 className="font-bold text-xl text-dark mt-1">Order Summary</h3>
+        <h2 className="mt-1.5 text-lg font-bold text-dark">Order total</h2>
       </div>
 
-      <div className="py-6 px-5 sm:px-6 space-y-4">
-        <div className="flex items-center justify-between">
-          <p className="text-dark-4">Items</p>
-          <p className="font-medium text-dark">{itemCount}</p>
+      <div className="space-y-4 px-6 py-6">
+        <div className="flex items-center justify-between text-[14px]">
+          <span className="text-dark-4">Items</span>
+          <span className="font-semibold text-dark">{itemCount}</span>
         </div>
 
-        <div className="flex items-center justify-between">
-          <p className="text-dark-4">Subtotal</p>
-          <p className="font-medium text-dark">Rs - {totalPrice.toFixed(2)}</p>
+        <div className="flex items-center justify-between text-[14px]">
+          <span className="text-dark-4">Subtotal</span>
+          <span className="font-semibold text-dark">{money(totalPrice)}</span>
         </div>
 
-        {/* <div className="flex items-center justify-between">
-          <p className="text-dark-4">Shipping</p>
-          <p className="font-medium text-dark">${shippingFee.toFixed(2)}</p>
-        </div> */}
+        <div className="flex items-center justify-between text-[14px]">
+          <span className="text-dark-4">Delivery</span>
+          <span className="font-semibold text-green">
+            Calculated at checkout
+          </span>
+        </div>
 
-        <div className="rounded-lg bg-gradient-to-r from-blue-light-5 to-blue-light-4 px-4 py-4 flex items-center justify-between border border-blue-light-3">
-          <p className="font-bold text-lg text-dark">Total</p>
-          <p className="font-bold text-xl text-blue">
-            Rs - {finalTotal.toFixed(2)}
-          </p>
+        <div className="flex items-baseline justify-between rounded-xl border border-blue/25 bg-blue/[0.08] px-4 py-4">
+          <span className="text-[15px] font-bold text-dark">Total</span>
+          <span className="text-xl font-bold text-blue">
+            {money(totalPrice)}
+          </span>
         </div>
 
         {hasUnavailableItems && (
-          <div className="mb-3 p-3 bg-red/10 border border-red/20 rounded-lg">
-            <p className="text-xs text-red font-medium">
-              ⚠️ Some items in your cart are unavailable. Please remove them to
-              proceed.
+          <div className="flex gap-2.5 rounded-xl border border-red/30 bg-red/10 px-4 py-3">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red" />
+            <p className="text-[12.5px] leading-relaxed text-red">
+              Some items are unavailable. Remove them to continue to checkout.
             </p>
           </div>
         )}
@@ -63,21 +75,28 @@ const OrderSummary = () => {
         <Link
           href={hasUnavailableItems ? "#" : "/checkout"}
           onClick={(e) => hasUnavailableItems && e.preventDefault()}
-          className={`w-full flex justify-center font-bold text-white bg-gradient-to-r from-blue to-blue-dark py-3.5 px-6 rounded-lg ease-out duration-200 ${
+          aria-disabled={hasUnavailableItems}
+          className={`inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-blue text-[14px] font-bold text-gray-1 transition-colors ${
             hasUnavailableItems
-              ? "opacity-50 cursor-not-allowed"
-              : "hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]"
+              ? "cursor-not-allowed opacity-50"
+              : "hover:bg-blue-light"
           }`}
         >
-          Proceed to Checkout
+          Proceed to checkout
+          <ArrowRight className="h-4 w-4" />
         </Link>
 
         <Link
           href="/shop-with-sidebar"
-          className="w-full flex justify-center font-bold text-dark border-2 border-gray-300 py-3 px-6 rounded-lg ease-out duration-200 hover:bg-gray-100 hover:border-gray-400"
+          className="inline-flex h-12 w-full items-center justify-center rounded-xl border border-gray-3 text-[14px] font-semibold text-dark transition-colors hover:border-blue hover:text-blue"
         >
-          Continue Shopping
+          Continue shopping
         </Link>
+
+        <p className="flex items-center justify-center gap-1.5 pt-1 text-[11.5px] text-dark-5">
+          <Lock className="h-3.5 w-3.5" />
+          Secure checkout · Your details are never shared
+        </p>
       </div>
     </div>
   );

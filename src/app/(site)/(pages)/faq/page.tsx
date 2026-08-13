@@ -1,123 +1,41 @@
-import Breadcrumb from "@/components/common/Breadcrumb";
-import SiteContainer from "@/components/common/SiteContainer";
 import { Metadata } from "next";
-import { ChevronDown } from "lucide-react";
+import Link from "next/link";
+import { ChevronDown, Mail, MessageCircle, Phone } from "lucide-react";
+
+import SiteContainer from "@/components/common/SiteContainer";
+import PageHero from "@/components/common/PageHero";
 import { siteConfig } from "@/config/site";
+import { faqs } from "@/config/faqs";
 
-const faqs = [
-  {
-    question: "What does Metro Opticals offer?",
-    answer: [
-      "We stock prescription eyeglasses, sunglasses, reading glasses, blue-light and computer lenses, contact lenses, and a full range of eyewear accessories such as cases, cleaning kits and lens solutions.",
-      "Our frames span everyday budget-friendly options through to premium designer brands, in metal, acetate, titanium and rimless styles for men, women and children.",
-    ],
-  },
-  {
-    question: "Can I order prescription glasses online?",
-    answer: [
-      "Yes. Choose your frame, select your lens type, and enter your prescription details at checkout. If you do not have a current prescription, you can upload one later or visit us in store.",
-      "We recommend a prescription issued within the last two years. If yours is older, book an eye test with us first so your lenses are made to the correct power.",
-    ],
-  },
-  {
-    question: "Do you offer eye tests?",
-    answer: [
-      "We provide comprehensive eye examinations at our store, including vision testing, prescription checks and basic eye health screening.",
-      "Call or message us to book an appointment. Walk-ins are welcome, though booked slots are served first during busy periods.",
-    ],
-  },
-  {
-    question: "How long does it take to make my glasses?",
-    answer: [
-      "Single-vision lenses are typically ready in 2–3 working days. Progressive, high-index and specially coated lenses usually take 5–7 working days.",
-      "Once your glasses are ready, we will notify you, and delivery across Sri Lanka takes a further 1–3 working days depending on your location.",
-    ],
-  },
-  {
-    question: "What if my glasses do not fit or the prescription feels wrong?",
-    answer: [
-      "Bring them in and we will adjust the fit free of charge for as long as you own the frame.",
-      "If the prescription does not feel right, contact us within 14 days of receiving your order and we will recheck it and remake the lenses if there has been an error on our side.",
-    ],
-  },
-  {
-    question: "Are the frames and lenses genuine, and are they under warranty?",
-    answer: [
-      "All our frames and lenses are sourced from authorised suppliers and come with the manufacturer's warranty.",
-      "Frames carry a 12-month warranty against manufacturing defects. Warranty does not cover accidental damage, scratches from normal wear, or loss.",
-    ],
-  },
-  {
-    question: "What payment methods do you accept?",
-    answer: [
-      "We accept credit and debit cards, bank transfers, and cash on delivery for orders within selected areas.",
-      "Select your preferred method at checkout. For corporate or bulk orders, contact us to arrange invoicing.",
-    ],
-  },
-];
+/**
+ * FAQ page. Questions live in `@/config/faqs` so the home-page preview and this
+ * full list stay in sync.
+ */
+const FAQPage = () => (
+  <>
+    <PageHero
+      eyebrow="Help centre"
+      title="Frequently asked questions"
+      description="From choosing the right frame to understanding your prescription — the questions our customers ask most."
+      crumbs={[{ label: "FAQ" }]}
+    />
 
-const FAQPage = () => {
-  return (
-    <section className="overflow-hidden py-8 bg-gray-2">
+    <section className="bg-gray-1 py-10 lg:py-14">
       <SiteContainer>
-        <div className="rounded-xl bg-gray-2 p-6 sm:p-10 shadow-1 border border-gray-3">
-          <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] items-start">
-            <div className="space-y-6">
-              <div>
-                <p className="text-sm font-semibold text-blue uppercase tracking-wide">
-                  Frequently Asked Questions
-                </p>
-                <h2 className="mt-2 text-3xl sm:text-4xl font-semibold text-dark">
-                  Everything you need to know before placing an order
-                </h2>
-                <p className="mt-3 text-body leading-relaxed">
-                  From choosing the right frame to understanding your
-                  prescription, here are the questions our customers ask most.
-                  If you cannot find your answer, our team is happy to help.
-                </p>
-              </div>
-            </div>
-
-            <div className="rounded-2xl bg-gradient-to-br from-blue-light-5 to-blue-light-4 p-6 shadow-xl">
-              <p className="text-sm font-semibold text-blue">Need help?</p>
-              <h3 className="mt-2 text-2xl font-semibold text-dark">
-                Talk to our team
-              </h3>
-              <p className="mt-3 text-sm text-body leading-relaxed">
-                Call or email us to book an eye test, check frame availability,
-                or ask about your prescription.
-              </p>
-              <div className="mt-6 space-y-3 text-sm text-dark">
-                <p className="font-semibold">Phone</p>
-                <a
-                  className="text-body hover:text-blue"
-                  href={siteConfig.contact.phoneHref}
-                >
-                  {siteConfig.contact.phone}
-                </a>
-                <p className="font-semibold">Email</p>
-                <a
-                  className="text-body hover:text-blue"
-                  href={`mailto:${siteConfig.contact.email}`}
-                >
-                  {siteConfig.contact.email}
-                </a>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-12 space-y-4">
+        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-8">
+          {/* --------------------------- questions --------------------------- */}
+          <div className="space-y-3">
             {faqs.map((faq, index) => (
               <details
                 key={faq.question}
-                className="group rounded-2xl border border-gray-3 bg-gray-1 p-6"
                 open={index === 0}
+                className="group rounded-2xl border border-gray-3 bg-gray-2 px-6 shadow-2 transition-colors duration-300 open:border-blue/40 hover:border-blue/30"
               >
-                <summary className="flex items-center justify-between gap-3 cursor-pointer font-semibold text-lg text-dark">
-                  <span>{faq.question}</span>
-                  <ChevronDown className="h-5 w-5 text-blue transition-transform duration-300 group-open:-rotate-180" />
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-5 text-[15px] font-semibold text-dark sm:text-[16px]">
+                  {faq.question}
+                  <ChevronDown className="h-5 w-5 shrink-0 text-blue transition-transform duration-300 group-open:-rotate-180" />
                 </summary>
-                <div className="mt-4 space-y-3 text-body leading-relaxed">
+                <div className="space-y-3 border-t border-gray-3 pb-6 pt-4 text-[14px] leading-relaxed text-body">
                   {faq.answer.map((paragraph) => (
                     <p key={paragraph}>{paragraph}</p>
                   ))}
@@ -125,11 +43,80 @@ const FAQPage = () => {
               </details>
             ))}
           </div>
+
+          {/* ---------------------------- help rail ---------------------------- */}
+          <aside className="lg:sticky lg:top-32">
+            <div className="overflow-hidden rounded-2xl border border-gray-3 bg-gray-2 shadow-2">
+              <div className="border-b border-gray-3 px-6 py-5">
+                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-blue">
+                  Still stuck?
+                </p>
+                <h2 className="mt-1.5 text-lg font-bold text-dark">
+                  Talk to our team
+                </h2>
+                <p className="mt-2 text-[13.5px] leading-relaxed text-body">
+                  Call or message us to book an eye test, check frame
+                  availability, or ask about your prescription.
+                </p>
+              </div>
+
+              <ul className="divide-y divide-gray-3">
+                {[
+                  {
+                    icon: Phone,
+                    label: "Phone",
+                    value: siteConfig.contact.phone,
+                    href: siteConfig.contact.phoneHref,
+                  },
+                  {
+                    icon: Mail,
+                    label: "Email",
+                    value: siteConfig.contact.email,
+                    href: `mailto:${siteConfig.contact.email}`,
+                  },
+                  {
+                    icon: MessageCircle,
+                    label: "WhatsApp",
+                    value: "Message the store",
+                    href: `https://wa.me/${siteConfig.contact.whatsapp}`,
+                  },
+                ].map(({ icon: Icon, label, value, href }) => (
+                  <li key={label}>
+                    <a
+                      href={href}
+                      className="group flex items-start gap-3.5 px-6 py-4 transition-colors hover:bg-gray-8"
+                    >
+                      <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-blue/25 bg-blue/10 text-blue">
+                        <Icon className="h-[17px] w-[17px]" />
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block text-[11px] font-bold uppercase tracking-[0.14em] text-dark-5">
+                          {label}
+                        </span>
+                        <span className="mt-0.5 block break-all text-[14px] font-semibold text-dark transition-colors group-hover:text-blue">
+                          {value}
+                        </span>
+                      </span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+
+              <div className="border-t border-gray-3 p-6">
+                <Link
+                  href="/contact"
+                  className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-blue text-[13px] font-bold text-gray-1 transition-colors hover:bg-blue-light"
+                >
+                  Send us a message
+                </Link>
+              </div>
+            </div>
+          </aside>
         </div>
       </SiteContainer>
     </section>
-  );
-};
+  </>
+);
 
 export const metadata: Metadata = {
   title: "FAQ",

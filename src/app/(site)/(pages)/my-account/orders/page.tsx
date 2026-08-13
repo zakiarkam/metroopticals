@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import AccountSidebar from "@/features/users/components/my-account/AccountSidebar";
 import SiteContainer from "@/components/common/SiteContainer";
+import PageHero from "@/components/common/PageHero";
 import InlineSpinner from "@/components/common/InlineSpinner";
 import MyOrdersTab from "@/features/users/components/my-account/MyOrders/MyOrdersTab";
 import { useCachedSession } from "@/features/auth/hooks/use-cached-session";
@@ -45,24 +46,36 @@ const MyOrdersPage = () => {
   }
 
   return (
-    <main className="bg-gray-2 py-6 sm:py-8">
-      <SiteContainer>
-        <div className="flex flex-col gap-6 xl:flex-row">
-          <AccountSidebar
-            name={session.user?.name}
-            email={session.user?.email}
-            role={(session.user as any)?.role}
-            memberSince={memberSince}
-            activeSection="orders"
-            onSectionClick={handleSidebarSelect}
-          />
+    <>
+      <PageHero
+        eyebrow="Your account"
+        title="My orders"
+        description="Track what you've bought, download invoices, and check where each order has got to."
+        crumbs={[
+          { label: "My account", href: "/my-account" },
+          { label: "Orders" },
+        ]}
+      />
 
-          <div className="flex-1 min-w-0">
-            <MyOrdersTab profile={(session.user as any) ?? null} />
+      <section className="bg-gray-1 py-10 lg:py-14">
+        <SiteContainer>
+          <div className="flex flex-col gap-6 xl:flex-row xl:gap-8">
+            <AccountSidebar
+              name={session.user?.name}
+              email={session.user?.email}
+              role={(session.user as any)?.role}
+              memberSince={memberSince}
+              activeSection="orders"
+              onSectionClick={handleSidebarSelect}
+            />
+
+            <div className="min-w-0 flex-1">
+              <MyOrdersTab profile={(session.user as any) ?? null} />
+            </div>
           </div>
-        </div>
-      </SiteContainer>
-    </main>
+        </SiteContainer>
+      </section>
+    </>
   );
 };
 
