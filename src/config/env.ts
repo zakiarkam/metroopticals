@@ -13,8 +13,6 @@ const envSchema = z.object({
     ? z.string().optional()
     : z.string().min(1, "DATABASE_URL is required"),
 
-  DIRECT_URL: z.string().optional(),
-
   NEXTAUTH_URL: isBuildPhase
     ? z.string().optional()
     : z.string().min(1, "NEXTAUTH_URL is required"),

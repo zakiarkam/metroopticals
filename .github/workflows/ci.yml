@@ -38,8 +38,6 @@ jobs:
 
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/metro_ci
-      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/metro_ci
-      SHADOW_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/metro_ci_shadow
       NEXTAUTH_URL: http://localhost:4500
       NEXTAUTH_SECRET: ci-placeholder-secret-at-least-32-characters
       NEXT_PUBLIC_R2_PUBLIC_URL: https://pub-04bc2daeed7142b7b30174b3890fc622.r2.dev
