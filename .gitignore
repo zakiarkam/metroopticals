@@ -53,3 +53,7 @@ ecommerce-*.json
 
 docs/
 *.log
+
+# Extra build dirs used by a second dev server (see NEXT_DIST_DIR)
+.next-*
+

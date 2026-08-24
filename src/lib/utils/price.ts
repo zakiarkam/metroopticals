@@ -46,3 +46,16 @@ export const getUnitLabel = (unitType?: string | null) => {
       return "per piece";
   }
 };
+
+/**
+ * Rupee amount for display, e.g. `Rs 4,900.00`.
+ *
+ * Six components had grown their own identical `money()` helper and a seventh
+ * used a bare `Intl.NumberFormat`, so a rounding or currency change had to be
+ * made in seven places. This is the one formatter the storefront uses.
+ */
+export const formatPrice = (value?: number | null) =>
+  `Rs ${Number(value ?? 0).toLocaleString("en-LK", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;

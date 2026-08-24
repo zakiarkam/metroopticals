@@ -41,24 +41,18 @@ export default function HowItWorks() {
         {STEPS.map((step, i) => (
           <li
             key={step.title}
-            className="group relative bg-gray-2 p-7 transition-colors duration-300 hover:bg-gray-8"
+            className="bg-gray-2 p-7 transition-colors duration-300 hover:bg-gray-8"
           >
-            {/* oversized step number, sunk into the surface */}
-            <span
-              aria-hidden
-              className="absolute right-5 top-3 select-none text-[3.4rem] font-bold leading-none text-dark/[0.07] transition-colors duration-300 group-hover:text-blue/20"
-            >
+            {/* One step number. The ghost numeral behind it was set at 7%
+                opacity on ivory, so it read as a smudge rather than a number. */}
+            <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-blue text-[13px] font-bold text-white">
               {i + 1}
             </span>
 
-            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-blue/40 text-[13px] font-bold text-blue">
-              {i + 1}
-            </span>
-
-            <h3 className="relative mt-5 text-[16px] font-bold text-dark">
+            <h3 className="mt-5 text-[16px] font-bold text-dark">
               {step.title}
             </h3>
-            <p className="relative mt-2.5 text-[13.5px] leading-relaxed text-body">
+            <p className="mt-2.5 text-[13.5px] leading-relaxed text-body">
               {step.copy}
             </p>
           </li>

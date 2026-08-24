@@ -1,6 +1,8 @@
 import React from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import Reveal from "./Reveal";
+import SiteContainer from "./SiteContainer";
 
 /**
  * Shared section shell + heading used by every customer-facing section.
@@ -28,11 +30,13 @@ export function Section({
       id={id}
       className={`relative ${
         tone === "raised" ? "bg-gray-2/40" : "bg-transparent"
-      } py-14 sm:py-16 lg:py-20 ${className}`}
+      } py-12 sm:py-14 lg:py-16 ${className}`}
     >
-      <div className="mx-auto w-full max-w-[1560px] px-4 sm:px-6 lg:px-10">
-        {children}
-      </div>
+      <SiteContainer>
+        {/* One reveal per section rather than per card — staggering dozens of
+            product tiles reads as jitter, not polish. */}
+        <Reveal>{children}</Reveal>
+      </SiteContainer>
     </section>
   );
 }
@@ -59,13 +63,13 @@ export function SectionHeading({
 
   return (
     <div
-      className={`mb-9 flex flex-col gap-5 sm:mb-11 ${
+      className={`mb-8 flex flex-col gap-4 sm:mb-10 ${
         centered
           ? "items-center text-center"
           : "sm:flex-row sm:items-end sm:justify-between"
       } ${className}`}
     >
-      <div className={centered ? "max-w-2xl" : "max-w-2xl"}>
+      <div className="max-w-2xl">
         {eyebrow && (
           <span
             className={`mb-3 inline-flex items-center gap-2.5 text-[11px] font-bold uppercase tracking-[0.24em] text-blue ${
@@ -77,7 +81,7 @@ export function SectionHeading({
           </span>
         )}
 
-        <h2 className="text-[1.7rem] font-bold leading-[1.12] tracking-tight text-dark sm:text-[2.05rem] lg:text-[2.35rem]">
+        <h2 className="font-display text-[1.6rem] font-bold leading-[1.12] tracking-[-0.03em] text-dark sm:text-[1.9rem] lg:text-[2.15rem]">
           {title}
         </h2>
 

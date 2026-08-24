@@ -1,6 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
+import SiteContainer from "./SiteContainer";
 
 export type Crumb = { label: string; href?: string };
 
@@ -25,7 +26,7 @@ export default function PageHero({
   actions?: React.ReactNode;
 }) {
   return (
-    <div className="relative overflow-hidden border-b border-gray-3 bg-gray-2">
+    <header className="relative overflow-hidden border-b border-gray-3 bg-gray-2">
       {/* faint gold wash so the band separates from the page without a hard fill */}
       <div
         aria-hidden
@@ -36,7 +37,7 @@ export default function PageHero({
         }}
       />
 
-      <div className="relative mx-auto w-full max-w-[1560px] px-4 py-9 sm:px-6 sm:py-11 lg:px-10">
+      <SiteContainer className="relative py-8 sm:py-10">
         <nav aria-label="Breadcrumb" className="mb-4">
           <ol className="flex flex-wrap items-center gap-1.5 text-[12px] text-dark-4">
             <li>
@@ -69,7 +70,7 @@ export default function PageHero({
                 {eyebrow}
               </span>
             )}
-            <h1 className="text-[1.8rem] font-bold leading-[1.1] tracking-tight text-dark sm:text-[2.3rem]">
+            <h1 className="font-display text-[1.75rem] font-bold leading-[1.1] tracking-[-0.03em] text-dark sm:text-[2.25rem]">
               {title}
             </h1>
             {description && (
@@ -81,7 +82,7 @@ export default function PageHero({
 
           {actions && <div className="shrink-0">{actions}</div>}
         </div>
-      </div>
-    </div>
+      </SiteContainer>
+    </header>
   );
 }

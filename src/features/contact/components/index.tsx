@@ -9,25 +9,21 @@ import {
   Facebook,
   Instagram,
   Loader2,
-  Mail,
-  MapPin,
-  MessageCircle,
-  Phone,
   Send,
 } from "lucide-react";
 
 import SiteContainer from "@/components/common/SiteContainer";
+import ContactChannels from "@/components/common/ContactChannels";
 import PageHero from "@/components/common/PageHero";
 import { contactApi } from "@/features/contact/api/contact-api";
 import { siteConfig } from "@/config/site";
+import { inputClasses, textareaClasses } from "@/components/common/form";
 
 type FormStatus = {
   type: "success" | "error";
   message: string;
 } | null;
 
-const inputClasses =
-  "h-11 w-full rounded-xl border border-gray-3 bg-gray-1 px-4 text-[14px] text-dark outline-none transition-colors placeholder:text-dark-5 hover:border-gray-4 focus:border-blue disabled:opacity-60";
 
 const HOURS = [
   { days: "Mon – Fri", time: "9:00 am – 7:00 pm" },
@@ -119,7 +115,10 @@ const Contact = () => {
         <SiteContainer>
           <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[380px_minmax(0,1fr)] lg:gap-8">
             {/* ------------------------ contact rail ------------------------ */}
-            <div className="flex flex-col gap-6 lg:sticky lg:top-32">
+            <div
+              className="flex flex-col gap-6 lg:sticky lg:self-start"
+              style={{ top: "calc(var(--site-header-height, 132px) + 1.5rem)" }}
+            >
               <div className="overflow-hidden rounded-2xl border border-gray-3 bg-gray-2 shadow-2">
                 <div className="border-b border-gray-3 px-6 py-4">
                   <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-blue">
@@ -130,80 +129,7 @@ const Contact = () => {
                   </h2>
                 </div>
 
-                <ul className="divide-y divide-gray-3">
-                  <li>
-                    <a
-                      href={siteConfig.contact.phoneHref}
-                      className="group flex items-start gap-3.5 px-6 py-4 transition-colors hover:bg-gray-8"
-                    >
-                      <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-blue/25 bg-blue/10 text-blue">
-                        <Phone className="h-[17px] w-[17px]" />
-                      </span>
-                      <span className="min-w-0">
-                        <span className="block text-[11px] font-bold uppercase tracking-[0.14em] text-dark-5">
-                          Phone
-                        </span>
-                        <span className="mt-0.5 block text-[14px] font-semibold text-dark transition-colors group-hover:text-blue">
-                          {siteConfig.contact.phone}
-                        </span>
-                      </span>
-                    </a>
-                  </li>
-
-                  <li>
-                    <a
-                      href={`mailto:${siteConfig.contact.email}`}
-                      className="group flex items-start gap-3.5 px-6 py-4 transition-colors hover:bg-gray-8"
-                    >
-                      <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-blue/25 bg-blue/10 text-blue">
-                        <Mail className="h-[17px] w-[17px]" />
-                      </span>
-                      <span className="min-w-0">
-                        <span className="block text-[11px] font-bold uppercase tracking-[0.14em] text-dark-5">
-                          Email
-                        </span>
-                        <span className="mt-0.5 block break-all text-[14px] font-semibold text-dark transition-colors group-hover:text-blue">
-                          {siteConfig.contact.email}
-                        </span>
-                      </span>
-                    </a>
-                  </li>
-
-                  <li>
-                    <a
-                      href={`https://wa.me/${siteConfig.contact.whatsapp}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="group flex items-start gap-3.5 px-6 py-4 transition-colors hover:bg-gray-8"
-                    >
-                      <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-blue/25 bg-blue/10 text-blue">
-                        <MessageCircle className="h-[17px] w-[17px]" />
-                      </span>
-                      <span className="min-w-0">
-                        <span className="block text-[11px] font-bold uppercase tracking-[0.14em] text-dark-5">
-                          WhatsApp
-                        </span>
-                        <span className="mt-0.5 block text-[14px] font-semibold text-dark transition-colors group-hover:text-blue">
-                          Message the store
-                        </span>
-                      </span>
-                    </a>
-                  </li>
-
-                  <li className="flex items-start gap-3.5 px-6 py-4">
-                    <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-blue/25 bg-blue/10 text-blue">
-                      <MapPin className="h-[17px] w-[17px]" />
-                    </span>
-                    <span className="min-w-0">
-                      <span className="block text-[11px] font-bold uppercase tracking-[0.14em] text-dark-5">
-                        Store
-                      </span>
-                      <span className="mt-0.5 block text-[14px] font-medium leading-relaxed text-dark">
-                        {siteConfig.contact.address}
-                      </span>
-                    </span>
-                  </li>
-                </ul>
+                <ContactChannels />
 
                 <div className="flex items-center gap-3 border-t border-gray-3 px-6 py-4">
                   <a
@@ -382,7 +308,7 @@ const Contact = () => {
                     placeholder="Tell us what you need — the more detail, the faster we can help."
                     value={message}
                     onChange={(event) => setMessage(event.target.value)}
-                    className="w-full resize-none rounded-xl border border-gray-3 bg-gray-1 p-4 text-[14px] leading-relaxed text-dark outline-none transition-colors placeholder:text-dark-5 hover:border-gray-4 focus:border-blue disabled:opacity-60"
+                    className={textareaClasses}
                     disabled={isSubmitting}
                   />
                 </div>
@@ -408,7 +334,7 @@ const Contact = () => {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-blue text-[14px] font-bold text-gray-1 transition-colors hover:bg-blue-light disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:px-10"
+                  className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-blue text-[14px] font-bold text-white transition-colors hover:bg-blue-dark disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:px-10"
                 >
                   {isSubmitting ? (
                     <>

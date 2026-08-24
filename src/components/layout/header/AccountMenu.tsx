@@ -56,7 +56,7 @@ const AccountMenu = memo(function AccountMenu({ onLogout }: AccountMenuProps) {
   // Loading state or not yet mounted
   if (!isClient || status === "loading") {
     return (
-      <div className="flex h-9 w-9 animate-pulse items-center justify-center rounded-full bg-gray-200 aspect-square border border-gray-3" />
+      <div className="flex h-9 w-9 animate-pulse items-center justify-center rounded-full bg-gray-800 aspect-square border border-gray-3" />
     );
   }
 
@@ -98,7 +98,7 @@ const AccountMenu = memo(function AccountMenu({ onLogout }: AccountMenuProps) {
         aria-label="Open account menu"
         aria-expanded={showUserMenu}
       >
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue text-gray-1 font-semibold text-sm transition-all group-hover:bg-blue-dark aspect-square shrink-0">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue text-white font-semibold text-sm transition-all group-hover:bg-blue-dark aspect-square shrink-0">
           {getInitials(user.name)}
         </div>
       </button>

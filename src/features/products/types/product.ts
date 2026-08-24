@@ -69,8 +69,9 @@ export type Product = {
   stock: number;
   unitType: ProductUnit;
   status: ProductStatus;
-  reviews: number;
+  /** Denormalised from published reviews — see Review in the schema. */
   rating: number | null;
+  reviewCount: number;
   createdAt: string;
   updatedAt: string;
   category: ProductCategory | null;
@@ -112,6 +113,8 @@ export type ProductQueryParams = {
   sizes?: FrameSizeBucket[];
   minPrice?: number;
   maxPrice?: number;
+  /** Restrict to products whose discounted price undercuts the list price. */
+  onSale?: boolean;
   sortBy?: "createdAt" | "price" | "title";
   sortOrder?: "asc" | "desc";
 };

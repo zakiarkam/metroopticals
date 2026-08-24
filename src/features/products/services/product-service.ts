@@ -7,6 +7,7 @@ import type {
 } from "@/features/products/validators/product";
 import { deleteFile } from "@/lib/storage/r2";
 import { FRAME_SIZE_RANGES } from "@/features/products/types/product";
+import type { FrameShape, Gender } from "@/features/products/types/product";
 
 export async function getProducts(query: ProductQueryInput) {
   const {
@@ -24,6 +25,7 @@ export async function getProducts(query: ProductQueryInput) {
     limit,
     minPrice,
     maxPrice,
+    onSale,
     status,
     sortBy,
     sortOrder,
@@ -51,6 +53,17 @@ export async function getProducts(query: ProductQueryInput) {
 
   if (brands?.length) {
     andFilters.push({ brand: { slug: { in: brands } } });
+  }
+
+  /*
+   * "On sale" is a real comparison between two columns, not just "has a
+   * discounted price set" — plenty of rows carry a `discountedPrice` equal to
+   * the list price. Prisma field references express that without raw SQL.
+   */
+  if (onSale) {
+    andFilters.push({
+      discountedPrice: { not: null, lt: prisma.product.fields.price },
+    });
   }
 
   if (genders?.length) {
@@ -289,6 +302,48 @@ export async function getProductFacets(query: ProductQueryInput) {
       .map(([value, count]) => ({ value, count }))
       .sort(byCountDesc),
   };
+}
+
+/**
+ * Frame shapes the shop can actually show something for.
+ *
+ * The navigation used to list all eight `FrameShape` enum members, so a shopper
+ * could pick "Browline" from the menu and land on an empty grid. This reads the
+ * shapes present on live products, so the menu can only ever offer a shape that
+ * has stock behind it.
+ */
+export async function getStockedFrameShapes() {
+  const rows = await prisma.product.groupBy({
+    by: ["frameShape"],
+    where: { status: "ACTIVE", frameShape: { not: null } },
+    _count: { _all: true },
+    orderBy: { _count: { frameShape: "desc" } },
+  });
+
+  return rows
+    .filter((row): row is typeof row & { frameShape: FrameShape } =>
+      Boolean(row.frameShape)
+    )
+    .map((row) => ({ value: row.frameShape, count: row._count._all }));
+}
+
+/**
+ * Wearer categories with stock behind them, most-stocked first.
+ *
+ * Same reason as `getStockedFrameShapes`: the menu offered "Kids" whether or
+ * not a single kids' frame was listed.
+ */
+export async function getStockedGenders() {
+  const rows = await prisma.product.groupBy({
+    by: ["gender"],
+    where: { status: "ACTIVE", gender: { not: null } },
+    _count: { _all: true },
+    orderBy: { _count: { gender: "desc" } },
+  });
+
+  return rows
+    .filter((row): row is typeof row & { gender: Gender } => Boolean(row.gender))
+    .map((row) => ({ value: row.gender, count: row._count._all }));
 }
 
 export async function getProductById(id: number) {

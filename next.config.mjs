@@ -1,5 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  /*
+   * A second `next dev` (or a `next build` run alongside one) writes into the
+   * same `.next` and leaves the running server with a half-deleted module
+   * graph. Set NEXT_DIST_DIR to give the extra process its own directory.
+   */
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   // Image optimization configuration
   images: {
     remotePatterns: [
@@ -20,6 +26,14 @@ const nextConfig = {
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     minimumCacheTTL: 3600 * 24 * 365, // 1 year for production
+    /*
+     * The bundled placeholder and campaign artwork are SVGs. The optimizer
+     * refuses SVG unless this is set; the CSP below keeps a served SVG from
+     * executing script, which is the reason the flag is opt-in.
+     */
+    dangerouslyAllowSVG: true,
+    contentDispositionType: "attachment",
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
 
   // Standalone output for Docker/production

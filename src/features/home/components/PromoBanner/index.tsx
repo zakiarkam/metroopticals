@@ -5,7 +5,7 @@ import { ArrowRight } from "lucide-react";
 
 import type { Advertisement } from "@/features/advertisements/types/advertisement";
 import { getProductImageUrl } from "@/lib/storageUtils";
-import { resolveDisplayPrice } from "@/lib/utils/price";
+import { formatPrice, resolveDisplayPrice } from "@/lib/utils/price";
 
 type PromoCard = {
   id: number;
@@ -19,11 +19,6 @@ type PromoCard = {
   hasDiscount: boolean;
 };
 
-const money = (value: number) =>
-  `Rs ${Number(value ?? 0).toLocaleString("en-LK", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
 
 const buildCard = (ad: Advertisement, canViewDiscount: boolean): PromoCard => {
   const product = ad.product;
@@ -82,7 +77,7 @@ const PromoBanner = React.memo(({ ads }: { ads: Advertisement[] }) => {
               {mainCard.label}
             </span>
 
-            <h2 className="mt-5 text-[1.6rem] font-bold leading-[1.12] tracking-tight text-dark sm:text-[2.1rem]">
+            <h2 className="mt-5 font-display text-[1.75rem] font-bold leading-[1.1] tracking-[-0.03em] text-dark sm:text-[2.3rem]">
               {mainCard.title}
             </h2>
 
@@ -92,18 +87,18 @@ const PromoBanner = React.memo(({ ads }: { ads: Advertisement[] }) => {
 
             <div className="mt-6 flex flex-wrap items-baseline gap-3">
               <span className="text-[1.7rem] font-bold leading-none text-dark">
-                {money(mainCard.price)}
+                {formatPrice(mainCard.price)}
               </span>
               {mainCard.hasDiscount && mainCard.originalPrice !== undefined && (
                 <span className="text-[15px] font-medium text-dark-5 line-through">
-                  {money(mainCard.originalPrice)}
+                  {formatPrice(mainCard.originalPrice)}
                 </span>
               )}
             </div>
 
             <Link
               href={mainCard.link}
-              className="group mt-8 inline-flex h-12 w-fit items-center gap-2 rounded-xl bg-blue px-8 text-[14px] font-bold text-gray-1 transition-colors hover:bg-blue-light"
+              className="group mt-8 inline-flex h-12 w-fit items-center gap-2 rounded-xl bg-blue px-8 text-[14px] font-bold text-white transition-colors hover:bg-blue-dark"
             >
               Shop this deal
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
@@ -124,7 +119,7 @@ const PromoBanner = React.memo(({ ads }: { ads: Advertisement[] }) => {
               alt={mainCard.title}
               fill
               sizes="(max-width: 1024px) 100vw, 45vw"
-              className="object-contain p-8 drop-shadow-[0_28px_45px_rgba(0,0,0,0.6)]"
+              className="object-contain p-8 drop-shadow-[0_16px_28px_rgba(39,30,20,0.16)]"
             />
           </div>
         </div>
@@ -158,11 +153,11 @@ const PromoBanner = React.memo(({ ads }: { ads: Advertisement[] }) => {
 
                   <div className="mt-3 flex flex-wrap items-baseline gap-2">
                     <span className="text-[17px] font-bold text-dark">
-                      {money(card.price)}
+                      {formatPrice(card.price)}
                     </span>
                     {card.hasDiscount && card.originalPrice !== undefined && (
                       <span className="text-[13px] font-medium text-dark-5 line-through">
-                        {money(card.originalPrice)}
+                        {formatPrice(card.originalPrice)}
                       </span>
                     )}
                   </div>

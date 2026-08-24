@@ -19,7 +19,7 @@ const CartSidebarModal = () => {
 
   const getFirstImage = (item: any) => {
     const previews = normalizeImageArray(item.imgs?.previews ?? []);
-    return previews[0] || "/images/placeholder-product.jpg";
+    return previews[0] || "/images/placeholder-product.svg";
   };
 
   return (

@@ -1,11 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import AccountSidebar from "@/features/users/components/my-account/AccountSidebar";
 import SiteContainer from "@/components/common/SiteContainer";
 import PageHero from "@/components/common/PageHero";
-import InlineSpinner from "@/components/common/InlineSpinner";
+import PageLoading from "@/components/common/PageLoading";
 import MyOrdersTab from "@/features/users/components/my-account/MyOrders/MyOrdersTab";
 import { useCachedSession } from "@/features/auth/hooks/use-cached-session";
 
@@ -18,31 +18,26 @@ const MyOrdersPage = () => {
     setMounted(true);
   }, []);
 
-  const handleSidebarSelect = useCallback(
-    (section: "account" | "orders") => {
-      if (section === "account") {
-        router.push("/my-account");
-      }
-    },
-    [router]
-  );
+  // A signed-out visitor used to get a completely blank page here, while
+  // /my-account redirected them to the login form. Both redirect now.
+  const signedOut = mounted && status !== "loading" && !session?.user;
+  useEffect(() => {
+    if (signedOut) router.replace("/log-in?callbackUrl=/my-account/orders");
+  }, [router, signedOut]);
 
   const memberSince = useMemo(() => {
+    // No join date is better than today's date — the old fallback told a new
+    // visitor they had been a member since this morning.
     const createdAt = (session?.user as any)?.createdAt;
-    const date = createdAt ? new Date(createdAt) : new Date();
-    return date.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+    if (!createdAt) return undefined;
+    return new Date(createdAt).toLocaleDateString("en-US", {
+      month: "short",
+      year: "numeric",
+    });
   }, [session?.user]);
 
-  if (!mounted || status === "loading") {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <InlineSpinner size={34} />
-      </div>
-    );
-  }
-
-  if (!session?.user) {
-    return null;
+  if (!mounted || status === "loading" || !session?.user) {
+    return <PageLoading />;
   }
 
   return (
@@ -66,7 +61,6 @@ const MyOrdersPage = () => {
               role={(session.user as any)?.role}
               memberSince={memberSince}
               activeSection="orders"
-              onSectionClick={handleSidebarSelect}
             />
 
             <div className="min-w-0 flex-1">

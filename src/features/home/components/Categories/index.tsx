@@ -27,12 +27,40 @@ type Category = {
  * Tiles are portrait cards rather than the old circular avatars — eyewear is
  * wide, and a circle crops the temples off every frame photo.
  */
+/**
+ * Bundled artwork used when a category has no uploaded image.
+ *
+ * A single grey initial was the old fallback, which turned the rail into a row
+ * of letters on a fresh install. Matching on the slug covers the categories an
+ * optical shop always has; anything unmatched falls back to the generic plate.
+ */
+const CATEGORY_ART: { match: RegExp; src: string }[] = [
+  { match: /sun/, src: "/images/dummy/categories/sunglasses.svg" },
+  { match: /contact|lens/, src: "/images/dummy/categories/premium.svg" },
+  { match: /accessor|case|clean|solution/, src: "/images/dummy/categories/computer.svg" },
+  { match: /read/, src: "/images/dummy/categories/reading.svg" },
+  { match: /kid|child|junior/, src: "/images/dummy/categories/kids.svg" },
+  { match: /wom|ladies/, src: "/images/dummy/categories/women.svg" },
+  { match: /men/, src: "/images/dummy/categories/men.svg" },
+  { match: /computer|blue|screen/, src: "/images/dummy/categories/computer.svg" },
+  { match: /premium|designer|luxury/, src: "/images/dummy/categories/premium.svg" },
+];
+
+const fallbackArt = (slug: string, name: string) => {
+  const haystack = `${slug} ${name}`.toLowerCase();
+  return (
+    CATEGORY_ART.find((entry) => entry.match.test(haystack))?.src ??
+    "/images/dummy/categories/eyeglasses.svg"
+  );
+};
+
 const CategoryTile = React.memo(({ item }: { item: Category }) => {
-  const imageUrl = getCategoryImageUrl(item.image);
+  const imageUrl =
+    getCategoryImageUrl(item.image) || fallbackArt(item.slug, item.name);
 
   return (
     <Link
-      href={`/shop-without-sidebar?category=${item.slug}`}
+      href={`/shop-with-sidebar?category=${item.slug}`}
       className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-gray-3 bg-gray-2 transition-all duration-300 hover:-translate-y-1 hover:border-blue/45 hover:shadow-gold"
     >
       <div className="relative flex aspect-[5/4] items-center justify-center overflow-hidden bg-gray-1 p-5">
@@ -45,20 +73,15 @@ const CategoryTile = React.memo(({ item }: { item: Category }) => {
           }}
         />
 
-        {imageUrl ? (
-          <Image
-            src={imageUrl}
-            alt={`${item.name} category`}
-            width={280}
-            height={224}
-            sizes="(max-width: 768px) 60vw, 220px"
-            className="relative h-full w-full object-contain transition-transform duration-500 group-hover:scale-110"
-          />
-        ) : (
-          <span className="relative text-4xl font-bold text-gray-4">
-            {item.name.charAt(0).toUpperCase()}
-          </span>
-        )}
+        <Image
+          src={imageUrl}
+          alt=""
+          width={280}
+          height={224}
+          sizes="(max-width: 768px) 60vw, 220px"
+          unoptimized={imageUrl.endsWith(".svg")}
+          className="relative h-full w-full object-contain transition-transform duration-500 group-hover:scale-110"
+        />
       </div>
 
       <div className="flex flex-1 flex-col items-center justify-center gap-1 border-t border-gray-3 px-3 py-4 text-center">
@@ -113,7 +136,7 @@ const Categories = React.memo(() => {
           {Array.from({ length: 6 }).map((_, i) => (
             <div
               key={i}
-              className="h-[220px] animate-pulse rounded-2xl border border-gray-3 bg-gray-2"
+              className="h-[220px] animate-pulse rounded-2xl border border-gray-3 bg-gray-8"
             />
           ))}
         </div>

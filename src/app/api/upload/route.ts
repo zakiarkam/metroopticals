@@ -14,6 +14,8 @@ export async function POST(request: NextRequest) {
       "product/image",
       "product/catalogue",
       "category/image",
+      "advertisement/image",
+      "brand/image",
     ];
 
     if (!file) {
@@ -24,10 +26,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid folder" }, { status: 400 });
     }
 
-    if (["product/image", "category/image"].includes(folder)) {
+    if (
+      [
+        "product/image",
+        "category/image",
+        "advertisement/image",
+        "brand/image",
+      ].includes(folder)
+    ) {
       if (!file.type.startsWith("image/")) {
         return NextResponse.json(
           { error: "Only image files are allowed" },
+          { status: 400 }
+        );
+      }
+
+      // SVG is an active document, not just a picture — it can carry script
+      // and would be served from our own origin. Banner artwork is photographic
+      // anyway, so raster formats only.
+      if (file.type === "image/svg+xml") {
+        return NextResponse.json(
+          { error: "SVG uploads are not supported. Use JPG, PNG or WebP." },
           { status: 400 }
         );
       }
@@ -92,6 +111,8 @@ export async function DELETE(request: NextRequest) {
       "product/image",
       "product/catalogue",
       "category/image",
+      "advertisement/image",
+      "brand/image",
     ];
     const folderValue = folder as UploadFolder;
 

@@ -17,12 +17,8 @@ import SiteContainer from "@/components/common/SiteContainer";
 import EmptyState from "@/components/common/EmptyState";
 import axiosInstance from "@/lib/axiosInstance";
 import { downloadOrderReceiptPdf } from "@/lib/utils/orderReceiptPdf";
+import { formatPrice } from "@/lib/utils/price";
 
-const money = (value?: number) =>
-  `Rs ${Number(value ?? 0).toLocaleString("en-LK", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
 
 /** What happens next — the three things customers email to ask about. */
 const NEXT_STEPS = [
@@ -49,6 +45,8 @@ const OrderConfirmationClient = () => {
   const orderId = searchParams.get("orderId");
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  /** Set only when the request itself failed, as opposed to a real 404. */
+  const [loadFailed, setLoadFailed] = useState(false);
   const [isPrintPending, setIsPrintPending] = useState(false);
 
   useEffect(() => {
@@ -65,6 +63,7 @@ const OrderConfirmationClient = () => {
         setOrder(orderData);
       } catch (error) {
         console.error("Failed to fetch order:", error);
+        setLoadFailed(true);
       } finally {
         setLoading(false);
       }
@@ -96,11 +95,24 @@ const OrderConfirmationClient = () => {
     return (
       <section className="bg-gray-1 py-16">
         <SiteContainer>
+          {/* A network failure used to be reported as "order not found",
+              which tells a customer who has just paid that their order does
+              not exist. The two states are now separate. */}
           <EmptyState
             icon={<FileText className="h-7 w-7" />}
-            title="Order not found"
-            description="We couldn't find that order. If you have just checked out, give it a moment and refresh."
-            action={{ label: "Go to home", href: "/" }}
+            title={
+              loadFailed ? "We couldn't load your order" : "Order not found"
+            }
+            description={
+              loadFailed
+                ? "Your order was not affected — we just could not reach the server. Try again in a moment."
+                : "We couldn't find that order. If you have just checked out, give it a moment and refresh."
+            }
+            action={
+              loadFailed
+                ? { label: "Try again", onClick: () => window.location.reload() }
+                : { label: "Go to my orders", href: "/my-account/orders" }
+            }
           />
         </SiteContainer>
       </section>
@@ -156,14 +168,14 @@ const OrderConfirmationClient = () => {
                 <div className="flex items-center justify-between text-[14px]">
                   <dt className="text-dark-4">Subtotal</dt>
                   <dd className="font-semibold text-dark">
-                    {money(order.subtotal)}
+                    {formatPrice(order.subtotal)}
                   </dd>
                 </div>
 
                 <div className="flex items-baseline justify-between rounded-xl border border-blue/25 bg-blue/[0.08] px-4 py-4">
                   <dt className="text-[15px] font-bold text-dark">Total paid</dt>
                   <dd className="text-xl font-bold text-blue">
-                    {money(order.totalAmount ?? order.total)}
+                    {formatPrice(order.totalAmount ?? order.total)}
                   </dd>
                 </div>
               </dl>
@@ -204,7 +216,7 @@ const OrderConfirmationClient = () => {
             <div className="flex flex-col gap-3 px-6 py-7 sm:flex-row sm:px-10">
               <Link
                 href="/"
-                className="inline-flex h-12 flex-1 items-center justify-center rounded-xl bg-blue text-[14px] font-bold text-gray-1 transition-colors hover:bg-blue-light"
+                className="inline-flex h-12 flex-1 items-center justify-center rounded-xl bg-blue text-[14px] font-bold text-white transition-colors hover:bg-blue-dark"
               >
                 Continue shopping
               </Link>
@@ -218,7 +230,7 @@ const OrderConfirmationClient = () => {
                 type="button"
                 onClick={handleDownloadInvoice}
                 disabled={isPrintPending}
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-blue/40 px-6 text-[14px] font-semibold text-blue transition-colors hover:bg-blue hover:text-gray-1 disabled:cursor-wait disabled:opacity-70"
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-blue/40 px-6 text-[14px] font-semibold text-blue transition-colors hover:bg-blue hover:text-white disabled:cursor-wait disabled:opacity-70"
               >
                 {isPrintPending ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -233,7 +245,7 @@ const OrderConfirmationClient = () => {
       </SiteContainer>
 
       {isPrintPending && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
           <div className="rounded-2xl border border-gray-3 bg-gray-2 px-8 py-7 text-center shadow-4">
             <Loader2 className="mx-auto h-8 w-8 animate-spin text-blue" />
             <p className="mt-4 text-[14px] font-semibold text-dark">

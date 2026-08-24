@@ -52,7 +52,7 @@ const CartSidebarModal = () => {
     if (item.imgs?.previews && item.imgs.previews.length > 0) {
       return item.imgs.previews[0];
     }
-    return "/images/placeholder-product.jpg";
+    return "/images/placeholder-product.svg";
   };
 
   const total = calculateTotal();
@@ -67,7 +67,7 @@ const CartSidebarModal = () => {
       <div
         onClick={closeCartModal}
         aria-hidden
-        className={`fixed inset-0 z-99999 bg-black/70 backdrop-blur-sm transition-opacity duration-300 ${
+        className={`fixed inset-0 z-99999 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${
           isCartModalOpen
             ? "pointer-events-auto opacity-100"
             : "pointer-events-none opacity-0"
@@ -118,7 +118,7 @@ const CartSidebarModal = () => {
               <Link
                 href="/shop-with-sidebar"
                 onClick={closeCartModal}
-                className="mt-6 inline-flex h-11 items-center justify-center rounded-xl bg-blue px-7 text-[13px] font-bold text-gray-1 transition-colors hover:bg-blue-light"
+                className="mt-6 inline-flex h-11 items-center justify-center rounded-xl bg-blue px-7 text-[13px] font-bold text-white transition-colors hover:bg-blue-dark"
               >
                 Browse frames
               </Link>
@@ -219,7 +219,7 @@ const CartSidebarModal = () => {
               <Link
                 href="/checkout"
                 onClick={closeCartModal}
-                className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-blue text-[14px] font-bold text-gray-1 transition-colors hover:bg-blue-light"
+                className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-blue text-[14px] font-bold text-white transition-colors hover:bg-blue-dark"
               >
                 Checkout
                 <ArrowRight className="h-4 w-4" />

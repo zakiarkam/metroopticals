@@ -10,9 +10,9 @@ type AccountSidebarProps = {
   name?: string | null;
   email?: string | null;
   role?: string | null;
-  memberSince: string;
+  /** Omitted when the account has no join date on record. */
+  memberSince?: string;
   activeSection: SectionKey;
-  onSectionClick: (section: SectionKey) => void;
 };
 
 const getInitials = (name?: string | null) => {
@@ -26,13 +26,21 @@ const getInitials = (name?: string | null) => {
     .slice(0, 2);
 };
 
+/**
+ * These are navigation, so they are links.
+ *
+ * They used to be `<button>`s whose handlers called `router.push` — no href
+ * meant no middle-click, no "open in new tab", no prefetch, and an
+ * `aria-current="page"` on an element that is not a link.
+ */
 const sectionItems: {
   key: SectionKey;
   label: string;
+  href: string;
   icon: React.ElementType;
 }[] = [
-  { key: "account", label: "Account details", icon: User },
-  { key: "orders", label: "My orders", icon: Package },
+  { key: "account", label: "Account details", href: "/my-account", icon: User },
+  { key: "orders", label: "My orders", href: "/my-account/orders", icon: Package },
 ];
 
 const AccountSidebar = React.memo(function AccountSidebar({
@@ -41,7 +49,6 @@ const AccountSidebar = React.memo(function AccountSidebar({
   role,
   memberSince,
   activeSection,
-  onSectionClick,
 }: AccountSidebarProps) {
   const roleLabel =
     role === "SUPER_ADMIN"
@@ -52,7 +59,10 @@ const AccountSidebar = React.memo(function AccountSidebar({
 
   return (
     <div className="w-full xl:w-[330px] xl:shrink-0">
-      <div className="overflow-hidden rounded-2xl border border-gray-3 bg-gray-2 shadow-2 xl:sticky xl:top-32">
+      <div
+        className="overflow-hidden rounded-2xl border border-gray-3 bg-gray-2 shadow-2 xl:sticky"
+        style={{ top: "calc(var(--site-header-height, 132px) + 1.5rem)" }}
+      >
         {/* -------------------------- identity -------------------------- */}
         <div className="relative overflow-hidden border-b border-gray-3 px-6 py-7">
           <div
@@ -65,7 +75,7 @@ const AccountSidebar = React.memo(function AccountSidebar({
           />
 
           <div className="relative flex items-center gap-4">
-            <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-blue text-[17px] font-bold uppercase text-gray-1">
+            <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-blue text-[17px] font-bold uppercase text-white">
               {getInitials(name)}
             </span>
             <div className="min-w-0">
@@ -83,32 +93,33 @@ const AccountSidebar = React.memo(function AccountSidebar({
               <ShieldCheck className="h-3.5 w-3.5" />
               {roleLabel}
             </span>
-            <span className="rounded-full border border-gray-3 px-3 py-1 text-[11px] font-medium text-dark-5">
-              Since {memberSince}
-            </span>
+            {memberSince && (
+              <span className="rounded-full border border-gray-3 px-3 py-1 text-[11px] font-medium text-dark-5">
+                Since {memberSince}
+              </span>
+            )}
           </div>
         </div>
 
         {/* --------------------------- nav --------------------------- */}
         <nav className="p-3">
           <ul className="space-y-1">
-            {sectionItems.map(({ key, label, icon: Icon }) => {
+            {sectionItems.map(({ key, label, href, icon: Icon }) => {
               const isActive = activeSection === key;
               return (
                 <li key={key}>
-                  <button
-                    type="button"
-                    onClick={() => onSectionClick(key)}
+                  <Link
+                    href={href}
                     aria-current={isActive ? "page" : undefined}
                     className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-[13.5px] font-semibold transition-colors ${
                       isActive
-                        ? "bg-blue text-gray-1"
+                        ? "bg-blue text-white"
                         : "text-dark hover:bg-gray-8 hover:text-blue"
                     }`}
                   >
                     <Icon className="h-[17px] w-[17px]" />
                     {label}
-                  </button>
+                  </Link>
                 </li>
               );
             })}

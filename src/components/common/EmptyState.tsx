@@ -6,6 +6,9 @@ import Link from "next/link";
  * empty search results) previously drew its own — with different icon sizes,
  * copy weight and button styles.
  */
+const actionClasses =
+  "mt-6 inline-flex h-11 items-center justify-center rounded-xl bg-blue px-7 text-[13px] font-bold text-white transition-colors hover:bg-blue-dark";
+
 export default function EmptyState({
   icon,
   title,
@@ -16,7 +19,8 @@ export default function EmptyState({
   icon?: React.ReactNode;
   title: string;
   description?: string;
-  action?: { label: string; href: string };
+  /** Either a link or a handler — retry-after-error needs the handler form. */
+  action?: { label: string; href: string } | { label: string; onClick: () => void };
   className?: string;
 }) {
   return (
@@ -37,14 +41,16 @@ export default function EmptyState({
         </p>
       )}
 
-      {action && (
-        <Link
-          href={action.href}
-          className="mt-6 inline-flex h-11 items-center justify-center rounded-xl bg-blue px-7 text-[13px] font-bold text-gray-1 transition-colors hover:bg-blue-light"
-        >
-          {action.label}
-        </Link>
-      )}
+      {action &&
+        ("href" in action ? (
+          <Link href={action.href} className={actionClasses}>
+            {action.label}
+          </Link>
+        ) : (
+          <button type="button" onClick={action.onClick} className={actionClasses}>
+            {action.label}
+          </button>
+        ))}
     </div>
   );
 }

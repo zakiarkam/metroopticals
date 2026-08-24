@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Loader2, PackageOpen } from "lucide-react";
 import EmptyState from "@/components/common/EmptyState";
 import { Order } from "@/features/orders/types/order";
@@ -14,14 +14,6 @@ const PAGE_LIMIT = 5;
 
 type MyOrdersTabProps = {
   profile?: Partial<User> | null;
-};
-
-const formatMemberSince = (date?: string | null) => {
-  if (!date) return "—";
-  return new Date(date).toLocaleDateString("en-US", {
-    month: "short",
-    year: "numeric",
-  });
 };
 
 const MyOrdersTab: React.FC<MyOrdersTabProps> = ({ profile }) => {
@@ -53,21 +45,6 @@ const MyOrdersTab: React.FC<MyOrdersTabProps> = ({ profile }) => {
       setIsPrintPending(false);
     }
   };
-
-  const memberSince = useMemo(
-    () => formatMemberSince(profile?.createdAt),
-    [profile?.createdAt]
-  );
-
-  const location = useMemo(() => {
-    const parts = [
-      profile?.address,
-      profile?.city,
-      profile?.postalCode,
-      profile?.country,
-    ].filter(Boolean);
-    return parts.length ? parts.join(", ") : "Not provided";
-  }, [profile?.address, profile?.city, profile?.country, profile?.postalCode]);
 
   return (
     <>
@@ -142,7 +119,7 @@ const MyOrdersTab: React.FC<MyOrdersTabProps> = ({ profile }) => {
       </div>
 
       {isPrintPending && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
           <div className="rounded-2xl border border-gray-3 bg-gray-2 px-8 py-7 text-center shadow-4">
             <Loader2 className="mx-auto h-8 w-8 animate-spin text-blue" />
             <p className="mt-4 text-[14px] font-semibold text-dark">

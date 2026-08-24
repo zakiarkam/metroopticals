@@ -170,6 +170,11 @@ export const productQuerySchema = z.object({
   status: z.enum(["ACTIVE", "INACTIVE", "OUT_OF_STOCK"]).optional(),
   minPrice: z.coerce.number().nonnegative().optional(),
   maxPrice: z.coerce.number().nonnegative().optional(),
+  /** Only products whose discounted price actually undercuts the list price. */
+  onSale: z
+    .union([z.boolean(), z.enum(["true", "false", "1", "0"])])
+    .transform((value) => value === true || value === "true" || value === "1")
+    .optional(),
   sortBy: z.enum(["createdAt", "price", "title"]).optional(),
   sortOrder: z.enum(["asc", "desc"]).optional(),
   page: z.coerce.number().int().positive().default(1),

@@ -1,25 +1,26 @@
-import dynamic from "next/dynamic";
-import Loading from "./loading";
+import { redirect } from "next/navigation";
 
-import { Metadata } from "next";
-export const metadata: Metadata = {
-  title: "Shop",
-  description:
-    "Browse our range of eyeglasses, sunglasses and contact lenses at Metro Opticals.",
-  // other metadata
-};
+/**
+ * Retired route.
+ *
+ * `/shop-without-sidebar` was a second, near-identical shop — same hero, same
+ * toolbar, same grid — but with a brands-only filter panel, its own drawer
+ * behaviour and its own set of bugs. Nothing distinguished the two pages to a
+ * shopper, so this one now forwards to the real shop with its query intact.
+ */
+export default async function ShopWithoutSidebarPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const params = await searchParams;
+  const query = new URLSearchParams();
 
-const ShopWithoutSidebar = dynamic(
-  () => import("@/features/products/components/ShopWithoutSidebar"),
-  { loading: () => <Loading /> }
-);
+  Object.entries(params).forEach(([key, value]) => {
+    if (Array.isArray(value)) value.forEach((v) => query.append(key, v));
+    else if (value != null) query.set(key, value);
+  });
 
-const ShopWithoutSidebarPage = () => {
-  return (
-    <main>
-      <ShopWithoutSidebar />
-    </main>
-  );
-};
-
-export default ShopWithoutSidebarPage;
+  const qs = query.toString();
+  redirect(`/shop-with-sidebar${qs ? `?${qs}` : ""}`);
+}

@@ -77,11 +77,6 @@ export async function GET() {
       changeFrequency: "daily",
       priority: 0.8,
     },
-    {
-      url: buildSiteUrl("/shop-without-sidebar"),
-      changeFrequency: "weekly",
-      priority: 0.7,
-    },
   ];
 
   let productRoutes: SitemapUrl[] = [];

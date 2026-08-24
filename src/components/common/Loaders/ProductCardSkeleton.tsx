@@ -4,7 +4,7 @@
  * Loading placeholders shaped like the real cards.
  *
  * The proportions here (4:3 media plate, two text lines, full-width button)
- * mirror <ProductCard /> and <SingleListItem /> so the layout does not jump
+ * mirror both <ProductCard /> layouts so the grid does not jump
  * when data lands.
  */
 
@@ -41,7 +41,7 @@ export default function ProductCardSkeleton({
   return (
     <div className="flex animate-pulse flex-col overflow-hidden rounded-2xl border border-gray-3 bg-gray-2">
       <div className="relative aspect-[4/3] w-full overflow-hidden bg-gray-8">
-        <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
+        <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/70 to-transparent" />
       </div>
 
       <div className="flex flex-col gap-3 border-t border-gray-3 p-5">

@@ -1,18 +1,45 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Heart, Lock, Trash2 } from "lucide-react";
 
 import SiteContainer from "@/components/common/SiteContainer";
 import PageHero from "@/components/common/PageHero";
 import EmptyState from "@/components/common/EmptyState";
-import SingleItem from "./SingleItem";
+import ProductCard from "@/components/common/ProductCard";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useWishlist } from "@/features/wishlist/hooks/use-wishlist";
 
+/** The shape the wishlist slice stores; wider than what the card needs. */
+type WishlistItem = {
+  id: number;
+  title: string;
+  price: number;
+  discountedPrice?: number | null;
+  stock?: number;
+  status?: string;
+  imgs?: { thumbnails?: string[]; previews?: string[] };
+};
+
 export const Wishlist = () => {
-  const { wishlistItems, clearWishlist, isAuthenticated, refreshWishlist } =
-    useWishlist();
+  const {
+    wishlistItems,
+    clearWishlist,
+    removeFromWishlist,
+    isAuthenticated,
+    refreshWishlist,
+  } = useWishlist();
   const hasItems = wishlistItems.length > 0;
+  const [confirmClear, setConfirmClear] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated) void refreshWishlist();
@@ -33,7 +60,7 @@ export const Wishlist = () => {
           hasItems ? (
             <button
               type="button"
-              onClick={clearWishlist}
+              onClick={() => setConfirmClear(true)}
               className="inline-flex h-11 items-center gap-2 rounded-xl border border-red/40 px-5 text-[13px] font-semibold text-red transition-colors hover:bg-red hover:text-white"
             >
               <Trash2 className="h-4 w-4" />
@@ -53,9 +80,24 @@ export const Wishlist = () => {
               action={{ label: "Sign in", href: "/log-in" }}
             />
           ) : hasItems ? (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {wishlistItems.map((item: { id: number }) => (
-                <SingleItem item={item as never} key={item.id} />
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+              {(wishlistItems as WishlistItem[]).map((item) => (
+                <ProductCard
+                  key={item.id}
+                  onRemove={async () => {
+                    await removeFromWishlist(item.id);
+                  }}
+                  item={{
+                    id: item.id,
+                    title: item.title,
+                    price: item.price,
+                    discountedPrice: item.discountedPrice ?? null,
+                    images: item.imgs?.previews ?? item.imgs?.thumbnails ?? [],
+                    stock: item.stock,
+                    status: item.status,
+                    raw: item,
+                  }}
+                />
               ))}
             </div>
           ) : (
@@ -68,6 +110,31 @@ export const Wishlist = () => {
           )}
         </SiteContainer>
       </section>
+
+      {/* Clearing the wishlist used to happen on the first click, while the
+          equivalent action in the cart asked first. Both ask now. */}
+      <AlertDialog open={confirmClear} onOpenChange={setConfirmClear}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Clear your wishlist?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This removes all {wishlistItems.length} saved frames. You can save
+              them again at any time.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep them</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                void clearWishlist();
+                setConfirmClear(false);
+              }}
+            >
+              Clear wishlist
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };

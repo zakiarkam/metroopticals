@@ -21,6 +21,7 @@ import { api } from "@/store/services/api";
 import { userApi } from "@/features/users/api/user-api";
 import { CUSTOMER_TYPE_LABELS, type CustomerType } from "@/features/users/types/user";
 import AccountSidebar from "./AccountSidebar";
+import { inputClasses } from "@/components/common/form";
 
 const CUSTOMER_TYPE_OPTIONS: { value: CustomerType; label: string }[] = [
   { value: "END_USER", label: "End User" },
@@ -214,21 +215,15 @@ export default function MyAccount() {
   const isReady = mounted && status === "authenticated" && !!userForUI;
 
   const memberSince = useMemo(() => {
-    // if you have createdAt on session.user, use it; else show month/year now
-    const d = (session?.user as any)?.createdAt
-      ? new Date((session?.user as any).createdAt)
-      : new Date();
-    return d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+    // No join date is better than today's date — the old fallback told a brand
+    // new visitor they had been a member since this morning.
+    const createdAt = (session?.user as any)?.createdAt;
+    if (!createdAt) return undefined;
+    return new Date(createdAt).toLocaleDateString("en-US", {
+      month: "short",
+      year: "numeric",
+    });
   }, [session?.user]);
-
-  const handleSidebarSelect = useCallback(
-    (section: "account" | "orders") => {
-      if (section === "orders") {
-        router.push("/my-account/orders");
-      }
-    },
-    [router]
-  );
 
   if (!isReady) {
     return (
@@ -293,7 +288,6 @@ export default function MyAccount() {
               role={role}
               memberSince={memberSince}
               activeSection="account"
-              onSectionClick={handleSidebarSelect}
             />
 
             {/* RIGHT CONTENT */}
@@ -384,7 +378,7 @@ export default function MyAccount() {
                               firstName: e.target.value,
                             })
                           }
-                          className="h-11 w-full rounded-xl border border-gray-3 bg-gray-1 px-4 text-[14px] text-dark outline-none transition-colors hover:border-gray-4 focus:border-blue"
+                          className={inputClasses}
                           required
                         />
                       </div>
@@ -406,7 +400,7 @@ export default function MyAccount() {
                               lastName: e.target.value,
                             })
                           }
-                          className="h-11 w-full rounded-xl border border-gray-3 bg-gray-1 px-4 text-[14px] text-dark outline-none transition-colors hover:border-gray-4 focus:border-blue"
+                          className={inputClasses}
                           required
                         />
                       </div>
@@ -447,7 +441,7 @@ export default function MyAccount() {
                               phone: e.target.value,
                             })
                           }
-                          className="h-11 w-full rounded-xl border border-gray-3 bg-gray-1 px-4 text-[14px] text-dark outline-none transition-colors hover:border-gray-4 focus:border-blue"
+                          className={inputClasses}
                           required
                         />
                       </div>
@@ -468,7 +462,7 @@ export default function MyAccount() {
                               customerType: e.target.value as CustomerType,
                             })
                           }
-                          className="h-11 w-full rounded-xl border border-gray-3 bg-gray-1 px-4 text-[14px] text-dark outline-none transition-colors hover:border-gray-4 focus:border-blue"
+                          className={inputClasses}
                         >
                           {CUSTOMER_TYPE_OPTIONS.map((opt) => (
                             <option key={opt.value} value={opt.value}>
@@ -492,7 +486,7 @@ export default function MyAccount() {
                           onChange={(e) =>
                             setEditForm({ ...editForm, city: e.target.value })
                           }
-                          className="h-11 w-full rounded-xl border border-gray-3 bg-gray-1 px-4 text-[14px] text-dark outline-none transition-colors hover:border-gray-4 focus:border-blue"
+                          className={inputClasses}
                           required
                         />
                       </div>
@@ -514,7 +508,7 @@ export default function MyAccount() {
                               address: e.target.value,
                             })
                           }
-                          className="h-11 w-full rounded-xl border border-gray-3 bg-gray-1 px-4 text-[14px] text-dark outline-none transition-colors hover:border-gray-4 focus:border-blue"
+                          className={inputClasses}
                           required
                         />
                       </div>
@@ -536,7 +530,7 @@ export default function MyAccount() {
                               postalCode: e.target.value,
                             })
                           }
-                          className="h-11 w-full rounded-xl border border-gray-3 bg-gray-1 px-4 text-[14px] text-dark outline-none transition-colors hover:border-gray-4 focus:border-blue"
+                          className={inputClasses}
                           required
                         />
                       </div>
@@ -558,7 +552,7 @@ export default function MyAccount() {
                               country: e.target.value,
                             })
                           }
-                          className="h-11 w-full rounded-xl border border-gray-3 bg-gray-1 px-4 text-[14px] text-dark outline-none transition-colors hover:border-gray-4 focus:border-blue"
+                          className={inputClasses}
                           required
                         />
                       </div>
@@ -568,7 +562,7 @@ export default function MyAccount() {
                       <button
                         type="submit"
                         disabled={isSaving}
-                        className="inline-flex h-11 items-center gap-2 rounded-xl bg-blue px-7 text-[13px] font-bold text-gray-1 transition-colors hover:bg-blue-light disabled:cursor-not-allowed disabled:opacity-60"
+                        className="inline-flex h-11 items-center gap-2 rounded-xl bg-blue px-7 text-[13px] font-bold text-white transition-colors hover:bg-blue-dark disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         {isSaving ? (
                           <>

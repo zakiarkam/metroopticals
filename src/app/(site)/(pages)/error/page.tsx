@@ -11,9 +11,9 @@ export const metadata: Metadata = {
 
 const ErrorPage = () => {
   return (
-    <main>
+    <>
       <Error />
-    </main>
+    </>
   );
 };
 

@@ -35,7 +35,7 @@ const SearchBar = memo(function SearchBar({
 }: SearchBarProps) {
   return (
     <form onSubmit={onSubmit} className="w-full" role="search">
-      <div className="relative flex w-full items-center rounded-full border border-gray-3 bg-gray-1 transition-colors focus-within:border-blue">
+      <div className="relative flex w-full items-center rounded-full border border-gray-3 bg-gray-1 transition-colors focus-within:border-blue focus-within:ring-2 focus-within:ring-blue/25">
         <button
           aria-label="Search"
           type="submit"
@@ -50,7 +50,7 @@ const SearchBar = memo(function SearchBar({
           placeholder="I'm looking for..."
           autoComplete="off"
           aria-label="Search products"
-          className="w-full rounded-full bg-transparent py-2.5 pl-12 pr-5 outline-none"
+          className="w-full rounded-full bg-transparent py-2.5 pl-12 pr-5 focus:outline-none"
         />
       </div>
     </form>

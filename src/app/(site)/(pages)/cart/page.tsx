@@ -1,7 +1,8 @@
 import React, { Suspense } from "react";
+import type { Metadata } from "next";
 import Cart from "@/features/cart/components";
+import PageLoading from "@/components/common/PageLoading";
 
-import { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Cart",
   description:
@@ -12,22 +13,12 @@ export const metadata: Metadata = {
   },
 };
 
-function CartContent() {
-  return <Cart />;
-}
-
-const CartPage = () => {
+export default function CartPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue"></div>
-        </div>
-      }
-    >
-      <CartContent />
-    </Suspense>
+    <>
+      <Suspense fallback={<PageLoading />}>
+        <Cart />
+      </Suspense>
+    </>
   );
-};
-
-export default CartPage;
+}

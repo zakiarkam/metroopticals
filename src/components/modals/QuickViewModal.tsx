@@ -61,7 +61,7 @@ const QuickViewModal = () => {
     const normalized = normalizeImageArray(product?.images ?? []);
     return normalized.length > 0
       ? normalized
-      : ["/images/placeholder-product.jpg"];
+      : ["/images/placeholder-product.svg"];
   }, [product?.images]);
 
   const productImages = normalizedImages;
@@ -177,15 +177,15 @@ const QuickViewModal = () => {
                 }}
               />
               <Image
-                src={previewImage || "/images/placeholder-product.jpg"}
+                src={previewImage || "/images/placeholder-product.svg"}
                 alt={product.title || "Product"}
                 fill
                 sizes="(max-width: 1024px) 90vw, 460px"
-                className="relative object-contain p-8 drop-shadow-[0_24px_40px_rgba(0,0,0,0.55)]"
+                className="relative object-contain p-8 drop-shadow-[0_14px_24px_rgba(39,30,20,0.14)]"
               />
 
               {hasDiscount && discountPercent !== null && (
-                <span className="absolute left-4 top-4 rounded-full bg-blue px-3 py-1 text-[11px] font-bold text-gray-1">
+                <span className="absolute left-4 top-4 rounded-full bg-blue px-3 py-1 text-[11px] font-bold text-white">
                   Save {discountPercent}%
                 </span>
               )}
@@ -215,7 +215,7 @@ const QuickViewModal = () => {
                     }`}
                   >
                     <Image
-                      src={img || "/images/placeholder-product.jpg"}
+                      src={img || "/images/placeholder-product.svg"}
                       alt=""
                       fill
                       sizes="72px"
@@ -331,7 +331,7 @@ const QuickViewModal = () => {
                 type="button"
                 disabled={!canPurchase || quantity === 0}
                 onClick={handleAddToCart}
-                className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-blue text-[14px] font-bold text-gray-1 transition-colors hover:bg-blue-light disabled:cursor-not-allowed disabled:bg-gray-8 disabled:text-dark-5"
+                className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-blue text-[14px] font-bold text-white transition-colors hover:bg-blue-dark disabled:cursor-not-allowed disabled:bg-gray-8 disabled:text-dark-5"
               >
                 {canPurchase && <ShoppingBag className="h-[18px] w-[18px]" />}
                 {availability.actionLabel}

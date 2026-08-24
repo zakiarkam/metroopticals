@@ -12,6 +12,7 @@ import {
   AVAILABILITY_PILL_CLASSES,
   getAvailability,
 } from "@/features/products/utils/availability";
+import { formatPrice } from "@/lib/utils/price";
 
 type CartItem = {
   id: number;
@@ -28,11 +29,6 @@ type CartItem = {
   };
 };
 
-const money = (value: number) =>
-  `Rs ${Number(value ?? 0).toLocaleString("en-LK", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
 
 /** One row in the cart. Shows the line total as well as the unit price — the old row only showed the unit price, which did not add up to the summary. */
 const SingleItem = ({ item }: { item: CartItem }) => {
@@ -63,7 +59,7 @@ const SingleItem = ({ item }: { item: CartItem }) => {
 
   const resolvedImages = normalizeImageArray(item.imgs?.previews ?? []);
   const displayImage =
-    resolvedImages[0] ?? "/images/placeholder-product.jpg";
+    resolvedImages[0] ?? "/images/placeholder-product.svg";
   const productUrl = `/shop-details/${item.productId || item.id}`;
 
   const hasReachedStock =
@@ -98,7 +94,7 @@ const SingleItem = ({ item }: { item: CartItem }) => {
 
         <div className="mt-1.5 flex flex-wrap items-center gap-2.5">
           <span className="text-[13px] text-dark-4">
-            {money(item.discountedPrice)} each
+            {formatPrice(item.discountedPrice)} each
           </span>
           {isUnavailable && (
             <span
@@ -141,7 +137,7 @@ const SingleItem = ({ item }: { item: CartItem }) => {
         </div>
 
         <p className="w-[110px] shrink-0 text-right text-[15px] font-bold text-dark">
-          {money(item.discountedPrice * item.quantity)}
+          {formatPrice(item.discountedPrice * item.quantity)}
         </p>
 
         <button

@@ -10,6 +10,9 @@ import type {
   Advertisement,
   AdvertisementPlacement,
 } from "@/features/advertisements/types/advertisement";
+import {
+  AD_PLACEMENTS,
+} from "@/features/advertisements/constants/advertisement";
 
 const advertisementProductSelect = {
   id: true,
@@ -99,9 +102,11 @@ export async function createAdvertisement(data: CreateAdvertisementInput) {
       placement: data.placement,
       status: data.status || "active",
       priority: data.priority || 0,
+      slot: data.slot || 1,
       startDate: data.startDate ? new Date(data.startDate) : null,
       endDate: data.endDate ? new Date(data.endDate) : null,
-      productId: data.productId,
+      // Banner placements carry no product, so this is nullable.
+      productId: data.productId ?? null,
     },
     include: {
       product: {
@@ -131,6 +136,7 @@ export async function updateAdvertisement(
       ...(data.placement && { placement: data.placement }),
       ...(data.status && { status: data.status }),
       ...(data.priority !== undefined && { priority: data.priority }),
+      ...(data.slot !== undefined && { slot: data.slot }),
       ...(data.startDate !== undefined && {
         startDate: data.startDate ? new Date(data.startDate) : null,
       }),
@@ -255,56 +261,38 @@ export async function getActiveAdvertisementsByPlacement(
   return normalizedAds as Advertisement[];
 }
 
-export type HomeAdvertisementsResult = {
-  position0: Advertisement[]; // under <Categories />
-  position1: Advertisement[]; // under <NewArrivals />
-  position2: Advertisement[]; // under <BestSeller />
-};
-
-export async function getHomeAdvertisements(): Promise<HomeAdvertisementsResult> {
+/**
+ * The home page's scheduled promo panel.
+ *
+ * There used to be three product-driven home slots keyed off `priority`
+ * (0/1/2), one under each of three sections. The home page now carries a
+ * single promo panel, so the query is one placement ordered by slot rather
+ * than three parallel priority buckets.
+ */
+export async function getHomePromoAdvertisements(): Promise<Advertisement[]> {
   const now = new Date();
-  const baseWhere = {
-    status: "active",
-    AND: [
-      { OR: [{ startDate: null }, { startDate: { lte: now } }] },
-      { OR: [{ endDate: null }, { endDate: { gte: now } }] },
-    ],
-  };
 
-  const normalize = (ad: any): Advertisement => ({
+  const ads = await prisma.advertisement.findMany({
+    where: {
+      status: "active",
+      placement: "promobanner",
+      AND: [
+        { OR: [{ startDate: null }, { startDate: { lte: now } }] },
+        { OR: [{ endDate: null }, { endDate: { gte: now } }] },
+      ],
+    },
+    include: { product: { select: advertisementProductSelect } },
+    orderBy: [{ slot: "asc" }],
+    take: 3,
+  });
+
+  return ads.map((ad: any) => ({
     ...ad,
     startDate: ad.startDate ? ad.startDate.toISOString() : null,
     endDate: ad.endDate ? ad.endDate.toISOString() : null,
     createdAt: ad.createdAt.toISOString(),
     updatedAt: ad.updatedAt.toISOString(),
-  });
-
-  const [p0, p1, p2] = await Promise.all([
-    prisma.advertisement.findMany({
-      where: { ...baseWhere, priority: 0 },
-      include: { product: { select: advertisementProductSelect } },
-      orderBy: [{ slot: "asc" }],
-      take: 3,
-    }),
-    prisma.advertisement.findMany({
-      where: { ...baseWhere, priority: 1 },
-      include: { product: { select: advertisementProductSelect } },
-      orderBy: [{ slot: "asc" }],
-      take: 3,
-    }),
-    prisma.advertisement.findMany({
-      where: { ...baseWhere, priority: 2 },
-      include: { product: { select: advertisementProductSelect } },
-      orderBy: [{ slot: "asc" }],
-      take: 3,
-    }),
-  ]);
-
-  return {
-    position0: p0.map(normalize),
-    position1: p1.map(normalize),
-    position2: p2.map(normalize),
-  };
+  })) as Advertisement[];
 }
 
 export const getProductDetailsUrl = (productId: number) => {
@@ -314,3 +302,48 @@ export const getProductDetailsUrl = (productId: number) => {
   }
   return slug;
 };
+
+/**
+ * Active banner ads for one zone, in slot order.
+ *
+ * Ordered by slot first so the admin's slot numbers map directly onto the
+ * left-to-right (or top-to-bottom) position on the page; priority only breaks
+ * ties when two campaigns claim the same slot, newest winning last.
+ */
+export async function getBannerAdvertisements(
+  placement: AdvertisementPlacement
+): Promise<Advertisement[]> {
+  const meta = AD_PLACEMENTS[placement];
+  const ads = await prisma.advertisement.findMany({
+    where: buildActiveAdvertisementWhere(placement),
+    include: { product: { select: advertisementProductSelect } },
+    orderBy: [{ slot: "asc" }, { priority: "desc" }, { createdAt: "desc" }],
+    take: meta ? meta.slots.length : 3,
+  });
+
+  return ads.map((ad) => ({
+    ...ad,
+    startDate: ad.startDate ? ad.startDate.toISOString() : null,
+    endDate: ad.endDate ? ad.endDate.toISOString() : null,
+    createdAt: ad.createdAt.toISOString(),
+    updatedAt: ad.updatedAt.toISOString(),
+  })) as Advertisement[];
+}
+
+/** Per-placement active counts, used by the admin overview cards. */
+export async function getAdvertisementPlacementCounts() {
+  const grouped = await prisma.advertisement.groupBy({
+    by: ["placement", "status"],
+    _count: { _all: true },
+  });
+
+  return grouped.reduce<Record<string, { active: number; inactive: number }>>(
+    (acc, row) => {
+      const bucket = (acc[row.placement] ||= { active: 0, inactive: 0 });
+      if (row.status === "active") bucket.active += row._count._all;
+      else bucket.inactive += row._count._all;
+      return acc;
+    },
+    {}
+  );
+}

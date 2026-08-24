@@ -24,19 +24,14 @@ import { normalizeImageArray } from "@/lib/storageUtils";
 import SiteContainer from "@/components/common/SiteContainer";
 import PageHero from "@/components/common/PageHero";
 import EmptyState from "@/components/common/EmptyState";
+import { formatPrice } from "@/lib/utils/price";
+import { inputClasses, textareaClasses } from "@/components/common/form";
 
 const CHECKOUT_DRAFT_KEY = "metro_checkout_draft_v1";
 
-const money = (value: number) =>
-  `Rs ${Number(value ?? 0).toLocaleString("en-LK", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
 
 /* ------------------------------ form atoms ------------------------------ */
 
-const inputClasses =
-  "h-11 w-full rounded-xl border border-gray-3 bg-gray-1 px-4 text-[14px] text-dark outline-none transition-colors placeholder:text-dark-5 hover:border-gray-4 focus:border-blue";
 
 /** One labelled text input. Extracted because checkout repeats it 16 times. */
 function Field({
@@ -497,7 +492,7 @@ const Checkout = () => {
                       type="checkbox"
                       checked={sameAsBilling}
                       onChange={(e) => setSameAsBilling(e.target.checked)}
-                      className="h-4 w-4 accent-[#C09C6C]"
+                      className="h-4 w-4 accent-blue-light"
                     />
                     <span className="text-[13.5px] font-medium text-dark">
                       Deliver to this address
@@ -530,7 +525,7 @@ const Checkout = () => {
                     onChange={(e) => setNotes(e.target.value)}
                     rows={5}
                     placeholder="e.g. My prescription is from January 2026 — I'll email a photo. Please call before delivery."
-                    className="w-full resize-none rounded-xl border border-gray-3 bg-gray-1 p-4 text-[14px] leading-relaxed text-dark outline-none transition-colors placeholder:text-dark-5 hover:border-gray-4 focus:border-blue"
+                    className={textareaClasses}
                   />
                 </Panel>
               </div>
@@ -553,7 +548,7 @@ const Checkout = () => {
                         item.imgs?.previews ?? []
                       );
                       const displayImage =
-                        previewImages[0] || "/images/placeholder-product.jpg";
+                        previewImages[0] || "/images/placeholder-product.svg";
                       const productUrl = `/shop-details/${
                         item.productId ?? item.id
                       }`;
@@ -571,7 +566,7 @@ const Checkout = () => {
                               sizes="56px"
                               className="object-contain p-1.5"
                             />
-                            <span className="absolute -right-1 -top-1 grid h-5 min-w-[20px] place-items-center rounded-full bg-blue px-1 text-[10px] font-bold text-gray-1">
+                            <span className="absolute -right-1 -top-1 grid h-5 min-w-[20px] place-items-center rounded-full bg-blue px-1 text-[10px] font-bold text-white">
                               {item.quantity}
                             </span>
                           </div>
@@ -584,7 +579,7 @@ const Checkout = () => {
                           </Link>
 
                           <span className="shrink-0 text-[13.5px] font-semibold text-dark">
-                            {money(item.discountedPrice * item.quantity)}
+                            {formatPrice(item.discountedPrice * item.quantity)}
                           </span>
                         </li>
                       );
@@ -595,7 +590,7 @@ const Checkout = () => {
                     <div className="flex items-center justify-between text-[14px]">
                       <span className="text-dark-4">Subtotal</span>
                       <span className="font-semibold text-dark">
-                        {money(calculateSubtotal())}
+                        {formatPrice(calculateSubtotal())}
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-[14px]">
@@ -611,7 +606,7 @@ const Checkout = () => {
                         Total
                       </span>
                       <span className="text-xl font-bold text-blue">
-                        {money(calculateTotal())}
+                        {formatPrice(calculateTotal())}
                       </span>
                     </div>
                   </div>
@@ -637,7 +632,7 @@ const Checkout = () => {
                               value={value}
                               checked={active}
                               onChange={(e) => setPaymentMethod(e.target.value)}
-                              className="mt-0.5 h-4 w-4 accent-[#C09C6C]"
+                              className="mt-0.5 h-4 w-4 accent-blue-light"
                             />
                             <span className="min-w-0">
                               <span className="flex items-center gap-2 text-[13.5px] font-semibold text-dark">
@@ -659,7 +654,7 @@ const Checkout = () => {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="inline-flex h-13 w-full items-center justify-center gap-2 rounded-xl bg-blue text-[15px] font-bold text-gray-1 transition-colors hover:bg-blue-light disabled:cursor-not-allowed disabled:opacity-60"
+                    className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-blue text-[15px] font-bold text-white transition-colors hover:bg-blue-dark disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {isSubmitting ? (
                       <>
@@ -667,7 +662,7 @@ const Checkout = () => {
                         Placing order…
                       </>
                     ) : (
-                      `Place order · ${money(calculateTotal())}`
+                      `Place order · ${formatPrice(calculateTotal())}`
                     )}
                   </button>
 

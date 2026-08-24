@@ -151,7 +151,7 @@ const Pagination: React.FC<PaginationProps> = ({
                   onClick={() => handlePageClick(page as number)}
                   className={`inline-flex h-9 min-w-[36px] items-center justify-center rounded-lg px-2.5 text-[13px] font-semibold transition-colors ${
                     safeCurrentPage === page
-                      ? "bg-blue text-gray-1"
+                      ? "bg-blue text-white"
                       : "border border-gray-3 text-dark hover:border-blue hover:text-blue"
                   }`}
                   aria-label={`Page ${page}`}

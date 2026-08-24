@@ -110,7 +110,7 @@ const CheckboxRow = ({
       type="checkbox"
       checked={checked}
       onChange={onToggle}
-      className="h-[15px] w-[15px] shrink-0 cursor-pointer accent-[#C09C6C]"
+      className="h-[15px] w-[15px] shrink-0 cursor-pointer accent-blue-light"
     />
     <span
       className={`capitalize ${checked ? "font-semibold text-blue" : "text-body"}`}
@@ -221,17 +221,17 @@ export default function ShopFilters({
   }, [facets]);
 
   return (
+    /*
+     * No heading of its own — the sidebar shell above already prints
+     * "Filters" and a clear-all, so this panel used to sit under a second,
+     * near-identical header saying "Refine" with a second reset link.
+     */
     <aside className="rounded-2xl border border-gray-3 bg-gray-2 px-4 shadow-2">
-      <div className="flex items-center justify-between border-b border-gray-3 py-4">
-        <h2 className="flex items-center gap-2 text-[13.5px] font-bold uppercase tracking-[0.1em] text-dark">
-          Refine
-          {activeCount > 0 && (
-            <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-blue px-1.5 text-[11px] font-bold text-gray-1">
-              {activeCount}
-            </span>
-          )}
-        </h2>
-        {activeCount > 0 && (
+      {activeCount > 0 && (
+        <div className="flex items-center justify-between border-b border-gray-3 py-3">
+          <span className="text-[12px] font-semibold text-dark-4">
+            {activeCount} {activeCount === 1 ? "filter" : "filters"} applied
+          </span>
           <button
             type="button"
             onClick={onClearAll}
@@ -239,8 +239,8 @@ export default function ShopFilters({
           >
             Reset
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
       {loading && !facets ? (
         <div className="space-y-3 py-5">

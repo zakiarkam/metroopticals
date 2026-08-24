@@ -4,29 +4,24 @@ import { signOut } from "next-auth/react";
 import { clearUserSession } from "@/lib/sessionStorage";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import { Eye, Headset, Heart, Phone } from "lucide-react";
-import { siteConfig } from "@/config/site";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Headset, Heart } from "lucide-react";
+import MegaMenu, {
+  EMPTY_CATALOGUE,
+  type NavCatalogue,
+  type NavItem,
+} from "@/features/site-content/components/site/MegaMenu";
 
 import AccountMenu from "./AccountMenu";
 import CartButton from "./CartButton";
 import Logo from "./Logo";
+import MobileNav from "./MobileNav";
 import SearchBar from "./SearchBar";
 
 import { useCartModalContext } from "@/app/context/CartSidebarModalContext";
-import { useCategories } from "@/features/categories/hooks/use-categories";
 import { useAppSelector } from "@/store/store";
 
-/** Nav entries are limited so the row never wraps awkwardly on laptops. */
-const MAX_NAV_CATEGORIES = 7;
-
-/* ----------------------------- utils ----------------------------- */
+/* ----------------------------- hooks ----------------------------- */
 
 function useHeaderHeightCssVar(headerRef: React.RefObject<HTMLElement>) {
   useEffect(() => {
@@ -94,22 +89,13 @@ function useLockBodyScroll(locked: boolean) {
   }, [locked]);
 }
 
-/* ----------------------------- icons ----------------------------- */
+/* ----------------------------- UI bits ----------------------------- */
 
 function IconMenu({ open }: { open: boolean }) {
-  return open ? (
+  return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path
-        d="M6 6l12 12M18 6L6 18"
-        stroke="currentColor"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-      />
-    </svg>
-  ) : (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M4 7h16M4 12h16M4 17h16"
+        d={open ? "M6 6l12 12M18 6L6 18" : "M4 7h16M4 12h16M4 17h16"}
         stroke="currentColor"
         strokeWidth="2.5"
         strokeLinecap="round"
@@ -118,112 +104,21 @@ function IconMenu({ open }: { open: boolean }) {
   );
 }
 
-/* ----------------------------- UI bits ----------------------------- */
-
 const Container = ({ children }: { children: React.ReactNode }) => (
-  <div className="mx-auto w-full max-w-[1600px] px-3 sm:px-4 lg:px-6">
+  <div className="mx-auto w-full max-w-[1440px] px-4 sm:px-5 lg:px-8">
     {children}
-  </div>
-);
-
-type NavItem = { label: string; href: string };
-
-const NavLinks = ({
-  items,
-  pathname,
-  currentCategory,
-  onNavigate,
-  vertical = false,
-}: {
-  items: NavItem[];
-  pathname: string;
-  currentCategory: string;
-  onNavigate?: () => void;
-  vertical?: boolean;
-}) => (
-  <nav aria-label="Product categories">
-    <ul
-      className={
-        vertical
-          ? "flex flex-col gap-1"
-          : "flex flex-wrap items-center justify-center gap-x-8 gap-y-1"
-      }
-    >
-      {items.map((item) => {
-        // A category is active when its slug matches the current ?category=.
-        const slug = item.href.split("category=")[1];
-        const isActive = slug
-          ? currentCategory === slug
-          : pathname === item.href.split("?")[0];
-
-        return (
-          <li key={item.href}>
-            <Link
-              href={item.href}
-              onClick={onNavigate}
-              aria-current={isActive ? "page" : undefined}
-              className={`relative block whitespace-nowrap text-[13.5px] font-medium capitalize transition-colors ${
-                vertical
-                  ? `rounded-lg px-3 py-2.5 ${
-                      isActive
-                        ? "bg-blue/10 text-blue"
-                        : "text-dark hover:bg-gray-8 hover:text-blue"
-                    }`
-                  : `py-3.5 ${isActive ? "text-blue" : "text-dark hover:text-blue"}`
-              }`}
-            >
-              {item.label}
-              {/* active underline, desktop row only */}
-              {!vertical && isActive && (
-                <span
-                  aria-hidden
-                  className="absolute inset-x-0 bottom-0 h-[2px] rounded-full bg-blue"
-                />
-              )}
-            </Link>
-          </li>
-        );
-      })}
-    </ul>
-  </nav>
-);
-
-/**
- * Slim announcement strip above the header.
- *
- * Carries the two things that convert best on an optical storefront — the free
- * eye test and the phone number — without stealing room from the search bar.
- */
-const AnnouncementBar = () => (
-  <div className="hidden border-b border-gray-3 bg-gray-1 sm:block">
-    <div className="mx-auto flex w-full max-w-[1600px] items-center justify-between gap-4 px-3 py-2 sm:px-4 lg:px-6">
-      <p className="flex items-center gap-2 text-[11.5px] font-medium text-dark-4">
-        <Eye className="h-3.5 w-3.5 text-blue" />
-        Free eye test with every pair · Island-wide delivery in 2 days
-      </p>
-
-      <div className="flex items-center gap-5 text-[11.5px] font-medium">
-        <a
-          href={siteConfig.contact.phoneHref}
-          className="flex items-center gap-1.5 text-dark-4 transition-colors hover:text-blue"
-        >
-          <Phone className="h-3.5 w-3.5" />
-          {siteConfig.contact.phone}
-        </a>
-        <Link
-          href="/faq"
-          className="hidden text-dark-4 transition-colors hover:text-blue md:block"
-        >
-          Help
-        </Link>
-      </div>
-    </div>
   </div>
 );
 
 /* ----------------------------- Header ---------------------------- */
 
-export default function Header() {
+export default function Header({
+  megaNav = [],
+  catalogue = EMPTY_CATALOGUE,
+}: {
+  megaNav?: NavItem[];
+  catalogue?: NavCatalogue;
+}) {
   const headerRef = useRef<HTMLElement | null>(null);
   useHeaderHeightCssVar(headerRef);
 
@@ -239,14 +134,11 @@ export default function Header() {
   const pathname = usePathname();
 
   const { openCartModal } = useCartModalContext();
-  const { categories } = useCategories();
-
   const product = useAppSelector((state) => state.cartReducer.items);
 
-  // ✅ Close mobile nav on route change
   useEffect(() => setNavigationOpen(false), [pathname]);
 
-  // ✅ Sync search state with URL (stable dependency)
+  // Keep the search box in step with the URL the shop is currently showing.
   const queryKey = searchParams.toString();
   useEffect(() => {
     const nextCat = searchParams.get("category") || "0";
@@ -256,44 +148,31 @@ export default function Header() {
     setSearchQuery((prev) => (prev === nextSearch ? prev : nextSearch));
   }, [queryKey, searchParams]);
 
-  /** Top-level categories only — brands would overflow the nav row. */
-  const topLevelCategories = useMemo(
-    () => (categories || []).filter((c) => !c.parentId),
-    [categories]
-  );
-
-  // "Shop" lands on the filterable listing; each category deep-links into the
-  // listing that reads ?category= so the filter is applied on arrival.
+  /** A fresh install with no saved navigation still needs a usable menu. */
   const navItems = useMemo<NavItem[]>(
-    () => [
-      { label: "Shop", href: "/shop-with-sidebar" },
-      ...topLevelCategories.slice(0, MAX_NAV_CATEGORIES).map((c) => ({
-        label: c.name,
-        href: `/shop-without-sidebar?category=${encodeURIComponent(c.slug)}`,
-      })),
-    ],
-    [topLevelCategories]
-  );
-
-  const navigateToShop = useCallback(
-    (categoryValue?: string, query?: string) => {
-      const params = new URLSearchParams();
-      if (categoryValue && categoryValue !== "0")
-        params.set("category", categoryValue);
-      if (query && query.trim()) params.set("search", query.trim());
-
-      const qs = params.toString();
-      router.push(`/shop-without-sidebar${qs ? `?${qs}` : ""}`);
-    },
-    [router]
+    () =>
+      megaNav.length
+        ? megaNav
+        : [
+            { label: "Eyeglasses", href: "/shop-with-sidebar" },
+            { label: "Sunglasses", href: "/shop-with-sidebar" },
+            { label: "Brands", href: "/shop-with-sidebar", source: "brands" },
+            { label: "Eye test", href: "/contact" },
+          ],
+    [megaNav]
   );
 
   const handleSearchSubmit = useCallback(
     (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
-      navigateToShop(selectedCategory, searchQuery);
+      const params = new URLSearchParams();
+      if (selectedCategory && selectedCategory !== "0")
+        params.set("category", selectedCategory);
+      if (searchQuery.trim()) params.set("search", searchQuery.trim());
+      const qs = params.toString();
+      router.push(`/shop-with-sidebar${qs ? `?${qs}` : ""}`);
     },
-    [navigateToShop, selectedCategory, searchQuery]
+    [router, searchQuery, selectedCategory]
   );
 
   const handleLogout = useCallback(async () => {
@@ -302,136 +181,94 @@ export default function Header() {
   }, []);
 
   const iconButton =
-    "inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-3 text-dark transition-colors hover:border-blue hover:text-blue";
+    "inline-flex h-10 w-10 items-center justify-center rounded-full text-dark transition-colors hover:bg-blue-light-5 hover:text-blue";
 
   return (
     <header
       ref={headerRef}
-      className={`fixed left-0 top-0 z-40 w-full border-b border-gray-3 bg-gray-2 transition-shadow duration-200 ${
+      className={`sticky top-0 z-40 w-full border-b border-gray-3 bg-gray-2 transition-shadow duration-200 ${
         stickyMenu ? "shadow-3" : "shadow-none"
       }`}
     >
-      {/* The announcement strip collapses away once the page is scrolled, so the
-          sticky header stays compact without losing it on first paint. */}
-      {!stickyMenu && <AnnouncementBar />}
-
       <Container>
-        {/* MAIN ROW */}
         <div
-          className={`flex flex-col gap-3 lg:gap-4 ${
-            stickyMenu ? "py-3" : "py-4"
+          className={`flex items-center gap-4 transition-[padding] ${
+            stickyMenu ? "py-2" : "py-3"
           }`}
         >
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-4 min-w-0 flex-1">
-              <Logo />
+          {/* Mobile menu toggle sits first so the logo stays optically centred */}
+          <button
+            aria-label="Toggle navigation"
+            aria-expanded={navigationOpen}
+            className="-ml-2 inline-flex h-10 w-10 items-center justify-center rounded-lg text-dark transition-colors hover:text-blue lg:hidden"
+            onClick={() => setNavigationOpen((s) => !s)}
+          >
+            <IconMenu open={navigationOpen} />
+          </button>
 
-              {/* Desktop search */}
-              <div className="hidden lg:block w-full max-w-[820px]">
-                <SearchBar
-                  searchQuery={searchQuery}
-                  setSearchQuery={setSearchQuery}
-                  onSubmit={handleSearchSubmit}
-                />
-              </div>
-            </div>
+          <Logo />
 
-            {/* Right actions */}
-            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-              <AccountMenu onLogout={handleLogout} />
-
-              <Link
-                href="/contact"
-                className={`hidden sm:inline-flex ${iconButton}`}
-                aria-label="Contact us"
-                title="Contact us"
-              >
-                <Headset className="h-5 w-5" />
-              </Link>
-
-              <Link
-                href="/wishlist"
-                className={`hidden sm:inline-flex ${iconButton}`}
-                aria-label="Wishlist"
-                title="Wishlist"
-              >
-                <Heart className="h-5 w-5" />
-              </Link>
-
-              <CartButton count={product.length} onOpen={openCartModal} />
-
-              {/* Mobile menu toggle */}
-              <button
-                aria-label="Toggle navigation"
-                aria-expanded={navigationOpen}
-                className="md:hidden inline-flex h-10 w-10 items-center justify-center rounded-lg border border-gray-3 text-dark hover:border-blue hover:text-blue transition-colors"
-                onClick={() => setNavigationOpen((s) => !s)}
-              >
-                <IconMenu open={navigationOpen} />
-              </button>
+          <div className="hidden min-w-0 flex-1 lg:block">
+            <div className="mx-auto max-w-[560px]">
+              <SearchBar
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                onSubmit={handleSearchSubmit}
+              />
             </div>
           </div>
 
-          {/* Mobile search */}
-          <div className="lg:hidden">
-            <SearchBar
-              searchQuery={searchQuery}
-              setSearchQuery={setSearchQuery}
-              onSubmit={handleSearchSubmit}
-            />
+          <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-1.5">
+            <AccountMenu onLogout={handleLogout} />
+
+            <Link
+              href="/contact"
+              className={`hidden sm:inline-flex ${iconButton}`}
+              aria-label="Contact us"
+              title="Contact us"
+            >
+              <Headset className="h-5 w-5" />
+            </Link>
+
+            <Link
+              href="/wishlist"
+              className={`hidden sm:inline-flex ${iconButton}`}
+              aria-label="Wishlist"
+              title="Wishlist"
+            >
+              <Heart className="h-5 w-5" />
+            </Link>
+
+            <CartButton count={product.length} onOpen={openCartModal} />
           </div>
+        </div>
+
+        {/* Search moves to its own row below the logo on small screens. */}
+        <div className="pb-3 lg:hidden">
+          <SearchBar
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            onSubmit={handleSearchSubmit}
+          />
         </div>
       </Container>
 
-      {/* CATEGORY NAV ROW */}
-      <div className="hidden md:block border-t border-gray-3">
-        <Container>
-          <NavLinks
-            items={navItems}
-            pathname={pathname}
-            currentCategory={selectedCategory}
-          />
-        </Container>
-      </div>
+      <MegaMenu items={navItems} catalogue={catalogue} />
 
-      {/* Mobile navigation */}
       {navigationOpen && (
         <>
           <div
-            className="fixed left-0 right-0 bottom-0 z-30"
+            className="fixed inset-x-0 bottom-0 z-30 bg-dark/20 lg:hidden"
             style={{ top: "var(--site-header-height)" }}
             onClick={() => setNavigationOpen(false)}
           />
-          <div className="md:hidden border-t border-gray-3 bg-gray-2 shadow-lg relative z-40">
+          <div className="relative z-40 border-t border-gray-3 bg-gray-2 shadow-lg lg:hidden">
             <Container>
-              <div className="py-4">
-                <NavLinks
-                  items={navItems}
-                  pathname={pathname}
-                  currentCategory={selectedCategory}
-                  onNavigate={() => setNavigationOpen(false)}
-                  vertical
-                />
-
-                <div className="mt-3 flex items-center gap-2 border-t border-gray-3 pt-3">
-                  <Link
-                    href="/contact"
-                    onClick={() => setNavigationOpen(false)}
-                    className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-gray-3 py-2.5 text-sm font-medium text-dark hover:border-blue hover:text-blue transition-colors"
-                  >
-                    <Headset className="h-4 w-4" />
-                    Contact
-                  </Link>
-                  <Link
-                    href="/wishlist"
-                    onClick={() => setNavigationOpen(false)}
-                    className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-gray-3 py-2.5 text-sm font-medium text-dark hover:border-blue hover:text-blue transition-colors"
-                  >
-                    <Heart className="h-4 w-4" />
-                    Wishlist
-                  </Link>
-                </div>
-              </div>
+              <MobileNav
+                items={navItems}
+                catalogue={catalogue}
+                onNavigate={() => setNavigationOpen(false)}
+              />
             </Container>
           </div>
         </>

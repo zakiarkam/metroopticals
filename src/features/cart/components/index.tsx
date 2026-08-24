@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Loader2, ShoppingCart, Trash2 } from "lucide-react";
+import { ShoppingCart, Trash2 } from "lucide-react";
 
 import OrderSummary from "./OrderSummary";
 import SingleItem from "./SingleItem";
 import SiteContainer from "@/components/common/SiteContainer";
+import AdZoneClient from "@/features/advertisements/components/site/AdZoneClient";
 import PageHero from "@/components/common/PageHero";
 import EmptyState from "@/components/common/EmptyState";
 import { useCart } from "@/features/cart/hooks/use-cart";
@@ -43,13 +44,7 @@ const Cart = () => {
     0
   );
 
-  if (isLoading) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-blue" />
-      </div>
-    );
-  }
+
 
   return (
     <>
@@ -79,7 +74,14 @@ const Cart = () => {
 
       <section className="bg-gray-1 py-10 lg:py-14">
         <SiteContainer>
-          {cartItems.length > 0 ? (
+          {/* The loading branch used to replace the whole page including the
+              header band, so the hero appeared only after the fetch settled. */}
+          {isLoading ? (
+            <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-8">
+              <div className="h-72 animate-pulse rounded-2xl border border-gray-3 bg-gray-8" />
+              <div className="h-80 animate-pulse rounded-2xl border border-gray-3 bg-gray-8" />
+            </div>
+          ) : cartItems.length > 0 ? (
             <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-8">
               <div className="overflow-hidden rounded-2xl border border-gray-3 bg-gray-2 shadow-2">
                 <div className="flex items-center justify-between gap-4 border-b border-gray-3 px-5 py-4 sm:px-6">
@@ -111,6 +113,8 @@ const Cart = () => {
               action={{ label: "Start shopping", href: "/shop-with-sidebar" }}
             />
           )}
+
+          <AdZoneClient placement="cart-banner" className="mt-10" />
         </SiteContainer>
       </section>
 

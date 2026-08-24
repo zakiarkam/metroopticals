@@ -8,12 +8,8 @@ import { AlertTriangle, ArrowRight, Lock } from "lucide-react";
 import { selectTotalPrice } from "@/store/features/cart-slice";
 import { useCart } from "@/features/cart/hooks/use-cart";
 import { getAvailability } from "@/features/products/utils/availability";
+import { formatPrice } from "@/lib/utils/price";
 
-const money = (value: number) =>
-  `Rs ${Number(value ?? 0).toLocaleString("en-LK", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
 
 /** Sticky totals panel beside the cart list. */
 const OrderSummary = () => {
@@ -46,12 +42,12 @@ const OrderSummary = () => {
 
         <div className="flex items-center justify-between text-[14px]">
           <span className="text-dark-4">Subtotal</span>
-          <span className="font-semibold text-dark">{money(totalPrice)}</span>
+          <span className="font-semibold text-dark">{formatPrice(totalPrice)}</span>
         </div>
 
         <div className="flex items-center justify-between text-[14px]">
           <span className="text-dark-4">Delivery</span>
-          <span className="font-semibold text-green">
+          <span className="font-semibold text-dark">
             Calculated at checkout
           </span>
         </div>
@@ -59,7 +55,7 @@ const OrderSummary = () => {
         <div className="flex items-baseline justify-between rounded-xl border border-blue/25 bg-blue/[0.08] px-4 py-4">
           <span className="text-[15px] font-bold text-dark">Total</span>
           <span className="text-xl font-bold text-blue">
-            {money(totalPrice)}
+            {formatPrice(totalPrice)}
           </span>
         </div>
 
@@ -72,19 +68,25 @@ const OrderSummary = () => {
           </div>
         )}
 
-        <Link
-          href={hasUnavailableItems ? "#" : "/checkout"}
-          onClick={(e) => hasUnavailableItems && e.preventDefault()}
-          aria-disabled={hasUnavailableItems}
-          className={`inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-blue text-[14px] font-bold text-gray-1 transition-colors ${
-            hasUnavailableItems
-              ? "cursor-not-allowed opacity-50"
-              : "hover:bg-blue-light"
-          }`}
-        >
-          Proceed to checkout
-          <ArrowRight className="h-4 w-4" />
-        </Link>
+        {/* Blocked checkout is a disabled button. As a `<a href="#">` with
+            preventDefault it still took focus and still read as a link. */}
+        {hasUnavailableItems ? (
+          <button
+            type="button"
+            disabled
+            className="inline-flex h-12 w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-gray-8 text-[14px] font-bold text-dark-5"
+          >
+            Proceed to checkout
+          </button>
+        ) : (
+          <Link
+            href="/checkout"
+            className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-blue text-[14px] font-bold text-white transition-colors hover:bg-blue-dark"
+          >
+            Proceed to checkout
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        )}
 
         <Link
           href="/shop-with-sidebar"

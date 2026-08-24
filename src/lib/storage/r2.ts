@@ -46,7 +46,9 @@ const getClient = (): S3Client => {
 export type UploadFolder =
   | "product/image"
   | "product/catalogue"
-  | "category/image";
+  | "category/image"
+  | "advertisement/image"
+  | "brand/image";
 
 export interface UploadOptions {
   folder: UploadFolder;

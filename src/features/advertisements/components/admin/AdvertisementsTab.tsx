@@ -1,148 +1,350 @@
 "use client";
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import AddAdvertisementDialog from "./modals/AddAdvertisementDialog";
-import DeleteAlertDialog from "@/components/modals/DeleteAlertDialog";
-import Pagination from "@/components/ui/pagination";
-import { deleteAdvertisement } from "@/features/advertisements/api/advertisement-api";
-import { Advertisement, AdvertisementPlacement } from "@/features/advertisements/types/advertisement";
-import { Toast } from "@/lib/utils/toast";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+  BarChart3, CalendarClock, ImageOff, LayoutTemplate, Pencil,
+  Plus, Search, Trash2,
+} from "lucide-react";
+import AddAdvertisementDialog from "./modals/AddAdvertisementDialog";
 import EditAdvertisementDialog from "./modals/EditAdvertisementDialog";
 import AdvertisementStatusDialog from "./modals/AdvertisementStatusDialog";
+import DeleteAlertDialog from "@/components/modals/DeleteAlertDialog";
+import { deleteAdvertisement } from "@/features/advertisements/api/advertisement-api";
+import type {
+  Advertisement,
+  AdvertisementPlacement,
+} from "@/features/advertisements/types/advertisement";
+import {
+  AD_PLACEMENTS,
+  AD_PLACEMENT_GROUPS,
+  AD_PLACEMENT_IDS,
+  type AdPlacementMeta,
+} from "@/features/advertisements/constants/advertisement";
+import { getAdvertisementImageUrl } from "@/lib/storageUtils";
+import { Toast } from "@/lib/utils/toast";
 import { useGetAdvertisementsQuery } from "@/store/services/api";
 
-type PlacementFilterValue = "all" | AdvertisementPlacement;
+/**
+ * Advertisements admin.
+ *
+ * Organised by zone rather than as one flat table, because the question an
+ * admin actually arrives with is "what is running in the home billboard right
+ * now?" — not "show me every ad ever made". Each zone lists its slots, so an
+ * empty slot is visible as an empty slot instead of being invisible.
+ */
 
-type AdvertisementsTabProps = {
-  dateRange: string;
+type ZoneFilter = "all" | AdPlacementMeta["group"];
+
+const formatDate = (value?: string | null) =>
+  value
+    ? new Date(value).toLocaleDateString("en-LK", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
+    : null;
+
+/** An ad can be active but outside its window — worth calling out. */
+const liveState = (ad: Advertisement) => {
+  if (ad.status !== "active") return "paused" as const;
+  const now = Date.now();
+  if (ad.startDate && new Date(ad.startDate).getTime() > now)
+    return "scheduled" as const;
+  if (ad.endDate && new Date(ad.endDate).getTime() < now)
+    return "expired" as const;
+  return "live" as const;
 };
 
-function truncate15(text?: string | null) {
-  const s = (text || "").trim();
-  if (!s) return "";
-  return s.length > 20 ? `${s.slice(0, 20)}…` : s;
-}
+const STATE_STYLES: Record<string, string> = {
+  live: "border-green/25 bg-green-light-6 text-green",
+  scheduled: "border-blue/25 bg-blue-light-5 text-blue",
+  expired: "border-orange/25 bg-orange-light-5 text-orange",
+  paused: "border-gray-3 bg-gray-1 text-dark-4",
+};
 
-const AdvertisementsTab: React.FC<AdvertisementsTabProps> = ({ dateRange }) => {
-  const [currentPage, setCurrentPage] = useState(1);
-  const [limit, setLimit] = useState(6);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [localSearchTerm, setLocalSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<
-    "all" | "active" | "inactive"
-  >("all");
-  const [placementFilter, setPlacementFilter] =
-    useState<PlacementFilterValue>("all");
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
-  const [selectedAd, setSelectedAd] = useState<Advertisement | null>(null);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [adToDelete, setAdToDelete] = useState<Advertisement | null>(null);
+const STATE_LABELS: Record<string, string> = {
+  live: "Live",
+  scheduled: "Scheduled",
+  expired: "Ended",
+  paused: "Paused",
+};
+
+const StatCard = ({
+  icon,
+  label,
+  value,
+  hint,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string | number;
+  hint: string;
+}) => (
+  <div className="rounded-2xl border border-gray-3 bg-gray-2 p-5">
+    <div className="flex items-center gap-3">
+      <span className="grid h-10 w-10 place-items-center rounded-xl bg-blue-light-5 text-blue">
+        {icon}
+      </span>
+      <div>
+        <p className="text-[12px] font-semibold uppercase tracking-wide text-dark-4">
+          {label}
+        </p>
+        <p className="text-[22px] font-bold leading-tight text-dark">{value}</p>
+      </div>
+    </div>
+    <p className="mt-3 text-[12.5px] leading-relaxed text-dark-4">{hint}</p>
+  </div>
+);
+
+/** One configured advertisement inside a zone. */
+const AdCard = ({
+  ad,
+  meta,
+  onEdit,
+  onStatus,
+  onDelete,
+}: {
+  ad: Advertisement;
+  meta: AdPlacementMeta;
+  onEdit: () => void;
+  onStatus: () => void;
+  onDelete: () => void;
+}) => {
+  const image = getAdvertisementImageUrl(ad.imageUrl);
+  const state = liveState(ad);
+  const start = formatDate(ad.startDate);
+  const end = formatDate(ad.endDate);
+
+  return (
+    <div className="group overflow-hidden rounded-2xl border border-gray-3 bg-gray-2 transition-shadow hover:shadow-2">
+      <div
+        className="relative w-full overflow-hidden bg-gray-1"
+        style={{ aspectRatio: meta.aspect }}
+      >
+        {image ? (
+          <Image
+            src={image}
+            alt={ad.title}
+            fill
+            sizes="(max-width: 768px) 100vw, 420px"
+            className="object-cover"
+            unoptimized={image.endsWith(".svg")}
+          />
+        ) : (
+          <span className="grid h-full w-full place-items-center text-dark-5">
+            <ImageOff className="h-6 w-6" />
+          </span>
+        )}
+
+        <span className="absolute left-3 top-3 rounded-full border border-white/40 bg-dark/70 px-2.5 py-1 text-[10.5px] font-bold uppercase tracking-wide text-white backdrop-blur">
+          Slot {ad.slot ?? 1}
+        </span>
+
+        <button
+          type="button"
+          onClick={onStatus}
+          title="Change status"
+          className={`absolute right-3 top-3 rounded-full border px-2.5 py-1 text-[10.5px] font-bold uppercase tracking-wide backdrop-blur transition-transform hover:scale-105 ${STATE_STYLES[state]}`}
+        >
+          {STATE_LABELS[state]}
+        </button>
+      </div>
+
+      <div className="p-4">
+        <p className="truncate text-[14px] font-semibold text-dark">
+          {ad.title}
+        </p>
+
+        <p className="mt-1 truncate text-[12.5px] text-dark-4">
+          {ad.link || (ad.product ? ad.product.title : "Not clickable")}
+        </p>
+
+        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-dark-4">
+          <span className="inline-flex items-center gap-1.5">
+            <CalendarClock className="h-3.5 w-3.5" />
+            {start || end
+              ? `${start ?? "Now"} → ${end ?? "No end"}`
+              : "Always on"}
+          </span>
+          <span>
+            {ad.viewCount.toLocaleString()} views ·{" "}
+            {ad.clickCount.toLocaleString()} clicks
+          </span>
+        </div>
+
+        <div className="mt-4 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onEdit}
+            className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg border border-gray-3 bg-gray-1 text-[13px] font-semibold text-dark transition-colors hover:border-blue hover:text-blue"
+          >
+            <Pencil className="h-3.5 w-3.5" />
+            Edit
+          </button>
+          <button
+            type="button"
+            onClick={onDelete}
+            title="Delete advertisement"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-3 bg-gray-1 text-dark-4 transition-colors hover:border-red hover:text-red"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/** An unfilled slot — shows the dummy artwork the site is currently using. */
+const EmptySlotCard = ({
+  meta,
+  slotIndex,
+  onAdd,
+}: {
+  meta: AdPlacementMeta;
+  slotIndex: number;
+  onAdd: () => void;
+}) => (
+  <button
+    type="button"
+    onClick={onAdd}
+    className="group overflow-hidden rounded-2xl border-2 border-dashed border-gray-3 bg-gray-1 text-left transition-colors hover:border-blue"
+  >
+    <div
+      className="relative w-full overflow-hidden opacity-55 transition-opacity group-hover:opacity-80"
+      style={{ aspectRatio: meta.aspect }}
+    >
+      <Image
+        src={meta.placeholders[slotIndex % meta.placeholders.length]}
+        alt=""
+        fill
+        sizes="(max-width: 768px) 100vw, 420px"
+        unoptimized
+        className="object-cover"
+      />
+    </div>
+    <div className="flex items-center gap-2 p-4">
+      <span className="grid h-8 w-8 place-items-center rounded-lg bg-blue-light-5 text-blue">
+        <Plus className="h-4 w-4" />
+      </span>
+      <span>
+        <span className="block text-[13.5px] font-semibold text-dark">
+          Slot {meta.slots[slotIndex]} is empty
+        </span>
+        <span className="block text-[12px] text-dark-4">
+          Sample artwork is showing — upload a photo to replace it.
+        </span>
+      </span>
+    </div>
+  </button>
+);
+
+type AdvertisementsTabProps = {
+  dateRange?: string;
+};
+
+const AdvertisementsTab: React.FC<AdvertisementsTabProps> = () => {
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [zoneFilter, setZoneFilter] = useState<ZoneFilter>("all");
+  const [addPlacement, setAddPlacement] = useState<
+    AdvertisementPlacement | undefined
+  >();
+  const [isAddOpen, setIsAddOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<Advertisement | null>(null);
+  const [statusTarget, setStatusTarget] = useState<Advertisement | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Advertisement | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Debounce search input
   useEffect(() => {
-    const handler = setTimeout(() => {
-      setSearchTerm(localSearchTerm);
-      setCurrentPage(1);
-    }, 300);
-    return () => clearTimeout(handler);
-  }, [localSearchTerm]);
+    const timer = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(timer);
+  }, [search]);
 
-  const queryParams = useMemo(
-    () => ({
-      search: searchTerm,
-      page: currentPage,
-      limit,
-      status: statusFilter === "all" ? undefined : statusFilter,
-      placement: placementFilter === "all" ? undefined : placementFilter,
-    }),
-    [searchTerm, currentPage, limit, statusFilter, placementFilter]
-  );
-
+  // The board shows every ad at once — grouping happens client-side, so the
+  // page load is one request rather than one per zone.
   const {
-    data: cachedAds,
+    data,
     isLoading,
     error,
-    refetch: refetchAds,
-  } = useGetAdvertisementsQuery(queryParams, { refetchOnFocus: true });
-
-  const advertisements = cachedAds?.advertisements || [];
-  const totalPages = cachedAds?.pagination.totalPages || 1;
-  const totalAds = cachedAds?.pagination.total || 0;
+    refetch,
+  } = useGetAdvertisementsQuery({ limit: 100 }, { refetchOnFocus: true });
 
   useEffect(() => {
     if (!error) return;
-    const message =
-      (error as any)?.data?.message ||
-      (error as any)?.data ||
-      (error as any)?.error ||
-      "Failed to load advertisements";
-    Toast.error(message);
+    Toast.error(
+      (error as any)?.data?.message || "Could not load advertisements."
+    );
   }, [error]);
 
-  const handleLimitChange = (newLimit: number) => {
-    setLimit(newLimit);
-    setCurrentPage(1);
-  };
+  const advertisements = useMemo(
+    () => data?.advertisements ?? [],
+    [data?.advertisements]
+  );
 
-  const handleEditClick = (ad: Advertisement) => {
-    setSelectedAd(ad);
-    setIsEditDialogOpen(true);
-  };
+  const byPlacement = useMemo(() => {
+    const term = debouncedSearch.trim().toLowerCase();
+    const grouped = new Map<string, Advertisement[]>();
 
-  const handleStatusClick = (ad: Advertisement) => {
-    setSelectedAd(ad);
-    setIsStatusDialogOpen(true);
-  };
+    advertisements
+      .filter((ad) =>
+        term
+          ? ad.title.toLowerCase().includes(term) ||
+            (ad.link || "").toLowerCase().includes(term)
+          : true
+      )
+      .forEach((ad) => {
+        const list = grouped.get(ad.placement) ?? [];
+        list.push(ad);
+        grouped.set(ad.placement, list);
+      });
 
-  const handleAdsChanged = useCallback(() => {
-    refetchAds();
-  }, [refetchAds]);
+    grouped.forEach((list) =>
+      list.sort((a, b) => (a.slot ?? 1) - (b.slot ?? 1) || b.priority - a.priority)
+    );
 
-  const handleDeleteClick = (ad: Advertisement) => {
-    setAdToDelete(ad);
-    setDeleteDialogOpen(true);
-  };
+    return grouped;
+  }, [advertisements, debouncedSearch]);
 
-  const handleDeleteConfirm = async () => {
-    if (!adToDelete) return;
+  const stats = useMemo(() => {
+    const live = advertisements.filter((ad) => liveState(ad) === "live").length;
+    const zonesFilled = AD_PLACEMENT_IDS.filter((id) =>
+      advertisements.some((ad) => ad.placement === id && ad.status === "active")
+    ).length;
+    const clicks = advertisements.reduce((sum, ad) => sum + ad.clickCount, 0);
+
+    return { live, zonesFilled, clicks, total: advertisements.length };
+  }, [advertisements]);
+
+  const openAdd = useCallback((placement?: AdvertisementPlacement) => {
+    setAddPlacement(placement);
+    setIsAddOpen(true);
+  }, []);
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
 
     setIsDeleting(true);
-    const toastId = Toast.loading(`Deleting "${adToDelete.title}"...`);
+    const toastId = Toast.loading(`Deleting "${deleteTarget.title}"…`);
 
     try {
-      await deleteAdvertisement(adToDelete.id);
-
+      await deleteAdvertisement(deleteTarget.id);
       Toast.update(toastId, {
-        render: "Advertisement deleted successfully!",
+        render: "Advertisement deleted.",
         type: "success",
         isLoading: false,
         autoClose: 3000,
         closeButton: true,
       });
-
-      handleAdsChanged();
-      setDeleteDialogOpen(false);
-      setAdToDelete(null);
-    } catch (error: any) {
-      console.error("Failed to delete advertisement:", error);
-
+      setDeleteTarget(null);
+      refetch();
+    } catch (err: any) {
       Toast.update(toastId, {
         render:
-          error?.response?.data?.message ||
-          error?.message ||
-          "Failed to delete advertisement. Please try again.",
+          err?.response?.data?.message ||
+          err?.message ||
+          "Could not delete the advertisement.",
         type: "error",
         isLoading: false,
         autoClose: 5000,
@@ -153,372 +355,227 @@ const AdvertisementsTab: React.FC<AdvertisementsTabProps> = ({ dateRange }) => {
     }
   };
 
-  const getPlacementBadge = (placement: string) => {
-    const badges: Record<string, string> = {
-      hero: "bg-blue-light-5 text-blue border border-blue/20",
-      promobanner: "bg-green-light-5 text-green border border-green/20",
-      countdown: "bg-orange-light-5 text-orange border border-orange/20",
-    };
-    return badges[placement] || "bg-gray-2 text-dark-3 border border-gray-3";
-  };
+  const visibleGroups = AD_PLACEMENT_GROUPS.filter(
+    (group) => zoneFilter === "all" || zoneFilter === group
+  );
 
-  const getStatusPill = (status: string) => {
-    return status === "active"
-      ? "bg-green-light-6 text-green border border-green/20 hover:bg-green-light-5"
-      : "bg-gray-2 text-dark-3 border border-gray-3 hover:bg-gray-3";
-  };
-
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return "N/A";
-    return new Date(dateString).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-  };
-
-  // Responsive controls: stack vertically on mobile, horizontally on md+
   return (
-    <div className="space-y-7.5">
-      <div className="rounded-xl border border-gray-3 bg-gray-2 shadow-1">
-        <div className="flex flex-wrap items-center gap-4 border-b border-gray-3 px-5 py-4">
-          <div>
-            <h3 className="text-custom-lg font-semibold text-dark">
-              Advertisements
-            </h3>
-            <p className="text-custom-xs text-body">{totalAds} total ads</p>
-          </div>
-
-          <div className="ml-auto flex flex-wrap items-center gap-3">
-            {/* Search Input */}
-            <div className="relative">
-              <Input
-                type="text"
-                placeholder="Search ads..."
-                value={localSearchTerm}
-                onChange={(e) => setLocalSearchTerm(e.target.value)}
-                className="h-8 w-64 pl-10"
-              />
-              <svg
-                className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-body pointer-events-none"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-            </div>
-
-            {/* Status Filter */}
-            <div className="flex h-8 items-center rounded-full border border-gray-3 bg-gray-1 p-1">
-              {["all", "active", "inactive"].map((filter) => (
-                <button
-                  key={filter}
-                  type="button"
-                  onClick={() => setStatusFilter(filter as typeof statusFilter)}
-                  className={`h-7 rounded-full px-3 text-custom-xs font-medium transition ${
-                    statusFilter === filter
-                      ? "bg-gray-2 text-blue shadow-1"
-                      : "text-body hover:text-dark"
-                  }`}
-                >
-                  {filter.charAt(0).toUpperCase() + filter.slice(1)}
-                </button>
-              ))}
-            </div>
-
-            {/* Placement Filter */}
-            <Select
-              value={placementFilter}
-              onValueChange={(value) =>
-                setPlacementFilter(value as PlacementFilterValue)
-              }
-            >
-              <SelectTrigger className="w-[150px] h-8">
-                <SelectValue placeholder="All Placements" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Placements</SelectItem>
-                <SelectItem value="hero">Hero</SelectItem>
-                <SelectItem value="promobanner">Promo Banner</SelectItem>
-                <SelectItem value="countdown">Countdown</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Button
-              className="h-8 bg-blue hover:bg-blue-dark"
-              onClick={() => setIsAddDialogOpen(true)}
-            >
-              <svg className="h-4 w-4" viewBox="0 0 20 20" fill="none">
-                <path
-                  d="M10 4V16"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                />
-                <path
-                  d="M4 10H16"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                />
-              </svg>
-              Add Advertisement
-            </Button>
-          </div>
+    <div className="space-y-6">
+      {/* ------------------------------- header ------------------------------- */}
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <h2 className="text-[24px] font-bold tracking-tight text-dark">
+            Advertisements
+          </h2>
+          <p className="mt-1 max-w-2xl text-[13.5px] leading-relaxed text-dark-4">
+            Every advertising zone on the storefront. Empty slots fall back to
+            sample artwork, so the site always looks complete — upload a photo
+            to take one over.
+          </p>
         </div>
 
-        <div className="overflow-x-auto">
-          <div className="min-w-[600px] md:min-w-[1100px]">
-            <div className="grid grid-cols-[80px_2fr_1fr_1fr_120px_100px_100px_120px] gap-4 border-b border-gray-3 px-3 md:px-5 py-3 text-custom-xs uppercase text-body tracking-wide">
-              <span>Image</span>
-              <span>Title</span>
-              <span>Placement</span>
-              <span>Period</span>
-              <span>Priority</span>
-              <span>Stats</span>
-              <span>Status</span>
-              <span>Actions</span>
-            </div>
-
-            {isLoading && advertisements.length === 0 ? (
-              <div className="px-3 md:px-5 py-10 text-center text-custom-sm text-body">
-                Loading advertisements...
-              </div>
-            ) : advertisements.length === 0 ? (
-              <div className="px-3 md:px-5 py-10 text-center text-custom-sm text-body">
-                No advertisements found. Create your first ad to get started.
-              </div>
-            ) : (
-              advertisements.map((ad) => {
-                const product = ad.product;
-                const hasDiscount =
-                  typeof product?.discountedPrice === "number" &&
-                  product.discountedPrice < product.price;
-                const displayPrice = product
-                  ? hasDiscount
-                    ? product.discountedPrice ?? product.price
-                    : product.price
-                  : undefined;
-                const displayTitle = truncate15(product?.title || ad.title);
-                const displayLink = ad.link ? truncate15(ad.link) : "";
-
-                return (
-                  <div
-                    key={ad.id}
-                    className="grid grid-cols-[80px_2fr_1fr_1fr_120px_100px_100px_120px] gap-4 px-3 md:px-5 py-4 text-custom-sm border-b border-gray-2 last:border-0 items-center hover:bg-gray-1 transition"
-                  >
-                    <div className="relative h-12 w-16 rounded-md overflow-hidden bg-gray-2 border border-gray-3">
-                      <Image
-                        src={ad.imageUrl}
-                        alt={ad.title}
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                    <div>
-                      <p className="font-medium text-dark truncate">
-                        {displayTitle}
-                      </p>
-                      {displayPrice && (
-                        <p className="text-custom-xs text-body">
-                          Rs {displayPrice.toLocaleString()}
-                          {hasDiscount && product && (
-                            <span className="ml-2 text-[10px] text-dark-4 line-through">
-                              Rs {product.price.toLocaleString()}
-                            </span>
-                          )}
-                        </p>
-                      )}
-                      {ad.link && (
-                        <a
-                          href={ad.link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-custom-xs text-blue hover:underline truncate block"
-                        >
-                          {displayLink}
-                        </a>
-                      )}
-                    </div>
-                    <div>
-                      <span
-                        className={`inline-flex rounded-full px-2.5 py-0.5 text-custom-xs font-medium capitalize ${getPlacementBadge(
-                          ad.placement
-                        )}`}
-                      >
-                        {ad.placement}
-                      </span>
-                      <p className="text-custom-xs text-body mt-1">
-                        Slot {ad.slot ?? 1}
-                      </p>
-                    </div>
-                    <div className="text-custom-xs text-body">
-                      <p>{formatDate(ad.startDate)}</p>
-                      <p>to {formatDate(ad.endDate)}</p>
-                    </div>
-                    <div className="text-center">
-                      <span className="inline-flex items-center justify-center rounded-full bg-blue-light-5 px-3 py-1 text-custom-sm font-semibold text-blue">
-                        {ad.priority}
-                      </span>
-                    </div>
-                    <div className="text-custom-xs">
-                      <p className="text-body">
-                        Views:{" "}
-                        <span className="text-dark font-medium">
-                          {ad.viewCount}
-                        </span>
-                      </p>
-                      <p className="text-body">
-                        Clicks:{" "}
-                        <span className="text-dark font-medium">
-                          {ad.clickCount}
-                        </span>
-                      </p>
-                    </div>
-                    <div className="flex items-center">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className={`inline-flex rounded-full px-2.5 py-0.5 text-custom-xs font-medium capitalize transition items-center gap-1 group min-h-[24px] border-0 ${getStatusPill(
-                          ad.status
-                        )}`}
-                        title="Click to change status"
-                        onClick={() => handleStatusClick(ad)}
-                      >
-                        <span>{ad.status}</span>
-                        <svg
-                          className="h-3 w-3 transition"
-                          viewBox="0 0 16 16"
-                          fill="none"
-                        >
-                          <path
-                            d="M4 6L8 10L12 6"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      </Button>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-blue hover:bg-blue-50 hover:text-blue-dark transition h-8 w-8"
-                        title="Edit"
-                        onClick={() => handleEditClick(ad)}
-                      >
-                        <svg
-                          className="h-4 w-4"
-                          viewBox="0 0 20 20"
-                          fill="none"
-                        >
-                          <path
-                            d="M14.166 2.5C14.3849 2.28113 14.6447 2.10752 14.9307 1.98906C15.2167 1.87061 15.5232 1.80957 15.8327 1.80957C16.1422 1.80957 16.4487 1.87061 16.7347 1.98906C17.0206 2.10752 17.2805 2.28113 17.4993 2.5C17.7182 2.71887 17.8918 2.97871 18.0103 3.26468C18.1287 3.55064 18.1898 3.85714 18.1898 4.16667C18.1898 4.47619 18.1287 4.78269 18.0103 5.06866C17.8918 5.35462 17.7182 5.61446 17.4993 5.83333L6.24935 17.0833L1.66602 18.3333L2.91602 13.75L14.166 2.5Z"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-red hover:bg-red-50 hover:text-red-dark transition h-8 w-8"
-                        title="Delete"
-                        onClick={() => handleDeleteClick(ad)}
-                      >
-                        <svg
-                          className="h-4 w-4"
-                          viewBox="0 0 20 20"
-                          fill="none"
-                        >
-                          <path
-                            d="M2.5 5H4.16667H17.5"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                          <path
-                            d="M15.8333 5V16.6667C15.8333 17.5 15 18.3333 14.1667 18.3333H5.83333C5 18.3333 4.16667 17.5 4.16667 16.6667V5"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      </Button>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </div>
-
-        {/* Pagination */}
-        {!isLoading && advertisements.length > 0 && (
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            totalItems={totalAds}
-            itemsPerPage={limit}
-            onPageChange={setCurrentPage}
-            onItemsPerPageChange={handleLimitChange}
-            showItemsPerPage={true}
-            itemsPerPageOptions={[6, 12, 24, 48, 96]}
-          />
-        )}
+        <button
+          type="button"
+          onClick={() => openAdd()}
+          className="inline-flex h-11 w-fit items-center gap-2 rounded-xl bg-blue px-6 text-[14px] font-bold text-white transition-colors hover:bg-blue-dark"
+        >
+          <Plus className="h-4 w-4" />
+          New advertisement
+        </button>
       </div>
 
+      {/* -------------------------------- stats ------------------------------- */}
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard
+          icon={<BarChart3 className="h-5 w-5" />}
+          label="Live now"
+          value={stats.live}
+          hint="Active and inside their scheduled window."
+        />
+        <StatCard
+          icon={<LayoutTemplate className="h-5 w-5" />}
+          label="Zones filled"
+          value={`${stats.zonesFilled} / ${AD_PLACEMENT_IDS.length}`}
+          hint="Zones with at least one active advertisement."
+        />
+        <StatCard
+          icon={<Pencil className="h-5 w-5" />}
+          label="Total ads"
+          value={stats.total}
+          hint="Including paused and expired campaigns."
+        />
+        <StatCard
+          icon={<CalendarClock className="h-5 w-5" />}
+          label="Clicks"
+          value={stats.clicks.toLocaleString()}
+          hint="Recorded across every advertisement."
+        />
+      </div>
+
+      {/* ------------------------------- filters ------------------------------ */}
+      <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-gray-3 bg-gray-2 p-3">
+        <div className="relative min-w-[220px] flex-1">
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-dark-5" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search advertisements…"
+            className="h-10 w-full rounded-xl border border-gray-3 bg-gray-1 pl-10 pr-4 text-[13.5px] text-dark outline-none transition-colors placeholder:text-dark-5 focus:border-blue"
+          />
+        </div>
+
+        <div className="flex flex-wrap items-center gap-1 rounded-xl border border-gray-3 bg-gray-1 p-1">
+          {(["all", ...AD_PLACEMENT_GROUPS] as ZoneFilter[]).map((option) => (
+            <button
+              key={option}
+              type="button"
+              onClick={() => setZoneFilter(option)}
+              className={`h-8 rounded-lg px-3.5 text-[12.5px] font-semibold capitalize transition-colors ${
+                zoneFilter === option
+                  ? "bg-gray-2 text-blue shadow-1"
+                  : "text-dark-4 hover:text-dark"
+              }`}
+            >
+              {option === "all" ? "All pages" : option}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* -------------------------------- zones ------------------------------- */}
+      {isLoading && advertisements.length === 0 ? (
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <div
+              key={index}
+              className="h-64 animate-pulse rounded-2xl border border-gray-3 bg-gray-1"
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="space-y-8">
+          {visibleGroups.map((group) => {
+            const placements = AD_PLACEMENT_IDS.filter(
+              (id) => AD_PLACEMENTS[id].group === group
+            );
+
+            return (
+              <div key={group} className="space-y-5">
+                <div className="flex items-center gap-3">
+                  <h3 className="text-[16px] font-bold text-dark">
+                    {group} page
+                  </h3>
+                  <span className="h-px flex-1 bg-gray-3" />
+                </div>
+
+                {placements.map((placementId) => {
+                  const meta = AD_PLACEMENTS[placementId];
+                  const ads = byPlacement.get(placementId) ?? [];
+
+                  return (
+                    <section
+                      key={placementId}
+                      className="rounded-2xl border border-gray-3 bg-gray-1 p-5"
+                    >
+                      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h4 className="text-[15px] font-semibold text-dark">
+                              {meta.label}
+                            </h4>
+                            <span className="rounded-full border border-gray-3 bg-gray-2 px-2.5 py-0.5 text-[10.5px] font-bold uppercase tracking-wide text-dark-4">
+                              {meta.kind === "banner"
+                                ? "Photo banner"
+                                : "Product driven"}
+                            </span>
+                          </div>
+                          <p className="mt-1 max-w-2xl text-[12.5px] leading-relaxed text-dark-4">
+                            {meta.description} Recommended size{" "}
+                            {meta.recommended}.
+                          </p>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => openAdd(placementId)}
+                          className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-gray-3 bg-gray-2 px-4 text-[13px] font-semibold text-dark transition-colors hover:border-blue hover:text-blue"
+                        >
+                          <Plus className="h-3.5 w-3.5" />
+                          Add photo
+                        </button>
+                      </div>
+
+                      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                        {ads.map((ad) => (
+                          <AdCard
+                            key={ad.id}
+                            ad={ad}
+                            meta={meta}
+                            onEdit={() => setEditTarget(ad)}
+                            onStatus={() => setStatusTarget(ad)}
+                            onDelete={() => setDeleteTarget(ad)}
+                          />
+                        ))}
+
+                        {/* Show one empty-slot prompt per slot the zone can
+                            render but nothing has claimed yet. */}
+                        {meta.slots
+                          .map((slot, index) => ({ slot, index }))
+                          .filter(
+                            ({ slot }) =>
+                              !ads.some((ad) => (ad.slot ?? 1) === slot)
+                          )
+                          .map(({ slot, index }) => (
+                            <EmptySlotCard
+                              key={`empty-${placementId}-${slot}`}
+                              meta={meta}
+                              slotIndex={index}
+                              onAdd={() => openAdd(placementId)}
+                            />
+                          ))}
+                      </div>
+                    </section>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* ------------------------------- dialogs ------------------------------ */}
       <AddAdvertisementDialog
-        isOpen={isAddDialogOpen}
-        onClose={() => setIsAddDialogOpen(false)}
-        onSuccess={handleAdsChanged}
+        isOpen={isAddOpen}
+        defaultPlacement={addPlacement}
+        onClose={() => setIsAddOpen(false)}
+        onSuccess={refetch}
       />
 
       <EditAdvertisementDialog
-        isOpen={isEditDialogOpen}
-        onClose={() => {
-          setIsEditDialogOpen(false);
-          setSelectedAd(null);
-        }}
-        onSuccess={handleAdsChanged}
-        advertisement={selectedAd}
+        isOpen={Boolean(editTarget)}
+        advertisement={editTarget}
+        onClose={() => setEditTarget(null)}
+        onSuccess={refetch}
       />
 
       <AdvertisementStatusDialog
-        isOpen={isStatusDialogOpen}
-        onClose={() => {
-          setIsStatusDialogOpen(false);
-          setSelectedAd(null);
-        }}
-        onSuccess={handleAdsChanged}
-        advertisementId={selectedAd?.id || null}
-        advertisementTitle={selectedAd?.title || ""}
-        currentStatus={selectedAd?.status || "inactive"}
+        isOpen={Boolean(statusTarget)}
+        advertisementId={statusTarget?.id ?? null}
+        advertisementTitle={statusTarget?.title ?? ""}
+        currentStatus={statusTarget?.status ?? "active"}
+        onClose={() => setStatusTarget(null)}
+        onSuccess={refetch}
       />
 
       <DeleteAlertDialog
-        isOpen={deleteDialogOpen}
-        onClose={() => {
-          setDeleteDialogOpen(false);
-          setAdToDelete(null);
-        }}
-        onConfirm={handleDeleteConfirm}
-        title="Delete Advertisement"
-        description="Are you sure you want to delete this advertisement? This action cannot be undone."
-        itemName={adToDelete?.title}
+        isOpen={Boolean(deleteTarget)}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDelete}
         isDeleting={isDeleting}
+        title="Delete advertisement?"
+        description="This removes the advertisement from the site immediately. It cannot be undone."
+        itemName={deleteTarget?.title}
       />
     </div>
   );

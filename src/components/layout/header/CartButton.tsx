@@ -35,7 +35,7 @@ const CartButton = memo(
         </svg>
 
         {count > 0 && (
-          <span className="absolute -right-1 -top-1 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-blue text-[10px] font-semibold text-gray-1 ring-2 ring-gray-2">
+          <span className="absolute -right-1 -top-1 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-blue text-[10px] font-semibold text-white ring-2 ring-gray-2">
             {count}
           </span>
         )}

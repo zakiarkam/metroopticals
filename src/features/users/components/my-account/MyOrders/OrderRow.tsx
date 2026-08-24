@@ -7,6 +7,7 @@ import { Download, ImageOff, Loader2 } from "lucide-react";
 
 import { Order, OrderStatus } from "@/features/orders/types/order";
 import { getProductImageUrl } from "@/lib/storageUtils";
+import { formatPrice } from "@/lib/utils/price";
 
 type OrderRowProps = {
   order: Order;
@@ -14,12 +15,12 @@ type OrderRowProps = {
   isPrintPending: boolean;
 };
 
-/** Status chips — dark-theme tints rather than the light-theme text colours the row used before. */
+/** Status chips. Every label is an AA-contrast token on its own tint — `SHIPPED` used to be `text-blue-light`, which is decoration-only gold. */
 const statusStyles: Record<OrderStatus, string> = {
   PENDING: "border-yellow/30 bg-yellow/10 text-yellow",
   CONFIRMED: "border-blue/30 bg-blue/10 text-blue",
   PROCESSING: "border-blue/30 bg-blue/10 text-blue",
-  SHIPPED: "border-blue/30 bg-blue/10 text-blue-light",
+  SHIPPED: "border-blue/30 bg-blue/10 text-blue-dark",
   DELIVERED: "border-green/30 bg-green/10 text-green",
   CANCELLED: "border-red/30 bg-red/10 text-red",
 };
@@ -30,12 +31,6 @@ const formatDate = (value: string) =>
     month: "short",
     year: "numeric",
   });
-
-const formatPrice = (value: number) =>
-  `Rs ${new Intl.NumberFormat("en-LK", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value)}`;
 
 const resolveImage = (
   images?: string[] | { previews?: string[]; thumbnails?: string[] }
