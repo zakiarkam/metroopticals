@@ -40,8 +40,7 @@ Then fill in `.env`. The values that must be set before the app will run:
 
 | Variable          | Notes                                                     |
 | ----------------- | --------------------------------------------------------- |
-| `DATABASE_URL`    | Postgres connection string                                 |
-| `DIRECT_URL`      | Used by Prisma for migrations. Same value unless your Postgres is pooled |
+| `DATABASE_URL`    | Postgres connection string — used for queries and migrations |
 | `NEXTAUTH_URL`    | `http://localhost:4500` in development                     |
 | `NEXTAUTH_SECRET` | At least 32 characters — `openssl rand -base64 32`. The app refuses to boot with less |
 

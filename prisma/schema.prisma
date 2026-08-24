@@ -3,9 +3,10 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
+  // Railway Postgres is not pooled, so there is no pooled/direct split to
+  // model: migrations and runtime queries use the same connection string.
+  url      = env("DATABASE_URL")
 }
 
 model User {

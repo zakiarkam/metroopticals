@@ -92,14 +92,16 @@ environment where the table says so.
 | Variable       | Value                             |
 | -------------- | --------------------------------- |
 | `DATABASE_URL` | `${{Postgres.DATABASE_URL}}`      |
-| `DIRECT_URL`   | `${{Postgres.DATABASE_URL}}`      |
 
-Type those `${{...}}` strings literally — Railway resolves them to whichever
-Postgres lives in the same environment. That is what keeps development off the
-production database, and it keeps working if the credentials are ever rotated.
+That is the only database variable. Type the `${{...}}` string literally —
+Railway resolves it to whichever Postgres lives in the same environment. That is
+what keeps development off the production database, and it keeps working if the
+credentials are ever rotated.
 
-Railway Postgres has no connection pooler, so `DIRECT_URL` (which Prisma uses
-for migrations) is intentionally the same value as `DATABASE_URL`.
+Railway Postgres has no connection pooler, so there is no pooled/direct split to
+configure: `schema.prisma` uses this one URL for both runtime queries and
+migrations. (Prisma's `directUrl` was removed for exactly this reason — it only
+exists to pair with a pooled `DATABASE_URL`, as on Neon.)
 
 ### Authentication
 
