@@ -3,13 +3,20 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": "22.x",
+    "npm": ">=10"
+  },
   "scripts": {
     "dev": "next dev -p 4500",
     "dev:clean": "rm -rf .next && next dev -p 4500",
     "dev:turbo": "next dev --turbo -p 4500",
     "build": "next build",
-    "start": "next start -p 4500",
+    "start": "next start -p ${PORT:-4500}",
     "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "deploy:release": "prisma migrate deploy && node prisma/bootstrap.mjs",
+    "db:bootstrap": "node prisma/bootstrap.mjs",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",

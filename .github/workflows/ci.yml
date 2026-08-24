@@ -1,0 +1,95 @@
+name: CI
+
+# Railway builds and deploys on its own (push to `dev` → development,
+# push to `main` → production). This workflow is the quality gate that runs
+# alongside it: it never deploys, it only tells you whether the commit is sound.
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Lint, typecheck, migrate & build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    # A throwaway Postgres so the migrations can actually be applied here,
+    # rather than finding out they are broken during a Railway pre-deploy.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: metro_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/metro_ci
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/metro_ci
+      SHADOW_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/metro_ci_shadow
+      NEXTAUTH_URL: http://localhost:4500
+      NEXTAUTH_SECRET: ci-placeholder-secret-at-least-32-characters
+      NEXT_PUBLIC_R2_PUBLIC_URL: https://pub-04bc2daeed7142b7b30174b3890fc622.r2.dev
+      NEXT_PUBLIC_SITE_URL: http://localhost:4500
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      # `npm ci` triggers the postinstall `prisma generate`, so the client is
+      # ready for the typecheck without a separate step.
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate Prisma schema
+        run: npx prisma validate
+
+      - name: Apply migrations to a clean database
+        run: npx prisma migrate deploy
+
+      - name: Check schema and migrations have not drifted apart
+        # Exits non-zero when the migrated database differs from schema.prisma —
+        # i.e. someone edited the schema without generating a migration, which
+        # would make Railway's `migrate deploy` a silent no-op.
+        run: |
+          if ! npx prisma migrate diff \
+            --from-url "$DATABASE_URL" \
+            --to-schema-datamodel prisma/schema.prisma \
+            --exit-code
+          then
+            echo "::error::schema.prisma has changes with no matching migration. Run 'npm run db:migrate' locally and commit prisma/migrations."
+            exit 1
+          fi
+          echo "Schema and migrations are in sync."
+
+      - name: Verify the bootstrap script runs clean
+        env:
+          ADMIN_BOOTSTRAP_EMAIL: ci-admin@example.com
+          ADMIN_BOOTSTRAP_PASSWORD: ci-only-placeholder-password
+        run: npm run db:bootstrap
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
