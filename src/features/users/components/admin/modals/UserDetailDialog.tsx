@@ -109,7 +109,7 @@ const UserDetailDialog: React.FC<UserDetailDialogProps> = ({
     title: string;
     children: React.ReactNode;
   }) => (
-    <section className="rounded-xl border border-gray-3 bg-white shadow-sm">
+    <section className="rounded-xl border border-gray-3 bg-gray-2 shadow-sm">
       <div className="px-3 py-2 md:px-4 md:py-3 border-b border-gray-2">
         <h4 className="text-sm md:text-base font-semibold text-dark">
           {title}
@@ -128,7 +128,7 @@ const UserDetailDialog: React.FC<UserDetailDialogProps> = ({
     >
       <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0 overflow-hidden">
         {/* Header (compact, sticky) */}
-        <DialogHeader className="sticky top-0 z-10 bg-white border-b border-gray-3">
+        <DialogHeader className="sticky top-0 z-10 bg-gray-2 border-b border-gray-3">
           <div className="flex items-start md:items-center justify-between gap-3 px-3 py-2 md:px-4 md:py-3">
             <div className="min-w-0">
               <DialogTitle className="text-base md:text-lg font-semibold leading-tight">
@@ -163,7 +163,7 @@ const UserDetailDialog: React.FC<UserDetailDialogProps> = ({
           ) : user ? (
             <div className="space-y-4">
               {/* Compact header card */}
-              <div className="rounded-xl border border-gray-3 bg-white shadow-sm px-3 py-2 md:px-4 md:py-3">
+              <div className="rounded-xl border border-gray-3 bg-gray-2 shadow-sm px-3 py-2 md:px-4 md:py-3">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                   <div className="flex items-start gap-3 min-w-0">
                     <div

@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import dynamic from "next/dynamic";
 import Loading from "./loading";
 import type { Metadata } from "next";
@@ -20,8 +21,12 @@ const ShopWithSidebar = dynamic(
 
 export default function ShopWithSidebarPage() {
   return (
-    <main>
-      <ShopWithSidebar />
-    </main>
+    <>
+      {/* The shop seeds its filters from the URL, which opts the route out of
+          static prerendering — Suspense gives Next a shell to emit instead. */}
+      <Suspense fallback={<Loading />}>
+        <ShopWithSidebar />
+      </Suspense>
+    </>
   );
 }

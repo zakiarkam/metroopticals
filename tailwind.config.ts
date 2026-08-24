@@ -11,6 +11,16 @@ const config: Config = {
   theme: {
     fontFamily: {
       "euclid-circular-a": ["Euclid Circular A"],
+      /*
+       * `theme.fontFamily` replaces Tailwind's defaults wholesale, so `sans`
+       * has to be redeclared here or `font-sans` would not exist at all.
+       */
+      sans: ["var(--font-sans)", ...defaultTheme.fontFamily.sans],
+      /*
+       * Same face as `sans` today. Kept as its own key so the display face can
+       * be swapped without touching the ~18 headings that reference it.
+       */
+      display: ["var(--font-sans)", ...defaultTheme.fontFamily.sans],
     },
     container: {
       center: true,
@@ -20,81 +30,203 @@ const config: Config = {
         xl: "0",
       },
     },
+    /**
+     * Metro Opticals — ivory & gold theme.
+     *
+     * Light surfaces, espresso text, gold accents. The token NAMES are used
+     * across ~250 files, so the palette is expressed by remapping their VALUES
+     * rather than rewriting every call site:
+     *   - `blue*`  is the gold accent (buttons, links, highlights)
+     *   - `gray-1..4` are surfaces and borders, LIGHTEST first
+     *   - `dark*`, `body` and `meta*` are text, from espresso down to muted
+     *
+     * Contrast rule: anything that carries text meets WCAG AA (4.5:1) against
+     * the surface it sits on. That is why the accent is a deep antique gold
+     * (#8F6A37, 4.9:1 on white) rather than the logo's literal #C09C6C, which
+     * only reaches 2.2:1 — the logo tone lives on as `blue-light` for fills,
+     * borders and decoration, where contrast is not a legibility concern.
+     */
     colors: {
       current: "currentColor",
       transparent: "transparent",
       white: "#FFFFFF",
-      body: "#6C6F93",
+      /** Default body copy — warm near-black, softened for long reading. */
+      body: "#554C40",
       meta: {
-        "2": "#495270",
-        "3": "#606882",
-        "4": "#8D93A5",
-        "5": "#BBBEC9",
-        DEFAULT: "#F7F9FC",
+        "2": "#4A4238",
+        "3": "#554C40",
+        "4": "#6F6555",
+        "5": "#948977",
+        DEFAULT: "#1B1713",
       },
+      /** Headings and high-emphasis text. */
       dark: {
-        "2": "#495270",
-        "3": "#606882",
-        "4": "#8D93A5",
-        "5": "#BBBEC9",
-        DEFAULT: "#1C274C",
+        "2": "#2E2822",
+        "3": "#4A4238",
+        "4": "#6F6555", // muted label text — 5.3:1 on white
+        "5": "#948977", // subtle meta / placeholder — small print only
+        DEFAULT: "#1B1713",
       },
+      /** Surfaces and borders. */
       gray: {
-        "1": "#F9FAFB",
-        "2": "#F3F4F6",
-        "3": "#E5E7EB",
-        "4": "#D1D5DB",
-        "5": "#9CA3AF",
-        "6": "#6B7280",
-        "7": "#374151",
-        DEFAULT: "#F3F5F6",
+        /*
+         * Elevation ladder. Light UI conveys height with SHADOW rather than
+         * lightness, so the steps here are close together and the separation
+         * comes from `boxShadow` below.
+         *   gray-1 page (ivory)  →  gray-2 card (white)  →  gray-8 hover
+         */
+        "1": "#FAF8F4", // page background — warm ivory
+        "2": "#FFFFFF", // card / section surface
+        "3": "#E7E0D4", // borders, dividers — warm hairline
+        "4": "#D3C9B8", // stronger borders, disabled fills
+        "5": "#948977", // muted text
+        "6": "#6F6555", // secondary text
+        "7": "#4A4238", // near-heading text
+        "8": "#F4F0E8", // raised surface (hover, popovers, table headers)
+        DEFAULT: "#FFFFFF",
+        /*
+         * Components also use Tailwind's default numeric gray scale
+         * (bg-gray-200, border-gray-200, text-gray-400, …). A custom
+         * `colors.gray` replaces the default entirely, so those keys are
+         * redefined here — warm-tinted, and in the conventional direction
+         * (low = light surface, high = dark text).
+         */
+        "50": "#FAF8F4",
+        "100": "#F4F0E8",
+        "200": "#E7E0D4",
+        "300": "#D3C9B8",
+        "400": "#A79C8A",
+        "500": "#8A7F6D",
+        "600": "#6F6555",
+        "700": "#4A4238",
+        "800": "#2E2822",
+        "900": "#1B1713",
       },
+      /** Gold accent — deepened from the logo tone so it can carry text. */
       blue: {
-        DEFAULT: "#3C50E0",
-        dark: "#1C3FB7",
-        light: "#5475E5",
-        "light-2": "#8099EC",
-        "light-3": "#ADBCF2",
-        "light-4": "#C3CEF6",
-        "light-5": "#E1E8FF",
+        DEFAULT: "#8F6A37", // primary actions and links — 4.9:1 on white
+        dark: "#6E5029", // hover / pressed
+        light: "#C09C6C", // the logo gold — decoration, borders, fills
+        "light-2": "#D6BC96",
+        "light-3": "#E9DAC0",
+        "light-4": "#F3E9D6",
+        "light-5": "#FAF5EC", // softest tint — hover backgrounds
+        // numeric scale: low = pale tint, high = deep gold
+        "50": "#FAF5EC",
+        "100": "#F3E9D6",
+        "200": "#E9DAC0",
+        "300": "#D6BC96",
+        "400": "#C09C6C",
+        "500": "#A9834B",
+        "600": "#8F6A37",
+        "700": "#75552B",
+        "800": "#5A4120",
+        "900": "#3E2C15",
       },
+      /**
+       * Status colours. The `DEFAULT` of each is dark enough to read as text on
+       * white, while `light-3`..`light-6` are pale tints for badge and banner
+       * fills.
+       */
       red: {
-        DEFAULT: "#F23030",
-        dark: "#E10E0E",
-        light: "#F56060",
-        "light-2": "#F89090",
-        "light-3": "#FBC0C0",
-        "light-4": "#FDD8D8",
-        "light-5": "#FEEBEB",
-        "light-6": "#FEF3F3",
+        DEFAULT: "#C1272D", // 5.9:1 on white
+        dark: "#9E1F24",
+        light: "#E05A5F",
+        "light-2": "#EE9296",
+        "light-3": "#F6C3C5",
+        "light-4": "#FBDEDF",
+        "light-5": "#FDEDEE",
+        "light-6": "#FEF5F5",
+        "50": "#FEF5F5",
+        "100": "#FDEDEE",
+        "200": "#FBDEDF",
+        "300": "#F6C3C5",
+        "400": "#E05A5F",
+        "500": "#D13B41",
+        "600": "#C1272D",
+        "700": "#9E1F24",
+        "800": "#7A181C",
+        "900": "#551113",
       },
       green: {
-        DEFAULT: "#22AD5C",
-        dark: "#1A8245",
-        light: "#2CD673",
-        "light-2": "#57DE8F",
-        "light-3": "#82E6AC",
-        "light-4": "#ACEFC8",
-        "light-5": "#C2F3D6",
-        "light-6": "#DAF8E6",
+        DEFAULT: "#2E7D4F", // 4.9:1 on white
+        dark: "#1F6440",
+        light: "#4CAF7A",
+        "light-2": "#8DCFA9",
+        "light-3": "#BFE5CF",
+        "light-4": "#DCF1E5",
+        "light-5": "#ECF8F1",
+        "light-6": "#F5FBF8",
+        "50": "#F5FBF8",
+        "100": "#ECF8F1",
+        "200": "#DCF1E5",
+        "300": "#BFE5CF",
+        "400": "#4CAF7A",
+        "500": "#389062",
+        "600": "#2E7D4F",
+        "700": "#1F6440",
+        "800": "#174C31",
+        "900": "#0F3421",
       },
       yellow: {
-        DEFAULT: "#FBBF24",
-        dark: "#F59E0B",
-        "dark-2": "#D97706",
-        light: "#FCD34D",
-        "light-1": "#FDE68A",
-        "light-2": "#FEF3C7",
-        "light-4": "#FFFBEB",
+        DEFAULT: "#916312", // 5.2:1 on white — low-stock and caution text
+        dark: "#875D12",
+        "dark-2": "#966816",
+        light: "#E8B450", // amber fill, not for text
+        "light-1": "#F0CC7A",
+        "light-2": "#F7E3B4",
+        "light-4": "#FDF6E6",
+        "50": "#FDF6E6",
+        "100": "#F7E3B4",
+        "200": "#F0CC7A",
+        "300": "#E8B450",
+        "400": "#C4901F",
+        "500": "#A9761A",
+        "600": "#875D12",
+        "700": "#6B490E",
+        "800": "#4E350A",
+        "900": "#332206",
       },
       teal: {
-        DEFAULT: "#02AAA4",
-        dark: "#06A09B",
+        DEFAULT: "#16867F",
+        dark: "#0F6A64",
       },
       orange: {
-        DEFAULT: "#F27430",
-        dark: "#E1580E",
+        DEFAULT: "#C2610F",
+        dark: "#9C4D0B",
+        "50": "#FDF3EA",
+        "100": "#FAE3CD",
+        "200": "#F4C79C",
+        "300": "#EAA365",
+        "400": "#DC7F28",
+        "500": "#C2610F",
+        "600": "#9C4D0B",
+        "700": "#7A3C09",
+        "800": "#582B06",
+        "900": "#3A1C04",
       },
+      purple: {
+        "100": "#EFE9FA",
+        "300": "#C9B4EF",
+        "600": "#6D45B8",
+        "700": "#573694",
+      },
+      emerald: {
+        "50": "#F5FBF8",
+        "100": "#ECF8F1",
+        "200": "#DCF1E5",
+        "600": "#2E7D4F",
+        "700": "#1F6440",
+      },
+      slate: {
+        "50": "#FAF8F4",
+        "100": "#F4F0E8",
+        "200": "#E7E0D4",
+        "700": "#4A4238",
+        "800": "#2E2822",
+        "900": "#1B1713",
+      },
+      black: "#000000",
     },
     screens: {
       xsm: "375px",
@@ -229,18 +361,46 @@ const config: Config = {
         "99999": "99999",
         "999999": "999999",
       },
+      /*
+       * Light-theme elevation.
+       *
+       * Every shadow is a warm brown-black (39 30 20) rather than neutral
+       * black, so cards sit on the ivory page without the grey cast a pure
+       * black shadow leaves. Each level layers a tight contact shadow under a
+       * wider ambient one — that pairing is what reads as height on light UI.
+       */
       boxShadow: {
-        "1": "0px 1px 2px 0px rgba(166, 175, 195, 0.25)",
-        "2": "0px 6px 24px 0px rgba(235, 238, 251, 0.40), 0px 2px 4px 0px rgba(148, 163, 184, 0.05)",
-        "3": "0px 2px 16px 0px rgba(13, 10, 44, 0.12)",
-        testimonial:
-          "0px 0px 4px 0px rgba(148, 163, 184, 0.10), 0px 6px 12px 0px rgba(224, 227, 238, 0.45)",
-        breadcrumb: "0px 1px 0px 0px #E5E7EB, 0px -1px 0px 0px #E5E7EB",
-        range:
-          "0px 0px 1px 0px rgba(33, 37, 41, 0.08), 0px 2px 2px 0px rgba(33, 37, 41, 0.06)",
-        filter: "0px 1px 0px 0px #E5E7EB",
-        list: "1px 0px 0px 0px #E5E7EB",
-        input: "inset 0 0 0 2px #3C50E0",
+        // level 1 — subtle lift (list rows, inputs)
+        "1": "0 1px 2px 0 rgba(39,30,20,0.06)",
+        // level 2 — standard card
+        "2": "0 1px 2px 0 rgba(39,30,20,0.05), 0 4px 12px -2px rgba(39,30,20,0.07)",
+        // level 3 — raised panel / popover
+        "3": "0 2px 4px -1px rgba(39,30,20,0.06), 0 12px 28px -6px rgba(39,30,20,0.12)",
+        // level 4 — modals and dialogs
+        "4": "0 4px 8px -2px rgba(39,30,20,0.08), 0 24px 56px -12px rgba(39,30,20,0.20)",
+        // gold-tinted glow for hover / focus emphasis
+        gold: "0 8px 24px -6px rgba(143,106,55,0.20), 0 0 0 1px rgba(143,106,55,0.22)",
+        "gold-sm": "0 0 0 1px rgba(143,106,55,0.28)",
+        testimonial: "0 1px 2px 0 rgba(39,30,20,0.05), 0 4px 12px -2px rgba(39,30,20,0.07)",
+        breadcrumb: "0 1px 0 0 #E7E0D4, 0 -1px 0 0 #E7E0D4",
+        range: "0 1px 3px 0 rgba(39,30,20,0.14)",
+        filter: "0 1px 0 0 #E7E0D4",
+        list: "1px 0 0 0 #E7E0D4",
+        input: "inset 0 0 0 2px #8F6A37",
+
+        /*
+         * Override Tailwind's DEFAULT shadow scale with the same warm tint.
+         * The app uses shadow-lg/md/xl in ~170 places, so redefining them here
+         * keeps those consistent with the numbered levels above.
+         */
+        sm: "0 1px 2px 0 rgba(39,30,20,0.05)",
+        DEFAULT: "0 1px 3px 0 rgba(39,30,20,0.08), 0 1px 2px -1px rgba(39,30,20,0.06)",
+        md: "0 2px 4px -1px rgba(39,30,20,0.06), 0 6px 14px -3px rgba(39,30,20,0.09)",
+        lg: "0 2px 4px -1px rgba(39,30,20,0.06), 0 12px 26px -6px rgba(39,30,20,0.12)",
+        xl: "0 4px 8px -2px rgba(39,30,20,0.07), 0 20px 44px -10px rgba(39,30,20,0.16)",
+        "2xl": "0 6px 12px -3px rgba(39,30,20,0.08), 0 32px 64px -16px rgba(39,30,20,0.22)",
+        inner: "inset 0 2px 4px 0 rgba(39,30,20,0.06)",
+        none: "none",
       },
       keyframes: {
         shimmer: {

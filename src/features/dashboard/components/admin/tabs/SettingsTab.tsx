@@ -18,7 +18,7 @@ const SettingsTab: React.FC = () => {
 
   return (
     <div className="space-y-7.5">
-      <div className="rounded-xl border border-gray-3 bg-white shadow-1">
+      <div className="rounded-xl border border-gray-3 bg-gray-2 shadow-1">
         <div className="border-b border-gray-3 px-5 py-4">
           <h3 className="text-custom-lg font-semibold text-dark">
             Store preferences
@@ -93,7 +93,7 @@ const SettingsTab: React.FC = () => {
         </div>
       </div>
 
-      <div className="rounded-xl border border-gray-3 bg-white shadow-1">
+      <div className="rounded-xl border border-gray-3 bg-gray-2 shadow-1">
         <div className="border-b border-gray-3 px-5 py-4">
           <h3 className="text-custom-lg font-semibold text-dark">
             Notification channels
@@ -182,7 +182,7 @@ const SettingsTab: React.FC = () => {
         </div>
       </div>
 
-      <div className="rounded-xl border border-gray-3 bg-white shadow-1">
+      <div className="rounded-xl border border-gray-3 bg-gray-2 shadow-1">
         <div className="border-b border-gray-3 px-5 py-4">
           <h3 className="text-custom-lg font-semibold text-dark">
             Checkout & policy
@@ -240,7 +240,7 @@ const SettingsTab: React.FC = () => {
         </div>
       </div>
 
-      <div className="rounded-xl border border-gray-3 bg-white shadow-1">
+      <div className="rounded-xl border border-gray-3 bg-gray-2 shadow-1">
         <div className="border-b border-gray-3 px-5 py-4">
           <h3 className="text-custom-lg font-semibold text-dark">
             Security controls

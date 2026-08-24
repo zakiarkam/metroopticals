@@ -215,7 +215,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
                   type="button"
                   onClick={() => removeImage(index)}
                   disabled={deleting === index}
-                  className="absolute top-2 right-2 bg-white rounded-full p-1.5 shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-red-50 hover:scale-110 disabled:opacity-50"
+                  className="absolute top-2 right-2 bg-gray-2 rounded-full p-1.5 shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-red-50 hover:scale-110 disabled:opacity-50 border border-gray-3"
                   title="Delete image"
                 >
                   {deleting === index ? (

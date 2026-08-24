@@ -2,7 +2,8 @@
 
 E-commerce storefront and admin dashboard for **Metro Opticals** — prescription eyeglasses, sunglasses, contact lenses and eye care.
 
-Built with Next.js 15 (App Router), Prisma, PostgreSQL (Neon), NextAuth and Cloudflare R2.
+Built with Next.js 15 (App Router), Prisma, PostgreSQL, NextAuth and Cloudflare
+R2. Deployed on Railway — see **[RAILWAY.md](RAILWAY.md)**.
 
 ---
 
@@ -11,12 +12,13 @@ Built with Next.js 15 (App Router), Prisma, PostgreSQL (Neon), NextAuth and Clou
 | Concern    | Choice                                  |
 | ---------- | --------------------------------------- |
 | Framework  | Next.js 15 (App Router, React 19)       |
-| Database   | PostgreSQL on Neon, via Prisma          |
+| Database   | PostgreSQL via Prisma                   |
 | Auth       | NextAuth (credentials + Google OAuth)   |
 | Storage    | Cloudflare R2 (S3-compatible API)       |
 | Email      | Resend                                  |
 | Styling    | Tailwind CSS + Radix UI                 |
 | State      | Redux Toolkit                           |
+| Hosting    | Railway (`dev` → development, `main` → production) |
 
 ---
 
@@ -38,10 +40,10 @@ Then fill in `.env`. The values that must be set before the app will run:
 
 | Variable          | Notes                                                     |
 | ----------------- | --------------------------------------------------------- |
-| `DATABASE_URL`    | Neon **pooled** connection string (host contains `-pooler`) |
-| `DIRECT_URL`      | Neon **direct** connection string, used for migrations     |
+| `DATABASE_URL`    | Postgres connection string                                 |
+| `DIRECT_URL`      | Used by Prisma for migrations. Same value unless your Postgres is pooled |
 | `NEXTAUTH_URL`    | `http://localhost:4500` in development                     |
-| `NEXTAUTH_SECRET` | At least 32 characters — `openssl rand -base64 32`         |
+| `NEXTAUTH_SECRET` | At least 32 characters — `openssl rand -base64 32`. The app refuses to boot with less |
 
 Storage and email can be left blank while developing; uploads will fail with a
 clear error and emails are logged to the console while `USE_MOCK_EMAIL=true`.
@@ -49,9 +51,9 @@ clear error and emails are logged to the console while `USE_MOCK_EMAIL=true`.
 ### 3. Set up the database
 
 ```bash
-npm run db:push      # create tables from prisma/schema.prisma
-npm run db:generate  # generate the Prisma client
-npm run db:seed      # optional: sample categories, products and users
+npm run db:migrate:deploy  # apply prisma/migrations to create the tables
+npm run db:generate        # generate the Prisma client
+npm run db:seed            # optional: sample categories, products and users
 ```
 
 ### 4. Run
@@ -62,10 +64,14 @@ npm run dev
 
 The app runs at <http://localhost:4500>.
 
-Seeded logins (development only — change these before going live):
+Seeded logins — **local development only**, never deployed:
 
 - Admin: `admin@metroopticals.lk` / `admin123`
 - Customer: `customer@example.com` / `customer123`
+
+Deployed environments do not run the seed. They create their admin from
+`ADMIN_BOOTSTRAP_EMAIL` / `ADMIN_BOOTSTRAP_PASSWORD` instead, and the bootstrap
+script rejects the placeholder passwords above.
 
 ---
 
@@ -129,10 +135,14 @@ read from it.
 | `npm run build`         | Production build                             |
 | `npm run start`         | Serve the production build                   |
 | `npm run lint`          | ESLint                                       |
-| `npm run db:push`       | Push the schema to the database (no migration) |
-| `npm run db:migrate`    | Create and apply a migration                 |
+| `npm run typecheck`     | `tsc --noEmit`                               |
+| `npm run deploy:release`| Apply migrations, then bootstrap the admin (Railway pre-deploy) |
+| `npm run db:migrate`    | Create and apply a migration (local)         |
+| `npm run db:migrate:deploy` | Apply pending migrations without creating one |
+| `npm run db:bootstrap`  | Create or promote the admin from `ADMIN_BOOTSTRAP_*` |
+| `npm run db:push`       | Push the schema with no migration — **local experiments only** |
 | `npm run db:studio`     | Open Prisma Studio                           |
-| `npm run db:seed`       | Seed sample data                             |
+| `npm run db:seed`       | Seed sample data (local only)                |
 | `npm run db:generate`   | Regenerate the Prisma client                 |
 | `npm run clean`         | Remove `.next` and the module cache          |
 
@@ -161,17 +171,23 @@ Each feature module follows the same shape: `api/` (client calls),
 
 ## Deployment
 
-Docker and nginx configuration is under [`docker/`](docker/) and
-[`nginx/`](nginx/); CI lives in [`.github/workflows/`](.github/workflows/).
+Hosted on **Railway**. Deploys are automatic:
 
-These were inherited from the previous deployment and still reference the old
-host and container registry. Before deploying, update:
+| Branch | Railway environment | Trigger        |
+| ------ | ------------------- | -------------- |
+| `dev`  | `development`       | push to `dev`  |
+| `main` | `production`        | push to `main` |
 
-- the container image name in `docker/docker-compose.prod.yml`
-- `server_name` and the certificate paths in `nginx/conf.d/metroopticals.conf`
-- the SSH host, registry and deploy secrets in the GitHub Actions workflow
+Each deploy builds the app, runs `npm run deploy:release` (apply migrations →
+bootstrap the admin) in a pre-deploy container, then starts the server and waits
+for `/api/health` to pass before taking traffic. A failed migration leaves the
+previous version running.
 
-Production also needs `NEXTAUTH_URL` and `NEXT_PUBLIC_SITE_URL` set to the real
-domain, a strong `NEXTAUTH_SECRET`, and `USE_MOCK_EMAIL=false` with a valid
-`RESEND_API_KEY`.
-# metroopticals
+Build and runtime settings are committed in [`railway.json`](railway.json).
+The full setup — environments, branch mapping, the variable list, migration and
+admin-password procedures, and troubleshooting — is in
+**[RAILWAY.md](RAILWAY.md)**.
+
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) is a quality gate only:
+it lints, typechecks, applies the migrations to a throwaway Postgres and builds.
+It never deploys.

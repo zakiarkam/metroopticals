@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { Check, ChevronDown } from "lucide-react";
 
 interface SelectOption {
   label: string;
@@ -14,6 +15,7 @@ interface CustomSelectProps {
   placeholder?: string;
 }
 
+/** Sort control for the shop toolbar. Custom rather than a native `<select>` so the popup matches the dark theme on every platform. */
 const CustomSelect = ({
   options,
   value,
@@ -44,45 +46,50 @@ const CustomSelect = ({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-between gap-3 min-w-[130px] sm:min-w-[200px] text-align-left px-4 py-2.5 bg-white border border-gray-3 rounded-lg text-custom-sm text-dark hover:border-blue focus:outline-none focus:border-blue"
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+        className={`flex h-10 min-w-[150px] items-center justify-between gap-3 rounded-lg border bg-gray-1 px-4 text-[13px] font-medium text-dark transition-colors sm:min-w-[210px] ${
+          isOpen ? "border-blue" : "border-gray-3 hover:border-blue/60"
+        }`}
       >
-        <span>{selectedOption?.label || placeholder}</span>
-        <svg
-          className={`fill-current transition-transform ${
-            isOpen ? "rotate-180" : ""
+        <span className="truncate">{selectedOption?.label || placeholder}</span>
+        <ChevronDown
+          className={`h-4 w-4 shrink-0 text-dark-4 transition-transform duration-200 ${
+            isOpen ? "rotate-180 text-blue" : ""
           }`}
-          width="16"
-          height="16"
-          viewBox="0 0 16 16"
-          fill="none"
-        >
-          <path
-            d="M4.287 5.67999C4.456 5.51099 4.68533 5.41699 4.924 5.41699C5.16267 5.41699 5.392 5.51099 5.561 5.67999L8 8.11866L10.439 5.67999C10.6084 5.51794 10.836 5.42969 11.0717 5.43186C11.3073 5.43403 11.5333 5.52644 11.6996 5.69169C11.8659 5.85694 11.9597 6.08239 11.9623 6.31799C11.9648 6.55359 11.8759 6.78099 11.713 6.94999L8.637 10.027C8.468 10.196 8.23867 10.29 8 10.29C7.76133 10.29 7.532 10.196 7.363 10.027L4.287 6.94999C4.118 6.78099 4.024 6.55166 4.024 6.31299C4.024 6.07432 4.118 5.84499 4.287 5.67599V5.67999Z"
-            fill=""
-          />
-        </svg>
+        />
       </button>
 
       {isOpen && (
-        <div className="absolute z-10 top-full left-0 right-0 mt-2 bg-white border border-gray-3 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-          {options.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => {
-                onChange(option.value);
-                setIsOpen(false);
-              }}
-              className={`w-full text-left px-4 py-2.5 text-custom-sm hover:bg-gray-1 transition-colors ${
-                value === option.value
-                  ? "bg-blue-light text-blue font-medium"
-                  : "text-dark"
-              }`}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
+        <ul
+          role="listbox"
+          className="absolute left-0 right-0 top-full z-30 mt-2 max-h-60 overflow-y-auto rounded-xl border border-gray-3 bg-gray-8 p-1.5 shadow-3"
+        >
+          {options.map((option) => {
+            const active = value === option.value;
+            return (
+              <li key={option.value}>
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={active}
+                  onClick={() => {
+                    onChange(option.value);
+                    setIsOpen(false);
+                  }}
+                  className={`flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-left text-[13px] transition-colors ${
+                    active
+                      ? "bg-blue/15 font-semibold text-blue"
+                      : "text-dark hover:bg-gray-2"
+                  }`}
+                >
+                  {option.label}
+                  {active && <Check className="h-4 w-4 shrink-0" />}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
       )}
     </div>
   );

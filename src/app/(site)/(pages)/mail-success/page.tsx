@@ -14,9 +14,9 @@ export const metadata: Metadata = {
 
 const MailSuccessPage = () => {
   return (
-    <main>
+    <>
       <MailSuccess />
-    </main>
+    </>
   );
 };
 

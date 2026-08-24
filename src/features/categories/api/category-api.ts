@@ -30,7 +30,7 @@ const mapApiCategory = (apiCategory: ApiCategory | Category): Category => {
   const relationCounts = (apiCategory as ApiCategory)._count;
   const countedProducts =
     (relationCounts?.products || 0) +
-    ((relationCounts as any)?.subcategoryProducts || 0);
+    ((relationCounts as any)?.brandProducts || 0);
 
   return {
     id: apiCategory.id,

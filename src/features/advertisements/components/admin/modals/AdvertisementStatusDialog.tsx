@@ -72,7 +72,7 @@ const AdvertisementStatusDialog: React.FC<AdvertisementStatusDialogProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
+      <div className="w-full max-w-md rounded-xl bg-gray-2 p-6 shadow-xl border border-gray-3">
         <div className="mb-6">
           <h2 className="text-xl font-semibold text-dark mb-2">
             Update Advertisement Status

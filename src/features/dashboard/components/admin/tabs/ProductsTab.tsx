@@ -141,7 +141,7 @@ const ProductsTab: React.FC<ProductsTabProps> = ({
         {summaryMetrics.map((metric) => (
           <div
             key={metric.label}
-            className="rounded-xl border border-gray-3 bg-white shadow-1 p-5"
+            className="rounded-xl border border-gray-3 bg-gray-2 shadow-1 p-5"
           >
             <div className="flex flex-col gap-2">
               <p className="text-custom-xs uppercase text-body tracking-wide">
@@ -158,7 +158,7 @@ const ProductsTab: React.FC<ProductsTabProps> = ({
         ))}
       </div> */}
 
-      <div className="rounded-xl border border-gray-3 bg-white shadow-1">
+      <div className="rounded-xl border border-gray-3 bg-gray-2 shadow-1">
         <div className="flex flex-wrap items-center gap-4 border-b border-gray-3 px-5 py-4">
           <div>
             <h3 className="text-custom-lg font-semibold text-dark">
@@ -185,7 +185,7 @@ const ProductsTab: React.FC<ProductsTabProps> = ({
                   }
                   className={`rounded-full px-3 py-1 text-custom-xs transition ${
                     statusFilter === filter.id
-                      ? "bg-white text-blue shadow-1"
+                      ? "bg-gray-2 text-blue shadow-1"
                       : "text-body hover:text-dark"
                   }`}
                 >
@@ -253,7 +253,7 @@ const ProductsTab: React.FC<ProductsTabProps> = ({
                   <p>{product.category?.name || "Uncategorized"}</p>
                   <div>
                     <p className="font-medium">{product.stock}</p>
-                    <div className="mt-1 h-1.5 rounded-full bg-gray-2">
+                    <div className="mt-1 h-1.5 rounded-full bg-gray-2 border border-gray-3">
                       <div
                         className="h-full rounded-full bg-blue"
                         style={{

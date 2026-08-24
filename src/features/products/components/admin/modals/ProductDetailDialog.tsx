@@ -6,6 +6,10 @@ import { Product } from "@/features/products/types/product";
 import { getProductById } from "@/features/products/api/product-api";
 import { getUnitLabel } from "@/lib/utils/price";
 import {
+  buildSpecRows,
+  hasEyewearSpec,
+} from "@/features/products/utils/eyewear";
+import {
   getProductImageUrl,
   getProductCatalogueUrl,
 } from "@/lib/storageUtils";
@@ -122,7 +126,7 @@ const ProductDetailDialog: React.FC<ProductDetailDialogProps> = ({
     >
       <DialogContent className="max-w-5xl max-h-[90vh] flex flex-col p-0 overflow-hidden">
         {/* Header (compact, sticky) */}
-        <DialogHeader className="sticky top-0 z-10 bg-white border-b border-gray-3">
+        <DialogHeader className="sticky top-0 z-10 bg-gray-2 border-b border-gray-3">
           <div className="flex items-start md:items-center justify-between gap-3 px-3 py-2 md:px-4 md:py-3">
             <div className="min-w-0">
               <DialogTitle className="text-base md:text-lg font-semibold leading-tight">
@@ -161,7 +165,7 @@ const ProductDetailDialog: React.FC<ProductDetailDialogProps> = ({
               {/* Top: Gallery + Main Info */}
               <div className="grid gap-4 md:gap-5 lg:grid-cols-2">
                 {/* Gallery Card */}
-                <section className="rounded-xl border border-gray-3 bg-white shadow-sm p-3 md:p-4 space-y-3">
+                <section className="rounded-xl border border-gray-3 bg-gray-2 shadow-sm p-3 md:p-4 space-y-3">
                   {/* Main image */}
                   <div className="relative aspect-square w-full overflow-hidden rounded-lg border border-gray-3 bg-gray-1">
                     {product.images?.length ? (
@@ -248,7 +252,7 @@ const ProductDetailDialog: React.FC<ProductDetailDialogProps> = ({
                 </section>
 
                 {/* Info Card */}
-                <section className="rounded-xl border border-gray-3 bg-white shadow-sm p-3 md:p-4">
+                <section className="rounded-xl border border-gray-3 bg-gray-2 shadow-sm p-3 md:p-4">
                   <div className="space-y-3">
                     {/* Title row */}
                     <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-2">
@@ -312,7 +316,7 @@ const ProductDetailDialog: React.FC<ProductDetailDialogProps> = ({
                     </div>
 
                     {/* Key facts (compact) */}
-                    <div className="rounded-lg border border-gray-3 bg-white">
+                    <div className="rounded-lg border border-gray-3 bg-gray-2">
                       <div className="px-3 py-2 flex items-center justify-between gap-3">
                         <span className="text-xs md:text-sm text-body font-medium">
                           Stock Available
@@ -330,15 +334,15 @@ const ProductDetailDialog: React.FC<ProductDetailDialogProps> = ({
                           {product.category?.name || "Uncategorized"}
                         </span>
                       </div>
-                      {product.subcategory && (
+                      {product.brand && (
                         <>
                           <div className="h-px bg-gray-2" />
                           <div className="px-3 py-2 flex items-center justify-between gap-3">
                             <span className="text-xs md:text-sm text-body font-medium">
-                              Subcategory
+                              Brand
                             </span>
                             <span className="text-xs md:text-sm font-semibold text-dark truncate max-w-[60%] text-right">
-                              {product.subcategory.name}
+                              {product.brand.name}
                             </span>
                           </div>
                         </>
@@ -361,7 +365,7 @@ const ProductDetailDialog: React.FC<ProductDetailDialogProps> = ({
               </div>
 
               {/* Description */}
-              <section className="rounded-xl border border-gray-3 bg-white shadow-sm p-3 md:p-4">
+              <section className="rounded-xl border border-gray-3 bg-gray-2 shadow-sm p-3 md:p-4">
                 <h3 className="text-sm md:text-base font-semibold text-dark">
                   Description
                 </h3>
@@ -370,9 +374,34 @@ const ProductDetailDialog: React.FC<ProductDetailDialogProps> = ({
                 </p>
               </section>
 
+              {/* Eyewear specification — frames only */}
+              {hasEyewearSpec(product) && (
+                <section className="rounded-xl border border-gray-3 bg-gray-2 shadow-sm p-3 md:p-4">
+                  <h3 className="text-sm md:text-base font-semibold text-dark">
+                    Eyewear Specification
+                  </h3>
+
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {buildSpecRows(product).map((row) => (
+                      <div
+                        key={row.label}
+                        className="rounded-lg border border-gray-3 bg-gray-1 px-3 py-2"
+                      >
+                        <p className="text-[11px] text-body uppercase tracking-wider font-semibold">
+                          {row.label}
+                        </p>
+                        <p className="mt-0.5 text-sm font-medium text-dark">
+                          {row.value}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+
               {/* Category details (responsive, compact cards) */}
               {product.category && (
-                <section className="rounded-xl border border-gray-3 bg-white shadow-sm p-3 md:p-4">
+                <section className="rounded-xl border border-gray-3 bg-gray-2 shadow-sm p-3 md:p-4">
                   <h3 className="text-sm md:text-base font-semibold text-dark">
                     Category Information
                   </h3>
@@ -395,22 +424,17 @@ const ProductDetailDialog: React.FC<ProductDetailDialogProps> = ({
                       )}
                     </div>
 
-                    {product.subcategory && (
+                    {product.brand && (
                       <div className="rounded-lg border border-gray-3 bg-gray-1 px-3 py-2">
                         <p className="text-[11px] text-body uppercase tracking-wider font-semibold">
-                          Subcategory
+                          Brand
                         </p>
                         <p className="mt-1 text-sm md:text-base font-semibold text-dark">
-                          {product.subcategory.name}
+                          {product.brand.name}
                         </p>
                         <p className="mt-0.5 font-mono text-[11px] md:text-xs text-body overflow-x-auto whitespace-nowrap">
-                          {product.subcategory.slug}
+                          {product.brand.slug}
                         </p>
-                        {product.subcategory.description && (
-                          <p className="mt-2 text-xs md:text-sm text-dark leading-relaxed">
-                            {product.subcategory.description}
-                          </p>
-                        )}
                       </div>
                     )}
                   </div>
@@ -418,7 +442,7 @@ const ProductDetailDialog: React.FC<ProductDetailDialogProps> = ({
               )}
 
               {/* Timeline */}
-              <section className="rounded-xl border border-gray-3 bg-white shadow-sm p-3 md:p-4">
+              <section className="rounded-xl border border-gray-3 bg-gray-2 shadow-sm p-3 md:p-4">
                 <h3 className="text-sm md:text-base font-semibold text-dark">
                   Timeline
                 </h3>

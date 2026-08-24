@@ -18,17 +18,17 @@ const TopProductsCard: React.FC<TopProductsCardProps> = ({
 
   if (isLoading) {
     return (
-      <div className="rounded-2xl bg-white shadow-1 border border-gray-3 overflow-hidden">
+      <div className="rounded-2xl bg-gray-2 shadow-1 border border-gray-3 overflow-hidden">
         <div className="p-4 sm:p-5 border-b border-gray-3">
-          <div className="h-6 bg-gray-2 rounded w-1/2 animate-pulse" />
-          <div className="h-4 bg-gray-2 rounded w-2/3 mt-2 animate-pulse" />
+          <div className="h-6 bg-gray-2 rounded w-1/2 animate-pulse border border-gray-3" />
+          <div className="h-4 bg-gray-2 rounded w-2/3 mt-2 animate-pulse border border-gray-3" />
         </div>
 
         <div className="p-4 sm:p-5 space-y-3">
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="h-[92px] sm:h-[76px] bg-gray-2 rounded-xl animate-pulse"
+              className="h-[92px] sm:h-[76px] bg-gray-2 rounded-xl animate-pulse border border-gray-3"
             />
           ))}
         </div>
@@ -37,7 +37,7 @@ const TopProductsCard: React.FC<TopProductsCardProps> = ({
   }
 
   return (
-    <section className="rounded-2xl bg-white shadow-1 border border-gray-3 overflow-hidden">
+    <section className="rounded-2xl bg-gray-2 shadow-1 border border-gray-3 overflow-hidden">
       <div className="p-4 sm:p-5 border-b border-gray-3">
         <h3 className="text-base sm:text-custom-lg font-semibold text-dark leading-tight">
           Top Products
@@ -58,7 +58,7 @@ const TopProductsCard: React.FC<TopProductsCardProps> = ({
               <div
                 key={product.id}
                 className="
-                  group rounded-xl border border-gray-3 bg-white
+                  group rounded-xl border border-gray-3 bg-gray-2
                   p-3 sm:p-4
                   transition
                   hover:border-blue hover:bg-gray-1

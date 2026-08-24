@@ -48,16 +48,16 @@ const RecentOrdersCard: React.FC<RecentOrdersCardProps> = ({
 
   if (isLoading) {
     return (
-      <div className="rounded-2xl bg-white shadow-1 border border-gray-3 overflow-hidden">
+      <div className="rounded-2xl bg-gray-2 shadow-1 border border-gray-3 overflow-hidden">
         <div className="border-b border-gray-3 px-4 sm:px-5 py-4">
-          <div className="h-6 bg-gray-2 rounded w-1/3 mb-2 animate-pulse" />
-          <div className="h-4 bg-gray-2 rounded w-1/2 animate-pulse" />
+          <div className="h-6 bg-gray-2 rounded w-1/3 mb-2 animate-pulse border border-gray-3" />
+          <div className="h-4 bg-gray-2 rounded w-1/2 animate-pulse border border-gray-3" />
         </div>
         <div className="p-4 sm:p-5 space-y-3 sm:space-y-4">
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="h-20 sm:h-16 bg-gray-2 rounded-xl animate-pulse"
+              className="h-20 sm:h-16 bg-gray-2 rounded-xl animate-pulse border border-gray-3"
             />
           ))}
         </div>
@@ -66,7 +66,7 @@ const RecentOrdersCard: React.FC<RecentOrdersCardProps> = ({
   }
 
   return (
-    <section className="rounded-2xl bg-white shadow-1 border border-gray-3 overflow-hidden">
+    <section className="rounded-2xl bg-gray-2 shadow-1 border border-gray-3 overflow-hidden">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-gray-3 px-4 sm:px-5 py-4">
         <div className="min-w-0">
@@ -80,7 +80,7 @@ const RecentOrdersCard: React.FC<RecentOrdersCardProps> = ({
 
         <Link
           href="/admin/orders"
-          className="inline-flex w-full sm:w-auto items-center justify-center rounded-lg border border-gray-3 bg-gray-1 px-3.5 py-2 text-custom-xs font-medium text-dark hover:border-blue hover:text-blue hover:bg-white transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue/40"
+          className="inline-flex w-full sm:w-auto items-center justify-center rounded-lg border border-gray-3 bg-gray-1 px-3.5 py-2 text-custom-xs font-medium text-dark hover:border-blue hover:text-blue hover:bg-gray-2 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue/40"
         >
           View all
         </Link>
@@ -109,7 +109,7 @@ const RecentOrdersCard: React.FC<RecentOrdersCardProps> = ({
                   className="
                     rounded-xl md:rounded-none
                     border border-gray-3 md:border-0 md:border-b md:border-gray-2 md:last:border-0
-                    bg-white
+                    bg-gray-2
                     transition
                     hover:bg-gray-1
                     focus-within:bg-gray-1

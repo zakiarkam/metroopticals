@@ -1,84 +1,140 @@
 "use client";
-import React, { useEffect } from "react";
-import Breadcrumb from "@/components/common/Breadcrumb";
+
+import React, { useEffect, useState } from "react";
+import { Heart, Lock, Trash2 } from "lucide-react";
+
 import SiteContainer from "@/components/common/SiteContainer";
-import SingleItem from "./SingleItem";
+import PageHero from "@/components/common/PageHero";
+import EmptyState from "@/components/common/EmptyState";
+import ProductCard from "@/components/common/ProductCard";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useWishlist } from "@/features/wishlist/hooks/use-wishlist";
 
+/** The shape the wishlist slice stores; wider than what the card needs. */
+type WishlistItem = {
+  id: number;
+  title: string;
+  price: number;
+  discountedPrice?: number | null;
+  stock?: number;
+  status?: string;
+  imgs?: { thumbnails?: string[]; previews?: string[] };
+};
+
 export const Wishlist = () => {
-  const { wishlistItems, clearWishlist, isAuthenticated, refreshWishlist } =
-    useWishlist();
+  const {
+    wishlistItems,
+    clearWishlist,
+    removeFromWishlist,
+    isAuthenticated,
+    refreshWishlist,
+  } = useWishlist();
   const hasItems = wishlistItems.length > 0;
+  const [confirmClear, setConfirmClear] = useState(false);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      void refreshWishlist();
-    }
+    if (isAuthenticated) void refreshWishlist();
   }, [isAuthenticated, refreshWishlist]);
 
   return (
     <>
-      <section className="overflow-hidden py-8 bg-gray-2">
-        <SiteContainer>
-          <div className="flex flex-wrap items-center justify-between gap-5 mb-7.5">
-            <h2 className="font-medium text-dark text-2xl">Your Wishlist</h2>
+      <PageHero
+        eyebrow="Saved for later"
+        title="Your wishlist"
+        description={
+          hasItems
+            ? `${wishlistItems.length} ${wishlistItems.length === 1 ? "frame" : "frames"} you're keeping an eye on. We'll tell you if any go out of stock.`
+            : "Save the frames you like and compare them side by side before you commit."
+        }
+        crumbs={[{ label: "Wishlist" }]}
+        actions={
+          hasItems ? (
             <button
-              onClick={clearWishlist}
-              disabled={!hasItems}
-              className="text-blue disabled:text-gray-4 disabled:cursor-not-allowed"
+              type="button"
+              onClick={() => setConfirmClear(true)}
+              className="inline-flex h-11 items-center gap-2 rounded-xl border border-red/40 px-5 text-[13px] font-semibold text-red transition-colors hover:bg-red hover:text-white"
             >
-              Clear Wishlist
+              <Trash2 className="h-4 w-4" />
+              Clear wishlist
             </button>
-          </div>
+          ) : null
+        }
+      />
 
-          {!isAuthenticated && (
-            <div className="bg-white rounded-[10px] shadow-1 p-10 text-center">
-              <p className="text-dark">
-                Please sign in to view and manage your wishlist.
-              </p>
+      <section className="bg-gray-1 py-10 lg:py-14">
+        <SiteContainer>
+          {!isAuthenticated ? (
+            <EmptyState
+              icon={<Lock className="h-7 w-7" />}
+              title="Sign in to see your wishlist"
+              description="Your saved frames follow your account, so they're waiting on any device you log into."
+              action={{ label: "Sign in", href: "/log-in" }}
+            />
+          ) : hasItems ? (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+              {(wishlistItems as WishlistItem[]).map((item) => (
+                <ProductCard
+                  key={item.id}
+                  onRemove={async () => {
+                    await removeFromWishlist(item.id);
+                  }}
+                  item={{
+                    id: item.id,
+                    title: item.title,
+                    price: item.price,
+                    discountedPrice: item.discountedPrice ?? null,
+                    images: item.imgs?.previews ?? item.imgs?.thumbnails ?? [],
+                    stock: item.stock,
+                    status: item.status,
+                    raw: item,
+                  }}
+                />
+              ))}
             </div>
-          )}
-
-          {isAuthenticated && (
-            <div className="bg-white rounded-[10px] shadow-1">
-              {hasItems ? (
-                <div className="w-full overflow-x-auto">
-                  <div className="min-w-[1170px]">
-                    {/* <!-- table header --> */}
-                    <div className="flex items-center py-5.5 px-10">
-                      <div className="min-w-[83px]"></div>
-                      <div className="min-w-[387px]">
-                        <p className="text-dark">Product</p>
-                      </div>
-
-                      <div className="min-w-[205px]">
-                        <p className="text-dark">Unit Price</p>
-                      </div>
-
-                      <div className="min-w-[265px]">
-                        <p className="text-dark">Stock Status</p>
-                      </div>
-
-                      <div className="min-w-[150px]">
-                        <p className="text-dark text-right">Action</p>
-                      </div>
-                    </div>
-
-                    {/* <!-- wish item --> */}
-                    {wishlistItems.map((item, key) => (
-                      <SingleItem item={item} key={key} />
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <div className="p-10 text-center text-dark">
-                  <p>Your wishlist is empty.</p>
-                </div>
-              )}
-            </div>
+          ) : (
+            <EmptyState
+              icon={<Heart className="h-7 w-7" />}
+              title="Nothing saved yet"
+              description="Tap the heart on any frame while browsing and it will land here."
+              action={{ label: "Browse frames", href: "/shop-with-sidebar" }}
+            />
           )}
         </SiteContainer>
       </section>
+
+      {/* Clearing the wishlist used to happen on the first click, while the
+          equivalent action in the cart asked first. Both ask now. */}
+      <AlertDialog open={confirmClear} onOpenChange={setConfirmClear}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Clear your wishlist?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This removes all {wishlistItems.length} saved frames. You can save
+              them again at any time.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep them</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                void clearWishlist();
+                setConfirmClear(false);
+              }}
+            >
+              Clear wishlist
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };

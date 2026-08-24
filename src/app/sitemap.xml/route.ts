@@ -63,11 +63,6 @@ export async function GET() {
       priority: 1,
     },
     {
-      url: buildSiteUrl("/about"),
-      changeFrequency: "monthly",
-      priority: 0.6,
-    },
-    {
       url: buildSiteUrl("/contact"),
       changeFrequency: "monthly",
       priority: 0.6,
@@ -81,11 +76,6 @@ export async function GET() {
       url: buildSiteUrl("/shop-with-sidebar"),
       changeFrequency: "daily",
       priority: 0.8,
-    },
-    {
-      url: buildSiteUrl("/shop-without-sidebar"),
-      changeFrequency: "weekly",
-      priority: 0.7,
     },
   ];
 

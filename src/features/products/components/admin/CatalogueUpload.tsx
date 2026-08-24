@@ -154,7 +154,7 @@ const CatalogueUpload: React.FC<CatalogueUploadProps> = ({
               type="button"
               onClick={removeCatalogue}
               disabled={deleting}
-              className="rounded-full p-2 bg-white shadow-md hover:bg-red-50 transition-colors disabled:opacity-50"
+              className="rounded-full p-2 bg-gray-2 shadow-md hover:bg-red-50 transition-colors disabled:opacity-50 border border-gray-3"
               title="Delete catalogue"
             >
               {deleting ? (

@@ -6,18 +6,26 @@ import type {
   ProductQueryInput,
 } from "@/features/products/validators/product";
 import { deleteFile } from "@/lib/storage/r2";
+import { FRAME_SIZE_RANGES } from "@/features/products/types/product";
+import type { FrameShape, Gender } from "@/features/products/types/product";
 
 export async function getProducts(query: ProductQueryInput) {
   const {
     category,
     categories,
-    subcategory,
-    subcategories,
+    brands,
+    genders,
+    shapes,
+    rimTypes,
+    materials,
+    colors,
+    sizes,
     search,
     page,
     limit,
     minPrice,
     maxPrice,
+    onSale,
     status,
     sortBy,
     sortOrder,
@@ -28,58 +36,69 @@ export async function getProducts(query: ProductQueryInput) {
   const andFilters: any[] = [];
 
   const categoryFilters =
-    categories && categories.length > 0
-      ? categories
-      : category
-      ? [category]
-      : [];
+    categories && categories.length > 0 ? categories : category ? [category] : [];
 
-  let categoryOrFilters: any[] = [];
   if (categoryFilters.length) {
     const slugFilter =
-      categoryFilters.length === 1
-        ? categoryFilters[0]
-        : { in: categoryFilters };
+      categoryFilters.length === 1 ? categoryFilters[0] : { in: categoryFilters };
 
-    categoryOrFilters = [
-      { category: { slug: slugFilter } },
-      { category: { parent: { slug: slugFilter } } },
-      { subcategory: { slug: slugFilter } },
-      { subcategory: { parent: { slug: slugFilter } } },
-    ];
-  }
-
-  const subcategoryFilters =
-    subcategories && subcategories.length > 0
-      ? subcategories
-      : subcategory
-      ? [subcategory]
-      : [];
-
-  if (categoryFilters.length && subcategoryFilters.length) {
-    const subcategorySlugFilter =
-      subcategoryFilters.length === 1
-        ? subcategoryFilters[0]
-        : { in: subcategoryFilters };
-
+    // Match the category itself or any of its children.
     andFilters.push({
       OR: [
-        ...categoryOrFilters,
-        { subcategory: { slug: subcategorySlugFilter } },
+        { category: { slug: slugFilter } },
+        { category: { parent: { slug: slugFilter } } },
       ],
     });
-  } else if (categoryFilters.length) {
-    andFilters.push({
-      OR: categoryOrFilters,
-    });
-  } else if (subcategoryFilters.length) {
-    const subcategorySlugFilter =
-      subcategoryFilters.length === 1
-        ? subcategoryFilters[0]
-        : { in: subcategoryFilters };
+  }
 
+  if (brands?.length) {
+    andFilters.push({ brand: { slug: { in: brands } } });
+  }
+
+  /*
+   * "On sale" is a real comparison between two columns, not just "has a
+   * discounted price set" — plenty of rows carry a `discountedPrice` equal to
+   * the list price. Prisma field references express that without raw SQL.
+   */
+  if (onSale) {
     andFilters.push({
-      subcategory: { slug: subcategorySlugFilter },
+      discountedPrice: { not: null, lt: prisma.product.fields.price },
+    });
+  }
+
+  if (genders?.length) {
+    andFilters.push({ gender: { in: genders } });
+  }
+
+  if (shapes?.length) {
+    andFilters.push({ frameShape: { in: shapes } });
+  }
+
+  if (rimTypes?.length) {
+    andFilters.push({ rimType: { in: rimTypes } });
+  }
+
+  if (materials?.length) {
+    // Case-insensitive match on free-text material.
+    andFilters.push({
+      OR: materials.map((m) => ({
+        frameMaterial: { equals: m, mode: "insensitive" },
+      })),
+    });
+  }
+
+  if (colors?.length) {
+    // `hasSome` on a string[] is case-sensitive in Postgres, so match the
+    // stored casing by comparing against the canonical list the UI offers.
+    andFilters.push({ frameColors: { hasSome: colors } });
+  }
+
+  if (sizes?.length) {
+    andFilters.push({
+      OR: sizes.map((size) => {
+        const range = FRAME_SIZE_RANGES[size];
+        return { lensWidth: { gte: range.min, lte: range.max } };
+      }),
     });
   }
 
@@ -135,17 +154,8 @@ export async function getProducts(query: ProductQueryInput) {
             updatedAt: true,
           },
         },
-        subcategory: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            description: true,
-            image: true,
-            status: true,
-            createdAt: true,
-            updatedAt: true,
-          },
+        brand: {
+          select: { id: true, name: true, slug: true, logo: true, status: true },
         },
       },
       skip,
@@ -166,12 +176,182 @@ export async function getProducts(query: ProductQueryInput) {
   };
 }
 
+/**
+ * Counts for each filter option in the sidebar.
+ *
+ * Counts are computed against the *category/search* scope only, not the
+ * currently ticked filters — otherwise ticking "Men" would drop every other
+ * gender to zero and make them un-tickable.
+ */
+export async function getProductFacets(query: ProductQueryInput) {
+  const { category, categories, search } = query;
+
+  const scope: any = { status: "ACTIVE" };
+  const and: any[] = [];
+
+  const categoryFilters =
+    categories && categories.length > 0 ? categories : category ? [category] : [];
+
+  if (categoryFilters.length) {
+    const slugFilter =
+      categoryFilters.length === 1 ? categoryFilters[0] : { in: categoryFilters };
+    and.push({
+      OR: [
+        { category: { slug: slugFilter } },
+        { category: { parent: { slug: slugFilter } } },
+      ],
+    });
+  }
+
+  if (search) {
+    and.push({
+      OR: [
+        { title: { contains: search, mode: "insensitive" } },
+        { description: { contains: search, mode: "insensitive" } },
+      ],
+    });
+  }
+
+  if (and.length) scope.AND = and;
+
+  const rows = await prisma.product.findMany({
+    where: scope,
+    select: {
+      gender: true,
+      frameShape: true,
+      rimType: true,
+      frameMaterial: true,
+      frameColors: true,
+      lensWidth: true,
+      brand: { select: { slug: true, name: true } },
+    },
+  });
+
+  const tally = <T extends string>(values: (T | null | undefined)[]) => {
+    const map = new Map<T, number>();
+    for (const v of values) {
+      if (v == null) continue;
+      map.set(v, (map.get(v) ?? 0) + 1);
+    }
+    return map;
+  };
+
+  const genderMap = tally(rows.map((r) => r.gender));
+  const shapeMap = tally(rows.map((r) => r.frameShape));
+  const rimMap = tally(rows.map((r) => r.rimType));
+
+  // Materials and colours are free text: group case-insensitively but show
+  // the first spelling encountered so the label stays human.
+  const groupText = (values: string[]) => {
+    const map = new Map<string, { label: string; count: number }>();
+    for (const raw of values) {
+      const key = raw.trim().toLowerCase();
+      if (!key) continue;
+      const existing = map.get(key);
+      if (existing) existing.count += 1;
+      else map.set(key, { label: raw.trim(), count: 1 });
+    }
+    return map;
+  };
+
+  const materialMap = groupText(
+    rows.map((r) => r.frameMaterial ?? "").filter(Boolean)
+  );
+  const colorMap = groupText(rows.flatMap((r) => r.frameColors ?? []));
+
+  const brandMap = new Map<string, { label: string; count: number }>();
+  for (const r of rows) {
+    if (!r.brand) continue;
+    const e = brandMap.get(r.brand.slug);
+    if (e) e.count += 1;
+    else brandMap.set(r.brand.slug, { label: r.brand.name, count: 1 });
+  }
+
+  const sizeMap = new Map<string, number>();
+  for (const r of rows) {
+    if (r.lensWidth == null) continue;
+    for (const [bucket, range] of Object.entries(FRAME_SIZE_RANGES)) {
+      if (r.lensWidth >= range.min && r.lensWidth <= range.max) {
+        sizeMap.set(bucket, (sizeMap.get(bucket) ?? 0) + 1);
+        break;
+      }
+    }
+  }
+
+  const byCountDesc = <T extends { count: number }>(a: T, b: T) =>
+    b.count - a.count;
+
+  return {
+    genders: Array.from(genderMap).map(([value, count]) => ({ value, count })),
+    brands: Array.from(brandMap)
+      .map(([value, { label, count }]) => ({ value, label, count }))
+      .sort(byCountDesc),
+    sizes: (["SMALL", "MEDIUM", "LARGE"] as const)
+      .map((value) => ({ value, count: sizeMap.get(value) ?? 0 }))
+      .filter((s) => s.count > 0),
+    shapes: Array.from(shapeMap)
+      .map(([value, count]) => ({ value, count }))
+      .sort(byCountDesc),
+    colors: Array.from(colorMap)
+      .map(([, { label, count }]) => ({ value: label, count }))
+      .sort(byCountDesc),
+    materials: Array.from(materialMap)
+      .map(([, { label, count }]) => ({ value: label, count }))
+      .sort(byCountDesc),
+    rimTypes: Array.from(rimMap)
+      .map(([value, count]) => ({ value, count }))
+      .sort(byCountDesc),
+  };
+}
+
+/**
+ * Frame shapes the shop can actually show something for.
+ *
+ * The navigation used to list all eight `FrameShape` enum members, so a shopper
+ * could pick "Browline" from the menu and land on an empty grid. This reads the
+ * shapes present on live products, so the menu can only ever offer a shape that
+ * has stock behind it.
+ */
+export async function getStockedFrameShapes() {
+  const rows = await prisma.product.groupBy({
+    by: ["frameShape"],
+    where: { status: "ACTIVE", frameShape: { not: null } },
+    _count: { _all: true },
+    orderBy: { _count: { frameShape: "desc" } },
+  });
+
+  return rows
+    .filter((row): row is typeof row & { frameShape: FrameShape } =>
+      Boolean(row.frameShape)
+    )
+    .map((row) => ({ value: row.frameShape, count: row._count._all }));
+}
+
+/**
+ * Wearer categories with stock behind them, most-stocked first.
+ *
+ * Same reason as `getStockedFrameShapes`: the menu offered "Kids" whether or
+ * not a single kids' frame was listed.
+ */
+export async function getStockedGenders() {
+  const rows = await prisma.product.groupBy({
+    by: ["gender"],
+    where: { status: "ACTIVE", gender: { not: null } },
+    _count: { _all: true },
+    orderBy: { _count: { gender: "desc" } },
+  });
+
+  return rows
+    .filter((row): row is typeof row & { gender: Gender } => Boolean(row.gender))
+    .map((row) => ({ value: row.gender, count: row._count._all }));
+}
+
 export async function getProductById(id: number) {
   const product = await prisma.product.findUnique({
     where: { id },
     include: {
       category: true,
-      subcategory: true,
+      brand: true,
     },
   });
 
@@ -202,7 +382,7 @@ export async function createProduct(data: CreateProductInput) {
     },
     include: {
       category: true,
-      // subcategory: true,
+      brand: true,
     },
   });
 
@@ -234,8 +414,7 @@ export async function updateProduct(id: number, data: UpdateProductInput) {
   if (data.catalogueFile !== undefined)
     updateData.catalogueFile = data.catalogueFile;
   if (data.categoryId !== undefined) updateData.categoryId = data.categoryId;
-  if (data.subcategoryId !== undefined)
-    updateData.subcategoryId = data.subcategoryId;
+  if (data.brandId !== undefined) updateData.brandId = data.brandId;
   if (data.unitType !== undefined) updateData.unitType = data.unitType;
   if (data.stock !== undefined) {
     updateData.stock = data.stock;
@@ -249,12 +428,30 @@ export async function updateProduct(id: number, data: UpdateProductInput) {
     updateData.status = data.status;
   }
 
+  // Eyewear spec. `null` is a meaningful value here (clears the field), so
+  // these are copied whenever the key is present rather than when truthy.
+  const eyewearFields = [
+    "lensWidth",
+    "bridgeWidth",
+    "templeLength",
+    "frameColors",
+    "frameMaterial",
+    "weightGrams",
+    "frameShape",
+    "rimType",
+    "gender",
+  ] as const;
+
+  for (const field of eyewearFields) {
+    if (data[field] !== undefined) updateData[field] = data[field];
+  }
+
   const product = await prisma.product.update({
     where: { id },
     data: updateData,
     include: {
       category: true,
-      // subcategory: true,
+      brand: true,
     },
   });
 
@@ -299,7 +496,6 @@ export async function updateProductStock(id: number, stock: number) {
     data: updateData,
     include: {
       category: true,
-      // subcategory: true
     },
   });
   return product;
@@ -328,7 +524,6 @@ export async function incrementProductStock(id: number, count: number) {
       data: updateData,
       include: {
         category: true,
-        //subcategory: true
       },
     });
     return product;
@@ -361,7 +556,6 @@ export async function decrementProductStock(id: number, count: number) {
       data: updateData,
       include: {
         category: true,
-        // subcategory: true
       },
     });
     return product;
@@ -377,7 +571,6 @@ export async function updateProductStatus(
     data: { status },
     include: {
       category: true,
-      // subcategory: true
     },
   });
   return product;

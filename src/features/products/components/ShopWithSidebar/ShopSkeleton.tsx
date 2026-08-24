@@ -4,37 +4,40 @@ import {
   ProductListSkeleton,
 } from "@/components/common/Loaders/ProductCardSkeleton";
 
+/** Full-page placeholder for the shop route, mirroring the real layout. */
+
+const Bar = ({ className = "" }: { className?: string }) => (
+  <div className={`rounded-md bg-gray-8 ${className}`} />
+);
+
 function SidebarSkeleton() {
   return (
-    <div className="w-full xl:w-[320px] xl:flex-shrink-0">
-      <div className="rounded-xl bg-white p-5 shadow-sm animate-pulse">
-        {/* Search */}
-        <div className="mb-6">
-          <div className="h-4 w-16 rounded bg-gray-200 mb-3" />
-          <div className="h-10 w-full rounded-lg bg-gray-200" />
+    <div className="w-full xl:w-[318px] xl:flex-shrink-0">
+      <div className="flex animate-pulse flex-col gap-4">
+        <div className="rounded-2xl border border-gray-3 bg-gray-2 px-4 py-3">
+          <Bar className="h-4 w-24" />
         </div>
 
-        {/* Categories */}
-        <div className="mb-6">
-          <div className="h-4 w-20 rounded bg-gray-200 mb-3" />
-          <div className="space-y-2">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <div className="h-4 w-4 rounded bg-gray-200" />
-                <div className="h-4 flex-1 rounded bg-gray-200" />
-              </div>
-            ))}
-          </div>
+        <div className="rounded-2xl border border-gray-3 bg-gray-2 p-3">
+          <Bar className="h-10 w-full rounded-xl" />
         </div>
 
-        {/* Price Range */}
-        <div>
-          <div className="h-4 w-24 rounded bg-gray-200 mb-3" />
-          <div className="flex gap-3">
-            <div className="h-10 flex-1 rounded-lg bg-gray-200" />
-            <div className="h-10 flex-1 rounded-lg bg-gray-200" />
+        {Array.from({ length: 3 }).map((_, block) => (
+          <div
+            key={block}
+            className="rounded-2xl border border-gray-3 bg-gray-2 p-4"
+          >
+            <Bar className="mb-4 h-4 w-28" />
+            <div className="space-y-2.5">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-2.5">
+                  <Bar className="h-4 w-4 rounded" />
+                  <Bar className="h-3.5 flex-1" />
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        ))}
       </div>
     </div>
   );
@@ -42,15 +45,13 @@ function SidebarSkeleton() {
 
 function ToolbarSkeleton() {
   return (
-    <div className="rounded-xl bg-white shadow-sm px-3 py-3 mb-6 animate-pulse">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-4">
-          <div className="h-10 w-32 rounded-lg bg-gray-200" />
-          <div className="hidden sm:block h-4 w-40 rounded bg-gray-200" />
-        </div>
+    <div className="mb-6 animate-pulse rounded-2xl border border-gray-3 bg-gray-2 p-3 sm:p-4">
+      <div className="flex items-center justify-between gap-3">
+        <Bar className="h-10 w-52 rounded-lg" />
         <div className="flex items-center gap-2">
-          <div className="h-9 w-10 rounded bg-gray-200" />
-          <div className="h-9 w-10 rounded bg-gray-200" />
+          <Bar className="hidden h-4 w-32 sm:block" />
+          <Bar className="h-10 w-10 rounded-lg" />
+          <Bar className="h-10 w-10 rounded-lg" />
         </div>
       </div>
     </div>
@@ -65,38 +66,37 @@ export default function ShopSkeleton({
   showSidebar?: boolean;
 }) {
   return (
-    <section className="overflow-hidden relative pb-8 pt-4 lg:pt-8 xl:pt-8 bg-[#f3f4f6]">
-      <SiteContainer>
-        <div className="flex flex-col gap-6 xl:flex-row">
-          {showSidebar && <SidebarSkeleton />}
+    <>
+      <div className="border-b border-gray-3 bg-gray-2">
+        <div className="mx-auto w-full max-w-[1560px] animate-pulse px-4 py-9 sm:px-6 sm:py-11 lg:px-10">
+          <Bar className="h-3 w-40" />
+          <Bar className="mt-5 h-9 w-72" />
+          <Bar className="mt-4 h-4 w-full max-w-xl" />
+        </div>
+      </div>
 
-          <div className="flex-1 w-full">
-            <ToolbarSkeleton />
+      <section className="relative overflow-hidden bg-gray-1 pb-16 pt-8">
+        <SiteContainer>
+          <div className="flex flex-col gap-6 xl:flex-row xl:gap-8">
+            {showSidebar && <SidebarSkeleton />}
 
-            {variant === "grid" ? (
-              <ProductGridSkeleton count={12} columns={3} />
-            ) : (
-              <ProductListSkeleton count={8} />
-            )}
+            <div className="w-full flex-1">
+              <ToolbarSkeleton />
 
-            {/* Pagination skeleton */}
-            <div className="flex justify-center mt-10">
-              <div className="bg-white shadow-sm rounded-lg p-2 animate-pulse">
-                <div className="flex items-center gap-2">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <div key={i} className="h-9 w-9 rounded bg-gray-200" />
-                  ))}
-                </div>
-              </div>
+              {variant === "grid" ? (
+                <ProductGridSkeleton count={12} columns={3} />
+              ) : (
+                <ProductListSkeleton count={8} />
+              )}
             </div>
           </div>
-        </div>
-      </SiteContainer>
-    </section>
+        </SiteContainer>
+      </section>
+    </>
   );
 }
 
-// Inline products loading skeleton (for use within loaded page)
+/** Inline products-only skeleton, used while a filter change is in flight. */
 export function ProductsLoadingSkeleton({
   variant = "grid",
   count = 12,

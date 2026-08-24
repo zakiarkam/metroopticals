@@ -71,11 +71,11 @@ const Pagination: React.FC<PaginationProps> = ({
 
   return (
     <div
-      className={`flex flex-col items-start gap-3 border-t border-gray-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 ${className}`}
+      className={`mt-8 flex flex-col items-start gap-3 rounded-2xl border border-gray-3 bg-gray-2 px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4 ${className}`}
     >
       {/* Items info and per page selector */}
       <div className="flex flex-wrap items-center gap-3">
-        <p className="text-xs sm:text-custom-sm text-body">
+        <p className="text-[12.5px] text-dark-4">
           Showing {startItem} to {endItem} of {totalItems} items
         </p>
 
@@ -83,7 +83,7 @@ const Pagination: React.FC<PaginationProps> = ({
           <div className="flex items-center gap-2">
             <label
               htmlFor="items-per-page"
-              className="text-xs sm:text-custom-sm text-body"
+              className="text-[12.5px] text-dark-4"
             >
               Per page:
             </label>
@@ -113,7 +113,7 @@ const Pagination: React.FC<PaginationProps> = ({
           <button
             onClick={handlePrevious}
             disabled={safeCurrentPage === 1}
-            className="flex h-8 w-8 items-center justify-center rounded-md border border-gray-3 text-xs font-medium text-dark hover:bg-gray-1 disabled:opacity-50 disabled:cursor-not-allowed transition sm:h-9 sm:w-9"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-3 text-dark transition-colors hover:border-blue hover:text-blue disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-gray-3 disabled:hover:text-dark"
             aria-label="Previous page"
           >
             <svg
@@ -138,7 +138,7 @@ const Pagination: React.FC<PaginationProps> = ({
                 return (
                   <span
                     key={`ellipsis-${index}`}
-                    className="px-2 py-1 text-xs text-body sm:px-3 sm:py-2 sm:text-custom-sm"
+                    className="px-2 text-[13px] text-dark-5"
                   >
                     ...
                   </span>
@@ -149,10 +149,10 @@ const Pagination: React.FC<PaginationProps> = ({
                 <button
                   key={page}
                   onClick={() => handlePageClick(page as number)}
-                  className={`min-w-[32px] rounded-md px-2 py-1 text-xs font-medium transition sm:min-w-[40px] sm:rounded-lg sm:px-3 sm:py-2 sm:text-custom-sm ${
+                  className={`inline-flex h-9 min-w-[36px] items-center justify-center rounded-lg px-2.5 text-[13px] font-semibold transition-colors ${
                     safeCurrentPage === page
                       ? "bg-blue text-white"
-                      : "text-dark hover:bg-gray-1"
+                      : "border border-gray-3 text-dark hover:border-blue hover:text-blue"
                   }`}
                   aria-label={`Page ${page}`}
                   aria-current={safeCurrentPage === page ? "page" : undefined}
@@ -167,7 +167,7 @@ const Pagination: React.FC<PaginationProps> = ({
           <button
             onClick={handleNext}
             disabled={safeCurrentPage === safeTotalPages}
-            className="flex h-8 w-8 items-center justify-center rounded-md border border-gray-3 text-xs font-medium text-dark hover:bg-gray-1 disabled:opacity-50 disabled:cursor-not-allowed transition sm:h-9 sm:w-9"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-3 text-dark transition-colors hover:border-blue hover:text-blue disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-gray-3 disabled:hover:text-dark"
             aria-label="Next page"
           >
             <svg

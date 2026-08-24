@@ -1,79 +1,99 @@
-/* Custom Toast Styles */
+/*
+ * Toast styles — Metro Opticals black & gold theme.
+ *
+ * The app is dark at all times, so these are the single source of truth.
+ * There is deliberately NO `prefers-color-scheme` block: a previous version
+ * had one that overrode every toast with a flat slate colour, wiping out the
+ * status gradients whenever the OS was set to dark mode.
+ */
+
 .Toastify__toast {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
   padding: 16px;
   min-height: 64px;
+  /* Default (neutral) toast: dark card with a gold hairline. */
+  background: #17171A;
+  color: #f5f1e8;
+  border: 1px solid #2E2E33;
 }
 
+/* Status toasts: dark tinted fills with a coloured accent border. */
 .Toastify__toast--success {
-  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  background: linear-gradient(135deg, #123d24 0%, #0e2e1c 100%);
+  border-color: #34c77b;
+  color: #cff7df;
 }
 
 .Toastify__toast--error {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  background: linear-gradient(135deg, #401a1a 0%, #2e1414 100%);
+  border-color: #f65454;
+  color: #ffd9d9;
 }
 
 .Toastify__toast--warning {
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  background: linear-gradient(135deg, #4a3a1b 0%, #2e2412 100%);
+  border-color: #e8b450;
+  color: #fdf4df;
 }
 
 .Toastify__toast--info {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  background: linear-gradient(135deg, #2a2419 0%, #1c1811 100%);
+  border-color: #c09c6c;
+  color: #f3eddc;
 }
 
 .Toastify__toast-body {
   padding: 0;
   font-size: 14px;
   line-height: 1.5;
+  color: inherit;
+}
+
+.Toastify__toast-icon svg {
+  fill: currentColor;
 }
 
 .Toastify__progress-bar {
-  height: 4px;
+  height: 3px;
+  background: #c09c6c;
 }
 
 .Toastify__progress-bar--success {
-  background: linear-gradient(to right, #16a34a, #22c55e);
+  background: linear-gradient(to right, #1f6b44, #34c77b);
 }
 
 .Toastify__progress-bar--error {
-  background: linear-gradient(to right, #dc2626, #ef4444);
+  background: linear-gradient(to right, #8c3232, #f65454);
 }
 
 .Toastify__progress-bar--warning {
-  background: linear-gradient(to right, #d97706, #f59e0b);
+  background: linear-gradient(to right, #8f7133, #e8b450);
 }
 
 .Toastify__progress-bar--info {
-  background: linear-gradient(to right, #2563eb, #3b82f6);
+  background: linear-gradient(to right, #a17c4c, #c09c6c);
 }
 
 .Toastify__close-button {
-  opacity: 0.7;
+  opacity: 0.6;
+  color: currentColor;
   transition: opacity 0.2s;
+}
+
+.Toastify__close-button > svg {
+  fill: currentColor;
 }
 
 .Toastify__close-button:hover {
   opacity: 1;
 }
 
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  .Toastify__toast {
-    background: #1f2937;
-    color: #f3f4f6;
-  }
-  
-  .Toastify__close-button {
-    color: #f3f4f6;
-  }
-}
-
-/* Loading spinner styles */
+/* Loading spinner */
 .Toastify__spinner {
-  border: 3px solid rgba(255, 255, 255, 0.3);
-  border-top-color: #ffffff;
+  border: 3px solid rgba(192, 156, 108, 0.25);
+  border-top-color: #c09c6c;
   border-radius: 50%;
   width: 20px;
   height: 20px;

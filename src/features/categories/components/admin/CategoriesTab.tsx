@@ -214,7 +214,7 @@ const CategoriesTab: React.FC<CategoriesTabProps> = ({ dateRange }) => {
 
   return (
     <div className="space-y-7.5">
-      <div className="rounded-xl border border-gray-3 bg-white shadow-1">
+      <div className="rounded-xl border border-gray-3 bg-gray-2 shadow-1">
         <div className="flex flex-wrap items-center gap-4 border-b border-gray-3 px-5 py-4">
           <div>
             <h3 className="text-custom-lg font-semibold text-dark">
@@ -258,7 +258,7 @@ const CategoriesTab: React.FC<CategoriesTabProps> = ({ dateRange }) => {
                   onClick={() => setStatusFilter(filter as any)}
                   className={`h-7 rounded-full px-3 text-custom-xs font-medium transition ${
                     statusFilter === filter
-                      ? "bg-white text-blue shadow-1"
+                      ? "bg-gray-2 text-blue shadow-1"
                       : "text-body hover:text-dark"
                   }`}
                 >

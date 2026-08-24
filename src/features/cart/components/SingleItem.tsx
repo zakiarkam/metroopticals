@@ -1,10 +1,18 @@
 "use client";
+
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { toast } from "react-hot-toast";
+import { Minus, Plus, Trash2 } from "lucide-react";
+
 import { useCart } from "@/features/cart/hooks/use-cart";
 import { normalizeImageArray } from "@/lib/storageUtils";
-import { toast } from "react-hot-toast";
+import {
+  AVAILABILITY_PILL_CLASSES,
+  getAvailability,
+} from "@/features/products/utils/availability";
+import { formatPrice } from "@/lib/utils/price";
 
 type CartItem = {
   id: number;
@@ -21,9 +29,14 @@ type CartItem = {
   };
 };
 
+
+/** One row in the cart. Shows the line total as well as the unit price — the old row only showed the unit price, which did not add up to the summary. */
 const SingleItem = ({ item }: { item: CartItem }) => {
   const { updateQuantity, removeFromCart } = useCart();
   const [isUpdating, setIsUpdating] = useState(false);
+
+  const availability = getAvailability(item.status, item.stock);
+  const isUnavailable = !availability.canBuy;
 
   const handleQuantityChange = async (newQuantity: number) => {
     if (newQuantity < 1 || isUpdating) return;
@@ -39,7 +52,6 @@ const SingleItem = ({ item }: { item: CartItem }) => {
 
   const handleRemove = async () => {
     if (isUpdating) return;
-
     setIsUpdating(true);
     await removeFromCart(item.id);
     setIsUpdating(false);
@@ -47,149 +59,96 @@ const SingleItem = ({ item }: { item: CartItem }) => {
 
   const resolvedImages = normalizeImageArray(item.imgs?.previews ?? []);
   const displayImage =
-    resolvedImages.length > 0
-      ? resolvedImages[0]
-      : "/images/placeholder-product.jpg";
+    resolvedImages[0] ?? "/images/placeholder-product.svg";
   const productUrl = `/shop-details/${item.productId || item.id}`;
 
   const hasReachedStock =
     typeof item.stock === "number" && item.quantity >= item.stock;
 
-  // Check if product is available for purchase
-  const isInactive = item.status === "INACTIVE";
-  const isOutOfStock =
-    item.status === "OUT_OF_STOCK" ||
-    (typeof item.stock === "number" && item.stock === 0);
-  const isUnavailable = isInactive || isOutOfStock;
-
-  const quantityControl = (
-    <div className="flex items-center rounded-md border border-gray-3 max-w-30 bg-gray-1">
-      <button
-        onClick={() => handleQuantityChange(item.quantity - 1)}
-        disabled={isUpdating || item.quantity <= 1 || isUnavailable}
-        className="w-9 h-9 flex items-center justify-center ease-out duration-200 hover:text-blue disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        <svg
-          width="14"
-          height="2"
-          viewBox="0 0 14 2"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="M13.3638 1.00024H0.636185C0.279966 1.00024 0 0.744493 0 0.419088C0 0.0936831 0.279966 -0.137939 0.636185 -0.137939H13.3638C13.72 -0.137939 14 0.0936831 14 0.419088C14 0.744493 13.6946 1.00024 13.3638 1.00024Z"
-            fill="currentColor"
-          />
-        </svg>
-      </button>
-
-      <input
-        type="text"
-        value={item.quantity}
-        readOnly
-        className="max-w-11.5 w-full text-center bg-transparent outline-none"
-      />
-
-      <button
-        onClick={() => handleQuantityChange(item.quantity + 1)}
-        disabled={isUpdating || hasReachedStock || isUnavailable}
-        className="w-9 h-9 flex items-center justify-center ease-out duration-200 hover:text-blue disabled:opacity-50 disabled:cursor-not-allowed"
-        title={
-          hasReachedStock
-            ? "Maximum stock reached"
-            : isUnavailable
-              ? "Product unavailable"
-              : undefined
-        }
-      >
-        <svg
-          width="14"
-          height="14"
-          viewBox="0 0 14 14"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="M13.3638 7.58172H7.58131V13.3642C7.58131 13.7151 7.32556 14.0005 7.00016 14.0005C6.67475 14.0005 6.41901 13.7405 6.41901 13.3642V7.58172H0.636185C0.285068 7.58172 0 7.29666 0 6.97125C0 6.64585 0.259991 6.3608 0.636185 6.3608H6.41901V0.578368C6.41901 0.227453 6.67475 -0.0576172 7.00016 -0.0576172C7.32556 -0.0576172 7.58131 0.202375 7.58131 0.578368V6.38619H13.3638C13.7146 6.38619 14 6.64194 14 6.99664C14 7.35135 13.6946 7.58172 13.3638 7.58172Z"
-            fill="currentColor"
-          />
-        </svg>
-      </button>
-    </div>
-  );
-
-  const removeButton = (
-    <button
-      onClick={handleRemove}
-      disabled={isUpdating}
-      className="text-dark ease-out duration-200 hover:text-red disabled:opacity-50 disabled:cursor-not-allowed"
-    >
-      <svg
-        width="18"
-        height="18"
-        viewBox="0 0 18 18"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          d="M13.7535 2.47502H11.5879V1.9969C11.5879 1.15315 10.9129 0.478149 10.0691 0.478149H7.90352C7.05977 0.478149 6.38477 1.15315 6.38477 1.9969V2.47502H4.21914C3.40352 2.47502 2.72852 3.15002 2.72852 3.96565V4.8094C2.72852 5.42815 3.09414 5.9344 3.62852 6.1594L4.07852 15.4688C4.13477 16.6219 5.09102 17.5219 6.24414 17.5219H11.7004C12.8535 17.5219 13.8098 16.6219 13.866 15.4688L14.3441 6.13127C14.8785 5.90627 15.2441 5.3719 15.2441 4.78127V3.93752C15.2441 3.15002 14.5691 2.47502 13.7535 2.47502ZM7.67852 1.9969C7.67852 1.85627 7.79102 1.74377 7.93164 1.74377H10.0973C10.2379 1.74377 10.3504 1.85627 10.3504 1.9969V2.47502H7.70664V1.9969H7.67852ZM4.02227 3.96565C4.02227 3.85315 4.10664 3.74065 4.24727 3.74065H13.7535C13.866 3.74065 13.9785 3.82502 13.9785 3.96565V4.8094C13.9785 4.9219 13.8941 5.0344 13.7535 5.0344H4.24727C4.13477 5.0344 4.02227 4.95002 4.02227 4.8094V3.96565ZM11.7285 16.2563H6.27227C5.79414 16.2563 5.40039 15.8906 5.37227 15.3844L4.95039 6.2719H13.0785L12.6566 15.3844C12.6004 15.8625 12.2066 16.2563 11.7285 16.2563Z"
-          fill="currentColor"
-        />
-        <path
-          d="M9.00039 9.11255C8.66289 9.11255 8.35352 9.3938 8.35352 9.75942V13.3313C8.35352 13.6688 8.63477 13.9782 9.00039 13.9782C9.33789 13.9782 9.64727 13.6969 9.64727 13.3313V9.75942C9.64727 9.3938 9.33789 9.11255 9.00039 9.11255Z"
-          fill="currentColor"
-        />
-        <path
-          d="M11.2502 9.67504C10.8846 9.64692 10.6033 9.90004 10.5752 10.2657L10.4064 12.7407C10.3783 13.0782 10.6314 13.3875 10.9971 13.4157C11.0252 13.4157 11.0252 13.4157 11.0533 13.4157C11.3908 13.4157 11.6721 13.1625 11.6721 12.825L11.8408 10.35C11.8408 9.98442 11.5877 9.70317 11.2502 9.67504Z"
-          fill="currentColor"
-        />
-        <path
-          d="M6.72245 9.67504C6.38495 9.70317 6.1037 10.0125 6.13182 10.35L6.3287 12.825C6.35683 13.1625 6.63808 13.4157 6.94745 13.4157C6.97558 13.4157 6.97558 13.4157 7.0037 13.4157C7.3412 13.3875 7.62245 13.0782 7.59433 12.7407L7.39745 10.2657C7.39745 9.90004 7.08808 9.64692 6.72245 9.67504Z"
-          fill="currentColor"
-        />
-      </svg>
-    </button>
-  );
-
   return (
-    <div className="flex items-start gap-5 py-5.5 px-6 max-[600px]:flex-col max-[600px]:items-start">
-      <div className="flex items-center gap-4.5 min-w-0 flex-1 max-[600px]:w-full">
-        <div className="w-20.5 h-20.5 rounded-[5px] overflow-hidden shrink-0">
-          <Image src={displayImage} alt={item.title} width={82} height={82} />
-        </div>
+    <div
+      className={`flex flex-col gap-4 p-5 transition-opacity sm:flex-row sm:items-center sm:gap-5 sm:p-6 ${
+        isUpdating ? "opacity-60" : ""
+      }`}
+    >
+      <Link
+        href={productUrl}
+        className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-gray-3 bg-gray-1"
+      >
+        <Image
+          src={displayImage}
+          alt={item.title}
+          fill
+          sizes="80px"
+          className="object-contain p-2"
+        />
+      </Link>
 
-        <div className="min-w-0">
-          <Link
-            href={productUrl}
-            className="font-medium text-dark hover:text-blue"
-          >
-            <span className="line-clamp-2 sm:line-clamp-1 capitalize break-words">
-              {item.title}
-            </span>
-          </Link>
+      <div className="min-w-0 flex-1">
+        <Link
+          href={productUrl}
+          className="line-clamp-2 text-[14.5px] font-semibold capitalize text-dark transition-colors hover:text-blue"
+        >
+          {item.title}
+        </Link>
 
-          {/* Status Badge */}
+        <div className="mt-1.5 flex flex-wrap items-center gap-2.5">
+          <span className="text-[13px] text-dark-4">
+            {formatPrice(item.discountedPrice)} each
+          </span>
           {isUnavailable && (
-            <div className="mt-1">
-              <span
-                className={`inline-block text-[10px] font-semibold px-2 py-0.5 rounded ${
-                  isInactive ? "bg-orange/10 text-orange" : "bg-red/10 text-red"
-                }`}
-              >
-                {isInactive ? "Inactive" : "Out of Stock"}
-              </span>
-            </div>
+            <span
+              className={`rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.1em] ${
+                AVAILABILITY_PILL_CLASSES[availability.tone]
+              }`}
+            >
+              {availability.label}
+            </span>
           )}
-
-          <p className="mt-1 text-dark">
-            Rs - {item.discountedPrice.toFixed(2)}
-          </p>
         </div>
       </div>
 
-      <div className="flex items-center gap-3 self-start max-[600px]:w-full max-[600px]:justify-between max-[600px]:mt-3">
-        {quantityControl}
-        {removeButton}
+      <div className="flex items-center justify-between gap-4 sm:justify-end">
+        <div className="flex items-center overflow-hidden rounded-xl border border-gray-3 bg-gray-1">
+          <button
+            type="button"
+            onClick={() => handleQuantityChange(item.quantity - 1)}
+            disabled={isUpdating || item.quantity <= 1 || isUnavailable}
+            aria-label="Decrease quantity"
+            className="grid h-10 w-10 place-items-center text-dark transition-colors hover:text-blue disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <Minus className="h-4 w-4" />
+          </button>
+
+          <span className="grid h-10 w-11 place-items-center border-x border-gray-3 text-[13.5px] font-bold text-dark">
+            {item.quantity}
+          </span>
+
+          <button
+            type="button"
+            onClick={() => handleQuantityChange(item.quantity + 1)}
+            disabled={isUpdating || hasReachedStock || isUnavailable}
+            aria-label="Increase quantity"
+            title={hasReachedStock ? "Maximum stock reached" : undefined}
+            className="grid h-10 w-10 place-items-center text-dark transition-colors hover:text-blue disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <Plus className="h-4 w-4" />
+          </button>
+        </div>
+
+        <p className="w-[110px] shrink-0 text-right text-[15px] font-bold text-dark">
+          {formatPrice(item.discountedPrice * item.quantity)}
+        </p>
+
+        <button
+          type="button"
+          onClick={handleRemove}
+          disabled={isUpdating}
+          aria-label={`Remove ${item.title} from cart`}
+          className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gray-3 text-dark-4 transition-colors hover:border-red hover:text-red disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <Trash2 className="h-[17px] w-[17px]" />
+        </button>
       </div>
     </div>
   );

@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import AccountSidebar from "@/features/users/components/my-account/AccountSidebar";
 import SiteContainer from "@/components/common/SiteContainer";
-import InlineSpinner from "@/components/common/InlineSpinner";
+import PageHero from "@/components/common/PageHero";
+import PageLoading from "@/components/common/PageLoading";
 import MyOrdersTab from "@/features/users/components/my-account/MyOrders/MyOrdersTab";
 import { useCachedSession } from "@/features/auth/hooks/use-cached-session";
 
@@ -17,52 +18,58 @@ const MyOrdersPage = () => {
     setMounted(true);
   }, []);
 
-  const handleSidebarSelect = useCallback(
-    (section: "account" | "orders") => {
-      if (section === "account") {
-        router.push("/my-account");
-      }
-    },
-    [router]
-  );
+  // A signed-out visitor used to get a completely blank page here, while
+  // /my-account redirected them to the login form. Both redirect now.
+  const signedOut = mounted && status !== "loading" && !session?.user;
+  useEffect(() => {
+    if (signedOut) router.replace("/log-in?callbackUrl=/my-account/orders");
+  }, [router, signedOut]);
 
   const memberSince = useMemo(() => {
+    // No join date is better than today's date — the old fallback told a new
+    // visitor they had been a member since this morning.
     const createdAt = (session?.user as any)?.createdAt;
-    const date = createdAt ? new Date(createdAt) : new Date();
-    return date.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+    if (!createdAt) return undefined;
+    return new Date(createdAt).toLocaleDateString("en-US", {
+      month: "short",
+      year: "numeric",
+    });
   }, [session?.user]);
 
-  if (!mounted || status === "loading") {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <InlineSpinner size={34} />
-      </div>
-    );
-  }
-
-  if (!session?.user) {
-    return null;
+  if (!mounted || status === "loading" || !session?.user) {
+    return <PageLoading />;
   }
 
   return (
-    <main className="bg-gray-2 py-6 sm:py-8">
-      <SiteContainer>
-        <div className="flex flex-col gap-6 xl:flex-row">
-          <AccountSidebar
-            name={session.user?.name}
-            email={session.user?.email}
-            role={(session.user as any)?.role}
-            memberSince={memberSince}
-            activeSection="orders"
-            onSectionClick={handleSidebarSelect}
-          />
+    <>
+      <PageHero
+        eyebrow="Your account"
+        title="My orders"
+        description="Track what you've bought, download invoices, and check where each order has got to."
+        crumbs={[
+          { label: "My account", href: "/my-account" },
+          { label: "Orders" },
+        ]}
+      />
 
-          <div className="flex-1 min-w-0">
-            <MyOrdersTab profile={(session.user as any) ?? null} />
+      <section className="bg-gray-1 py-10 lg:py-14">
+        <SiteContainer>
+          <div className="flex flex-col gap-6 xl:flex-row xl:gap-8">
+            <AccountSidebar
+              name={session.user?.name}
+              email={session.user?.email}
+              role={(session.user as any)?.role}
+              memberSince={memberSince}
+              activeSection="orders"
+            />
+
+            <div className="min-w-0 flex-1">
+              <MyOrdersTab profile={(session.user as any) ?? null} />
+            </div>
           </div>
-        </div>
-      </SiteContainer>
-    </main>
+        </SiteContainer>
+      </section>
+    </>
   );
 };
 

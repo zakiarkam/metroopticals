@@ -27,20 +27,26 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { ProductFormData } from "../types";
+import {
+  ProductFormData,
+  EMPTY_EYEWEAR_FIELDS,
+  toEyewearPayload,
+} from "../types";
+import EyewearSpecFields from "../EyewearSpecFields";
 import { createProduct } from "@/features/products/api/product-api";
 import { uploadApi } from "@/features/uploads/api/upload-api";
 import { ProductStatus } from "@/features/products/types/product";
 import ImageUpload from "../ImageUpload";
 import CatalogueUpload from "../CatalogueUpload";
 import { Toast } from "@/lib/utils/toast";
+import { useBrands } from "@/features/brands/hooks/use-brands";
 import { useCategoriesCache } from "@/features/categories/hooks/use-categories-cache";
 
 interface PrefillData {
   title: string;
   slug: string;
   categoryId: number | null;
-  subcategoryId: number | null;
+  brandId: number | null;
   price: number;
   discountedPrice?: number;
   stock: number;
@@ -74,7 +80,7 @@ const AddProductDialog: React.FC<AddProductDialogProps> = ({
       title: "",
       slug: "",
       categoryId: null,
-      subcategoryId: null,
+      brandId: null,
       stock: undefined,
       price: undefined,
       discountedPrice: undefined,
@@ -83,9 +89,11 @@ const AddProductDialog: React.FC<AddProductDialogProps> = ({
       description: "",
       images: [],
       catalogueFile: null,
+      ...EMPTY_EYEWEAR_FIELDS,
     },
   });
 
+  const { brands: brandOptions } = useBrands();
   const { data: cachedCategories, error: categoriesError } = useCategoriesCache(
     { page: 1, limit: 200 },
     { staleTimeMs: 10 * 60 * 1000, enabled: isOpen }
@@ -130,7 +138,7 @@ const AddProductDialog: React.FC<AddProductDialogProps> = ({
         title: newTitle,
         slug: generateSlug(newTitle),
         categoryId: prefillData.categoryId,
-        subcategoryId: prefillData.subcategoryId,
+        brandId: prefillData.brandId,
         price: prefillData.price,
         discountedPrice: prefillData.discountedPrice,
         stock: prefillData.stock,
@@ -211,10 +219,11 @@ const AddProductDialog: React.FC<AddProductDialogProps> = ({
         images: data.images || [],
         catalogueFile: data.catalogueFile,
         categoryId: data.categoryId ?? undefined,
-        subcategoryId: data.subcategoryId ?? undefined,
+        brandId: data.brandId ?? undefined,
         stock: data.stock,
         status: "ACTIVE" as ProductStatus,
         unitType: data.unitType,
+        ...toEyewearPayload(data),
       };
 
       await createProduct(productData);
@@ -380,8 +389,8 @@ const AddProductDialog: React.FC<AddProductDialogProps> = ({
                         onValueChange={(val) => {
                           const value = Number(val);
                           field.onChange(Number.isNaN(value) ? null : value);
-                          // Reset subcategory when category changes
-                          form.setValue("subcategoryId", null);
+                          // Reset brand when category changes
+                          form.setValue("brandId", null);
                         }}
                         value={
                           field.value !== null && field.value !== undefined
@@ -412,55 +421,40 @@ const AddProductDialog: React.FC<AddProductDialogProps> = ({
                   )}
                 />
 
-                {/* Subcategory (optional) */}
+                {/* Brand (optional) */}
                 <FormField
-                  control={form.control}
-                  name="subcategoryId"
-                  render={({ field }) => {
-                    const parentId = form.watch("categoryId");
-                    const subcategories = categories.filter(
-                      (c) => c.parentId === parentId
-                    );
-                    return (
-                      <FormItem>
-                        <FormLabel>Subcategory</FormLabel>
-                        <Select
-                          onValueChange={(val) => {
-                            const value = Number(val);
-                            field.onChange(Number.isNaN(value) ? null : value);
-                          }}
-                          value={
-                            field.value !== null && field.value !== undefined
-                              ? String(field.value)
-                              : ""
-                          }
-                          disabled={!parentId || subcategories.length === 0}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue
-                                placeholder={
-                                  !parentId
-                                    ? "Select a category first"
-                                    : subcategories.length === 0
-                                      ? "No subcategories"
-                                      : "Select subcategory (optional)"
-                                }
-                              />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {subcategories.map((sub) => (
-                              <SelectItem key={sub.id} value={String(sub.id)}>
-                                {sub.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    );
-                  }}
+                                    control={form.control}
+                  name="brandId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Brand</FormLabel>
+                      <Select
+                        onValueChange={(val) =>
+                          field.onChange(val === "__none__" ? null : Number(val))
+                        }
+                        value={
+                          field.value !== null && field.value !== undefined
+                            ? String(field.value)
+                            : "__none__"
+                        }
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select brand (optional)" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="__none__">No brand</SelectItem>
+                          {brandOptions.map((b) => (
+                            <SelectItem key={b.id} value={String(b.id)}>
+                              {b.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
 
                 {/* Price and Discounted Price */}
@@ -684,6 +678,8 @@ const AddProductDialog: React.FC<AddProductDialogProps> = ({
                     </FormItem>
                   )}
                 />
+
+                <EyewearSpecFields form={form} />
 
                 {/* Product Images */}
                 <FormField

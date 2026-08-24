@@ -112,7 +112,7 @@ const OrderStatusDialog: React.FC<OrderStatusDialogProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-md flex flex-col p-0">
-        <DialogHeader className="sticky top-0 z-10 bg-white border-b border-gray-3 px-6 py-4">
+        <DialogHeader className="sticky top-0 z-10 bg-gray-2 border-b border-gray-3 px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
               <DialogTitle>Update Order Status</DialogTitle>
@@ -199,7 +199,7 @@ const OrderStatusDialog: React.FC<OrderStatusDialogProps> = ({
           </div>
         </div>
 
-        <DialogFooter className="bg-white border-t border-gray-3 px-6 py-4">
+        <DialogFooter className="bg-gray-2 border-t border-gray-3 px-6 py-4">
           <Button
             type="button"
             variant="outline"

@@ -14,9 +14,9 @@ export const metadata: Metadata = {
 
 const CheckoutPage = () => {
   return (
-    <main>
+    <>
       <Checkout />
-    </main>
+    </>
   );
 };
 

@@ -19,7 +19,9 @@ export interface DeleteFileResponse {
 export type UploadFolder =
   | "product/image"
   | "product/catalogue"
-  | "category/image";
+  | "category/image"
+  | "advertisement/image"
+  | "brand/image";
 
 // Upload API Service
 export const uploadApi = {

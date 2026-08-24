@@ -56,7 +56,7 @@ const AccountMenu = memo(function AccountMenu({ onLogout }: AccountMenuProps) {
   // Loading state or not yet mounted
   if (!isClient || status === "loading") {
     return (
-      <div className="flex h-9 w-9 animate-pulse items-center justify-center rounded-full bg-gray-200 aspect-square" />
+      <div className="flex h-9 w-9 animate-pulse items-center justify-center rounded-full bg-gray-800 aspect-square border border-gray-3" />
     );
   }
 
@@ -65,34 +65,24 @@ const AccountMenu = memo(function AccountMenu({ onLogout }: AccountMenuProps) {
     return (
       <Link
         href="/log-in"
-        className="group flex items-center gap-2.5 transition-all hover:opacity-80"
-        aria-label="Login"
+        className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-gray-3 text-dark transition-colors hover:border-blue hover:text-blue"
+        aria-label="Log in"
+        title="Log in"
       >
-        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue/10 group-hover:bg-blue/20 transition-colors aspect-square shrink-0">
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="#3C50E0"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-            <circle cx="12" cy="7" r="4" />
-          </svg>
-        </div>
-
-        <div className="hidden sm:block">
-          <span className="block text-2xs text-dark-4 uppercase group-hover:text-blue transition-colors">
-            account
-          </span>
-          <p className="font-medium text-custom-sm text-dark group-hover:text-blue transition-colors">
-            Log In
-          </p>
-        </div>
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+          <circle cx="12" cy="7" r="4" />
+        </svg>
       </Link>
     );
   }
@@ -108,16 +98,8 @@ const AccountMenu = memo(function AccountMenu({ onLogout }: AccountMenuProps) {
         aria-label="Open account menu"
         aria-expanded={showUserMenu}
       >
-        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue text-white font-semibold text-sm transition-all group-hover:bg-blue-dark group-hover:shadow-md aspect-square shrink-0">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue text-white font-semibold text-sm transition-all group-hover:bg-blue-dark aspect-square shrink-0">
           {getInitials(user.name)}
-        </div>
-        <div className="hidden sm:block text-left">
-          <span className="block text-2xs text-dark-4 uppercase group-hover:text-blue transition-colors">
-            Welcome
-          </span>
-          <p className="font-medium text-custom-sm text-dark line-clamp-1 max-w-[140px] group-hover:text-blue transition-colors">
-            {user.name}
-          </p>
         </div>
       </button>
 
@@ -130,7 +112,7 @@ const AccountMenu = memo(function AccountMenu({ onLogout }: AccountMenuProps) {
           />
 
           {/* Dropdown Menu */}
-          <div className="absolute left-1/2 -translate-x-1/2 sm:left-auto sm:right-0 sm:translate-x-0 top-full  sm:mr-0 z-50 w-64 max-w-[calc(100vw-16px)] rounded-xl border border-gray-200 bg-white shadow-xl overflow-hidden ">
+          <div className="absolute left-1/2 -translate-x-1/2 sm:left-auto sm:right-0 sm:translate-x-0 top-full  sm:mr-0 z-50 w-64 max-w-[calc(100vw-16px)] rounded-xl border border-gray-200 bg-gray-2 shadow-xl overflow-hidden ">
             {/* User Info */}
             <div className="border-b border-gray-200 px-4 py-3">
               <p className="text-custom-sm font-medium text-dark">

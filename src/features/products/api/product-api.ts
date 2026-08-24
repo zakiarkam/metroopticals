@@ -25,12 +25,23 @@ export const getProducts = async (
   if (params?.search) queryParams.search = params.search;
   if (params?.status) queryParams.status = params.status;
   if (params?.category) queryParams.category = params.category;
-  if (params?.subcategory) queryParams.subcategory = params.subcategory;
-
-  if (params?.subcategories?.length)
-    queryParams.subcategories = params.subcategories.join(",");
   if (params?.categories?.length)
     queryParams.categories = params.categories.join(",");
+
+  // Multi-select facet filters, sent as comma-separated lists.
+  const listFilters = [
+    "brands",
+    "genders",
+    "shapes",
+    "rimTypes",
+    "materials",
+    "colors",
+    "sizes",
+  ] as const;
+  for (const key of listFilters) {
+    const value = params?.[key];
+    if (value?.length) queryParams[key] = (value as string[]).join(",");
+  }
 
   if (params?.minPrice !== undefined) queryParams.minPrice = params.minPrice;
   if (params?.maxPrice !== undefined) queryParams.maxPrice = params.maxPrice;

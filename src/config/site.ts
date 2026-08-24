@@ -56,7 +56,9 @@ export const siteConfig = {
   ogImage: "/images/logo/og-image.png",
 
   /** Brand colours, kept in sync with the manifest and theme-color meta. */
-  themeColor: "#1a202c",
+  themeColor: "#FAF8F4",
+  /** Gold accent — the deepened tone used for UI, see tailwind.config.ts. */
+  accentColor: "#8F6A37",
 } as const;
 
 export type SiteConfig = typeof siteConfig;

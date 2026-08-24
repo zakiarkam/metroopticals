@@ -27,13 +27,20 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { ProductFormData } from "../types";
+import {
+  ProductFormData,
+  EMPTY_EYEWEAR_FIELDS,
+  toEyewearPayload,
+  toEyewearFormFields,
+} from "../types";
+import EyewearSpecFields from "../EyewearSpecFields";
 import { updateProduct, getProductById } from "@/features/products/api/product-api";
 import { uploadApi } from "@/features/uploads/api/upload-api";
 import { ProductStatus } from "@/features/products/types/product";
 import ImageUpload from "../ImageUpload";
 import CatalogueUpload from "../CatalogueUpload";
 import { Toast } from "@/lib/utils/toast";
+import { useBrands } from "@/features/brands/hooks/use-brands";
 import { useCategoriesCache } from "@/features/categories/hooks/use-categories-cache";
 
 interface EditProductDialogProps {
@@ -69,7 +76,7 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
       title: "",
       slug: "",
       categoryId: null,
-      subcategoryId: null,
+      brandId: null,
       stock: undefined,
       price: undefined,
       discountedPrice: undefined,
@@ -78,12 +85,14 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
       description: "",
       images: [],
       catalogueFile: null,
+      ...EMPTY_EYEWEAR_FIELDS,
     },
   });
 
   const watchedStock = form.watch("stock");
   const watchedStatus = form.watch("status");
 
+  const { brands: brandOptions } = useBrands();
   const { data: cachedCategories, error: categoriesError } = useCategoriesCache(
     { page: 1, limit: 200 },
     { staleTimeMs: 10 * 60 * 1000, enabled: isOpen }
@@ -102,7 +111,7 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
         title: product.title,
         slug: product.slug,
         categoryId: product.category?.id ?? null,
-        subcategoryId: (product as any).subcategory?.id ?? null,
+        brandId: (product as any).brand?.id ?? null,
         stock: product.stock,
         price: product.price,
         discountedPrice: product.discountedPrice,
@@ -111,6 +120,7 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
         description: product.description,
         images: Array.isArray(product.images) ? product.images : [],
         catalogueFile: product.catalogueFile || null,
+        ...toEyewearFormFields(product),
       };
 
       form.reset(formValues);
@@ -248,10 +258,11 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
           : [],
         catalogueFile: data.catalogueFile || null,
         categoryId: data.categoryId ?? undefined,
-        subcategoryId: data.subcategoryId ?? undefined,
+        brandId: data.brandId ?? undefined,
         stock: data.stock,
         status: data.status,
         unitType: data.unitType,
+        ...toEyewearPayload(data),
       };
 
       await updateProduct(productId, productData);
@@ -346,7 +357,7 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0">
-        <DialogHeader className="sticky top-0 z-10 bg-white border-b border-gray-3 px-6 py-4">
+        <DialogHeader className="sticky top-0 z-10 bg-gray-2 border-b border-gray-3 px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
               <DialogTitle>Edit Product</DialogTitle>
@@ -441,7 +452,7 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
                           onValueChange={(val) => {
                             const value = Number(val);
                             field.onChange(Number.isNaN(value) ? null : value);
-                            form.setValue("subcategoryId", null);
+                            form.setValue("brandId", null);
                           }}
                           value={
                             field.value !== null && field.value !== undefined
@@ -472,57 +483,40 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
                     )}
                   />
 
-                  {/* Subcategory (optional) */}
+                  {/* Brand (optional) */}
                   <FormField
-                    control={form.control}
-                    name="subcategoryId"
-                    render={({ field }) => {
-                      const parentId = form.watch("categoryId");
-                      const subcategories = categories.filter(
-                        (c) => c.parentId === parentId
-                      );
-                      return (
-                        <FormItem>
-                          <FormLabel>Subcategory</FormLabel>
-                          <Select
-                            onValueChange={(val) => {
-                              const value = Number(val);
-                              field.onChange(
-                                Number.isNaN(value) ? null : value
-                              );
-                            }}
-                            value={
-                              field.value !== null && field.value !== undefined
-                                ? String(field.value)
-                                : ""
-                            }
-                            disabled={!parentId || subcategories.length === 0}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue
-                                  placeholder={
-                                    !parentId
-                                      ? "Select a category first"
-                                      : subcategories.length === 0
-                                        ? "No subcategories"
-                                        : "Select subcategory (optional)"
-                                  }
-                                />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {subcategories.map((sub) => (
-                                <SelectItem key={sub.id} value={String(sub.id)}>
-                                  {sub.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      );
-                    }}
+                                      control={form.control}
+                  name="brandId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Brand</FormLabel>
+                      <Select
+                        onValueChange={(val) =>
+                          field.onChange(val === "__none__" ? null : Number(val))
+                        }
+                        value={
+                          field.value !== null && field.value !== undefined
+                            ? String(field.value)
+                            : "__none__"
+                        }
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select brand (optional)" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="__none__">No brand</SelectItem>
+                          {brandOptions.map((b) => (
+                            <SelectItem key={b.id} value={String(b.id)}>
+                              {b.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                   />
 
                   {/* Price and Discounted Price */}
@@ -751,6 +745,8 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
                     )}
                   />
 
+                  <EyewearSpecFields form={form} />
+
                   {/* Product Images */}
                   <FormField
                     control={form.control}
@@ -838,7 +834,7 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
                 </div>
               </div>
 
-              <DialogFooter className="sticky bottom-0 bg-white border-t border-gray-3 px-6 py-4">
+              <DialogFooter className="sticky bottom-0 bg-gray-2 border-t border-gray-3 px-6 py-4">
                 <Button
                   type="button"
                   variant="outline"

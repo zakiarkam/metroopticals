@@ -1,6 +1,14 @@
 import type { Product } from "@/features/products/types/product";
 
-export type AdvertisementPlacement = "hero" | "promobanner" | "countdown";
+export type AdvertisementPlacement =
+  // Product-driven home slot.
+  | "promobanner"
+  // Photo banner zones — see AD_PLACEMENTS in constants/advertisement.ts.
+  | "home-billboard"
+  | "shop-top"
+  | "shop-sidebar"
+  | "product-detail"
+  | "cart-banner";
 
 export interface Advertisement {
   id: number;
@@ -16,7 +24,7 @@ export interface Advertisement {
   clickCount: number;
   viewCount: number;
   product?: Product | null;
-  productId?: number;
+  productId?: number | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -41,7 +49,8 @@ export interface CreateAdvertisementInput {
   slot?: number;
   startDate?: string;
   endDate?: string;
-  productId: number;
+  /** Banner placements do not need a product; product placements do. */
+  productId?: number | null;
 }
 
 export interface UpdateAdvertisementInput {
@@ -54,7 +63,7 @@ export interface UpdateAdvertisementInput {
   slot?: number;
   startDate?: string;
   endDate?: string;
-  productId?: number;
+  productId?: number | null;
 }
 
 export interface UpdateAdvertisementStatusInput {

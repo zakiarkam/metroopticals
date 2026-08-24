@@ -14,9 +14,9 @@ export const metadata: Metadata = {
 
 const WishlistPage = () => {
   return (
-    <main>
+    <>
       <Wishlist />
-    </main>
+    </>
   );
 };
 

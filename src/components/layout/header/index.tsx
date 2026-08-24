@@ -4,29 +4,24 @@ import { signOut } from "next-auth/react";
 import { clearUserSession } from "@/lib/sessionStorage";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import { useSelector } from "react-redux";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Headset, Heart } from "lucide-react";
+import MegaMenu, {
+  EMPTY_CATALOGUE,
+  type NavCatalogue,
+  type NavItem,
+} from "@/features/site-content/components/site/MegaMenu";
 
 import AccountMenu from "./AccountMenu";
 import CartButton from "./CartButton";
-import Dropdown from "./Dropdown";
 import Logo from "./Logo";
-import { menuData } from "./menuData";
+import MobileNav from "./MobileNav";
 import SearchBar from "./SearchBar";
-import SupportBlock from "./SupportBlock";
 
 import { useCartModalContext } from "@/app/context/CartSidebarModalContext";
-import { useCategories } from "@/features/categories/hooks/use-categories";
-import { selectTotalPrice } from "@/store/features/cart-slice";
 import { useAppSelector } from "@/store/store";
 
-/* ----------------------------- utils ----------------------------- */
+/* ----------------------------- hooks ----------------------------- */
 
 function useHeaderHeightCssVar(headerRef: React.RefObject<HTMLElement>) {
   useEffect(() => {
@@ -94,34 +89,13 @@ function useLockBodyScroll(locked: boolean) {
   }, [locked]);
 }
 
-/* ----------------------------- icons ----------------------------- */
+/* ----------------------------- UI bits ----------------------------- */
 
 function IconMenu({ open }: { open: boolean }) {
-  return open ? (
-    <svg
-      width="22"
-      height="22"
-      viewBox="0 0 24 24"
-      fill="none"
-      aria-hidden="true"
-    >
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path
-        d="M6 6l12 12M18 6L6 18"
-        stroke="currentColor"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-      />
-    </svg>
-  ) : (
-    <svg
-      width="22"
-      height="22"
-      viewBox="0 0 24 24"
-      fill="none"
-      aria-hidden="true"
-    >
-      <path
-        d="M4 7h16M4 12h16M4 17h16"
+        d={open ? "M6 6l12 12M18 6L6 18" : "M4 7h16M4 12h16M4 17h16"}
         stroke="currentColor"
         strokeWidth="2.5"
         strokeLinecap="round"
@@ -130,56 +104,21 @@ function IconMenu({ open }: { open: boolean }) {
   );
 }
 
-/* ----------------------------- UI bits ----------------------------- */
-
 const Container = ({ children }: { children: React.ReactNode }) => (
-  <div className="mx-auto w-full max-w-[1600px] px-3 sm:px-4 lg:px-6">
+  <div className="mx-auto w-full max-w-[1440px] px-4 sm:px-5 lg:px-8">
     {children}
   </div>
 );
 
-const NavLinks = ({
-  sticky,
-  pathname,
-  onNavigate,
-}: {
-  sticky: boolean;
-  pathname: string;
-  onNavigate?: () => void;
-}) => (
-  <nav>
-    <ul className="flex flex-wrap items-center  justify-self-center gap-5">
-      {menuData.map((menuItem, i) =>
-        menuItem.submenu ? (
-          <Dropdown key={i} menuItem={menuItem} stickyMenu={sticky} />
-        ) : (
-          <li
-            key={i}
-            className={`group relative ${
-              pathname === menuItem.path
-                ? "before:w-full"
-                : "before:w-0 hover:before:w-full"
-            } before:h-[3px] before:bg-blue before:absolute before:left-0 before:-top-2 before:rounded-b-[3px] before:ease-out before:duration-200`}
-          >
-            <Link
-              href={menuItem.path}
-              onClick={onNavigate}
-              className={`hover:text-blue text-sm font-medium text-dark flex transition-colors ${
-                sticky ? "xl:py-3" : "xl:py-4"
-              } ${pathname === menuItem.path ? "text-blue" : ""}`}
-            >
-              {menuItem.title}
-            </Link>
-          </li>
-        )
-      )}
-    </ul>
-  </nav>
-);
-
 /* ----------------------------- Header ---------------------------- */
 
-export default function Header() {
+export default function Header({
+  megaNav = [],
+  catalogue = EMPTY_CATALOGUE,
+}: {
+  megaNav?: NavItem[];
+  catalogue?: NavCatalogue;
+}) {
   const headerRef = useRef<HTMLElement | null>(null);
   useHeaderHeightCssVar(headerRef);
 
@@ -195,15 +134,11 @@ export default function Header() {
   const pathname = usePathname();
 
   const { openCartModal } = useCartModalContext();
-  const { categories } = useCategories();
-
   const product = useAppSelector((state) => state.cartReducer.items);
-  const totalPrice = useSelector(selectTotalPrice);
 
-  // ✅ Close mobile nav on route change
   useEffect(() => setNavigationOpen(false), [pathname]);
 
-  // ✅ Sync search state with URL (stable dependency)
+  // Keep the search box in step with the URL the shop is currently showing.
   const queryKey = searchParams.toString();
   useEffect(() => {
     const nextCat = searchParams.get("category") || "0";
@@ -213,34 +148,31 @@ export default function Header() {
     setSearchQuery((prev) => (prev === nextSearch ? prev : nextSearch));
   }, [queryKey, searchParams]);
 
-  const options = useMemo(() => {
-    return [
-      { label: "All Categories", value: "0" },
-      ...(categories || [])
-        .filter((c) => !c.parentId)
-        .map((c) => ({ label: c.name, value: c.slug })),
-    ];
-  }, [categories]);
-
-  const navigateToShop = useCallback(
-    (categoryValue?: string, query?: string) => {
-      const params = new URLSearchParams();
-      if (categoryValue && categoryValue !== "0")
-        params.set("category", categoryValue);
-      if (query && query.trim()) params.set("search", query.trim());
-
-      const qs = params.toString();
-      router.push(`/shop-without-sidebar${qs ? `?${qs}` : ""}`);
-    },
-    [router]
+  /** A fresh install with no saved navigation still needs a usable menu. */
+  const navItems = useMemo<NavItem[]>(
+    () =>
+      megaNav.length
+        ? megaNav
+        : [
+            { label: "Eyeglasses", href: "/shop-with-sidebar" },
+            { label: "Sunglasses", href: "/shop-with-sidebar" },
+            { label: "Brands", href: "/shop-with-sidebar", source: "brands" },
+            { label: "Eye test", href: "/contact" },
+          ],
+    [megaNav]
   );
 
   const handleSearchSubmit = useCallback(
     (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
-      navigateToShop(selectedCategory, searchQuery);
+      const params = new URLSearchParams();
+      if (selectedCategory && selectedCategory !== "0")
+        params.set("category", selectedCategory);
+      if (searchQuery.trim()) params.set("search", searchQuery.trim());
+      const qs = params.toString();
+      router.push(`/shop-with-sidebar${qs ? `?${qs}` : ""}`);
     },
-    [navigateToShop, selectedCategory, searchQuery]
+    [router, searchQuery, selectedCategory]
   );
 
   const handleLogout = useCallback(async () => {
@@ -248,99 +180,95 @@ export default function Header() {
     await signOut({ callbackUrl: "/log-in" });
   }, []);
 
+  const iconButton =
+    "inline-flex h-10 w-10 items-center justify-center rounded-full text-dark transition-colors hover:bg-blue-light-5 hover:text-blue";
+
   return (
     <header
       ref={headerRef}
-      className={`fixed left-0 top-0 w-full z-40 bg-white transition-all duration-200 shadow-sm ${
-        stickyMenu ? "shadow-md" : ""
+      className={`sticky top-0 z-40 w-full border-b border-gray-3 bg-gray-2 transition-shadow duration-200 ${
+        stickyMenu ? "shadow-3" : "shadow-none"
       }`}
     >
       <Container>
-        {/* TOP ROW */}
         <div
-          className={`flex flex-col gap-3 lg:gap-4 ${stickyMenu ? "py-3 sm:py-4" : "py-4 sm:py-5"}`}
+          className={`flex items-center gap-4 transition-[padding] ${
+            stickyMenu ? "py-2" : "py-3"
+          }`}
         >
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3 w-full">
-              <Logo />
+          {/* Mobile menu toggle sits first so the logo stays optically centred */}
+          <button
+            aria-label="Toggle navigation"
+            aria-expanded={navigationOpen}
+            className="-ml-2 inline-flex h-10 w-10 items-center justify-center rounded-lg text-dark transition-colors hover:text-blue lg:hidden"
+            onClick={() => setNavigationOpen((s) => !s)}
+          >
+            <IconMenu open={navigationOpen} />
+          </button>
 
-              {/* Desktop search */}
-              <div className="hidden lg:block w-full max-w-[820px]">
-                <SearchBar
-                  options={options}
-                  selectedCategory={selectedCategory}
-                  searchQuery={searchQuery}
-                  setSearchQuery={setSearchQuery}
-                  onSubmit={handleSearchSubmit}
-                  onCategorySelect={(v) => navigateToShop(v, searchQuery)}
-                />
-              </div>
-            </div>
+          <Logo />
 
-            {/* Right actions */}
-            <div className="flex items-center gap-3">
-              <AccountMenu onLogout={handleLogout} />
-
-              <CartButton
-                count={product.length}
-                totalPrice={totalPrice}
-                onOpen={openCartModal}
+          <div className="hidden min-w-0 flex-1 lg:block">
+            <div className="mx-auto max-w-[560px]">
+              <SearchBar
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                onSubmit={handleSearchSubmit}
               />
-
-              {/* Mobile menu toggle */}
-              <button
-                aria-label="Toggle navigation"
-                className="md:hidden inline-flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
-                onClick={() => setNavigationOpen((s) => !s)}
-              >
-                <IconMenu open={navigationOpen} />
-              </button>
             </div>
           </div>
 
-          {/* Mobile search */}
-          <div className="lg:hidden">
-            <SearchBar
-              options={options}
-              selectedCategory={selectedCategory}
-              searchQuery={searchQuery}
-              setSearchQuery={setSearchQuery}
-              onSubmit={handleSearchSubmit}
-              onCategorySelect={(v) => navigateToShop(v, searchQuery)}
-            />
+          <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-1.5">
+            <AccountMenu onLogout={handleLogout} />
+
+            <Link
+              href="/contact"
+              className={`hidden sm:inline-flex ${iconButton}`}
+              aria-label="Contact us"
+              title="Contact us"
+            >
+              <Headset className="h-5 w-5" />
+            </Link>
+
+            <Link
+              href="/wishlist"
+              className={`hidden sm:inline-flex ${iconButton}`}
+              aria-label="Wishlist"
+              title="Wishlist"
+            >
+              <Heart className="h-5 w-5" />
+            </Link>
+
+            <CartButton count={product.length} onOpen={openCartModal} />
           </div>
+        </div>
+
+        {/* Search moves to its own row below the logo on small screens. */}
+        <div className="pb-3 lg:hidden">
+          <SearchBar
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            onSubmit={handleSearchSubmit}
+          />
         </div>
       </Container>
 
-      {/* NAV ROW */}
-      <div className="border-t border-gray-200">
-        <Container>
-          <div className="flex items-center justify-between md:py-2">
-            <div className="hidden md:block">
-              <NavLinks sticky={stickyMenu} pathname={pathname} />
-            </div>
-            <SupportBlock />
-          </div>
-        </Container>
-      </div>
+      <MegaMenu items={navItems} catalogue={catalogue} />
 
-      {/* Mobile navigation */}
       {navigationOpen && (
         <>
           <div
-            className="fixed  left-0 right-0 bottom-0 z-30"
+            className="fixed inset-x-0 bottom-0 z-30 bg-dark/20 lg:hidden"
             style={{ top: "var(--site-header-height)" }}
             onClick={() => setNavigationOpen(false)}
           />
-          <div className="md:hidden  border-t border-gray-200 bg-white shadow-sm relative z-40">
+          <div className="relative z-40 border-t border-gray-3 bg-gray-2 shadow-lg lg:hidden">
             <Container>
-              <div className="py-6">
-                <NavLinks
-                  sticky={stickyMenu}
-                  pathname={pathname}
-                  onNavigate={() => setNavigationOpen(false)}
-                />
-              </div>
+              <MobileNav
+                items={navItems}
+                catalogue={catalogue}
+                onNavigate={() => setNavigationOpen(false)}
+              />
             </Container>
           </div>
         </>

@@ -38,18 +38,21 @@ next-env.d.ts
 .env.local
 .env.production
 
-# Docker
-docker-compose.override.yml
+# Database dumps
 backups/
 *.sql
 *.sql.gz
+# ...but Prisma migrations are source code and must be committed, otherwise
+# `prisma migrate deploy` finds nothing to apply and the deploy creates no tables.
+!prisma/migrations/**/*.sql
 
-# Jenkins
-.jenkins/
-jenkins-data/
-
-# Google Cloud credentials
-ecommerce-*.json
+# Railway CLI
+.railway/
 
 docs/
 *.log
+/logs/
+
+# Extra build dirs used by a second dev server (see NEXT_DIST_DIR)
+.next-*
+

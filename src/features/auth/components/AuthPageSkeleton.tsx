@@ -1,26 +1,26 @@
 import React from "react";
 
 const Skeleton = ({ className = "" }: { className?: string }) => (
-  <div className={`animate-pulse rounded-md bg-gray-2 ${className}`} />
+  <div className={`animate-pulse rounded-md bg-gray-8 ${className}`} />
 );
 
 export default function AuthPageSkeleton() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-2 px-4 py-8">
+    <div className="flex min-h-screen items-center justify-center bg-gray-1 px-4 py-8">
       <div className="w-full max-w-5xl">
-        <div className="grid overflow-hidden rounded-3xl bg-white shadow-lg lg:grid-cols-[1.05fr_0.95fr]">
+        <div className="grid overflow-hidden rounded-3xl bg-gray-2 shadow-lg lg:grid-cols-[1.05fr_0.95fr] border border-gray-3">
           {/* LEFT: Illustration panel skeleton (matches your actual left panel) */}
-          <div className="hidden flex-col gap-6 rounded-l-3xl bg-gradient-to-br from-blue to-blue-light-3 p-6 text-white shadow-lg lg:flex">
+          <div className="hidden flex-col gap-6 rounded-l-3xl bg-gradient-to-br from-[#E4CC84] via-[#C09C6C] to-[#9A7645] p-8 lg:flex">
             <div className="space-y-3">
-              <Skeleton className="h-3 w-20 bg-white/20" />
-              <Skeleton className="h-7 w-72 bg-white/20" />
-              <Skeleton className="h-4 w-80 bg-white/15" />
+              <Skeleton className="h-3 w-20 bg-dark/15" />
+              <Skeleton className="h-7 w-72 bg-dark/15" />
+              <Skeleton className="h-4 w-80 bg-dark/10" />
             </div>
 
             <div className="flex flex-1 items-center justify-center">
-              <div className="relative h-64 w-full overflow-hidden rounded-2xl bg-white/10 p-4">
+              <div className="relative h-64 w-full overflow-hidden rounded-2xl bg-white/50 p-4">
                 <div className="flex h-full w-full items-center justify-center">
-                  <div className="h-28 w-28 rounded-full bg-white/20" />
+                  <div className="h-28 w-28 rounded-full bg-dark/15" />
                 </div>
               </div>
             </div>

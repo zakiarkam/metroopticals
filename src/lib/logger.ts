@@ -5,16 +5,33 @@ import winston from "winston";
 import type TransportStream from "winston-transport";
 
 const isProduction = process.env.NODE_ENV === "production";
-const logDir =
-  process.env.LOG_DIR ||
-  (isProduction ? "/var/log/app" : path.join(process.cwd(), "logs"));
 
-let hasLogDir = true;
-try {
-  fs.mkdirSync(logDir, { recursive: true });
-} catch (error) {
-  hasLogDir = false;
-  console.warn("Logger: unable to create log directory, using console only.");
+/*
+ * File logging is opt-in.
+ *
+ * On Railway the container filesystem is ephemeral and is thrown away on every
+ * deploy, so log files there are write-only — nobody ever reads them back.
+ * Railway collects stdout/stderr instead, which is what the console transport
+ * feeds. Locally, files are still handy for grepping a long dev session, so
+ * they stay on by default outside production.
+ *
+ * Set LOG_TO_FILE=true (and optionally LOG_DIR) only where a real, persistent
+ * volume is mounted.
+ */
+const logToFile = process.env.LOG_TO_FILE
+  ? process.env.LOG_TO_FILE === "true"
+  : !isProduction;
+
+const logDir = process.env.LOG_DIR || path.join(process.cwd(), "logs");
+
+let hasLogDir = false;
+if (logToFile) {
+  try {
+    fs.mkdirSync(logDir, { recursive: true });
+    hasLogDir = true;
+  } catch {
+    console.warn("Logger: unable to create log directory, using console only.");
+  }
 }
 
 const baseFormat = winston.format.combine(

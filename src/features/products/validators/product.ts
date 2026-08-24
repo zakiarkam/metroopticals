@@ -1,6 +1,89 @@
 import { z } from "zod";
 
+export const FRAME_SHAPES = [
+  "RECTANGLE",
+  "SQUARE",
+  "ROUND",
+  "OVAL",
+  "CAT_EYE",
+  "AVIATOR",
+  "GEOMETRIC",
+  "BROWLINE",
+] as const;
+
+export const RIM_TYPES = ["FULL_RIM", "SEMI_RIMLESS", "RIMLESS"] as const;
+
+export const GENDERS = ["MEN", "WOMEN", "UNISEX", "KIDS"] as const;
+export const FRAME_SIZES = ["SMALL", "MEDIUM", "LARGE"] as const;
+
+/**
+ * Optional millimetre measurement. Empty strings from HTML inputs become
+ * null rather than 0, so "not specified" stays distinct from "zero".
+ * Ranges are the realistic bounds for eyewear, which catches typos like
+ * entering 500 instead of 50.
+ */
+const mm = (min: number, max: number, label: string) =>
+  z.preprocess(
+    (v) => (v === "" || v === undefined || v === null ? null : Number(v)),
+    z
+      .number()
+      .int(`${label} must be a whole number of millimetres`)
+      .min(min, `${label} must be at least ${min}mm`)
+      .max(max, `${label} must be at most ${max}mm`)
+      .nullable()
+      .optional()
+  );
+
+const optionalText = z.preprocess((v) => {
+  if (typeof v !== "string") return v;
+  const trimmed = v.trim();
+  return trimmed === "" ? null : trimmed;
+}, z.string().max(60).nullable().optional());
+
+/** Shared eyewear fields, spread into both create and update schemas. */
+const eyewearSpecFields = {
+  lensWidth: mm(20, 90, "Lens width"),
+  bridgeWidth: mm(8, 40, "Bridge width"),
+  templeLength: mm(100, 200, "Temple length"),
+  frameColors: z
+    .preprocess((v) => {
+      if (v === undefined || v === null || v === "") return [];
+      const arr = Array.isArray(v) ? v : String(v).split(",");
+      return Array.from(
+        new Set(
+          arr
+            .map((c) => (typeof c === "string" ? c.trim() : ""))
+            .filter((c) => c.length > 0)
+        )
+      );
+    }, z.array(z.string().min(1).max(40)).max(20))
+    .optional(),
+  frameMaterial: optionalText,
+  weightGrams: z.preprocess(
+    (v) => (v === "" || v === undefined || v === null ? null : Number(v)),
+    z
+      .number()
+      .min(1, "Weight must be at least 1g")
+      .max(200, "Weight must be at most 200g")
+      .nullable()
+      .optional()
+  ),
+  frameShape: z.preprocess(
+    (v) => (v === "" || v === undefined ? null : v),
+    z.enum(FRAME_SHAPES).nullable().optional()
+  ),
+  rimType: z.preprocess(
+    (v) => (v === "" || v === undefined ? null : v),
+    z.enum(RIM_TYPES).nullable().optional()
+  ),
+  gender: z.preprocess(
+    (v) => (v === "" || v === undefined ? null : v),
+    z.enum(GENDERS).nullable().optional()
+  ),
+};
+
 export const createProductSchema = z.object({
+  ...eyewearSpecFields,
   title: z.string().min(1, "Title is required"),
   slug: z.string().optional(),
   description: z.string().optional(),
@@ -9,13 +92,14 @@ export const createProductSchema = z.object({
   images: z.array(z.string()).optional(),
   catalogueFile: z.string().optional().nullable(),
   categoryId: z.coerce.number().int().positive().optional(),
-  subcategoryId: z.coerce.number().int().positive().optional().nullable(),
+  brandId: z.coerce.number().int().positive().optional().nullable(),
   stock: z.number().int().min(0, "Stock must be non-negative"),
   unitType: z.enum(["METER", "PIECES", "BOX", "DRUM"]).default("PIECES"),
   status: z.enum(["ACTIVE", "INACTIVE", "OUT_OF_STOCK"]).default("ACTIVE"),
 });
 
 export const updateProductSchema = z.object({
+  ...eyewearSpecFields,
   title: z.string().min(1).optional(),
   slug: z.string().optional(),
   description: z.string().optional(),
@@ -24,7 +108,7 @@ export const updateProductSchema = z.object({
   images: z.array(z.string()).optional(),
   catalogueFile: z.string().optional().nullable(),
   categoryId: z.coerce.number().int().positive().optional().nullable(),
-  subcategoryId: z.coerce.number().int().positive().optional().nullable(),
+  brandId: z.coerce.number().int().positive().optional().nullable(),
   stock: z.number().int().min(0).optional(),
   unitType: z.enum(["METER", "PIECES", "BOX", "DRUM"]).optional(),
   status: z.enum(["ACTIVE", "INACTIVE", "OUT_OF_STOCK"]).optional(),
@@ -59,15 +143,38 @@ const categoryArraySchema = z
   }, z.array(z.string().min(1)).nonempty())
   .optional();
 
+/** Accepts `?x=a,b` or repeated `?x=a&x=b`, and drops blanks. */
+const csvList = <T extends z.ZodTypeAny>(inner: T) =>
+  z
+    .preprocess((value) => {
+      const parts = Array.isArray(value) ? value : [value];
+      const flat = parts
+        .flatMap((v) => (typeof v === "string" ? v.split(",") : v))
+        .map((v) => (typeof v === "string" ? v.trim() : v))
+        .filter((v) => v !== "" && v !== undefined && v !== null);
+      return flat.length ? flat : undefined;
+    }, z.array(inner).nonempty())
+    .optional();
+
 export const productQuerySchema = z.object({
   category: z.string().optional(),
-  subcategory: z.string().optional(),
-  subcategories: categoryArraySchema,
   categories: categoryArraySchema,
+  brands: csvList(z.string().min(1)),
+  genders: csvList(z.enum(GENDERS)),
+  shapes: csvList(z.enum(FRAME_SHAPES)),
+  rimTypes: csvList(z.enum(RIM_TYPES)),
+  materials: csvList(z.string().min(1)),
+  colors: csvList(z.string().min(1)),
+  sizes: csvList(z.enum(FRAME_SIZES)),
   search: z.string().optional(),
   status: z.enum(["ACTIVE", "INACTIVE", "OUT_OF_STOCK"]).optional(),
   minPrice: z.coerce.number().nonnegative().optional(),
   maxPrice: z.coerce.number().nonnegative().optional(),
+  /** Only products whose discounted price actually undercuts the list price. */
+  onSale: z
+    .union([z.boolean(), z.enum(["true", "false", "1", "0"])])
+    .transform((value) => value === true || value === "true" || value === "1")
+    .optional(),
   sortBy: z.enum(["createdAt", "price", "title"]).optional(),
   sortOrder: z.enum(["asc", "desc"]).optional(),
   page: z.coerce.number().int().positive().default(1),

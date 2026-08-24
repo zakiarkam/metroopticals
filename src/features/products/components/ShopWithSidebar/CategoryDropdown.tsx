@@ -35,7 +35,7 @@ const CategoryItem = React.memo(function CategoryItem({
           type="button"
           onClick={onToggleExpand}
           className="p-0.5 hover:text-blue ease-out duration-200 flex-shrink-0"
-          aria-label="Toggle subcategories"
+          aria-label="Toggle brands"
         >
           <svg
             className={`ease-out duration-200 ${isExpanded ? "rotate-180" : ""}`}
@@ -65,7 +65,7 @@ const CategoryItem = React.memo(function CategoryItem({
         <div className="flex items-center gap-1.5">
           <div
             className={`flex items-center justify-center rounded w-4 h-4 border ${
-              isSelected ? "border-blue bg-blue" : "bg-white border-gray-3"
+              isSelected ? "border-blue bg-blue" : "bg-gray-2 border-gray-3"
             }`}
           >
             <svg
@@ -85,13 +85,15 @@ const CategoryItem = React.memo(function CategoryItem({
             </svg>
           </div>
 
-          <span className={isChild ? "text-body" : ""}>{category.name}</span>
+          <span className={`capitalize ${isChild ? "text-body" : ""}`}>
+            {category.name}
+          </span>
         </div>
 
         {productCount > 0 && (
           <span
-            className={`inline-flex rounded-[30px] text-custom-xs px-2 ease-out duration-200 group-hover:text-white group-hover:bg-blue ${
-              isSelected ? "text-white bg-blue" : "bg-gray-2 text-dark"
+            className={`text-[11px] font-medium duration-200 ease-out ${
+              isSelected ? "text-blue" : "text-dark-5"
             }`}
           >
             {productCount}
@@ -148,7 +150,7 @@ export default function CategoryDropdown({
     return map;
   }, [categories]);
 
-  const orphanSubcategories = useMemo(
+  const orphanBrandies = useMemo(
     () =>
       categories.filter(
         (category) =>
@@ -210,20 +212,21 @@ export default function CategoryDropdown({
   };
 
   return (
-    <div className="bg-white shadow-sm rounded-xl border border-gray-100">
+    <div className="rounded-2xl border border-gray-3 bg-gray-2 px-4 shadow-2">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className={`w-full flex items-center justify-between py-3 px-4 ${open ? "shadow-filter" : ""}`}
+        aria-expanded={open}
+        className="group flex w-full items-center justify-between py-4"
       >
-        <p className="text-dark font-medium">Category</p>
-        <span
-          className={`text-dark ease-out duration-200 ${open ? "rotate-180" : ""}`}
-        >
+        <p className="text-[13.5px] font-bold uppercase tracking-[0.1em] text-dark">
+          Category
+        </p>
+        <span className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-gray-3 text-dark-4 transition-colors group-hover:border-blue group-hover:text-blue">
           <svg
-            className="fill-current"
-            width="24"
-            height="24"
+            className={`fill-current duration-200 ease-out ${open ? "rotate-180" : ""}`}
+            width="16"
+            height="16"
             viewBox="0 0 24 24"
             fill="none"
           >
@@ -237,13 +240,17 @@ export default function CategoryDropdown({
         </span>
       </button>
 
-      <div className={`flex-col gap-3 py-4 px-4 ${open ? "flex" : "hidden"}`}>
+      <div
+        className={`flex-col gap-2.5 border-t border-gray-3 py-4 ${
+          open ? "flex" : "hidden"
+        }`}
+      >
         {categories.length === 0 ? (
-          <p className="text-sm text-gray-400">No categories available</p>
+          <p className="text-[13px] text-dark-5">No categories available</p>
         ) : (
           <>
             {rootCategories.map((category) => {
-              const subcategories = categories.filter(
+              const brands = categories.filter(
                 (item) => item.parentId === category.id
               );
               const isExpanded = expandedCategories.has(category.id);
@@ -254,14 +261,14 @@ export default function CategoryDropdown({
                     category={category}
                     isSelected={selectedCategories.includes(category.slug)}
                     onSelect={() => handleCategorySelect(category)}
-                    hasChildren={subcategories.length > 0}
+                    hasChildren={brands.length > 0}
                     isExpanded={isExpanded}
                     onToggleExpand={() => toggleCategoryExpand(category.id)}
                   />
 
-                  {subcategories.length > 0 && isExpanded && (
-                    <div className="ml-5 flex flex-col gap-1 border-l border-gray-2 pl-3">
-                      {subcategories.map((sub) => {
+                  {brands.length > 0 && isExpanded && (
+                    <div className="ml-5 flex flex-col gap-1 border-l border-gray-3 pl-3">
+                      {brands.map((sub) => {
                         const isSelected =
                           selectedCategories.includes(sub.slug) ||
                           selectedCategories.includes(category.slug);
@@ -282,12 +289,12 @@ export default function CategoryDropdown({
               );
             })}
 
-            {orphanSubcategories.length > 0 && (
-              <div className="space-y-2 border-t border-gray-2 pt-4">
-                <p className="text-custom-xs uppercase tracking-wide text-body">
-                  Subcategories
+            {orphanBrandies.length > 0 && (
+              <div className="space-y-2 border-t border-gray-3 pt-4">
+                <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-dark-5">
+                  Brands
                 </p>
-                {orphanSubcategories.map((sub) => (
+                {orphanBrandies.map((sub) => (
                   <CategoryItem
                     key={sub.id}
                     category={sub}

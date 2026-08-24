@@ -9,6 +9,9 @@ interface PriceDropdownProps {
   onPriceChange: (range: { from: number; to: number }) => void;
   minPrice: number;
   maxPrice: number;
+  /** Render bare, without the card chrome and its own "Price" header —
+   *  used when the parent filter panel already provides the section. */
+  embedded?: boolean;
 }
 
 export default function PriceDropdown({
@@ -16,11 +19,16 @@ export default function PriceDropdown({
   onPriceChange,
   minPrice,
   maxPrice,
+  embedded = false,
 }: PriceDropdownProps) {
   const [open, setOpen] = useState(true);
 
+  if (embedded) {
+    return <PriceBody {...{ priceRange, onPriceChange, minPrice, maxPrice }} />;
+  }
+
   return (
-    <div className="bg-white shadow-sm rounded-xl border border-gray-100">
+    <div className="bg-gray-2 shadow-sm rounded-xl border border-gray-100">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -77,6 +85,53 @@ export default function PriceDropdown({
             <span className="block px-3 py-1.5">{priceRange.to}</span>
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+/** The slider + read-outs, shared by the standalone card and embedded modes. */
+function PriceBody({
+  priceRange,
+  onPriceChange,
+  minPrice,
+  maxPrice,
+}: Omit<PriceDropdownProps, "embedded">) {
+  const amount = (value: number) =>
+    value.toLocaleString("en-LK", { maximumFractionDigits: 0 });
+
+  return (
+    <div className="px-2 pb-1">
+      <RangeSlider
+        min={minPrice}
+        max={maxPrice}
+        step={10}
+        value={[priceRange.from, priceRange.to]}
+        onInput={(values: number[]) =>
+          onPriceChange({
+            from: Math.floor(values[0]),
+            to: Math.ceil(values[1]),
+          })
+        }
+      />
+
+      <div className="price-amount mt-5 flex items-center gap-3">
+        {[
+          { caption: "From", value: priceRange.from },
+          { caption: "Up to", value: priceRange.to },
+        ].map((bound) => (
+          <div
+            key={bound.caption}
+            className="flex-1 rounded-lg border border-gray-3 bg-gray-1 px-3 py-2"
+          >
+            <span className="block text-[10px] font-bold uppercase tracking-[0.12em] text-dark-5">
+              {bound.caption}
+            </span>
+            <span className="mt-0.5 block text-[13px] font-semibold text-dark">
+              Rs {amount(bound.value)}
+            </span>
+          </div>
+        ))}
       </div>
     </div>
   );

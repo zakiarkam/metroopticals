@@ -28,6 +28,7 @@ model User {
   cartItems     CartItem[]
   orders        Order[]
   resetTokens   PasswordResetToken[]
+  reviews       Review[]
   sessions      Session[]
   wishlistItems WishlistItem[]
 
@@ -84,48 +85,68 @@ model PasswordResetToken {
 }
 
 model Category {
-  name                String
-  slug                String     @unique
-  description         String?
-  image               String?
-  status              String     @default("active")
-  createdAt           DateTime   @default(now())
-  updatedAt           DateTime   @updatedAt
-  id                  Int        @id @default(autoincrement())
-  parentId            Int?
-  parent              Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
-  children            Category[] @relation("CategoryHierarchy")
-  products            Product[]  @relation("ProductCategory")
-  subcategoryProducts Product[]  @relation("ProductSubcategory")
+  name        String
+  slug        String     @unique
+  description String?
+  image       String?
+  status      String     @default("active")
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  id          Int        @id @default(autoincrement())
+  parentId    Int?
+  parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryHierarchy")
+  products    Product[]  @relation("ProductCategory")
 
   @@map("categories")
 }
 
 model Product {
   title           String
-  slug            String          @unique
+  slug            String      @unique
   description     String?
   price           Float
   discountedPrice Float?
   images          String[]
   catalogueFile   String?
-  stock           Int             @default(0)
-  status          String          @default("ACTIVE")
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-  unitType        ProductUnit     @default(PIECES)
-  id              Int             @id @default(autoincrement())
-  categoryId      Int?
-  subcategoryId   Int?
-  advertisements  Advertisement[]
-  cartItems       CartItem[]
-  orderItems      OrderItem[]
-  category        Category?       @relation("ProductCategory", fields: [categoryId], references: [id])
-  subcategory     Category?       @relation("ProductSubcategory", fields: [subcategoryId], references: [id])
-  wishlistItems   WishlistItem[]
+  stock           Int         @default(0)
+  status          String      @default("ACTIVE")
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  unitType        ProductUnit @default(PIECES)
+
+  // ---- Eyewear specification (optional: only frames use these) ----
+  // The three measurements printed on a frame, e.g. 50 □ 17 - 140
+  lensWidth     Int? // mm, per lens
+  bridgeWidth   Int? // mm, gap between lenses
+  templeLength  Int? // mm, arm length
+  frameColors   String[] // a frame is often sold in several colourways
+  frameMaterial String?
+  weightGrams   Float?
+  frameShape    FrameShape?
+  rimType       RimType?
+  gender        Gender?
+
+  // Denormalised review aggregates. Recomputed whenever a review is published,
+  // edited or removed, so listing pages can sort and display stars without
+  // joining every review row on every query.
+  rating      Float? // null until the first published review
+  reviewCount Int    @default(0)
+
+  id             Int             @id @default(autoincrement())
+  categoryId     Int?
+  brandId        Int?
+  advertisements Advertisement[]
+  cartItems      CartItem[]
+  orderItems     OrderItem[]
+  reviews        Review[]
+  brand          Brand?          @relation(fields: [brandId], references: [id])
+  category       Category?       @relation("ProductCategory", fields: [categoryId], references: [id])
+  wishlistItems  WishlistItem[]
 
   @@index([categoryId])
-  @@index([subcategoryId])
+  @@index([brandId])
+  @@index([gender])
   @@index([status])
   @@index([slug])
   @@map("products")
@@ -261,6 +282,46 @@ enum ProductUnit {
   DRUM
 }
 
+/// Eyewear brands. Separate from Category because one brand (e.g. Ray-Ban)
+/// sells across several categories, which a child-category cannot express.
+model Brand {
+  id        Int       @id @default(autoincrement())
+  name      String
+  slug      String    @unique
+  logo      String?
+  status    String    @default("active")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  products  Product[]
+
+  @@index([status])
+  @@map("brands")
+}
+
+enum Gender {
+  MEN
+  WOMEN
+  UNISEX
+  KIDS
+}
+
+enum FrameShape {
+  RECTANGLE
+  SQUARE
+  ROUND
+  OVAL
+  CAT_EYE
+  AVIATOR
+  GEOMETRIC
+  BROWLINE
+}
+
+enum RimType {
+  FULL_RIM
+  SEMI_RIMLESS
+  RIMLESS
+}
+
 enum OrderStatus {
   PENDING
   CONFIRMED
@@ -282,4 +343,59 @@ enum CustomerType {
   INSTALLER
   PROJECTS
   COMPANY
+}
+
+// Editable storefront content.
+//
+// Every non-catalogue block on the site — the announcement bar, the mega menu,
+// the home page sections, the footer — is stored here as one row of JSON keyed
+// by a stable string. The shape of each row is described in code by the block
+// registry (src/features/site-content/constants/blocks.ts), which also supplies
+// the defaults, so a missing row renders the shipped dummy content rather than
+// an empty page. That keeps the schema stable while blocks gain fields.
+model SiteContent {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  data      Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("site_content")
+}
+
+// A customer's review of a product.
+//
+// Reviews are user-generated, not editable site content: an admin can approve,
+// reject or delete one, but never write one. New reviews land as PENDING so a
+// human sees them before they reach the storefront.
+//
+// One review per customer per product (@@unique) — the write form switches to
+// "edit your review" when a row already exists, rather than stacking duplicates.
+model Review {
+  id        Int          @id @default(autoincrement())
+  rating    Int // 1–5
+  title     String?
+  body      String
+  status    ReviewStatus @default(PENDING)
+  // Set at submission time by checking the customer's delivered orders, so the
+  // badge stays true even if the product is later removed from their history.
+  verifiedPurchase Boolean @default(false)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  productId Int
+  userId    Int
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@index([productId, status])
+  @@index([status])
+  @@map("reviews")
+}
+
+enum ReviewStatus {
+  PENDING
+  PUBLISHED
+  REJECTED
 }

@@ -1,0 +1,110 @@
+import type {
+  EyewearSpec,
+  FrameShape,
+  Gender,
+  RimType,
+} from "@/features/products/types/product";
+
+export const GENDER_LABELS: Record<Gender, string> = {
+  MEN: "Men",
+  WOMEN: "Women",
+  UNISEX: "Unisex",
+  KIDS: "Kids",
+};
+
+export const FRAME_SHAPE_LABELS: Record<FrameShape, string> = {
+  RECTANGLE: "Rectangle",
+  SQUARE: "Square",
+  ROUND: "Round",
+  OVAL: "Oval",
+  CAT_EYE: "Cat-Eye",
+  AVIATOR: "Aviator",
+  GEOMETRIC: "Geometric",
+  BROWLINE: "Browline",
+};
+
+export const RIM_TYPE_LABELS: Record<RimType, string> = {
+  FULL_RIM: "Full-Rim",
+  SEMI_RIMLESS: "Semi-Rimless",
+  RIMLESS: "Rimless",
+};
+
+/** True when a product carries any frame specification at all. */
+export const hasEyewearSpec = (spec: EyewearSpec) =>
+  spec.lensWidth != null ||
+  spec.bridgeWidth != null ||
+  spec.templeLength != null ||
+  (spec.frameColors?.length ?? 0) > 0 ||
+  !!spec.frameMaterial ||
+  spec.weightGrams != null ||
+  !!spec.frameShape ||
+  !!spec.gender ||
+  !!spec.rimType;
+
+/**
+ * The industry size code stamped inside a frame, e.g. `50 □ 17 - 140`.
+ * Returns null unless all three measurements are present, since a partial
+ * code would be misleading.
+ */
+export const formatFrameSizeCode = ({
+  lensWidth,
+  bridgeWidth,
+  templeLength,
+}: EyewearSpec) => {
+  if (lensWidth == null || bridgeWidth == null || templeLength == null) {
+    return null;
+  }
+  return `${lensWidth} □ ${bridgeWidth} - ${templeLength}`;
+};
+
+/**
+ * Frame size bucket derived from lens width, matching how opticians describe
+ * fit. Boundaries follow common retail practice.
+ */
+export const getFrameSizeLabel = (lensWidth?: number | null) => {
+  if (lensWidth == null) return null;
+  if (lensWidth < 48) return "Small";
+  if (lensWidth <= 53) return "Medium";
+  return "Large";
+};
+
+/** "Lightweight (11g)" — the qualifier only appears when it is genuinely light. */
+export const formatWeight = (weightGrams?: number | null) => {
+  if (weightGrams == null) return null;
+  const rounded = Number.isInteger(weightGrams)
+    ? weightGrams
+    : Math.round(weightGrams * 10) / 10;
+  return weightGrams <= 20 ? `Lightweight (${rounded}g)` : `${rounded}g`;
+};
+
+/** Ordered rows for the spec list on the product page. */
+export const buildSpecRows = (spec: EyewearSpec) => {
+  const sizeCode = formatFrameSizeCode(spec);
+  const sizeLabel = getFrameSizeLabel(spec.lensWidth);
+
+  const rows: { label: string; value: string }[] = [];
+
+  if (sizeCode) {
+    rows.push({
+      label: "Size",
+      value: sizeLabel ? `${sizeLabel} (${sizeCode})` : sizeCode,
+    });
+  }
+  if (spec.frameColors?.length) {
+    rows.push({ label: "Colour", value: spec.frameColors.join(", ") });
+  }
+
+  const weight = formatWeight(spec.weightGrams);
+  if (weight) rows.push({ label: "Weight", value: weight });
+
+  if (spec.frameMaterial)
+    rows.push({ label: "Material", value: spec.frameMaterial });
+  if (spec.frameShape)
+    rows.push({ label: "Shape", value: FRAME_SHAPE_LABELS[spec.frameShape] });
+  if (spec.rimType)
+    rows.push({ label: "Rim", value: RIM_TYPE_LABELS[spec.rimType] });
+  if (spec.gender)
+    rows.push({ label: "Suits", value: GENDER_LABELS[spec.gender] });
+
+  return rows;
+};
