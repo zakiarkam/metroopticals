@@ -193,7 +193,7 @@ export default async function Footer() {
                   <li>
                     <a
                       href={`mailto:${siteConfig.contact.email}`}
-                      className="flex items-center gap-2.5 transition-colors hover:text-blue-light"
+                      className="flex items-center gap-2.5 break-all transition-colors hover:text-blue-light"
                     >
                       <Mail className="h-4 w-4 shrink-0 text-blue-light" />
                       {siteConfig.contact.email}

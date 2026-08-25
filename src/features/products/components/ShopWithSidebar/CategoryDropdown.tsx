@@ -29,12 +29,12 @@ const CategoryItem = React.memo(function CategoryItem({
   const productCount = category.productCount ?? 0;
 
   return (
-    <div className="flex items-center justify-between w-full gap-1">
+    <div className="flex min-h-10 items-center justify-between w-full gap-1 xl:min-h-0">
       {hasChildren && onToggleExpand && (
         <button
           type="button"
           onClick={onToggleExpand}
-          className="p-0.5 hover:text-blue ease-out duration-200 flex-shrink-0"
+          className="-m-1.5 p-2 hover:text-blue ease-out duration-200 flex-shrink-0"
           aria-label="Toggle brands"
         >
           <svg
@@ -57,7 +57,7 @@ const CategoryItem = React.memo(function CategoryItem({
 
       <button
         type="button"
-        className={`group flex items-center justify-between flex-1 ease-out duration-200 hover:text-blue ${
+        className={`group flex min-w-0 items-center justify-between gap-2 flex-1 ease-out duration-200 hover:text-blue ${
           isSelected ? "text-blue" : "text-dark"
         } ${isChild ? "text-left text-custom-sm" : "text-left"}`}
         onClick={onSelect}
@@ -85,14 +85,14 @@ const CategoryItem = React.memo(function CategoryItem({
             </svg>
           </div>
 
-          <span className={`capitalize ${isChild ? "text-body" : ""}`}>
+          <span className={`break-words capitalize ${isChild ? "text-body" : ""}`}>
             {category.name}
           </span>
         </div>
 
         {productCount > 0 && (
           <span
-            className={`text-[11px] font-medium duration-200 ease-out ${
+            className={`shrink-0 text-[11px] font-medium duration-200 ease-out ${
               isSelected ? "text-blue" : "text-dark-5"
             }`}
           >

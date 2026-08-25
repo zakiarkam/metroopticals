@@ -68,7 +68,7 @@ export default function ContactChannels({
               <span className="block text-[11px] font-bold uppercase tracking-[0.14em] text-dark-5">
                 {label}
               </span>
-              <span className="mt-0.5 block text-[14px] font-semibold leading-snug text-dark transition-colors group-hover:text-blue">
+              <span className="mt-0.5 block break-words text-[14px] font-semibold leading-snug text-dark transition-colors group-hover:text-blue">
                 {value}
               </span>
             </span>
@@ -83,12 +83,12 @@ export default function ContactChannels({
                 {...(href.startsWith("http")
                   ? { target: "_blank", rel: "noopener noreferrer" }
                   : {})}
-                className="group flex items-start gap-3.5 px-6 py-4 transition-colors hover:bg-gray-8"
+                className="group flex items-start gap-3.5 px-5 py-4 transition-colors hover:bg-gray-8 sm:px-6"
               >
                 {body}
               </a>
             ) : (
-              <div className="flex items-start gap-3.5 px-6 py-4">{body}</div>
+              <div className="flex items-start gap-3.5 px-5 py-4 sm:px-6">{body}</div>
             )}
           </li>
         );

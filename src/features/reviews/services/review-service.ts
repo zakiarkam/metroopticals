@@ -262,15 +262,18 @@ export async function deleteReview(id: number) {
   await recalculateProductRating(existing.productId);
 }
 
-/** Published reviews across the catalogue, for the home page social proof. */
-export async function getFeaturedReviews(limit = 3) {
+/**
+ * The five most recent published reviews, for the home page slider.
+ * The full history per product lives on the product page.
+ */
+export async function getFeaturedReviews(limit = 5) {
   const rows = await prisma.review.findMany({
     where: { status: "PUBLISHED", rating: { gte: 4 } },
     include: {
       user: { select: authorSelect },
       product: { select: { id: true, title: true, images: true } },
     },
-    orderBy: [{ rating: "desc" }, { createdAt: "desc" }],
+    orderBy: [{ createdAt: "desc" }],
     take: limit,
   });
 

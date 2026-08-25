@@ -578,7 +578,7 @@ const Checkout = () => {
                           <div className="min-w-0 flex-1">
                             <Link
                               href={productUrl}
-                              className="line-clamp-2 text-[13px] font-medium capitalize text-dark transition-colors hover:text-blue"
+                              className="line-clamp-2 break-words text-[13px] font-medium capitalize text-dark transition-colors hover:text-blue"
                             >
                               {item.title}
                             </Link>

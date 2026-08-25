@@ -126,7 +126,7 @@ const Categories = React.memo(() => {
     return (
       <Section>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:auto-rows-fr lg:grid-cols-12">
-          <div className="h-[440px] animate-pulse rounded-2xl bg-gray-8 lg:col-span-6 lg:row-span-2" />
+          <div className="h-[320px] animate-pulse rounded-2xl bg-gray-8 sm:h-[380px] lg:col-span-6 lg:row-span-2 lg:h-[440px]" />
           <div className="h-[240px] animate-pulse rounded-2xl bg-gray-8 lg:col-span-3" />
           <div className="h-[240px] animate-pulse rounded-2xl bg-gray-8 lg:col-span-3" />
           <div className="h-[240px] animate-pulse rounded-2xl bg-gray-8 lg:col-span-6" />

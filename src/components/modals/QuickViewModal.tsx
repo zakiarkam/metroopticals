@@ -176,7 +176,7 @@ const QuickViewModal = () => {
       open={isModalOpen && !!product.id}
       onOpenChange={(open) => !open && closeModal()}
     >
-      <DialogContent className="max-h-[92vh] max-w-[95vw] overflow-y-auto border-gray-3 bg-gray-2 p-0 sm:max-w-[980px]">
+      <DialogContent className="max-h-[92vh] max-w-[calc(100vw-2rem)] overflow-y-auto rounded-xl border-gray-3 bg-gray-2 p-0 sm:max-w-[calc(100vw-3rem)] lg:max-w-[980px]">
         <div className="grid gap-0 lg:grid-cols-2">
           {/* ========================= gallery ========================= */}
           <div className="border-b border-gray-3 bg-gray-1 p-5 sm:p-7 lg:border-b-0 lg:border-r">
@@ -243,9 +243,9 @@ const QuickViewModal = () => {
           </div>
 
           {/* ========================= details ========================= */}
-          <div className="flex flex-col p-5 sm:p-7">
+          <div className="flex min-w-0 flex-col p-5 sm:p-7">
             <DialogHeader className="space-y-0 text-left">
-              <DialogTitle className="text-left text-[1.35rem] font-bold capitalize leading-tight tracking-tight text-dark">
+              <DialogTitle className="break-words text-left text-[1.35rem] font-bold capitalize leading-tight tracking-tight text-dark lg:pr-8">
                 <Link
                   href={`/shop-details/${product.id}`}
                   onClick={closeModal}
@@ -257,7 +257,7 @@ const QuickViewModal = () => {
             </DialogHeader>
 
             <div className="mt-4 flex flex-wrap items-end gap-x-3 gap-y-1">
-              <span className="text-[1.7rem] font-bold leading-none text-dark">
+              <span className="text-[1.5rem] font-bold leading-none text-dark sm:text-[1.7rem]">
                 {money(displayPrice)}
               </span>
               {hasDiscount && product.price && (

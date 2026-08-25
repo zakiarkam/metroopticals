@@ -192,7 +192,7 @@ const AuthAdmin = () => {
                       type="button"
                       onClick={() => handleTabChange(tab)}
                       className={cn(
-                        "h-9 rounded-lg text-[13px] font-semibold transition-all",
+                        "h-10 rounded-lg text-[13px] font-semibold transition-all",
                         activeTab === tab
                           ? "bg-white text-dark shadow-sm"
                           : "text-dark-4 hover:text-dark-2",

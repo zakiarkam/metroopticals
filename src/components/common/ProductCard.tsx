@@ -196,7 +196,7 @@ export default function ProductCard({
   /* ------------------------------------------------------ shared fragments */
 
   const meta = (
-    <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-dark-4">
+    <div className="flex min-w-0 items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-dark-4">
       <span className="truncate">{item.categoryName || "Eyewear"}</span>
       {item.brandName && (
         <>
@@ -362,7 +362,7 @@ export default function ProductCard({
           href={detailsHref}
           onClick={rememberForDetails}
           aria-label={item.title}
-          className="relative aspect-[4/3] w-full shrink-0 overflow-hidden rounded-xl bg-gray-1 sm:w-[240px]"
+          className="relative aspect-[4/3] w-full shrink-0 overflow-hidden rounded-xl bg-gray-1 sm:w-[200px] md:w-[240px]"
         >
           <Image
             src={activeImage}
@@ -380,7 +380,7 @@ export default function ProductCard({
             {availabilityChip}
           </div>
 
-          <h3 className="text-[16px] font-semibold capitalize leading-snug text-dark">
+          <h3 className="break-words text-[16px] font-semibold capitalize leading-snug text-dark">
             {title}
           </h3>
 
@@ -395,7 +395,7 @@ export default function ProductCard({
 
           <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-2">
             {price}
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               {quickViewButton}
               {removeButton ?? wishlistButton}
               {addToCartButton("px-6")}
@@ -505,13 +505,13 @@ export default function ProductCard({
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col gap-2.5 p-5">
+      <div className="flex flex-1 flex-col gap-2.5 p-4 sm:p-5">
         {imageDots && <div className="pb-1">{imageDots}</div>}
 
         {meta}
 
         <h3
-          className={`font-display font-bold capitalize leading-snug tracking-[-0.02em] text-dark ${
+          className={`break-words font-display font-bold capitalize leading-snug tracking-[-0.02em] text-dark ${
             featured ? "text-[1.15rem]" : "text-[15.5px]"
           }`}
         >

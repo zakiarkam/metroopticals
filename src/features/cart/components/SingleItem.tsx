@@ -174,7 +174,7 @@ const SingleItem = ({ item }: { item: CartItem }) => {
       <div className="min-w-0 flex-1">
         <Link
           href={productUrl}
-          className="line-clamp-2 text-[14.5px] font-semibold capitalize text-dark transition-colors hover:text-blue"
+          className="line-clamp-2 break-words text-[14.5px] font-semibold capitalize text-dark transition-colors hover:text-blue"
         >
           {item.title}
         </Link>
@@ -202,7 +202,7 @@ const SingleItem = ({ item }: { item: CartItem }) => {
         </div>
       </div>
 
-      <div className="flex items-center justify-between gap-4 sm:justify-end">
+      <div className="flex min-w-0 items-center justify-between gap-3 sm:gap-4 sm:justify-end">
         <div className="flex items-center overflow-hidden rounded-xl border border-gray-3 bg-gray-1">
           <button
             type="button"
@@ -230,7 +230,7 @@ const SingleItem = ({ item }: { item: CartItem }) => {
           </button>
         </div>
 
-        <p className="w-[110px] shrink-0 text-right text-[15px] font-bold text-dark">
+        <p className="min-w-[80px] flex-1 text-right text-[15px] font-bold text-dark sm:w-[110px] sm:flex-none">
           {formatPrice(item.discountedPrice * item.quantity)}
         </p>
 

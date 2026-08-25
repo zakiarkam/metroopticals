@@ -302,21 +302,27 @@ export const downloadOrderReceiptPdf = async (order: Order) => {
     y = 20;
   }
 
+  // Amounts sit 4mm in from the right edge so the figures never touch the
+  // page margin; the label column starts at the same inset.
+  const amountX = pageW - mx - 4;
   totalLines.forEach((line) => {
     setText(MUTED, 9);
     doc.text(line.label, totalsX, y);
     setText(line.color ?? INK, 9, "bold");
-    doc.text(line.value, pageW - mx, y, { align: "right" });
-    y += 6;
+    doc.text(line.value, amountX, y, { align: "right" });
+    y += 6.5;
   });
 
-  doc.setFillColor(CHARCOAL[0], CHARCOAL[1], CHARCOAL[2]);
-  doc.roundedRect(totalsX - 4, y - 1, totalsW + 4, 11, 1.5, 1.5, "F");
-  setText(WHITE, 9.5, "bold");
-  doc.text("TOTAL", totalsX, y + 6);
-  setText(WHITE, 11.5, "bold");
-  doc.text(money(order.totalAmount), pageW - mx, y + 6, { align: "right" });
-  y += 20;
+  y += 1;
+  doc.setDrawColor(CHARCOAL[0], CHARCOAL[1], CHARCOAL[2]);
+  doc.setLineWidth(0.5);
+  doc.line(totalsX, y, pageW - mx, y);
+  y += 7;
+  setText(INK, 10, "bold");
+  doc.text("Total", totalsX, y);
+  setText(INK, 13, "bold");
+  doc.text(money(order.totalAmount), amountX, y, { align: "right" });
+  y += 18;
 
   /* ----------------------------------------------------- payment panel */
   const bankLines = [

@@ -135,7 +135,7 @@ const ShopToolbar = React.memo(function ShopToolbar({
 
   return (
     <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-gray-3 bg-gray-2 p-3 shadow-2 sm:p-3.5">
-      <div className="flex flex-1 items-center gap-3">
+      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-3">
         <button
           type="button"
           onClick={onOpenFilters}
@@ -152,7 +152,7 @@ const ShopToolbar = React.memo(function ShopToolbar({
         />
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
         <p className="text-[13px] text-dark-4">{count}</p>
 
         <div className="hidden items-center gap-2 sm:flex">
@@ -241,7 +241,7 @@ const ShopSidebar = React.memo(function ShopSidebar({
             <button
               type="button"
               onClick={onClearAll}
-              className="text-[12.5px] font-semibold text-blue transition-opacity hover:opacity-80"
+              className="inline-flex min-h-10 items-center text-[12.5px] font-semibold text-blue transition-opacity hover:opacity-80"
             >
               Clear all
             </button>
@@ -249,7 +249,7 @@ const ShopSidebar = React.memo(function ShopSidebar({
               type="button"
               onClick={onClose}
               aria-label="Close filters"
-              className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-3 text-dark transition-colors hover:border-blue hover:text-blue xl:hidden"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-gray-3 text-dark transition-colors hover:border-blue hover:text-blue xl:hidden"
             >
               <X className="h-4 w-4" />
             </button>

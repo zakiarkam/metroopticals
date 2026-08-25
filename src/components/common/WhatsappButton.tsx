@@ -1,30 +1,31 @@
 "use client";
 
-const WHATSAPP_NUMBER = "94712822821";
-const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}`;
+import { siteConfig } from "@/config/site";
+
+const WHATSAPP_URL = `https://wa.me/${siteConfig.contact.whatsapp}`;
 
 export default function WhatsappButton() {
   return (
-    <div className="fixed bottom-8 right-8 z-999">
+    <div className="fixed bottom-4 right-4 z-999 sm:bottom-8 sm:right-8">
       <a
         href={WHATSAPP_URL}
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Chat with us on WhatsApp"
-        className="relative inline-flex items-center justify-center w-16 h-16"
+        className="relative inline-flex h-13 w-13 items-center justify-center sm:h-16 sm:w-16"
       >
         <span
           aria-hidden="true"
           className="absolute inline-flex w-full h-full rounded-full bg-[#25D366] opacity-60 animate-ping"
         />
-        <span className="relative flex items-center justify-center w-16 h-16 rounded-full shadow-lg bg-[#25D366] hover:bg-[#1DA851] text-white transition-colors">
+        <span className="relative flex h-13 w-13 items-center justify-center rounded-full sm:h-16 sm:w-16 shadow-lg bg-[#25D366] hover:bg-[#1DA851] text-white transition-colors">
           <svg
             fill="#ffffff"
             viewBox="0 0 32 32"
             version="1.1"
             xmlns="http://www.w3.org/2000/svg"
             stroke="#ffffff"
-            className="w-7 h-7"
+            className="h-6 w-6 sm:h-7 sm:w-7"
           >
             <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
             <g

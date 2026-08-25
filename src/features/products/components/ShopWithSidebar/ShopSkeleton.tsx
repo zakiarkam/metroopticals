@@ -12,7 +12,7 @@ const Bar = ({ className = "" }: { className?: string }) => (
 
 function SidebarSkeleton() {
   return (
-    <div className="w-full xl:w-[318px] xl:flex-shrink-0">
+    <div className="w-full xl:w-[300px] xl:flex-shrink-0">
       <div className="flex animate-pulse flex-col gap-4">
         <div className="rounded-2xl border border-gray-3 bg-gray-2 px-4 py-3">
           <Bar className="h-4 w-24" />
@@ -47,7 +47,7 @@ function ToolbarSkeleton() {
   return (
     <div className="mb-6 animate-pulse rounded-2xl border border-gray-3 bg-gray-2 p-3 sm:p-4">
       <div className="flex items-center justify-between gap-3">
-        <Bar className="h-10 w-52 rounded-lg" />
+        <Bar className="h-10 w-40 rounded-lg sm:w-52" />
         <div className="flex items-center gap-2">
           <Bar className="hidden h-4 w-32 sm:block" />
           <Bar className="h-10 w-10 rounded-lg" />

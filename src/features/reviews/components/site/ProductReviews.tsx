@@ -65,7 +65,7 @@ function ReviewCard({
 
   return (
     <article
-      className={`flex w-[290px] shrink-0 snap-start flex-col rounded-2xl border p-6 sm:w-[360px] sm:p-7 ${
+      className={`flex w-[290px] max-w-[calc(100vw-3rem)] shrink-0 snap-start flex-col rounded-2xl border p-5 sm:w-[360px] sm:max-w-none sm:p-7 ${
         own ? "border-blue/40 bg-blue-light-5" : "border-gray-3 bg-gray-2"
       }`}
     >
@@ -76,7 +76,7 @@ function ReviewCard({
 
       <StarRating value={review.rating} size={15} className="mt-5" />
 
-      <p className="mt-4 font-display text-[1.25rem] font-bold leading-[1.25] tracking-[-0.02em] text-dark sm:text-[1.4rem]">
+      <p className="mt-4 break-words font-display text-[1.25rem] font-bold leading-[1.25] tracking-[-0.02em] text-dark sm:text-[1.4rem]">
         {headline}
       </p>
 
@@ -274,7 +274,7 @@ export default function ProductReviews({
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             {signedIn ? (
               <button
                 type="button"
@@ -321,7 +321,7 @@ export default function ProductReviews({
           <div className="mt-8 grid gap-8 border-y border-gray-3 py-7 sm:grid-cols-[auto_minmax(0,1fr)] sm:gap-12">
             <div>
               <div className="flex items-end gap-3">
-                <p className="font-display text-[3rem] font-bold leading-none tracking-[-0.04em] text-dark">
+                <p className="font-display text-[2.5rem] font-bold leading-none tracking-[-0.04em] text-dark sm:text-[3rem]">
                   {summary.average?.toFixed(1)}
                 </p>
                 <span className="pb-1.5 text-[14px] font-medium text-dark-5">

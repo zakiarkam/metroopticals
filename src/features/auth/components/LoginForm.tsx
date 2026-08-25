@@ -135,14 +135,14 @@ const LoginForm = React.memo(
         </AuthField>
 
         <div className="flex items-center justify-between">
-          <label className="flex cursor-pointer items-center gap-2">
+          <label className="-my-2 flex cursor-pointer items-center gap-2 py-2">
             <Checkbox id="remember" />
             <span className="text-[13px] text-dark-4">Remember me</span>
           </label>
           <button
             type="button"
             onClick={onShowForgotPassword}
-            className="text-[13px] font-semibold text-blue transition-colors hover:text-blue-dark hover:underline"
+            className="-my-2 py-2 text-[13px] font-semibold text-blue transition-colors hover:text-blue-dark hover:underline"
           >
             Forgot password?
           </button>

@@ -18,12 +18,12 @@ export const siteConfig = {
   contact: {
     email: "hello@metroopticals.lk",
     /** Displayed phone number. */
-    phone: "011 234 5678",
+    phone: "076 663 8682",
     /** tel: link format. */
-    phoneHref: "tel:+94112345678",
+    phoneHref: "tel:+94766638682",
     /** Digits only, for wa.me links. */
-    whatsapp: "94112345678",
-    address: "No 1, Main Street, Colombo, Sri Lanka.",
+    whatsapp: "94766638682",
+    address: "No 98, Super Commercial Complex, Nawalapitiya, Sri Lanka.",
   },
 
   /**
@@ -38,8 +38,9 @@ export const siteConfig = {
   },
 
   social: {
-    facebook: "https://www.facebook.com/metroopticals",
-    instagram: "https://www.instagram.com/metroopticals",
+    instagram: "https://www.instagram.com/metropticals",
+    tiktok: "https://www.tiktok.com/@metropticals",
+    whatsapp: "https://wa.me/94766638682",
   },
 
   /**

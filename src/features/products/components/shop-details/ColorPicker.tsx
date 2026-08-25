@@ -52,7 +52,7 @@ const ColorPicker = ({
               role="radio"
               aria-checked={selected}
               onClick={() => onChange(color)}
-              className={`inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-[13px] font-semibold transition-all ${
+              className={`inline-flex min-h-[40px] items-center gap-2 rounded-xl border px-3 py-2 text-[13px] font-semibold transition-all ${
                 selected
                   ? "border-blue bg-blue/[0.07] text-dark shadow-[0_0_0_1px_rgba(37,89,168,0.35)]"
                   : "border-gray-3 bg-gray-2 text-dark-2 hover:border-blue/45 hover:text-dark"

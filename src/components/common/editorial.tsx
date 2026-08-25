@@ -122,7 +122,7 @@ export function SectionIntro({
             {eyebrow}
           </span>
         )}
-        <h2 className="font-display text-[2rem] font-bold leading-[1.05] tracking-[-0.035em] text-dark sm:text-[2.6rem] lg:text-[3rem]">
+        <h2 className="break-words font-display text-[2rem] font-bold leading-[1.05] tracking-[-0.035em] text-dark sm:text-[2.6rem] lg:text-[3rem]">
           {title}
           {titleAccent && (
             <>
@@ -241,7 +241,7 @@ export function ConsultBand({
         }}
       />
 
-      <SiteContainer className="relative py-14 lg:py-20">
+      <SiteContainer className="relative py-12 sm:py-14 lg:py-20">
         <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-16">
           <div>
             <span className="mb-4 block text-[11px] font-bold uppercase tracking-[0.24em] text-blue-light">

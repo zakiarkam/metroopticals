@@ -64,7 +64,7 @@ export default function FAQPage() {
             action={<PillLink href="/contact">Send us a message</PillLink>}
           />
 
-          <div className="relative mt-12 aspect-[21/9] overflow-hidden rounded-2xl bg-gray-1">
+          <div className="relative mt-10 aspect-[16/9] overflow-hidden rounded-2xl bg-gray-1 sm:mt-12 sm:aspect-[21/9]">
             <Image
               src="/images/store/consult.jpg"
               alt="An optician fitting a pair of spectacles onto a smiling customer in the store"
@@ -104,11 +104,11 @@ export default function FAQPage() {
                   open={index === 0}
                   className="group border-b border-gray-3"
                 >
-                  <summary className="flex cursor-pointer list-none items-center justify-between gap-6 py-5 text-[15.5px] font-semibold text-dark transition-colors hover:text-blue">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-5 text-[15px] font-semibold text-dark transition-colors hover:text-blue sm:gap-6 sm:text-[15.5px]">
                     {faq.question}
                     <ChevronDown className="h-5 w-5 shrink-0 text-blue transition-transform duration-300 group-open:-rotate-180" />
                   </summary>
-                  <div className="space-y-3 pb-6 pr-10 text-[14.5px] leading-relaxed text-body">
+                  <div className="space-y-3 pb-6 text-[14.5px] leading-relaxed text-body sm:pr-10">
                     {faq.answer.map((paragraph) => (
                       <p key={paragraph}>{paragraph}</p>
                     ))}

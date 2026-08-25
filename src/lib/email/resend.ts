@@ -1352,9 +1352,9 @@ export async function sendContactFormEmail(
                 ${escapeHtml(siteConfig.tagline)}
               </p>
               <p style="margin:0;font-size:13px;color:#B5AEA2;">
-                Email: <a href="mailto:hello@metroopticals.lk" style="color:#B5AEA2;text-decoration:none;">hello@metroopticals.lk</a>
+                Email: <a href="mailto:${escapeHtml(BRAND.supportEmail)}" style="color:#B5AEA2;text-decoration:none;">${escapeHtml(BRAND.supportEmail)}</a>
                 &nbsp;|&nbsp;
-                Phone: <a href="tel:+94712822821" style="color:#B5AEA2;text-decoration:none;">+94 71 282 2821</a>
+                Phone: <a href="tel:${escapeHtml(BRAND.supportPhone)}" style="color:#B5AEA2;text-decoration:none;">${escapeHtml(BRAND.supportPhoneLabel)}</a>
               </p>
               <p style="margin:15px 0 0;font-size:12px;color:#6b7280;">
                 c ${year} Metro Opticals. All rights reserved.

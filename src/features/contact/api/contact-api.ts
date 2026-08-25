@@ -20,7 +20,7 @@ interface ContactFormResponse {
  * Sends the form data to the backend which will:
  * 1. Save to database
  * 2. Send email notification to admin (hello@metroopticals.lk)
- * 3. Send WhatsApp notification to admin (+94712822821)
+ * 3. Send WhatsApp notification to admin (ADMIN_EMAIL / WhatsApp number from env)
  */
 export async function submitContactForm(
   data: ContactFormInput

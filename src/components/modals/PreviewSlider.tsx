@@ -55,7 +55,7 @@ const PreviewSliderModal = () => {
 
       <div>
         <button
-          className="rotate-180 absolute left-100 p-5 cursor-pointer z-10 "
+          className="rotate-180 absolute left-2 sm:left-10 lg:left-100 p-5 cursor-pointer z-10 "
           onClick={handlePrev}
         >
           <svg
@@ -75,7 +75,7 @@ const PreviewSliderModal = () => {
         </button>
 
         <button
-          className="absolute right-100 p-5 cursor-pointer z-10"
+          className="absolute right-2 sm:right-10 lg:right-100 p-5 cursor-pointer z-10"
           onClick={handleNext}
         >
           <svg
@@ -95,7 +95,12 @@ const PreviewSliderModal = () => {
         </button>
       </div>
 
-      <Swiper ref={sliderRef} slidesPerView={1} spaceBetween={20}>
+      <Swiper
+        ref={sliderRef}
+        slidesPerView={1}
+        spaceBetween={20}
+        className="w-full max-w-[450px] px-4"
+      >
         <SwiperSlide>
           <div className="flex justify-center items-center">
             <Image
@@ -103,6 +108,7 @@ const PreviewSliderModal = () => {
               alt={"product image"}
               width={450}
               height={450}
+              className="h-auto max-w-full"
             />
           </div>
         </SwiperSlide>

@@ -87,7 +87,7 @@ export default function HomeHero({ data }: { data: BlockData }) {
               {data?.ctaLabel && (
                 <Link
                   href={data.ctaHref || "/shop-with-sidebar"}
-                  className="group inline-flex h-12 items-center gap-2 rounded-xl bg-blue px-7 text-[14.5px] font-bold text-white transition-colors hover:bg-blue-dark"
+                  className="group inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-blue px-7 sm:w-auto text-[14.5px] font-bold text-white transition-colors hover:bg-blue-dark"
                 >
                   {data.ctaLabel}
                   <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
@@ -97,7 +97,7 @@ export default function HomeHero({ data }: { data: BlockData }) {
               {data?.secondaryLabel && (
                 <Link
                   href={data.secondaryHref || "/contact"}
-                  className="inline-flex h-12 items-center rounded-xl border border-gray-4 px-7 text-[14.5px] font-bold text-dark transition-colors hover:border-blue hover:text-blue"
+                  className="inline-flex h-12 w-full items-center justify-center rounded-xl border border-gray-4 px-7 sm:w-auto text-[14.5px] font-bold text-dark transition-colors hover:border-blue hover:text-blue"
                 >
                   {data.secondaryLabel}
                 </Link>

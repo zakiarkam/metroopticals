@@ -112,7 +112,7 @@ const AccountMenu = memo(function AccountMenu({ onLogout }: AccountMenuProps) {
           />
 
           {/* Dropdown Menu */}
-          <div className="absolute left-1/2 -translate-x-1/2 sm:left-auto sm:right-0 sm:translate-x-0 top-full  sm:mr-0 z-50 w-64 max-w-[calc(100vw-16px)] rounded-xl border border-gray-200 bg-gray-2 shadow-xl overflow-hidden ">
+          <div className="absolute right-0 top-full z-50 mt-2 w-64 max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-xl border border-gray-3 bg-gray-2 shadow-xl">
             {/* User Info */}
             <div className="border-b border-gray-200 px-4 py-3">
               <p className="text-custom-sm font-medium text-dark">

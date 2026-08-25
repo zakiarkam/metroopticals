@@ -1,10 +1,12 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Section, SectionHeading } from "@/components/common/Section";
+import { Section } from "@/components/common/Section";
 import SiteContainer from "@/components/common/SiteContainer";
 import { getAdvertisementImageUrl, getBrandLogoUrl } from "@/lib/storageUtils";
-import { StarRating } from "@/features/reviews/components/site/StarRating";
+import TestimonialCarousel, {
+  type TestimonialReview,
+} from "@/features/reviews/components/site/TestimonialCarousel";
 import type { BlockData } from "@/features/site-content/types/site-content";
 
 /**
@@ -106,7 +108,7 @@ export function BrandStrip({
               <li
                 key={`${brand.id}-${index}`}
                 aria-hidden={decorative || undefined}
-                className="w-[150px] shrink-0 sm:w-[180px]"
+                className="w-[140px] shrink-0 sm:w-[180px]"
               >
                 <Link
                   href={`/shop-with-sidebar?brands=${encodeURIComponent(brand.slug)}`}
@@ -176,13 +178,13 @@ export function PromoBanners({ data }: { data: BlockData }) {
                 className="absolute inset-0 bg-gradient-to-r from-dark/80 via-dark/45 to-transparent"
               />
 
-              <span className="relative block max-w-sm p-7 sm:p-9">
+              <span className="relative block w-full max-w-sm p-6 sm:p-9">
                 {item.eyebrow && (
                   <span className="block text-[11px] font-bold uppercase tracking-[0.22em] text-blue-light">
                     {item.eyebrow}
                   </span>
                 )}
-                <span className="mt-2 block font-display text-[1.5rem] font-bold leading-[1.15] text-white sm:text-[1.85rem]">
+                <span className="mt-2 block break-words font-display text-[1.5rem] font-bold leading-[1.15] text-white sm:text-[1.85rem]">
                   {item.title}
                 </span>
                 {item.ctaLabel && (
@@ -207,62 +209,12 @@ export function PromoBanners({ data }: { data: BlockData }) {
  * Nothing here is authored by the shop  if no review has been approved yet the
  * section hides itself rather than showing invented testimonials.
  */
-export function LiveReviews({
-  reviews,
-}: {
-  reviews: {
-    id: number;
-    rating: number;
-    title: string | null;
-    body: string;
-    user?: { name: string | null } | null;
-    product?: { id: number; title: string } | null;
-  }[];
-}) {
+export function LiveReviews({ reviews }: { reviews: TestimonialReview[] }) {
   if (!reviews.length) return null;
 
   return (
-    <Section>
-      <SectionHeading
-        eyebrow="Verified buyers"
-        title="What our customers say"
-        align="center"
-      />
-
-      <div className="grid gap-5 md:grid-cols-3">
-        {reviews.slice(0, 3).map((review) => (
-          <figure
-            key={review.id}
-            className="flex h-full flex-col rounded-2xl border border-gray-3 bg-gray-2 p-6"
-          >
-            <StarRating value={review.rating} />
-
-            {review.title && (
-              <h3 className="mt-3 text-[15px] font-semibold text-dark">
-                {review.title}
-              </h3>
-            )}
-
-            <blockquote className="mt-2 flex-1 text-[14.5px] leading-relaxed text-body">
-              {review.body}
-            </blockquote>
-
-            <figcaption className="mt-5 border-t border-gray-3 pt-4">
-              <span className="block text-[14px] font-bold text-dark">
-                {review.user?.name || "Verified customer"}
-              </span>
-              {review.product && (
-                <Link
-                  href={`/shop-details/${review.product.id}`}
-                  className="block truncate text-[12.5px] text-dark-4 transition-colors hover:text-blue"
-                >
-                  on {review.product.title}
-                </Link>
-              )}
-            </figcaption>
-          </figure>
-        ))}
-      </div>
+    <Section tone="raised">
+      <TestimonialCarousel reviews={reviews} />
     </Section>
   );
 }

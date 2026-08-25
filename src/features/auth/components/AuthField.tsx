@@ -67,7 +67,7 @@ export const PasswordToggle = ({
     type="button"
     onClick={onToggle}
     aria-label={shown ? "Hide password" : "Show password"}
-    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-dark-5 transition-colors hover:text-blue"
+    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-2 text-dark-5 transition-colors hover:text-blue"
   >
     {shown ? (
       <EyeOff className="h-4 w-4" aria-hidden />

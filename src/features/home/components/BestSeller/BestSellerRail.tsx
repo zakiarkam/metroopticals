@@ -84,7 +84,7 @@ export default function BestSellerRail({ items }: { items: TopProduct[] }) {
                 "linear-gradient(150deg, #F3E9D6 0%, #FAF5EC 55%, #FFFFFF 100%)",
             }}
           >
-            <span className="flex w-full flex-col gap-5 p-6 sm:p-7 lg:flex-row lg:items-stretch">
+            <span className="flex w-full flex-col gap-5 p-5 sm:p-7 lg:flex-row lg:items-stretch">
               <span className="flex min-w-0 flex-1 flex-col">
                 {item.category && (
                   <span className="mb-2 block text-[10.5px] font-bold uppercase tracking-[0.2em] text-blue">
@@ -92,7 +92,7 @@ export default function BestSellerRail({ items }: { items: TopProduct[] }) {
                   </span>
                 )}
 
-                <span className="block font-display text-[1.3rem] font-bold leading-[1.15] tracking-[-0.03em] text-dark sm:text-[1.5rem]">
+                <span className="block break-words font-display text-[1.3rem] font-bold leading-[1.15] tracking-[-0.03em] text-dark sm:text-[1.5rem]">
                   {item.name}
                 </span>
 
@@ -122,7 +122,7 @@ export default function BestSellerRail({ items }: { items: TopProduct[] }) {
                   <Link
                     href={href}
                     onClick={(event) => event.stopPropagation()}
-                    className="text-[12px] font-bold uppercase tracking-[0.14em] text-dark transition-colors hover:text-blue"
+                    className="inline-flex min-h-9 items-center text-[12px] font-bold uppercase tracking-[0.14em] text-dark transition-colors hover:text-blue"
                   >
                     Read more
                   </Link>

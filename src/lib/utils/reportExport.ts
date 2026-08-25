@@ -1,6 +1,7 @@
 "use client";
 
 import ExcelJS from "exceljs";
+import { siteConfig } from "@/config/site";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import type { ReportExportPayload } from "@/features/reports/types/report";
@@ -91,12 +92,12 @@ export const exportReportPdf = async (
     doc.setFontSize(8);
     doc.setTextColor(midGray[0], midGray[1], midGray[2]);
     doc.text(
-      "No 1, Main Street, Colombo, Sri Lanka.",
+      siteConfig.contact.address,
       marginX + (logoDataUrl ? 28 : 0),
       21
     );
     doc.text(
-      "011 234 5678 | hello@metroopticals.lk",
+      `${siteConfig.contact.phone} | ${siteConfig.contact.email}`,
       marginX + (logoDataUrl ? 28 : 0),
       25
     );
@@ -140,7 +141,7 @@ export const exportReportPdf = async (
     doc.setFontSize(7);
     doc.setTextColor(midGray[0], midGray[1], midGray[2]);
     doc.text(
-      "Questions? Contact hello@metroopticals.lk | 011 234 5678 | metroopticals.lk",
+      `Questions? Contact ${siteConfig.contact.email} | ${siteConfig.contact.phone} | ${siteConfig.domain}`,
       pageWidth / 2,
       footerTop + 6,
       { align: "center" }
