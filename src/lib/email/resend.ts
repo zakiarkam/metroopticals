@@ -813,7 +813,7 @@ function renderAdminOrderEmail({
   const discount = Number(order.discountAmount || 0);
   const total = Math.max(0, subtotal + shipping - discount);
 
-  const placeholderImg = ensureAbsoluteUrl("/images/placeholder.png", baseUrl);
+  const placeholderImg = ensureAbsoluteUrl("/images/placeholder.jpg", baseUrl);
 
   const itemsHtml = order.items
     .map((it) => {

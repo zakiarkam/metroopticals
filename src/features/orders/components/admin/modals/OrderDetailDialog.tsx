@@ -406,14 +406,6 @@ const OrderDetailDialog: React.FC<OrderDetailDialogProps> = ({
                       {formatPrice(order.subtotal)}
                     </span>
                   </div>
-                  {/* <div className="flex items-center justify-between gap-3">
-                    <span className="text-xs md:text-sm text-body">
-                      Shipping Fee
-                    </span>
-                    <span className="text-xs md:text-sm font-semibold text-dark">
-                      {formatPrice(order.shippingFee)}
-                    </span>
-                  </div> */}
                   <div className="h-px bg-gray-2 my-2" />
                   <div className="flex items-center justify-between gap-3">
                     <span className="text-sm md:text-base font-semibold text-dark">

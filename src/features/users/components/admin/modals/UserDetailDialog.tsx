@@ -203,17 +203,6 @@ const UserDetailDialog: React.FC<UserDetailDialogProps> = ({
                       </div>
                     </div>
                   </div>
-
-                  {/* Action area (kept for future actions; stays responsive) */}
-                  {/* <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
-                    <Button
-                      variant="outline"
-                      className="h-9 w-full md:w-auto"
-                      onClick={onClose}
-                    >
-                      Close
-                    </Button>
-                  </div> */}
                 </div>
               </div>
 

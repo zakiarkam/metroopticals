@@ -9,7 +9,7 @@ export async function createUserByAdmin(data: AdminCreateUserInput) {
     throw new ValidationError('User with this email already exists')
   }
 
-  const passwordHash = await bcrypt.hash(data.password, 10)
+  const passwordHash = await bcrypt.hash(data.password, 12)
 
   const user = await prisma.user.create({
     data: {
@@ -125,7 +125,7 @@ export async function updateUserByAdmin(
 
   let updateData: any = { ...data }
   if (data.password) {
-    updateData.password = await bcrypt.hash(data.password, 10)
+    updateData.password = await bcrypt.hash(data.password, 12)
   }
 
   const user = await prisma.user.update({

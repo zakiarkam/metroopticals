@@ -24,7 +24,7 @@ const buildCard = (ad: Advertisement, canViewDiscount: boolean): PromoCard => {
   const image =
     getProductImageUrl(product?.images?.[0]) ||
     ad.imageUrl ||
-    "/images/promo/promo-01.png";
+    "/images/placeholder-product.svg";
   const title = product?.title || ad.title || "Featured product";
   const description =
     product?.description ||

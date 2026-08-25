@@ -152,7 +152,7 @@ const AddProductDialog: React.FC<AddProductDialogProps> = ({
     } else if (!isOpen) {
       setHasSlugBeenTouched(false);
     }
-  }, [isOpen, prefillData]);
+  }, [isOpen, prefillData, form]);
 
   useEffect(() => {
     if (watchedStock === 0 && watchedStatus !== "OUT_OF_STOCK") {

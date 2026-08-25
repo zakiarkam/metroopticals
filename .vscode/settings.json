@@ -18,9 +18,5 @@
     "titleBar.inactiveBackground": "#483d8b99",
     "titleBar.inactiveForeground": "#e7e7e799"
   },
-  "peacock.color": "#483D8B",
-  "github-actions.workflows.pinned.workflows": [
-    ".github/workflows/docker-build-push.yml",
-    ".github/workflows/deploy-prod.yml"
-  ]
+  "peacock.color": "#483D8B"
 }

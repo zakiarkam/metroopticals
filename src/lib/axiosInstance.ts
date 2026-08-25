@@ -17,14 +17,6 @@ const axiosInstance = axios.create({
 // Request interceptor
 axiosInstance.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // Add auth token if available
-    const token =
-      typeof window !== "undefined" ? localStorage.getItem("authToken") : null;
-
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-
     const method = config.method?.toLowerCase();
     if (method && ["post", "put", "patch", "delete"].includes(method)) {
       logClientAction("api_request", {

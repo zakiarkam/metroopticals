@@ -61,6 +61,16 @@ export interface UploadResult {
   publicUrl: string;
 }
 
+// Object keys are built from user-supplied names; strip anything that could
+// escape the folder prefix ("../", "/", control chars) before use.
+export const sanitizeFileName = (name: string): string => {
+  const cleaned = name.replace(/[^a-zA-Z0-9._-]/g, "_").replace(/\.{2,}/g, ".");
+  if (!cleaned || cleaned === "." || cleaned === "_") {
+    throw new Error("Invalid file name");
+  }
+  return cleaned;
+};
+
 export const uploadFile = async ({
   folder,
   file,
@@ -68,9 +78,9 @@ export const uploadFile = async ({
 }: UploadOptions): Promise<UploadResult> => {
   try {
     const timestamp = Date.now();
-    const fileName =
-      customFileName ||
-      `${timestamp}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
+    const fileName = sanitizeFileName(
+      customFileName || `${timestamp}-${file.name}`
+    );
     const filePath = `${folder}/${fileName}`;
 
     const buffer = Buffer.from(await file.arrayBuffer());
@@ -90,7 +100,6 @@ export const uploadFile = async ({
       publicUrl: `${PUBLIC_BASE_URL}/${filePath}`,
     };
   } catch (error: any) {
-    console.error("Upload error details:", error);
     throw new Error(error?.message || "Failed to upload file");
   }
 };
@@ -99,7 +108,7 @@ export const deleteFile = async (
   folder: UploadFolder,
   fileName: string
 ): Promise<void> => {
-  const filePath = `${folder}/${fileName}`;
+  const filePath = `${folder}/${sanitizeFileName(fileName)}`;
   await getClient().send(
     new DeleteObjectCommand({
       Bucket: BUCKET_NAME,

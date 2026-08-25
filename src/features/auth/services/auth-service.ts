@@ -21,7 +21,7 @@ export async function createUser(data: SignupInput) {
   }
 
   // Hash password
-  const hashedPassword = await bcrypt.hash(data.password, 10);
+  const hashedPassword = await bcrypt.hash(data.password, 12);
 
   // Create user
   const user = await prisma.user.create({
@@ -114,7 +114,7 @@ export async function resetPassword(data: ResetPasswordInput) {
   }
 
   // Hash new password
-  const hashedPassword = await bcrypt.hash(data.password, 10);
+  const hashedPassword = await bcrypt.hash(data.password, 12);
 
   // Update user password
   await prisma.user.update({

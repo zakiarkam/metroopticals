@@ -20,7 +20,6 @@ import type {
 import {
   sendWhatsAppMessage,
   formatOrderPlacedCustomerWhatsAppMessage,
-  formatOrderPlacedAdminWhatsAppMessage,
   formatOrderStatusWhatsAppMessage,
 } from "@/lib/whatsapp";
 import { logger, serializeError } from "@/lib/logger";
@@ -38,9 +37,8 @@ function formatOrderNumber(orderId: number, createdAt: Date): string {
 }
 
 /**
- * WhatsApp notifier for ORDER PLACED (customer first, then admin).
- * - No manual sleep here.
- * - If admin hits rate-limit, sendWhatsAppMessage() handles 429 retry/wait internally.
+ * WhatsApp notifier for ORDER PLACED (customer confirmation).
+ * No manual sleep here: sendWhatsAppMessage() handles 429 retry/wait internally.
  */
 async function notifyOrderPlacedWhatsApp(params: {
   order: OrderWithItemsAndUser;
@@ -65,7 +63,7 @@ async function notifyOrderPlacedWhatsApp(params: {
     order.user?.phone?.trim() ||
     undefined;
 
-  // 1) Customer confirmation (priority)
+  // Customer confirmation
   if (customerPhone) {
     const customerMsg = formatOrderPlacedCustomerWhatsAppMessage({
       orderNumber: order.orderNumber,
@@ -87,37 +85,6 @@ async function notifyOrderPlacedWhatsApp(params: {
   } else {
     logger.warn("⚠️ No customer phone, skipping customer WhatsApp");
   }
-
-  // 2) Admin notification
-  // const adminPhone = process.env.ADMIN_PHONE?.trim();
-  // if (adminPhone) {
-  //   const adminMsg = formatOrderPlacedAdminWhatsAppMessage({
-  //     orderNumber: order.orderNumber,
-  //     orderId: order.id,
-  //     billingName: orderData.billingName,
-  //     billingEmail: orderData.billingEmail,
-  //     customerPhone,
-  //     totalAmount: order.totalAmount,
-  //     items,
-  //     shippingAddress: orderData.shippingAddress,
-  //     shippingCity: orderData.shippingCity,
-  //     shippingCountry: orderData.shippingCountry,
-  //     notes: orderData.notes ?? undefined,
-  //   });
-
-  //   const r = await sendWhatsAppMessage(adminPhone, adminMsg, {
-  //     maxRetries: 2,
-  //     retryDelayMs: 61_000,
-  //   });
-
-  //   if (!r.success && r.isInvalidNumber) {
-  //     console.warn(`⚠️ Admin phone not on WhatsApp: ${adminPhone}`);
-  //   } else if (!r.success) {
-  //     console.warn("⚠️ Admin WhatsApp failed:", r.error);
-  //   }
-  // } else {
-  //   console.warn("⚠️ ADMIN_PHONE not configured, skipping admin WhatsApp");
-  // }
 }
 
 export async function getOrders(

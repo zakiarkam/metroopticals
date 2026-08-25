@@ -10,6 +10,12 @@ const slugify = (value: string) =>
     .replace(/(^-|-$)/g, "");
 
 async function main() {
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(
+      "Refusing to seed: NODE_ENV is 'production'. The seed data contains known development passwords and must never run against a production database.",
+    );
+  }
+
   // ---------- Users ----------
   const adminPassword = await bcrypt.hash("admin123", 10);
   await prisma.user.upsert({

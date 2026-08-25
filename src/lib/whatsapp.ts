@@ -3,6 +3,8 @@
  * Using WaSender API for WhatsApp Business messaging
  */
 
+import { siteConfig } from "@/config/site";
+
 export interface WhatsAppResult {
   success: boolean;
   messageId?: string;
@@ -158,14 +160,9 @@ export async function sendWhatsAppMessage(
   return lastError;
 }
 
-// -------------------------
-// Message formatting
-// -------------------------
-
-const DEFAULT_BASE_URL = "http://localhost:3000";
 const SUPPORT_CONTACT_PATH = "/contact";
-const SUPPORT_PHONE = "011 234 5678";
-const SUPPORT_EMAIL = "hello@metroopticals.lk";
+const SUPPORT_PHONE = siteConfig.contact.phone;
+const SUPPORT_EMAIL = siteConfig.contact.email;
 
 const normalizeBaseUrl = (value: string) =>
   value.startsWith("http://") || value.startsWith("https://")
@@ -176,7 +173,8 @@ export const getBaseUrl = () =>
   normalizeBaseUrl(
     process.env.NEXT_PUBLIC_SITE_URL ||
       process.env.NEXTAUTH_URL ||
-      DEFAULT_BASE_URL
+      siteConfig.domain ||
+      (process.env.NODE_ENV !== "production" ? "http://localhost:4500" : "")
   );
 
 const supportLine = () =>
@@ -232,66 +230,6 @@ export function formatOrderPlacedCustomerWhatsAppMessage(params: {
     `━━━━━━━━━━━━━━━━━━━━`,
     supportLine(),
   ].join("\n");
-}
-
-export function formatOrderPlacedAdminWhatsAppMessage(params: {
-  orderNumber: string;
-  orderId: number | string;
-  billingName: string;
-  billingEmail: string;
-  customerPhone?: string;
-  totalAmount: number;
-  items: OrderItemLine[];
-  shippingAddress: string;
-  shippingCity: string;
-  shippingCountry: string;
-  notes?: string;
-}) {
-  const {
-    orderNumber,
-    orderId,
-    billingName,
-    billingEmail,
-    customerPhone,
-    totalAmount,
-    items,
-    shippingAddress,
-    shippingCity,
-    shippingCountry,
-    notes,
-  } = params;
-
-  const lines: string[] = [
-    `*METRO OPTICALS*`,
-    ``,
-    `🛒 *NEW ORDER RECEIVED*`,
-    `━━━━━━━━━━━━━━━━━━━━`,
-    ``,
-    `📋 *Order #:* ${orderNumber}`,
-    `🔗 *View:* ${orderLink(orderId)}`,
-    ``,
-    `👤 *Customer*`,
-    `• Name: ${billingName}`,
-    `• Email: ${billingEmail}`,
-  ];
-
-  if (customerPhone) lines.push(`• Phone: ${customerPhone}`);
-
-  lines.push(``, `📦 *Items*`, ...formatItems(items));
-
-  lines.push(``, `💰 *Total:* ${money(totalAmount)}`, ``);
-
-  lines.push(`📍 *Shipping*`);
-  lines.push(`${shippingAddress}`);
-  lines.push(`${shippingCity}, ${shippingCountry}`);
-
-  if (notes?.trim()) {
-    lines.push(``, `📝 *Notes:* ${notes.trim()}`);
-  }
-
-  lines.push(``, `━━━━━━━━━━━━━━━━━━━━`, supportLine());
-
-  return lines.join("\n");
 }
 
 export function formatOrderStatusWhatsAppMessage(params: {

@@ -344,18 +344,6 @@ const ProductDetailDialog: React.FC<ProductDetailDialogProps> = ({
                         </>
                       )}
                     </div>
-
-                    {/* Product ID (scroll-safe) */}
-                    {/* <div className="rounded-lg border border-gray-3 bg-gray-1 px-3 py-2">
-                      <p className="text-[11px] text-body uppercase tracking-wide">
-                        Product ID
-                      </p>
-                      <div className="mt-1 overflow-x-auto">
-                        <p className="font-mono text-xs md:text-sm text-dark whitespace-nowrap">
-                          {product.id}
-                        </p>
-                      </div>
-                    </div> */}
                   </div>
                 </section>
               </div>
