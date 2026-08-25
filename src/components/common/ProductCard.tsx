@@ -338,13 +338,16 @@ export default function ProductCard({
       </span>
     ) : null;
 
+  // Cards don't advertise how few are left  a low count reads as "In stock"
+  // here; the product page still shows the real figure.
+  const chipTone = availability.tone === "low" ? "in" : availability.tone;
   const availabilityChip = (
     <span
       className={`inline-block whitespace-nowrap rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.1em] ${
-        AVAILABILITY_PILL_CLASSES[availability.tone]
+        AVAILABILITY_PILL_CLASSES[chipTone]
       }`}
     >
-      {availability.label}
+      {chipTone === "in" ? "In stock" : availability.label}
     </span>
   );
 
@@ -380,6 +383,12 @@ export default function ProductCard({
           <h3 className="break-words text-[16px] font-semibold capitalize leading-snug text-dark">
             {title}
           </h3>
+
+          {item.description ? (
+            <p className="line-clamp-2 text-[13px] leading-relaxed text-body">
+              {item.description}
+            </p>
+          ) : null}
 
           {rating}
           {colors}
@@ -431,9 +440,9 @@ export default function ProductCard({
          heavier one plus a gold ring, which read as a second, competing border
          once the pair was already a size larger than its neighbours  the size
          difference alone says which cards are in focus. */
-      className={`group relative flex h-full flex-col overflow-hidden rounded-3xl bg-gray-2 shadow-2 ring-1 ring-gray-3 transition-all duration-300 hover:-translate-y-1 hover:shadow-gold ${className}`}
+      className={`group relative flex h-full flex-col overflow-hidden rounded-2xl bg-gray-2 shadow-2 ring-1 ring-gray-3 transition-all duration-300 hover:-translate-y-1 hover:shadow-gold ${className}`}
     >
-      <div className="relative aspect-square w-full overflow-hidden bg-gray-1">
+      <div className="relative aspect-[5/4] w-full overflow-hidden bg-gray-1">
         {/* Gold pool sits behind the placeholder so the line art has a ground;
             a real photograph covers it entirely. */}
         {!hasPhoto && (
@@ -473,13 +482,9 @@ export default function ProductCard({
             </span>
           ) : null}
 
-          {availability.tone !== "in" && (
+          {(availability.tone === "out" || availability.tone === "inactive") && (
             <span
-              className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.1em] shadow-1 backdrop-blur-sm ${
-                availability.tone === "low"
-                  ? "bg-gray-2/95 text-dark"
-                  : "bg-dark/85 text-white"
-              }`}
+              className="rounded-full bg-dark/85 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.1em] text-white shadow-1 backdrop-blur-sm"
             >
               {availability.label}
             </span>
@@ -496,18 +501,24 @@ export default function ProductCard({
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col gap-2.5 p-4 sm:p-5">
-        {imageDots && <div className="pb-1">{imageDots}</div>}
+      <div className="flex flex-1 flex-col gap-1.5 p-3.5 sm:p-4">
+        {imageDots && <div className="pb-0.5">{imageDots}</div>}
 
         {meta}
 
         <h3
           className={`break-words font-display font-bold capitalize leading-snug tracking-[-0.02em] text-dark ${
-            featured ? "text-[1.15rem]" : "text-[15.5px]"
+            featured ? "text-[1.1rem]" : "text-[14.5px]"
           }`}
         >
           {title}
         </h3>
+
+        {item.description ? (
+          <p className="line-clamp-2 text-[12.5px] leading-snug text-body">
+            {item.description}
+          </p>
+        ) : null}
 
         {rating}
         {colors}
@@ -515,7 +526,7 @@ export default function ProductCard({
         {/* Price and buy sit on one line: the button is the card's only action
             once the image is a link, so it does not need a full row of its own
             unless this is the lifted card. */}
-        <div className="mt-auto flex items-end justify-between gap-3 pt-3">
+        <div className="mt-auto flex items-end justify-between gap-3 pt-2">
           {price}
 
           {featured ? null : (
@@ -524,7 +535,7 @@ export default function ProductCard({
               onClick={handleAddToCart}
               disabled={isAddingToCart || !availability.canBuy}
               aria-label={`${availability.actionLabel}  ${item.title}`}
-              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-blue-light-4 text-blue-dark transition-colors hover:bg-blue hover:text-white disabled:cursor-not-allowed disabled:bg-gray-8 disabled:text-dark-5"
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-light-4 text-blue-dark transition-colors hover:bg-blue hover:text-white disabled:cursor-not-allowed disabled:bg-gray-8 disabled:text-dark-5"
             >
               {isAddingToCart ? (
                 <Loader2 className="h-[18px] w-[18px] animate-spin" />
