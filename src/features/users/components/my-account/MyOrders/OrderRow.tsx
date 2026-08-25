@@ -157,7 +157,7 @@ const OrderRow: React.FC<OrderRowProps> = ({
           {canReview && productUrl && (
             <Link
               href={`${productUrl}#reviews`}
-              className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-blue px-4 text-[13px] font-semibold text-white transition-colors hover:bg-blue-dark sm:flex-none sm:px-5"
+              className="inline-flex h-11 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-blue px-3 text-[12.5px] font-semibold text-white transition-colors hover:bg-blue-dark sm:flex-none sm:px-5 sm:text-[13px]"
             >
               <Star className="h-4 w-4" />
               Write a review
@@ -168,7 +168,7 @@ const OrderRow: React.FC<OrderRowProps> = ({
             type="button"
             onClick={() => onPrintInvoice(order)}
             disabled={isPrintPending}
-            className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-gray-3 px-4 text-[13px] font-semibold text-dark transition-colors hover:border-blue hover:text-blue disabled:cursor-wait disabled:opacity-60 sm:flex-none sm:px-5"
+            className="inline-flex h-11 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-gray-3 px-3 text-[12.5px] font-semibold text-dark transition-colors hover:border-blue hover:text-blue disabled:cursor-wait disabled:opacity-60 sm:flex-none sm:px-5 sm:text-[13px]"
           >
             {isPrintPending ? (
               <Loader2 className="h-4 w-4 animate-spin" />

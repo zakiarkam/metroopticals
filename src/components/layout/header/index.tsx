@@ -197,7 +197,7 @@ export default function Header({
           drawer below is excluded on purpose: including it made the header
           grow when the menu opened, which shrank the drawer's own max-height
           and produced a ResizeObserver feedback loop. */}
-      <div ref={headerRef}>
+      <div ref={headerRef} className="relative z-40 bg-gray-2">
       <Container>
         <div
           className={`flex items-center gap-4 transition-[padding] ${

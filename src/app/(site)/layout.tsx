@@ -41,11 +41,12 @@ export default async function SiteLayout({
   ]);
 
   const megaNav = (content["header.nav"]?.items ?? []) as NavItem[];
-  // Every catalogue-sourced menu column is built from rows that have stock
-  // behind them, so the menu can never offer a filter with nothing to show.
+  // Shapes and genders are built from rows that have stock behind them. Brands
+  // are the exception: every active brand is listed (matching the home page
+  // brand rail), so a newly added brand is discoverable before its first
+  // product lands  the shop page shows an honest empty state.
   const catalogue: NavCatalogue = {
     brands: brands
-      .filter((brand) => brand.productCount > 0)
       // The logo travels with the row so the brands panel can draw the mark
       // rather than the name  see BrandColumn in MegaMenu.
       .map((brand) => ({

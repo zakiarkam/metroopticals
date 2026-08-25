@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { Heart, Package, ShieldCheck, User } from "lucide-react";
+import { Heart, Package, User } from "lucide-react";
 
 type SectionKey = "account" | "orders";
 
@@ -90,19 +90,17 @@ const AccountSidebar = React.memo(function AccountSidebar({
               <p className="mt-0.5 line-clamp-1 break-all text-[12.5px] text-body">
                 {email || "Not provided"}
               </p>
+              {/* Role reads as a quiet caption under the email  a coloured
+                  word, not a badge. */}
+              <p className="mt-1 text-[11.5px] font-semibold uppercase tracking-[0.1em] text-blue">
+                {roleLabel}
+                {memberSince && (
+                  <span className="ml-2 font-medium normal-case tracking-normal text-dark-5">
+                    · Since {memberSince}
+                  </span>
+                )}
+              </p>
             </div>
-          </div>
-
-          <div className="relative mt-5 flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-blue/30 bg-blue/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.1em] text-blue">
-              <ShieldCheck className="h-3.5 w-3.5" />
-              {roleLabel}
-            </span>
-            {memberSince && (
-              <span className="rounded-full border border-gray-3 px-3 py-1 text-[11px] font-medium text-dark-5">
-                Since {memberSince}
-              </span>
-            )}
           </div>
         </div>
 

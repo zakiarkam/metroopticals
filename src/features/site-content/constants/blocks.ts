@@ -103,7 +103,7 @@ export const BLOCKS: BlockDefinition[] = [
     ],
     defaults: {
       enabled: true,
-      message: "Island-wide delivery in 2 days  order before 2pm.",
+      message: "Island-wide delivery in 2 days.",
       ctaLabel: "Shop now",
       ctaHref: shop(),
       rightLabel: "Book an eye test",
@@ -706,12 +706,18 @@ export const BLOCKS: BlockDefinition[] = [
           },
           { name: "href", label: "Profile URL", type: "link" },
         ],
-        defaultItem: { platform: "instagram", href: "https://www.instagram.com/metropticals" },
+        defaultItem: {
+          platform: "instagram",
+          href: "https://www.instagram.com/metropticals",
+        },
       },
     ],
     defaults: {
       items: [
-        { platform: "instagram", href: "https://www.instagram.com/metropticals" },
+        {
+          platform: "instagram",
+          href: "https://www.instagram.com/metropticals",
+        },
         { platform: "tiktok", href: "https://www.tiktok.com/@metropticals" },
         { platform: "whatsapp", href: "https://wa.me/94766638682" },
       ],
@@ -724,16 +730,43 @@ export const BLOCKS: BlockDefinition[] = [
     description:
       "Legal name, contact and bank details printed on every invoice and receipt. Also editable from the admin profile page.",
     fields: [
-      { name: "legalName", type: "text", label: "Registered business name", maxLength: 120 },
-      { name: "registrationNumber", type: "text", label: "Business registration / VAT no.", placeholder: "Optional", maxLength: 60 },
-      { name: "address", type: "textarea", label: "Address", rows: 2, maxLength: 240 },
+      {
+        name: "legalName",
+        type: "text",
+        label: "Registered business name",
+        maxLength: 120,
+      },
+      {
+        name: "registrationNumber",
+        type: "text",
+        label: "Business registration / VAT no.",
+        placeholder: "Optional",
+        maxLength: 60,
+      },
+      {
+        name: "address",
+        type: "textarea",
+        label: "Address",
+        rows: 2,
+        maxLength: 240,
+      },
       { name: "phone", type: "text", label: "Phone", maxLength: 40 },
       { name: "email", type: "text", label: "Email", maxLength: 120 },
       { name: "website", type: "text", label: "Website", maxLength: 120 },
-      { name: "bankAccountName", type: "text", label: "Bank account name", maxLength: 120 },
+      {
+        name: "bankAccountName",
+        type: "text",
+        label: "Bank account name",
+        maxLength: 120,
+      },
       { name: "bankName", type: "text", label: "Bank", maxLength: 120 },
       { name: "bankBranch", type: "text", label: "Branch", maxLength: 120 },
-      { name: "bankAccountNumber", type: "text", label: "Account number", maxLength: 40 },
+      {
+        name: "bankAccountNumber",
+        type: "text",
+        label: "Account number",
+        maxLength: 40,
+      },
       {
         name: "invoiceNote",
         type: "textarea",
