@@ -48,8 +48,13 @@ async function notifyOrderPlacedWhatsApp(params: {
 }) {
   const { order, orderData } = params;
 
+  // The colour rides along in the title: the WhatsApp formatter takes a plain
+  // product name, and a message that omits the colourway is one the customer
+  // has to ask about.
   const items = order.items.map((i) => ({
-    product: { title: i.product.title },
+    product: {
+      title: i.color ? `${i.product.title} (${i.color})` : i.product.title,
+    },
     quantity: i.quantity,
     price: i.price,
   }));
@@ -197,6 +202,7 @@ export async function createOrder(userId: number, data: CreateOrderInput) {
     quantity: number;
     price: number;
     discountedPrice: number | null;
+    color: string | null;
     currentStock: number;
   }> = [];
 
@@ -221,11 +227,23 @@ export async function createOrder(userId: number, data: CreateOrderInput) {
     const netPrice = discountedPrice ?? originalPrice;
     subtotal += netPrice * item.quantity;
 
+    // The colour is trusted only as far as the product's own list — a request
+    // built by hand must not be able to write anything onto a picking slip.
+    const requestedColor = item.color?.trim();
+    const color =
+      requestedColor &&
+      product.frameColors.some(
+        (option) => option.trim().toLowerCase() === requestedColor.toLowerCase()
+      )
+        ? requestedColor
+        : null;
+
     validatedItems.push({
       productId: item.productId,
       quantity: item.quantity,
       price: originalPrice,
       discountedPrice,
+      color,
       currentStock: product.stock,
     });
   }
@@ -245,11 +263,12 @@ export async function createOrder(userId: number, data: CreateOrderInput) {
         ...orderData,
         items: {
           create: validatedItems.map(
-            ({ productId, quantity, price, discountedPrice }) => ({
+            ({ productId, quantity, price, discountedPrice, color }) => ({
               productId,
               quantity,
               price,
               ...(discountedPrice !== null ? { discountedPrice } : {}),
+              ...(color ? { color } : {}),
             }),
           ),
         },
@@ -299,6 +318,7 @@ export async function createOrder(userId: number, data: CreateOrderInput) {
       const emailItems = order.items.map((item) => ({
         quantity: item.quantity,
         price: item.price,
+        color: item.color,
         product: {
           title: item.product.title,
           images: item.product.images,
@@ -334,6 +354,7 @@ export async function createOrder(userId: number, data: CreateOrderInput) {
       const emailItems = order.items.map((item) => ({
         quantity: item.quantity,
         price: item.price,
+        color: item.color,
         product: {
           title: item.product.title,
           images: item.product.images,

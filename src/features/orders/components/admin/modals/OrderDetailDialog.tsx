@@ -356,6 +356,10 @@ const OrderDetailDialog: React.FC<OrderDetailDialogProps> = ({
                                   </h5>
                                   <p className="text-xs md:text-sm text-body mt-1">
                                     {item.product.category.name}
+                                    {/* The colourway as sold — what the shelf
+                                        is picked from, so it sits with the
+                                        product name rather than in a note. */}
+                                    {item.color ? ` · ${item.color}` : ""}
                                   </p>
                                 </div>
 

@@ -314,6 +314,9 @@ const Checkout = () => {
           productId: item.productId ?? item.id, // Use productId if available, fallback to id
           quantity: item.quantity,
           price: item.discountedPrice,
+          // Frozen onto the order line so the picking slip still names the
+          // colourway after the product's colour list is edited.
+          color: item.color || undefined,
         })),
         // Shipping fee/method temporarily disabled in checkout UI.
         shippingFee,
@@ -571,12 +574,19 @@ const Checkout = () => {
                             </span>
                           </div>
 
-                          <Link
-                            href={productUrl}
-                            className="line-clamp-2 min-w-0 flex-1 text-[13px] font-medium capitalize text-dark transition-colors hover:text-blue"
-                          >
-                            {item.title}
-                          </Link>
+                          <div className="min-w-0 flex-1">
+                            <Link
+                              href={productUrl}
+                              className="line-clamp-2 text-[13px] font-medium capitalize text-dark transition-colors hover:text-blue"
+                            >
+                              {item.title}
+                            </Link>
+                            {item.color && (
+                              <p className="mt-0.5 text-[12px] text-dark-4">
+                                Colour: {item.color}
+                              </p>
+                            )}
+                          </div>
 
                           <span className="shrink-0 text-[13.5px] font-semibold text-dark">
                             {formatPrice(item.discountedPrice * item.quantity)}

@@ -175,7 +175,10 @@ export const BLOCKS: BlockDefinition[] = [
             type: "repeater",
             itemLabel: "column",
             titleField: "title",
-            max: 3,
+            // Four fits the 1440px panel without wrapping; the Lenses menu
+            // needs all four to list the lens-type guides beside the shop
+            // links. The panel itself renders any number.
+            max: 4,
             fields: [
               { name: "title", label: "Column heading", type: "text" },
               {
@@ -294,13 +297,41 @@ export const BLOCKS: BlockDefinition[] = [
           promoCtaHref: shop("categories=sunglasses"),
         },
         {
+          /*
+           * The lens-type columns mirror `@/config/lenses` — that module is the
+           * source of the guide pages, and these links point at them. Add a lens
+           * type there and add its row here; the two are matched by slug, so a
+           * typo lands on a 404 rather than an empty grid.
+           */
           label: "Lenses",
-          href: shop("categories=contact-lenses"),
+          href: "/lenses",
           accent: false,
           badge: "",
           columns: [
             {
               title: "Lens type",
+              source: "",
+              links: [
+                { label: "U/C (Uncoated)", href: "/lenses/uncoated", accent: false },
+                { label: "Blue Cut", href: "/lenses/blue-cut", accent: false },
+                { label: "Blue Filter", href: "/lenses/blue-filter", accent: false },
+                { label: "Photochromic", href: "/lenses/photochromic", accent: false },
+                { label: "Polarized", href: "/lenses/polarized", accent: false },
+              ],
+            },
+            {
+              title: "Vision & premium",
+              source: "",
+              links: [
+                { label: "Bifocal", href: "/lenses/bifocal", accent: false },
+                { label: "Progressive", href: "/lenses/progressive", accent: false },
+                { label: "Neo Vision", href: "/lenses/neo-vision", accent: false },
+                { label: "Omega", href: "/lenses/omega", accent: false },
+                { label: "All lens types", href: "/lenses", accent: true },
+              ],
+            },
+            {
+              title: "Shop lenses",
               source: "",
               links: [
                 {
@@ -321,29 +352,22 @@ export const BLOCKS: BlockDefinition[] = [
               ],
             },
             {
-              title: "Guides",
+              title: "In store & guides",
               source: "",
               links: [
+                { label: "Book an eye test", href: "/contact", accent: false },
+                { label: "Lens fitting service", href: "/contact", accent: false },
                 { label: "How to read a prescription", href: "/faq", accent: false },
                 { label: "How to measure your PD", href: "/faq", accent: false },
                 { label: "Frame size guide", href: "/faq", accent: false },
               ],
             },
-            {
-              title: "In store",
-              source: "",
-              links: [
-                { label: "Book an eye test", href: "/contact", accent: false },
-                { label: "Lens fitting service", href: "/contact", accent: false },
-                { label: "Ask about your prescription", href: "/contact", accent: false },
-              ],
-            },
           ],
-          promoImage: "",
-          promoTitle: "",
-          promoCopy: "",
-          promoCtaLabel: "",
-          promoCtaHref: "",
+          promoImage: "/images/lenses/guide.jpg",
+          promoTitle: "Which lens is right for you?",
+          promoCopy: "Nine lens types, what each one does — and what it won't.",
+          promoCtaLabel: "Read the lens guide",
+          promoCtaHref: "/lenses",
         },
         {
           label: "Brands",

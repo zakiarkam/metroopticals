@@ -7,6 +7,8 @@ export const createOrderSchema = z.object({
         productId: z.coerce.number().int().positive(),
         quantity: z.number().int().min(1),
         price: z.number().positive(),
+        /** The colourway as chosen in the cart; blank for colour-less items. */
+        color: z.string().trim().max(60).optional(),
       })
     )
     .min(1),

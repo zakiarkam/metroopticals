@@ -13,6 +13,7 @@ import {
   getAvailability,
 } from "@/features/products/utils/availability";
 import { formatPrice } from "@/lib/utils/price";
+import { getColorSwatch } from "@/features/products/utils/colors";
 
 type CartItem = {
   id: number;
@@ -21,6 +22,8 @@ type CartItem = {
   price: number;
   discountedPrice: number;
   quantity: number;
+  color?: string;
+  colorOptions?: string[];
   stock?: number;
   status?: string;
   imgs?: {
@@ -29,6 +32,79 @@ type CartItem = {
   };
 };
 
+
+/**
+ * The colour on a cart line.
+ *
+ * A frame with more than one colourway gets a select so the choice can be
+ * corrected in place; one with a single colour is just stated. Either way the
+ * colour is always visible — a cart that hides it leaves the shopper checking
+ * out on an assumption.
+ *
+ * A line saved before colours existed carries none. Rather than say nothing,
+ * it opens on "Choose colour" so the shopper can set one before checkout
+ * instead of leaving the warehouse to guess.
+ */
+const ColorControl = ({
+  item,
+  onChange,
+  disabled,
+}: {
+  item: CartItem;
+  onChange: (color: string) => void;
+  disabled: boolean;
+}) => {
+  const options = item.colorOptions ?? [];
+  const color = item.color ?? "";
+  const swatch = getColorSwatch(color);
+
+  const dot = swatch && (
+    <span
+      aria-hidden
+      className={`h-3.5 w-3.5 shrink-0 rounded-full ${
+        swatch.needsBorder ? "ring-1 ring-inset ring-dark/20" : ""
+      }`}
+      style={{ background: swatch.background }}
+    />
+  );
+
+  if (options.length < 2 && color) {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-gray-3 bg-gray-1 px-2.5 py-1 text-[12px] font-medium text-dark-2">
+        {dot}
+        {color}
+      </span>
+    );
+  }
+
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full border bg-gray-1 py-1 pl-2.5 pr-1 text-[12px] font-medium focus-within:border-blue ${
+        color ? "border-gray-3 text-dark-2" : "border-blue/45 text-blue"
+      }`}
+    >
+      {dot}
+      <select
+        value={color}
+        disabled={disabled}
+        onChange={(event) => onChange(event.target.value)}
+        aria-label={`Colour for ${item.title}`}
+        className="cursor-pointer border-0 bg-transparent pr-1 text-[12px] font-medium text-inherit outline-none disabled:cursor-not-allowed"
+      >
+        {!color && (
+          <option value="" disabled>
+            Choose colour
+          </option>
+        )}
+        {options.map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
+    </span>
+  );
+};
 
 /** One row in the cart. Shows the line total as well as the unit price — the old row only showed the unit price, which did not add up to the summary. */
 const SingleItem = ({ item }: { item: CartItem }) => {
@@ -47,6 +123,19 @@ const SingleItem = ({ item }: { item: CartItem }) => {
 
     setIsUpdating(true);
     await updateQuantity(item.id, newQuantity);
+    setIsUpdating(false);
+  };
+
+  /**
+   * Changing the colour here saves a trip back to the product page for what is
+   * usually a last-second change of mind. If the same frame is already in the
+   * cart in the colour being switched to, the server merges the two lines.
+   */
+  const handleColorChange = async (color: string) => {
+    if (isUpdating || color === item.color) return;
+
+    setIsUpdating(true);
+    await updateQuantity(item.id, item.quantity, color);
     setIsUpdating(false);
   };
 
@@ -96,6 +185,13 @@ const SingleItem = ({ item }: { item: CartItem }) => {
           <span className="text-[13px] text-dark-4">
             {formatPrice(item.discountedPrice)} each
           </span>
+          {(item.color || (item.colorOptions?.length ?? 0) > 0) && (
+            <ColorControl
+              item={item}
+              onChange={handleColorChange}
+              disabled={isUpdating}
+            />
+          )}
           {isUnavailable && (
             <span
               className={`rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.1em] ${

@@ -707,6 +707,7 @@ export default function ShopWithSidebar() {
                         brandName: item.brand?.name ?? null,
                         rating: item.rating ?? null,
                         reviewCount: item.reviewCount ?? null,
+                        frameColors: item.frameColors ?? null,
                         raw: item,
                       }}
                     />

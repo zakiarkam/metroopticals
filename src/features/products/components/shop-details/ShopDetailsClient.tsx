@@ -31,6 +31,8 @@ import {
   AVAILABILITY_PILL_CLASSES,
   getAvailability,
 } from "@/features/products/utils/availability";
+import { normalizeColorOptions } from "@/features/products/utils/colors";
+import ColorPicker from "./ColorPicker";
 import FrameMeasurements from "./FrameMeasurements";
 import ProductGallery from "./ProductGallery";
 import ProductSpecTable from "./ProductSpecTable";
@@ -79,6 +81,7 @@ const ShopDetailsClient = ({
   const [isSaving, setIsSaving] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [selectedColor, setSelectedColor] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   const hasInitialProduct = Boolean(initialProduct);
@@ -116,6 +119,21 @@ const ShopDetailsClient = ({
     () => normalizeImageArray(product?.images) ?? [],
     [product?.images]
   );
+
+  const colorOptions = useMemo(
+    () => normalizeColorOptions(product?.frameColors),
+    [product?.frameColors]
+  );
+
+  // Pre-select the first colourway rather than opening on "nothing chosen":
+  // there is no such thing as a frame with no colour, so an empty state would
+  // only ever be a step to clear on the way to the same outcome.
+  useEffect(() => {
+    setSelectedColor((current) =>
+      current && colorOptions.includes(current) ? current : colorOptions[0] ?? ""
+    );
+  }, [colorOptions]);
+
   const featuredImage = images[selectedIndex] || images[0] || fallbackImage;
 
   const { displayPrice, hasDiscount, discountPercent, originalPrice } =
@@ -161,11 +179,22 @@ const ShopDetailsClient = ({
         discountedPrice: product.discountedPrice ?? product.price,
         images: images.length ? images : [fallbackImage],
         stock: product.stock,
+        frameColors: colorOptions,
       } as never,
-      quantity
+      quantity,
+      selectedColor || undefined
     );
     setIsAdding(false);
-  }, [addToCart, availability.canBuy, images, isAdding, product, quantity]);
+  }, [
+    addToCart,
+    availability.canBuy,
+    colorOptions,
+    images,
+    isAdding,
+    product,
+    quantity,
+    selectedColor,
+  ]);
 
   const handleAddToWishlist = useCallback(async () => {
     if (!product || isSaving || isInWishlist(product.id)) return;
@@ -349,6 +378,15 @@ const ShopDetailsClient = ({
 
             {/* ------------------------ buy box ------------------------ */}
             <div className="mt-7 rounded-2xl border border-gray-3 bg-gray-2 p-5 shadow-2 sm:p-6">
+              {colorOptions.length > 0 && (
+                <ColorPicker
+                  colors={colorOptions}
+                  value={selectedColor}
+                  onChange={setSelectedColor}
+                  className="mb-5 border-b border-gray-3 pb-5"
+                />
+              )}
+
               <div className="flex flex-wrap items-center gap-4">
                 <span className="text-[13px] font-semibold text-dark">
                   Quantity

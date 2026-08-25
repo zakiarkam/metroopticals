@@ -221,13 +221,11 @@ const AdvertisementForm: React.FC<AdvertisementFormProps> = ({
     const product = products.find((item) => item.id === id);
     if (!product) return;
 
+    // Title and artwork are deliberately left alone: an empty title resolves to
+    // the product name and an empty image falls back to the product photo, so
+    // the ad keeps tracking the catalogue instead of freezing a copy of it.
     set({
       productId: id,
-      title: values.title.trim() ? values.title : product.title,
-      imageUrl:
-        values.imageUrl ||
-        getProductImageUrl(product.images?.[0]) ||
-        values.imageUrl,
       link: values.link || `/shop-details/${id}`,
     });
   };
@@ -309,7 +307,7 @@ const AdvertisementForm: React.FC<AdvertisementFormProps> = ({
         description={
           isProductAd
             ? "Optional — leave empty and the linked product's photo is used."
-            : "The photo visitors will see. This is the whole ad."
+            : "The photo visitors will see. This is the whole ad, and the only thing this zone needs."
         }
       >
         <AdImageUpload
@@ -398,24 +396,29 @@ const AdvertisementForm: React.FC<AdvertisementFormProps> = ({
       <Section
         step={isProductAd ? 4 : 3}
         title="Details"
-        description="The internal name, and where a click should land."
+        description="All optional — name the ad if it helps you find it later, and set where a click should land."
       >
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
             <label className={labelClass}>
-              Title <span className="text-red">*</span>
+              Title <span className="text-dark-5">(optional)</span>
             </label>
             <input
               type="text"
               value={values.title}
               onChange={(e) => set({ title: e.target.value })}
-              placeholder="e.g. Sunglass season — 30% off"
+              placeholder={
+                isProductAd
+                  ? "Leave empty to use the product name"
+                  : "e.g. Sunglass season — 30% off"
+              }
               className={fieldClass}
               maxLength={200}
             />
             <p className="mt-1.5 text-[12px] text-dark-4">
-              Used as the image&apos;s alt text, so describe what is in the
-              picture.
+              Names the ad in this list and becomes the image&apos;s alt text.
+              Leave it empty and we use{" "}
+              {isProductAd ? "the linked product's name" : "the zone name"}.
             </p>
           </div>
 
@@ -554,8 +557,12 @@ export default AdvertisementForm;
 /**
  * Turn form values into an API payload, or explain what is missing.
  *
- * Mirrors the zod schema on the server so the admin gets a plain sentence at
- * the point of failure rather than a validation blob after a round trip.
+ * Only one thing is actually required: the zone must end up with something to
+ * render. A banner needs its artwork; a product placement needs artwork or a
+ * product to borrow a photo from. Everything else — the title, the link, the
+ * schedule — is optional, and a blank title is filled in server-side from the
+ * product name or the zone label. Mirrors the zod schema so the admin gets a
+ * plain sentence at the point of failure rather than a round trip.
  */
 export const buildAdvertisementPayload = (values: AdFormValues) => {
   const meta = AD_PLACEMENTS[values.placement];
@@ -563,23 +570,17 @@ export const buildAdvertisementPayload = (values: AdFormValues) => {
   const imageUrl = values.imageUrl.trim();
   const link = values.link.trim();
 
-  if (!title) {
-    return { ok: false as const, message: "Give the advertisement a title." };
-  }
-
-  if (!imageUrl) {
+  if (meta.kind === "banner" && !imageUrl) {
     return {
       ok: false as const,
-      message: meta.kind === "product"
-        ? "Upload artwork, or pick a product so its photo can be used."
-        : "Upload the banner artwork.",
+      message: "Upload the banner artwork — that is the whole ad.",
     };
   }
 
-  if (meta.kind === "product" && !values.productId) {
+  if (meta.kind === "product" && !imageUrl && !values.productId) {
     return {
       ok: false as const,
-      message: `${meta.label} needs a linked product.`,
+      message: "Upload artwork, or pick a product so its photo can be used.",
     };
   }
 
@@ -602,8 +603,8 @@ export const buildAdvertisementPayload = (values: AdFormValues) => {
   return {
     ok: true as const,
     payload: {
-      title,
-      imageUrl,
+      title: title || undefined,
+      imageUrl: imageUrl || undefined,
       link: link || undefined,
       placement: values.placement,
       status: values.status,

@@ -46,7 +46,13 @@ export default async function SiteLayout({
   const catalogue: NavCatalogue = {
     brands: brands
       .filter((brand) => brand.productCount > 0)
-      .map((brand) => ({ label: brand.name, value: brand.slug })),
+      // The logo travels with the row so the brands panel can draw the mark
+      // rather than the name — see BrandColumn in MegaMenu.
+      .map((brand) => ({
+        label: brand.name,
+        value: brand.slug,
+        logo: brand.logo,
+      })),
     shapes: shapes.map(({ value }) => ({
       value,
       label: FRAME_SHAPE_LABELS[value] ?? value,

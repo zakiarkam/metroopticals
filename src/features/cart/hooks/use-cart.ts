@@ -61,6 +61,8 @@ export const useCart = () => {
         price: item.product.price,
         discountedPrice: item.product.discountedPrice || item.product.price,
         quantity: item.quantity,
+        color: item.color || "",
+        colorOptions: item.product.frameColors ?? [],
         stock: item.product.stock,
         status: resolveStatus(item.product.status, item.product.stock),
         imgs: {
@@ -139,8 +141,15 @@ export const useCart = () => {
         images: string[];
         stock: number;
         status?: string | null;
+        frameColors?: string[] | null;
       },
-      quantity: number = 1
+      quantity: number = 1,
+      /**
+       * The colourway the shopper picked. Omitted from listing cards, where
+       * there is no choice on screen — the server then settles on the first
+       * colour the product lists so the line is never colour-less.
+       */
+      color?: string
     ) => {
       if (status !== "authenticated") {
         toast.error("Please login to add items to cart");
@@ -150,7 +159,11 @@ export const useCart = () => {
       try {
         const loadingToast = toast.loading("Adding to cart...");
 
-        const response = await addToCart({ productId: product.id, quantity });
+        const response = await addToCart({
+          productId: product.id,
+          quantity,
+          ...(color ? { color } : {}),
+        });
 
         const normalizedImages = normalizeImageArray(product.images);
 
@@ -162,6 +175,8 @@ export const useCart = () => {
             price: product.price,
             discountedPrice: product.discountedPrice || product.price,
             quantity,
+            color: response.cartItem?.color ?? color ?? "",
+            colorOptions: product.frameColors ?? [],
             imgs: {
               previews: normalizedImages,
               thumbnails: normalizedImages,
@@ -187,7 +202,7 @@ export const useCart = () => {
   );
 
   const handleUpdateQuantity = useCallback(
-    async (id: number, quantity: number) => {
+    async (id: number, quantity: number, color?: string) => {
       if (quantity < 1) {
         toast.error("Quantity must be at least 1");
         return false;
@@ -207,7 +222,10 @@ export const useCart = () => {
         // Optimistic update
         dispatch(updateCartItemQuantity({ id, quantity }));
 
-        await updateCartItem(id, { quantity });
+        await updateCartItem(id, {
+          quantity,
+          ...(color !== undefined ? { color } : {}),
+        });
         toast.success("Cart updated");
 
         // Sync with server

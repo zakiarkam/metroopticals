@@ -637,6 +637,7 @@ const OrderReceipt = React.forwardRef<HTMLDivElement, OrderReceiptProps>(
                           <td>
                             <div className="product-title">
                               {item.product.title}
+                              {item.color ? ` — ${item.color}` : ""}
                             </div>
                           </td>
                           <td className="category">

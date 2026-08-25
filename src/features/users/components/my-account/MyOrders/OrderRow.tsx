@@ -115,6 +115,9 @@ const OrderRow: React.FC<OrderRowProps> = ({
             )}
           </p>
           <p className="mt-1 text-[12.5px] text-dark-5">
+            {/* The colourway is part of what was bought, so the summary line
+                names it rather than making the customer open the invoice. */}
+            {firstItem?.color ? `${firstItem.color} · ` : ""}
             {extraItems > 0
               ? `+ ${extraItems} more ${extraItems === 1 ? "item" : "items"}`
               : "1 item"}

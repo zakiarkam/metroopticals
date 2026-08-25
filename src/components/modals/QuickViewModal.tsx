@@ -36,6 +36,8 @@ import {
   AVAILABILITY_PILL_CLASSES,
   getAvailability,
 } from "@/features/products/utils/availability";
+import { normalizeColorOptions } from "@/features/products/utils/colors";
+import ColorPicker from "@/features/products/components/shop-details/ColorPicker";
 
 const money = (value?: number | null) =>
   `Rs ${Number(value ?? 0).toLocaleString("en-LK", {
@@ -48,6 +50,7 @@ const QuickViewModal = () => {
   const { openPreviewModal } = usePreviewSlider();
   const { isAuthenticated, addToCart } = useCart();
   const [quantity, setQuantity] = useState(1);
+  const [selectedColor, setSelectedColor] = useState("");
 
   const dispatch = useDispatch<AppDispatch>();
 
@@ -63,6 +66,17 @@ const QuickViewModal = () => {
       ? normalized
       : ["/images/placeholder-product.svg"];
   }, [product?.images]);
+
+  const colorOptions = useMemo(
+    () => normalizeColorOptions(product?.frameColors),
+    [product?.frameColors]
+  );
+
+  // Follows whichever product the modal was opened on, and pre-selects the
+  // first colourway the same way the product page does.
+  useEffect(() => {
+    setSelectedColor(colorOptions[0] ?? "");
+  }, [colorOptions]);
 
   const productImages = normalizedImages;
   const thumbnailImages = normalizedImages;
@@ -125,8 +139,10 @@ const QuickViewModal = () => {
         discountedPrice: product.discountedPrice || product.price || 0,
         images: imagesForCart,
         stock: product.stock ?? 0,
+        frameColors: colorOptions,
       },
-      quantity
+      quantity,
+      selectedColor || undefined
     );
 
     if (added) {
@@ -293,6 +309,15 @@ const QuickViewModal = () => {
                 <FileText className="h-4 w-4" />
                 View catalogue
               </a>
+            )}
+
+            {colorOptions.length > 0 && (
+              <ColorPicker
+                colors={colorOptions}
+                value={selectedColor}
+                onChange={setSelectedColor}
+                className="mt-6"
+              />
             )}
 
             {/* quantity */}

@@ -72,6 +72,7 @@ export default function RelatedProducts({
               status: item.status,
               categoryName: item.category?.name ?? null,
               brandName: item.brand?.name ?? null,
+              frameColors: item.frameColors ?? null,
               raw: item,
             }}
           />

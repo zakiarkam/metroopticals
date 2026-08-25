@@ -1,17 +1,11 @@
 "use client";
 
-import React, { useCallback, useRef } from "react";
-import Image from "next/image";
-import Link from "next/link";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import React from "react";
 
 import { useCategories } from "@/features/categories/hooks/use-categories";
 import { getCategoryImageUrl } from "@/lib/storageUtils";
 import { Section, SectionHeading } from "@/components/common/Section";
-
-import "swiper/css/navigation";
-import "swiper/css";
+import PhotoTile, { type PhotoTileSize } from "@/components/common/PhotoTile";
 
 type Category = {
   id: number;
@@ -22,123 +16,114 @@ type Category = {
 };
 
 /**
- * Category rail.
+ * The category bento.
  *
- * Tiles are portrait cards rather than the old circular avatars — eyewear is
- * wide, and a circle crops the temples off every frame photo.
+ * Was a six-across Swiper of small portrait cards, which gave every category
+ * the same weight and hid half of them behind arrows. A bento says something a
+ * carousel cannot: the first category gets the room, and nothing is off-screen.
+ *
+ * The tiles are photographs with the name over them, so the fallback art below
+ * is photographic too — the old line-art SVGs were drawn to sit on ivory and
+ * disappeared entirely under the scrim.
  */
+
 /**
- * Bundled artwork used when a category has no uploaded image.
+ * Bundled photography used when a category has no uploaded image.
  *
- * A single grey initial was the old fallback, which turned the rail into a row
- * of letters on a fresh install. Matching on the slug covers the categories an
- * optical shop always has; anything unmatched falls back to the generic plate.
+ * Admin uploads always win; this only decides what a fresh install looks like.
+ * Matching on the slug covers the categories an optical shop always carries,
+ * and anything unmatched falls back to the shop interior.
  */
 const CATEGORY_ART: { match: RegExp; src: string }[] = [
-  { match: /sun/, src: "/images/dummy/categories/sunglasses.svg" },
-  { match: /contact|lens/, src: "/images/dummy/categories/premium.svg" },
-  { match: /accessor|case|clean|solution/, src: "/images/dummy/categories/computer.svg" },
-  { match: /read/, src: "/images/dummy/categories/reading.svg" },
-  { match: /kid|child|junior/, src: "/images/dummy/categories/kids.svg" },
-  { match: /wom|ladies/, src: "/images/dummy/categories/women.svg" },
-  { match: /men/, src: "/images/dummy/categories/men.svg" },
-  { match: /computer|blue|screen/, src: "/images/dummy/categories/computer.svg" },
-  { match: /premium|designer|luxury/, src: "/images/dummy/categories/premium.svg" },
+  { match: /sun/, src: "/images/categories/sunglasses.jpg" },
+  { match: /contact/, src: "/images/categories/contact-lenses.jpg" },
+  { match: /read/, src: "/images/categories/reading-glasses.jpg" },
+  { match: /accessor|case|clean|solution|kit/, src: "/images/categories/accessories.jpg" },
+  { match: /kid|child|junior/, src: "/images/categories/kids.jpg" },
+  { match: /eyeglass|frame|optical|spectacle/, src: "/images/categories/eyeglasses.jpg" },
 ];
 
 const fallbackArt = (slug: string, name: string) => {
   const haystack = `${slug} ${name}`.toLowerCase();
   return (
     CATEGORY_ART.find((entry) => entry.match.test(haystack))?.src ??
-    "/images/dummy/categories/eyeglasses.svg"
+    "/images/categories/shop.jpg"
   );
 };
 
-const CategoryTile = React.memo(({ item }: { item: Category }) => {
-  const imageUrl =
-    getCategoryImageUrl(item.image) || fallbackArt(item.slug, item.name);
+type Placement = { span: string; size: PhotoTileSize };
 
-  return (
-    <Link
-      href={`/shop-with-sidebar?category=${item.slug}`}
-      className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-gray-3 bg-gray-2 transition-all duration-300 hover:-translate-y-1 hover:border-blue/45 hover:shadow-gold"
-    >
-      <div className="relative flex aspect-[5/4] items-center justify-center overflow-hidden bg-gray-1 p-5">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
-          style={{
-            background:
-              "radial-gradient(65% 65% at 50% 55%, rgba(192,156,108,0.22) 0%, transparent 72%)",
-          }}
-        />
+/**
+ * Where each tile sits on the 12-column grid.
+ *
+ * The four-or-more case is the reference layout: a tall feature on the left,
+ * two square tiles stacked to its right, then a wide tile beneath them. The
+ * smaller cases are spelled out rather than derived because a shop with two or
+ * three categories otherwise inherits the tall feature and leaves half the
+ * grid empty beside it.
+ *
+ * Leftovers past the first four are packed three to a row, and a short final
+ * row widens to fill — five categories used to leave two thirds of the last
+ * row as blank ivory, which read as a loading failure rather than a layout.
+ */
+const OPENING: Record<number, Placement[]> = {
+  1: [{ span: "lg:col-span-12", size: "lg" }],
+  2: [
+    { span: "lg:col-span-6", size: "lg" },
+    { span: "lg:col-span-6", size: "lg" },
+  ],
+  3: [
+    { span: "lg:col-span-6 lg:row-span-2", size: "lg" },
+    { span: "lg:col-span-6", size: "sm" },
+    { span: "lg:col-span-6", size: "sm" },
+  ],
+};
 
-        <Image
-          src={imageUrl}
-          alt=""
-          width={280}
-          height={224}
-          sizes="(max-width: 768px) 60vw, 220px"
-          unoptimized={imageUrl.endsWith(".svg")}
-          className="relative h-full w-full object-contain transition-transform duration-500 group-hover:scale-110"
-        />
-      </div>
+const OPENING_DEFAULT: Placement[] = [
+  { span: "lg:col-span-6 lg:row-span-2", size: "lg" },
+  { span: "lg:col-span-3", size: "sm" },
+  { span: "lg:col-span-3", size: "sm" },
+  { span: "lg:col-span-6", size: "md" },
+];
 
-      <div className="flex flex-1 flex-col items-center justify-center gap-1 border-t border-gray-3 px-3 py-4 text-center">
-        <p className="line-clamp-1 text-[13.5px] font-semibold capitalize text-dark transition-colors group-hover:text-blue">
-          {item.name}
-        </p>
-        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-dark-5">
-          {item.productCount ? `${item.productCount} items` : "Coming soon"}
-        </p>
-      </div>
-    </Link>
-  );
-});
+const ROW_SPAN: Record<number, string> = {
+  1: "lg:col-span-12",
+  2: "lg:col-span-6",
+  3: "lg:col-span-4",
+};
 
-CategoryTile.displayName = "CategoryTile";
+function placementsFor(count: number): Placement[] {
+  const opening = OPENING[count] ?? OPENING_DEFAULT;
+  const out = [...opening];
 
-const NavButton = ({
-  direction,
-  onClick,
-}: {
-  direction: "prev" | "next";
-  onClick: () => void;
-}) => (
-  <button
-    type="button"
-    onClick={onClick}
-    aria-label={direction === "prev" ? "Previous categories" : "Next categories"}
-    className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-3 bg-gray-2 text-dark transition-colors hover:border-blue hover:text-blue"
-  >
-    {direction === "prev" ? (
-      <ChevronLeft className="h-[18px] w-[18px]" />
-    ) : (
-      <ChevronRight className="h-[18px] w-[18px]" />
-    )}
-  </button>
-);
+  for (let left = count - opening.length; left > 0; ) {
+    const inRow = Math.min(3, left);
+    for (let i = 0; i < inRow; i++) {
+      out.push({ span: ROW_SPAN[inRow], size: "md" });
+    }
+    left -= inRow;
+  }
+
+  return out;
+}
+
+const pieces = (count?: number) =>
+  count ? `${count} ${count === 1 ? "piece" : "pieces"}` : "Coming soon";
 
 const Categories = React.memo(() => {
-  const sliderRef = useRef<any>(null);
   const { categories, loading, error } = useCategories();
-  const parentCategories = (categories || []).filter(
+  const parentCategories = ((categories || []) as Category[]).filter(
     (category: any) => !category.parentId
   );
-
-  const handlePrev = useCallback(() => sliderRef.current?.swiper?.slidePrev(), []);
-  const handleNext = useCallback(() => sliderRef.current?.swiper?.slideNext(), []);
 
   if (loading) {
     return (
       <Section>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div
-              key={i}
-              className="h-[220px] animate-pulse rounded-2xl border border-gray-3 bg-gray-8"
-            />
-          ))}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:auto-rows-fr lg:grid-cols-12">
+          <div className="h-[440px] animate-pulse rounded-2xl bg-gray-8 lg:col-span-6 lg:row-span-2" />
+          <div className="h-[240px] animate-pulse rounded-2xl bg-gray-8 lg:col-span-3" />
+          <div className="h-[240px] animate-pulse rounded-2xl bg-gray-8 lg:col-span-3" />
+          <div className="h-[240px] animate-pulse rounded-2xl bg-gray-8 lg:col-span-6" />
         </div>
       </Section>
     );
@@ -146,42 +131,49 @@ const Categories = React.memo(() => {
 
   if (error || parentCategories.length === 0) return null;
 
+  const layout = placementsFor(parentCategories.length);
+
   return (
     <Section>
       <SectionHeading
         eyebrow="Browse the range"
         title="Shop by category"
+        titleAccent="Everything we make up."
         description="Prescription frames, sunglasses, contact lenses and everything that keeps them clean."
         href="/shop-with-sidebar"
       />
 
-      <div className="relative">
-        <Swiper
-          ref={sliderRef}
-          slidesPerView={6}
-          spaceBetween={16}
-          breakpoints={{
-            0: { slidesPerView: 1.5, spaceBetween: 12 },
-            480: { slidesPerView: 2.2, spaceBetween: 12 },
-            640: { slidesPerView: 3, spaceBetween: 16 },
-            1000: { slidesPerView: 4, spaceBetween: 16 },
-            1200: { slidesPerView: 6, spaceBetween: 16 },
-          }}
-          className="!pb-1"
-        >
-          {parentCategories.map((item: Category) => (
-            <SwiperSlide key={item.id} className="!h-auto">
-              <CategoryTile item={item} />
-            </SwiperSlide>
-          ))}
-        </Swiper>
+      {/* `auto-rows-fr` is what makes the tall tile line up with the two
+          stacked beside it — without it the row heights follow content and the
+          feature tile ends up shorter than the pair it is supposed to span. */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:auto-rows-fr lg:grid-cols-12">
+        {parentCategories.map((item, index) => {
+          const placement = layout[index];
+          // At the two-column breakpoint an odd count strands the last tile in
+          // a half-width slot; widening just that one keeps the grid square.
+          const widenLast =
+            index === parentCategories.length - 1 &&
+            parentCategories.length % 2 === 1
+              ? "sm:col-span-2"
+              : "";
 
-        {parentCategories.length > 2 && (
-          <div className="mt-6 flex items-center justify-center gap-3">
-            <NavButton direction="prev" onClick={handlePrev} />
-            <NavButton direction="next" onClick={handleNext} />
-          </div>
-        )}
+          return (
+            <div key={item.id} className={`${widenLast} ${placement.span}`}>
+              <PhotoTile
+                href={`/shop-with-sidebar?categories=${item.slug}`}
+                image={
+                  getCategoryImageUrl(item.image) ||
+                  fallbackArt(item.slug, item.name)
+                }
+                imageAlt={item.name}
+                title={item.name}
+                meta={pieces(item.productCount)}
+                size={placement.size}
+                priority={index === 0}
+              />
+            </div>
+          );
+        })}
       </div>
     </Section>
   );

@@ -368,6 +368,26 @@ export default function BrandsTab() {
                   </button>
                 </div>
 
+                {/* Why a brand is, or is not, in the storefront's Brands menu.
+                    The rule (live, stocked, and ideally with a logo) used to be
+                    invisible here, so a newly added brand appearing nowhere on
+                    the site read as a bug. */}
+                <p
+                  className={`mt-3 rounded-lg px-3 py-2 text-[12px] leading-relaxed ${
+                    active && (brand.productCount ?? 0) > 0
+                      ? "bg-green-light-6 text-green"
+                      : "bg-gray-1 text-dark-4"
+                  }`}
+                >
+                  {!active
+                    ? "Hidden — set it Live to show it in the Brands menu."
+                    : (brand.productCount ?? 0) === 0
+                      ? "Not in the Brands menu yet — assign at least one product to this brand."
+                      : logo
+                        ? "Showing in the Brands menu and on the home page."
+                        : "In the Brands menu as text — upload a logo to show its mark."}
+                </p>
+
                 <div className="mt-4 flex items-center gap-2">
                   <button
                     type="button"

@@ -14,6 +14,10 @@ type CartItem = {
   price: number;
   discountedPrice: number;
   quantity: number;
+  /** The colourway this line is for — one line per colour. */
+  color?: string;
+  /** Every colour the product is sold in, for the in-cart colour switcher. */
+  colorOptions?: string[];
   stock?: number;
   status?: string;
   imgs?: {
@@ -40,14 +44,19 @@ export const cart = createSlice({
         price,
         quantity,
         discountedPrice,
+        color,
+        colorOptions,
         imgs,
         stock,
         status,
       } = action.payload;
 
-      // Check if item exists by productId (for API items) or id (for legacy items)
+      // A line is identified by product *and* colour: adding the tortoise of a
+      // frame already in the cart in black is a new line, not a quantity bump.
       const existingItem = state.items.find(
-        (item) => item.productId === productId || item.id === id
+        (item) =>
+          (item.productId === productId || item.id === id) &&
+          (item.color ?? "") === (color ?? "")
       );
 
       if (existingItem) {
@@ -64,6 +73,8 @@ export const cart = createSlice({
           price,
           quantity,
           discountedPrice,
+          color,
+          colorOptions,
           imgs,
           stock,
           status,

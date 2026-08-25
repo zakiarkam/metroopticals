@@ -13,7 +13,8 @@ export type AdvertisementPlacement =
 export interface Advertisement {
   id: number;
   title: string;
-  imageUrl: string;
+  /** Null when the ad runs on its linked product's photo instead. */
+  imageUrl: string | null;
   link?: string | null;
   placement: AdvertisementPlacement;
   slot: number;
@@ -40,8 +41,10 @@ export interface AdvertisementsResponse {
 }
 
 export interface CreateAdvertisementInput {
-  title: string;
-  imageUrl: string;
+  /** Optional — falls back to the product name, then the zone label. */
+  title?: string;
+  /** Optional on product placements, which can borrow the product photo. */
+  imageUrl?: string;
   link?: string;
   placement: AdvertisementPlacement;
   status?: "active" | "inactive";

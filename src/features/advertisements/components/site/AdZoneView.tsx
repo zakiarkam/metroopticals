@@ -6,7 +6,10 @@ import {
   AD_PLACEMENTS,
   type AdPlacementMeta,
 } from "@/features/advertisements/constants/advertisement";
-import { getAdvertisementImageUrl } from "@/lib/storageUtils";
+import {
+  getAdvertisementImageUrl,
+  getProductImageUrl,
+} from "@/lib/storageUtils";
 
 /**
  * Presentational half of an advertisement zone.
@@ -40,7 +43,12 @@ const buildSlots = (meta: AdPlacementMeta, ads: Advertisement[]): Slot[] =>
       ads.find((item) => item.slot === slotNumber) ??
       (ads.length === meta.slots.length ? ads[index] : undefined);
 
-    const image = ad ? getAdvertisementImageUrl(ad.imageUrl) : null;
+    // Artwork is optional: an ad with a linked product but no upload runs on
+    // the product's own photo rather than falling through to dummy artwork.
+    const image = ad
+      ? getAdvertisementImageUrl(ad.imageUrl) ??
+        getProductImageUrl(ad.product?.images?.[0])
+      : null;
 
     if (ad && image) {
       return {

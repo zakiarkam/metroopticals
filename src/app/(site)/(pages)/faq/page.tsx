@@ -1,90 +1,136 @@
 import { Metadata } from "next";
-import Link from "next/link";
+import Image from "next/image";
 import { ChevronDown } from "lucide-react";
 
 import SiteContainer from "@/components/common/SiteContainer";
 import PageHero from "@/components/common/PageHero";
-import ContactChannels from "@/components/common/ContactChannels";
+import {
+  ConsultBand,
+  PillLink,
+  SectionIntro,
+} from "@/components/common/editorial";
 import { faqs } from "@/config/faqs";
+import { buildSiteUrl } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "FAQ",
   description:
     "Frequently asked questions about Metro Opticals — eyewear range, prescriptions, eye tests, delivery times, warranty and payment options.",
+  alternates: { canonical: buildSiteUrl("/faq") },
 };
 
 /**
  * FAQ page. Questions live in `@/config/faqs` so the home-page preview and this
  * full list stay in sync.
+ *
+ * Laid out to match the lens guides: a sticky heading against a flat, ruled
+ * accordion, and the shared dark band closing the page. The previous version
+ * stacked every question in its own bordered card next to a card-shaped help
+ * rail, which made a page of plain text look like a dashboard.
  */
 export default function FAQPage() {
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((faq) => ({
+      "@type": "Question",
+      name: faq.question,
+      acceptedAnswer: { "@type": "Answer", text: faq.answer.join(" ") },
+    })),
+  };
+
   return (
-  <>
-    <PageHero
-      eyebrow="Help centre"
-      title="Frequently asked questions"
-      description="From choosing the right frame to understanding your prescription — the questions our customers ask most."
-      crumbs={[{ label: "FAQ" }]}
-    />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
 
-    <div className="bg-gray-1 py-10 lg:py-14">
-      <SiteContainer>
-        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-8">
-          {/* --------------------------- questions --------------------------- */}
-          <div className="space-y-3">
-            {faqs.map((faq, index) => (
-              <details
-                key={faq.question}
-                open={index === 0}
-                className="group rounded-2xl border border-gray-3 bg-gray-2 px-6 shadow-2 transition-colors duration-300 open:border-blue/40 hover:border-blue/30"
-              >
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-5 text-[15px] font-semibold text-dark sm:text-[16px]">
-                  {faq.question}
-                  <ChevronDown className="h-5 w-5 shrink-0 text-blue transition-transform duration-300 group-open:-rotate-180" />
-                </summary>
-                <div className="space-y-3 border-t border-gray-3 pb-6 pt-4 text-[14px] leading-relaxed text-body">
-                  {faq.answer.map((paragraph) => (
-                    <p key={paragraph}>{paragraph}</p>
-                  ))}
-                </div>
-              </details>
-            ))}
+      <PageHero
+        eyebrow="Help centre"
+        title="Frequently asked questions"
+        description="From choosing the right frame to understanding your prescription — the questions our customers ask most."
+        crumbs={[{ label: "FAQ" }]}
+      />
+
+      {/* ------------------------------- intro ------------------------------- */}
+      <section className="border-b border-gray-3 bg-gray-2 py-12 lg:py-16">
+        <SiteContainer>
+          <SectionIntro
+            eyebrow="Before you ask"
+            title="Most answers are here."
+            titleAccent="The rest, just call us."
+            body="Prescriptions, eye tests, lead times, warranty and delivery — the things people ring the shop about most often, answered properly rather than in one line. If yours is not here, the store will pick up."
+            action={<PillLink href="/contact">Send us a message</PillLink>}
+          />
+
+          <div className="relative mt-12 aspect-[21/9] overflow-hidden rounded-2xl bg-gray-1">
+            <Image
+              src="/images/store/consult.jpg"
+              alt="An optician fitting a pair of spectacles onto a smiling customer in the store"
+              fill
+              priority
+              sizes="100vw"
+              className="object-cover"
+            />
           </div>
+        </SiteContainer>
+      </section>
 
-          {/* ---------------------------- help rail ---------------------------- */}
-          <aside
-            className="lg:sticky lg:self-start"
-            style={{ top: "calc(var(--site-header-height, 132px) + 1.5rem)" }}
-          >
-            <div className="overflow-hidden rounded-2xl border border-gray-3 bg-gray-2 shadow-2">
-              <div className="border-b border-gray-3 px-6 py-5">
-                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-blue">
-                  Still stuck?
-                </p>
-                <h2 className="mt-1.5 text-lg font-bold text-dark">
-                  Talk to our team
-                </h2>
-                <p className="mt-2 text-[13.5px] leading-relaxed text-body">
-                  Call or message us to book an eye test, check frame
-                  availability, or ask about your prescription.
-                </p>
-              </div>
-
-              <ContactChannels only={["phone", "email", "whatsapp"]} />
-
-              <div className="border-t border-gray-3 p-6">
-                <Link
-                  href="/contact"
-                  className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-blue text-[13px] font-bold text-white transition-colors hover:bg-blue-dark"
-                >
-                  Send us a message
-                </Link>
-              </div>
+      {/* ------------------------------ questions ------------------------------ */}
+      <section className="bg-gray-1 py-12 lg:py-16">
+        <SiteContainer>
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,0.7fr)_minmax(0,1.3fr)] lg:gap-16">
+            <div>
+              <span className="mb-3 inline-flex items-center gap-2.5 text-[11px] font-bold uppercase tracking-[0.24em] text-blue">
+                <span className="h-px w-7 bg-blue/50" />
+                Questions
+              </span>
+              <h2 className="font-display text-[1.7rem] font-bold leading-[1.1] tracking-[-0.035em] text-dark sm:text-[2rem]">
+                Everything people
+                <br />
+                <span className="text-blue-light">ask at the counter</span>
+              </h2>
+              <p className="mt-4 max-w-sm text-[14.5px] leading-relaxed text-body">
+                {faqs.length} questions, answered by the people who actually cut
+                and fit the lenses.
+              </p>
             </div>
-          </aside>
-        </div>
-      </SiteContainer>
-    </div>
-  </>
+
+            <div className="border-t border-gray-3">
+              {faqs.map((faq, index) => (
+                <details
+                  key={faq.question}
+                  open={index === 0}
+                  className="group border-b border-gray-3"
+                >
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-6 py-5 text-[15.5px] font-semibold text-dark transition-colors hover:text-blue">
+                    {faq.question}
+                    <ChevronDown className="h-5 w-5 shrink-0 text-blue transition-transform duration-300 group-open:-rotate-180" />
+                  </summary>
+                  <div className="space-y-3 pb-6 pr-10 text-[14.5px] leading-relaxed text-body">
+                    {faq.answer.map((paragraph) => (
+                      <p key={paragraph}>{paragraph}</p>
+                    ))}
+                  </div>
+                </details>
+              ))}
+            </div>
+          </div>
+        </SiteContainer>
+      </section>
+
+      {/* -------------------------------- band -------------------------------- */}
+      <ConsultBand
+        eyebrow="Still stuck?"
+        title="Talk to someone"
+        titleAccent="who fits lenses daily."
+        body="Call the store, message us on WhatsApp, or book a free eye test. If the question is about your prescription, bring it in — five minutes at the counter beats twenty on the phone."
+        image="/images/store/eye-test.jpg"
+        imageAlt="A phoropter eye-testing instrument in a warm, dimly lit consulting room"
+        primary={{ href: "/contact", label: "Book an eye test" }}
+        secondary={{ href: "/lenses", label: "Read the lens guide" }}
+      />
+    </>
   );
 }

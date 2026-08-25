@@ -17,7 +17,6 @@ const placementEnum = z.enum(
 const imageRef = z
   .string()
   .trim()
-  .min(1, "An image is required")
   .refine(
     (value) => /^https?:\/\//i.test(value) || value.startsWith("/"),
     "Must be an uploaded image or a URL"
@@ -31,9 +30,17 @@ const linkRef = z
     "Must be a full URL or a path starting with /"
   );
 
+/**
+ * Nothing here is individually mandatory.
+ *
+ * An ad is a picture, a linked product, or both — a banner campaign is often
+ * artwork with no name worth typing, and a product placement can run entirely
+ * on the catalogue photo. The cross-field rules below enforce the one thing
+ * that actually matters: the zone must end up with something to render.
+ */
 const baseAdvertisementSchema = z.object({
-  title: z.string().trim().min(1, "Title is required").max(200),
-  imageUrl: imageRef,
+  title: z.string().trim().max(200).optional().nullable(),
+  imageUrl: imageRef.optional().nullable(),
   link: linkRef.optional().nullable(),
   placement: placementEnum,
   status: z.enum(["active", "inactive"]).default("active"),
@@ -46,27 +53,44 @@ const baseAdvertisementSchema = z.object({
 
 /**
  * Cross-field rules shared by create and update:
- *  - product placements must name a product, banner placements must not need one
+ *  - a banner zone has only artwork to show, so it needs an image
+ *  - a product zone needs either its own artwork or a product to borrow from
  *  - the slot has to be one the placement actually renders
  *  - an end date cannot precede the start date
  */
 const applyPlacementRules = (
   data: {
     placement?: AdvertisementPlacement;
+    imageUrl?: string | null;
     productId?: number | null;
     slot?: number;
     startDate?: string | null;
     endDate?: string | null;
   },
-  ctx: z.RefinementCtx
+  ctx: z.RefinementCtx,
+  /**
+   * A partial update that never mentions the artwork leaves the stored image
+   * in place, so re-checking "does this zone have something to render" would
+   * reject a perfectly valid rename.
+   */
+  checkCreative = true
 ) => {
   const meta = data.placement ? AD_PLACEMENTS[data.placement] : null;
+  const hasImage = Boolean(data.imageUrl && data.imageUrl.trim());
 
-  if (meta && meta.kind === "product" && !data.productId) {
+  if (checkCreative && meta && meta.kind === "banner" && !hasImage) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["imageUrl"],
+      message: `${meta.label} is a photo banner — upload the artwork.`,
+    });
+  }
+
+  if (checkCreative && meta && meta.kind === "product" && !hasImage && !data.productId) {
     ctx.addIssue({
       code: "custom",
       path: ["productId"],
-      message: `${meta.label} is driven by a product — pick one.`,
+      message: `${meta.label} needs either artwork or a linked product.`,
     });
   }
 
@@ -98,7 +122,7 @@ export const updateAdvertisementSchema = baseAdvertisementSchema
     // On update the placement may be absent, in which case there is nothing to
     // validate the product/slot against — the service keeps the stored values.
     if (!data.placement) return;
-    applyPlacementRules(data, ctx);
+    applyPlacementRules(data, ctx, data.imageUrl !== undefined);
   });
 
 export const updateAdvertisementStatusSchema = z.object({

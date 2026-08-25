@@ -1,14 +1,23 @@
 import React, { useState, useCallback } from "react";
-import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Button } from "@/components/ui/button";
+import {
+  Globe,
+  Hash,
+  Loader2,
+  Lock,
+  Mail,
+  MapPin,
+  Phone,
+  ShieldCheck,
+  User,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Toast } from "@/lib/utils/toast";
 import { authApi } from "@/features/auth/api/auth-api";
 import dynamic from "next/dynamic";
+import AuthField, { authInputClasses, PasswordToggle } from "./AuthField";
 
 const PasswordStrengthMeter = dynamic(() => import("./PasswordStrengthMeter"), {
   ssr: false,
@@ -98,258 +107,195 @@ const SignupForm = React.memo(({ onSuccess }: SignupFormProps) => {
     } catch (err: any) {
       console.error("Signup error:", err);
       Toast.error(
-        err.message || "An unexpected error occurred. Please try again."
+        err.message || "An unexpected error occurred. Please try again.",
       );
     } finally {
       setIsLoading(false);
     }
   };
 
+  const errors = signupForm.formState.errors;
+
   return (
-    <motion.form
-      key="signup"
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 20 }}
+    <form
       onSubmit={signupForm.handleSubmit(onSubmit)}
-      className="space-y-3"
+      className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300 ease-out"
     >
-      <div className="space-y-1.5">
-        <Label htmlFor="signup-name">Full Name</Label>
-        <Input
+      <div className="grid gap-4 sm:grid-cols-2">
+        <AuthField
           id="signup-name"
-          {...signupForm.register("name")}
-          type="text"
-          placeholder="John Doe"
-        />
-        {signupForm.formState.errors.name && (
-          <p className="text-xs text-red">
-            {signupForm.formState.errors.name.message}
-          </p>
-        )}
+          label="Full name"
+          icon={User}
+          error={errors.name?.message}
+        >
+          <Input
+            id="signup-name"
+            {...signupForm.register("name")}
+            type="text"
+            autoComplete="name"
+            placeholder="John Doe"
+            className={authInputClasses}
+          />
+        </AuthField>
+
+        <AuthField
+          id="signup-phone"
+          label="Phone"
+          icon={Phone}
+          error={errors.phone?.message}
+        >
+          <Input
+            id="signup-phone"
+            {...signupForm.register("phone")}
+            type="tel"
+            autoComplete="tel"
+            placeholder="+94 77 123 4567"
+            className={authInputClasses}
+          />
+        </AuthField>
       </div>
 
-      <div className="space-y-1.5">
-        <Label htmlFor="signup-email">Email Address</Label>
+      <AuthField
+        id="signup-email"
+        label="Email address"
+        icon={Mail}
+        error={errors.email?.message}
+      >
         <Input
           id="signup-email"
           {...signupForm.register("email")}
           type="email"
-          placeholder="john@example.com"
+          autoComplete="email"
+          placeholder="you@example.com"
+          className={authInputClasses}
         />
-        {signupForm.formState.errors.email && (
-          <p className="text-xs text-red">
-            {signupForm.formState.errors.email.message}
-          </p>
-        )}
-      </div>
+      </AuthField>
 
-      <div className="space-y-1.5">
-        <Label htmlFor="signup-phone">Phone Number</Label>
-        <Input
-          id="signup-phone"
-          {...signupForm.register("phone")}
-          type="tel"
-          placeholder="+1234567890"
-        />
-        {signupForm.formState.errors.phone && (
-          <p className="text-xs text-red">
-            {signupForm.formState.errors.phone.message}
-          </p>
-        )}
-      </div>
-
-      <div className="space-y-1.5">
-        <Label htmlFor="signup-address">Street Address</Label>
+      <AuthField
+        id="signup-address"
+        label="Street address"
+        icon={MapPin}
+        error={errors.address?.message}
+      >
         <Input
           id="signup-address"
           {...signupForm.register("address")}
           type="text"
-          placeholder="123 Main St"
+          autoComplete="street-address"
+          placeholder="123 Main Street"
+          className={authInputClasses}
         />
-        {signupForm.formState.errors.address && (
-          <p className="text-xs text-red">
-            {signupForm.formState.errors.address.message}
-          </p>
-        )}
-      </div>
+      </AuthField>
 
-      <div className="grid gap-3 lg:grid-cols-2">
-        <div className="space-y-1.5">
-          <Label htmlFor="signup-city">City</Label>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <AuthField
+          id="signup-city"
+          label="City"
+          icon={MapPin}
+          error={errors.city?.message}
+        >
           <Input
             id="signup-city"
             {...signupForm.register("city")}
             type="text"
-            placeholder="City"
+            autoComplete="address-level2"
+            placeholder="Colombo"
+            className={authInputClasses}
           />
-          {signupForm.formState.errors.city && (
-            <p className="text-xs text-red">
-              {signupForm.formState.errors.city.message}
-            </p>
-          )}
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="signup-postal">Postal Code</Label>
+        </AuthField>
+
+        <AuthField
+          id="signup-postal"
+          label="Postal code"
+          icon={Hash}
+          error={errors.postalCode?.message}
+        >
           <Input
             id="signup-postal"
             {...signupForm.register("postalCode")}
             type="text"
-            placeholder="Postal Code"
+            autoComplete="postal-code"
+            placeholder="00100"
+            className={authInputClasses}
           />
-          {signupForm.formState.errors.postalCode && (
-            <p className="text-xs text-red">
-              {signupForm.formState.errors.postalCode.message}
-            </p>
-          )}
-        </div>
+        </AuthField>
       </div>
 
-      <div className="space-y-1.5">
-        <Label htmlFor="signup-country">Country</Label>
+      <AuthField
+        id="signup-country"
+        label="Country"
+        icon={Globe}
+        error={errors.country?.message}
+      >
         <Input
           id="signup-country"
           {...signupForm.register("country")}
           type="text"
-          placeholder="Country"
+          autoComplete="country-name"
+          placeholder="Sri Lanka"
+          className={authInputClasses}
         />
-        {signupForm.formState.errors.country && (
-          <p className="text-xs text-red">
-            {signupForm.formState.errors.country.message}
-          </p>
-        )}
-      </div>
+      </AuthField>
 
-      <div className="space-y-1.5">
-        <Label htmlFor="signup-password">Password</Label>
-        <div className="relative">
-          <Input
-            id="signup-password"
-            {...signupForm.register("password", {
-              onChange: (e) => {
-                const strength = calculatePasswordStrength(e.target.value);
-                setPasswordStrength(strength);
-              },
-            })}
-            type={showPassword ? "text" : "password"}
-            placeholder="••••••••"
-            className="pr-10"
+      <AuthField
+        id="signup-password"
+        label="Password"
+        icon={Lock}
+        error={errors.password?.message}
+        trailing={
+          <PasswordToggle
+            shown={showPassword}
+            onToggle={() => setShowPassword(!showPassword)}
           />
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-5 hover:text-dark"
-          >
-            {showPassword ? (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-                className="h-5 w-5"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"
-                />
-              </svg>
-            ) : (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-                className="h-5 w-5"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-              </svg>
-            )}
-          </button>
-        </div>
-        {signupForm.formState.errors.password && (
-          <p className="text-xs text-red">
-            {signupForm.formState.errors.password.message}
-          </p>
-        )}
-        <PasswordStrengthMeter strength={passwordStrength} />
-      </div>
+        }
+      >
+        <Input
+          id="signup-password"
+          {...signupForm.register("password", {
+            onChange: (e) => {
+              setPasswordStrength(calculatePasswordStrength(e.target.value));
+            },
+          })}
+          type={showPassword ? "text" : "password"}
+          autoComplete="new-password"
+          placeholder="••••••••"
+          className={`${authInputClasses} pr-11`}
+        />
+      </AuthField>
 
-      <div className="space-y-1.5">
-        <Label htmlFor="signup-confirm-password">Confirm Password</Label>
-        <div className="relative">
-          <Input
-            id="signup-confirm-password"
-            {...signupForm.register("confirmPassword")}
-            type={showConfirmPassword ? "text" : "password"}
-            placeholder="••••••••"
-            className="pr-10"
+      <PasswordStrengthMeter strength={passwordStrength} />
+
+      <AuthField
+        id="signup-confirm-password"
+        label="Confirm password"
+        icon={ShieldCheck}
+        error={errors.confirmPassword?.message}
+        trailing={
+          <PasswordToggle
+            shown={showConfirmPassword}
+            onToggle={() => setShowConfirmPassword(!showConfirmPassword)}
           />
-          <button
-            type="button"
-            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-5 hover:text-dark"
-          >
-            {showConfirmPassword ? (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-                className="h-5 w-5"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"
-                />
-              </svg>
-            ) : (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-                className="h-5 w-5"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-              </svg>
-            )}
-          </button>
-        </div>
-        {signupForm.formState.errors.confirmPassword && (
-          <p className="text-xs text-red">
-            {signupForm.formState.errors.confirmPassword.message}
-          </p>
-        )}
-      </div>
+        }
+      >
+        <Input
+          id="signup-confirm-password"
+          {...signupForm.register("confirmPassword")}
+          type={showConfirmPassword ? "text" : "password"}
+          autoComplete="new-password"
+          placeholder="••••••••"
+          className={`${authInputClasses} pr-11`}
+        />
+      </AuthField>
 
-      <Button type="submit" disabled={isLoading} className="w-full">
-        {isLoading ? "Creating account..." : "Create Account"}
-      </Button>
-    </motion.form>
+      <button
+        type="submit"
+        disabled={isLoading}
+        className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[linear-gradient(100deg,#A9834B_0%,#8F6A37_55%,#6E5029_100%)] text-sm font-semibold tracking-wide text-white shadow-lg shadow-blue/20 transition-all hover:shadow-xl hover:shadow-blue/25 hover:brightness-[1.06] active:scale-[0.995] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:brightness-100"
+      >
+        {isLoading && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
+        {isLoading ? "Creating account..." : "Create account"}
+      </button>
+    </form>
   );
 });
 

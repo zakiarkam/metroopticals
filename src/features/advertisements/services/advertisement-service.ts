@@ -93,11 +93,43 @@ export async function getAdvertisementById(id: number) {
   return advertisement;
 }
 
+/**
+ * The name shown in the admin list and used as the image's alt text.
+ *
+ * Titles are optional — a banner is often just artwork — so a blank one falls
+ * back to the linked product's name and then to the zone label. The list can
+ * then never show a nameless row, and the alt text is never empty.
+ */
+async function resolveAdvertisementTitle(
+  title: string | null | undefined,
+  placement: AdvertisementPlacement,
+  productId?: number | null
+) {
+  const trimmed = title?.trim();
+  if (trimmed) return trimmed;
+
+  if (productId) {
+    const product = await prisma.product.findUnique({
+      where: { id: productId },
+      select: { title: true },
+    });
+    if (product?.title) return product.title;
+  }
+
+  return AD_PLACEMENTS[placement]?.label ?? "Advertisement";
+}
+
 export async function createAdvertisement(data: CreateAdvertisementInput) {
+  const title = await resolveAdvertisementTitle(
+    data.title,
+    data.placement,
+    data.productId
+  );
+
   return prisma.advertisement.create({
     data: {
-      title: data.title,
-      imageUrl: data.imageUrl,
+      title,
+      imageUrl: data.imageUrl?.trim() || null,
       link: data.link || null,
       placement: data.placement,
       status: data.status || "active",
@@ -127,11 +159,27 @@ export async function updateAdvertisement(
 ) {
   const advertisement = await getAdvertisementById(id);
 
+  // Clearing the title is allowed; it just falls back the same way a blank one
+  // did at creation rather than leaving the row nameless.
+  const title =
+    data.title === undefined
+      ? undefined
+      : await resolveAdvertisementTitle(
+          data.title,
+          (data.placement ??
+            advertisement.placement) as AdvertisementPlacement,
+          data.productId ?? advertisement.productId
+        );
+
   return prisma.advertisement.update({
     where: { id },
     data: {
-      ...(data.title && { title: data.title }),
-      ...(data.imageUrl && { imageUrl: data.imageUrl }),
+      ...(title !== undefined && { title }),
+      // An empty string means "remove the artwork", which a product placement
+      // is allowed to do — it then runs on the product's own photo.
+      ...(data.imageUrl !== undefined && {
+        imageUrl: data.imageUrl?.trim() || null,
+      }),
       ...(data.link !== undefined && { link: data.link || null }),
       ...(data.placement && { placement: data.placement }),
       ...(data.status && { status: data.status }),

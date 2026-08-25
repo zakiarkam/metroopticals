@@ -3,91 +3,79 @@ import React, { useState, useEffect, useRef } from "react";
 import { useCachedSession } from "@/features/auth/hooks/use-cached-session";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { AnimatePresence } from "framer-motion";
+import Image from "next/image";
+import { motion } from "framer-motion";
+import { ArrowLeft } from "lucide-react";
 import dynamic from "next/dynamic";
+import { cn } from "@/lib/utils";
+import { siteConfig } from "@/config/site";
 import AuthPageSkeleton from "./AuthPageSkeleton";
+import AuthHeader from "./AuthHeader";
 
-// Lazy load components for better performance
-const AuthIllustrationPanel = dynamic(
-  () => import("@/features/auth/components/AuthIllustrationPanel"),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="hidden flex-col gap-6 rounded-l-3xl bg-gradient-to-br from-[#E4CC84] via-[#C09C6C] to-[#9A7645] p-8 lg:flex">
-        <div className="space-y-3">
-          <div className="h-3 w-20 animate-pulse rounded bg-dark/15" />
-          <div className="h-7 w-72 animate-pulse rounded bg-dark/15" />
-          <div className="h-4 w-80 animate-pulse rounded bg-dark/10" />
-        </div>
-        <div className="flex flex-1 items-center justify-center">
-          <div className="relative h-64 w-full overflow-hidden rounded-2xl bg-white/50 p-4">
-            <div className="flex h-full w-full items-center justify-center">
-              <div className="h-28 w-28 animate-pulse rounded-full bg-dark/15" />
-            </div>
-          </div>
-        </div>
-      </div>
-    ),
-  }
-);
+/**
+ * Sign-in / sign-up screen.
+ *
+ * One card, two halves: the form and a gold brand panel. Above `lg` the panel
+ * SLIDES between the halves when you switch form — sign-in keeps the form on
+ * the left, sign-up moves it to the right — which is what makes the switch
+ * read as one screen rather than two pages. Below `lg` there is no room for
+ * that, so the panel collapses to a ribbon and the two forms swap under a pair
+ * of pill tabs.
+ */
 
-const AuthHeader = dynamic(() => import("./AuthHeader"), {
+const AuthBrandPanel = dynamic(() => import("./AuthBrandPanel"), {
   ssr: false,
+  loading: () => (
+    <div className="h-full w-full bg-[linear-gradient(155deg,#3E2C15_0%,#6E5029_45%,#A9834B_100%)]" />
+  ),
 });
+
+const FormFallback = () => (
+  <div className="space-y-4">
+    {[0, 1].map((row) => (
+      <div key={row} className="space-y-2">
+        <div className="h-3 w-16 animate-pulse rounded bg-gray-8" />
+        <div className="h-11 w-full animate-pulse rounded-xl border border-gray-3 bg-gray-1" />
+      </div>
+    ))}
+    <div className="h-11 w-full animate-pulse rounded-xl bg-gray-8" />
+  </div>
+);
 
 const LoginForm = dynamic(() => import("./LoginForm"), {
   ssr: false,
-  loading: () => (
-    <div className="space-y-3">
-      <div className="space-y-2">
-        <div className="h-3 w-16 animate-pulse rounded bg-gray-8 border border-gray-3" />
-        <div className="h-10 w-full animate-pulse rounded-xl bg-gray-8 border border-gray-3" />
-      </div>
-      <div className="space-y-2">
-        <div className="h-3 w-20 animate-pulse rounded bg-gray-8 border border-gray-3" />
-        <div className="h-10 w-full animate-pulse rounded-xl bg-gray-8 border border-gray-3" />
-      </div>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="h-4 w-4 animate-pulse rounded-sm bg-gray-8 border border-gray-3" />
-          <div className="h-3 w-24 animate-pulse rounded bg-gray-8 border border-gray-3" />
-        </div>
-        <div className="h-3 w-28 animate-pulse rounded bg-gray-8 border border-gray-3" />
-      </div>
-      <div className="h-10 w-full animate-pulse rounded-xl bg-gray-8 border border-gray-3" />
-      <div className="flex items-center justify-center pt-2">
-        <div className="h-3 w-20 animate-pulse rounded bg-gray-8 border border-gray-3" />
-      </div>
-      <div className="h-10 w-full animate-pulse rounded-xl bg-gray-8 border border-gray-3" />
-    </div>
-  ),
+  loading: () => <FormFallback />,
 });
 
 const SignupForm = dynamic(() => import("./SignupForm"), {
   ssr: false,
-  loading: () => (
-    <div className="space-y-3">
-      <div className="h-10 bg-gray-8 animate-pulse rounded border border-gray-3"></div>
-      <div className="h-10 bg-gray-8 animate-pulse rounded border border-gray-3"></div>
-      <div className="h-10 bg-gray-8 animate-pulse rounded border border-gray-3"></div>
-    </div>
-  ),
+  loading: () => <FormFallback />,
 });
 
-const ForgotPasswordForm = dynamic(
-  () => import("./ForgotPasswordForm"),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="space-y-3">
-        <div className="h-10 bg-gray-8 animate-pulse rounded border border-gray-3"></div>
-        <div className="h-10 bg-gray-8 animate-pulse rounded border border-gray-3"></div>
-      </div>
-    ),
-  }
-);
+const ForgotPasswordForm = dynamic(() => import("./ForgotPasswordForm"), {
+  ssr: false,
+  loading: () => <FormFallback />,
+});
 
 type TabType = "login" | "signup";
+
+const HEADINGS = {
+  login: {
+    kicker: "Welcome back",
+    title: "Sign in to your account",
+    subtitle: "Enter your details to continue.",
+  },
+  signup: {
+    kicker: "Get started",
+    title: "Create your account",
+    subtitle: "A few details and you're ready to shop.",
+  },
+  forgot: {
+    kicker: "Password reset",
+    title: "Forgot your password?",
+    subtitle: "We'll email you a secure link.",
+  },
+} as const;
 
 const AuthAdmin = () => {
   const router = useRouter();
@@ -95,7 +83,10 @@ const AuthAdmin = () => {
   const redirectUrl = searchParams.get("redirect") || "/admin";
   const { data: session, status, update } = useCachedSession();
 
-  const [activeTab, setActiveTab] = useState<TabType>("login");
+  /* `?mode=signup` opens the registration form directly. */
+  const [activeTab, setActiveTab] = useState<TabType>(
+    searchParams.get("mode") === "signup" ? "signup" : "login",
+  );
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
   const hasRedirectedRef = useRef(false);
@@ -130,83 +121,158 @@ const AuthAdmin = () => {
     setActiveTab("login");
   };
 
-  const handleShowForgotPassword = () => {
-    setShowForgotPassword(true);
-  };
-
-  const handleCancelForgotPassword = () => {
-    setShowForgotPassword(false);
-    setForgotEmail("");
-  };
+  const isSignup = activeTab === "signup";
+  const heading = showForgotPassword
+    ? HEADINGS.forgot
+    : HEADINGS[isSignup ? "signup" : "login"];
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-2 px-4 py-8">
-      <div className="w-full max-w-5xl">
-        <div className="grid overflow-hidden rounded-3xl bg-gray-2 shadow-lg lg:grid-cols-[1.05fr_0.95fr] border border-gray-3">
-          <AuthIllustrationPanel />
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gray-1 px-4 py-10 sm:px-6">
+      {/* Warm ambient wash behind the card. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -left-32 top-[-12%] h-[30rem] w-[30rem] rounded-full bg-blue-light/20 blur-[110px]"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -right-40 bottom-[-18%] h-[34rem] w-[34rem] rounded-full bg-blue-light-3/40 blur-[120px]"
+      />
 
-          <div className="flex flex-col gap-4 px-6 py-6 sm:px-8 sm:py-8">
-            <div className="space-y-3">
-              <AuthHeader />
+      <div className="relative w-full max-w-[1060px]">
+        <Link
+          href="/"
+          className="mb-4 inline-flex items-center gap-1.5 text-[13px] font-medium text-dark-4 transition-colors hover:text-blue"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" aria-hidden />
+          Back to store
+        </Link>
+
+        <div className="relative overflow-hidden rounded-[28px] border border-gray-3 bg-white shadow-[0_28px_70px_-30px_rgba(27,23,19,0.45)]">
+          {/* Compact brand ribbon — the panel's stand-in below `lg`. */}
+          <div className="relative flex items-center gap-3 overflow-hidden bg-[linear-gradient(120deg,#3E2C15_0%,#6E5029_55%,#A9834B_100%)] px-6 py-5 lg:hidden">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-dark p-2 ring-1 ring-blue-light/30">
+              <Image
+                src={siteConfig.logoMark}
+                alt={siteConfig.name}
+                width={48}
+                height={48}
+                className="h-full w-full object-contain"
+              />
             </div>
-
-            <AnimatePresence mode="wait">
-              {activeTab === "login" && !showForgotPassword && (
-                <LoginForm
-                  redirectUrl={redirectUrl}
-                  onShowForgotPassword={handleShowForgotPassword}
-                />
-              )}
-
-              {activeTab === "login" && showForgotPassword && (
-                <ForgotPasswordForm
-                  forgotEmail={forgotEmail}
-                  setForgotEmail={setForgotEmail}
-                  onCancel={handleCancelForgotPassword}
-                />
-              )}
-
-              {activeTab === "signup" && (
-                <SignupForm onSuccess={handleSignupSuccess} />
-              )}
-            </AnimatePresence>
-
-            <div className="text-center text-sm text-muted-foreground">
-              {activeTab === "login" ? (
-                <>
-                  Don&apos;t have an account?{" "}
-                  <button
-                    type="button"
-                    onClick={() => handleTabChange("signup")}
-                    className="font-medium text-primary hover:underline"
-                  >
-                    Sign Up
-                  </button>
-                </>
-              ) : (
-                <>
-                  Already have an account?{" "}
-                  <button
-                    type="button"
-                    onClick={() => handleTabChange("login")}
-                    className="font-medium text-primary hover:underline"
-                  >
-                    Log In
-                  </button>
-                </>
-              )}
-            </div>
-
-            <div className="text-center text-sm">
-              <Link
-                href="/"
-                className="font-medium text-primary hover:underline"
-              >
-                ← Back to Store
-              </Link>
+            <div className="leading-tight">
+              <p className="text-sm font-semibold text-white">
+                {siteConfig.name}
+              </p>
+              <p className="text-[10px] uppercase tracking-[0.18em] text-white/70">
+                {siteConfig.tagline}
+              </p>
             </div>
           </div>
+
+          <div className="grid lg:h-[680px] lg:grid-cols-2">
+            {/*
+             * The card keeps one height whichever form is showing, so the
+             * sliding panel never jumps. The taller sign-up form scrolls
+             * inside this column instead. `m-auto` on the inner block centres
+             * a short form but collapses to zero once the content overflows,
+             * which `justify-center` would not do — it would clip the top.
+             */}
+            <div
+              className={cn(
+                "flex flex-col px-6 py-8 sm:px-10 sm:py-10 lg:row-start-1 lg:h-full lg:overflow-y-auto lg:px-12",
+                isSignup ? "lg:col-start-2" : "lg:col-start-1",
+              )}
+            >
+              <div className="m-auto w-full">
+                {/* Pill tabs stand in for the sliding panel on small screens. */}
+                <div className="mb-6 grid grid-cols-2 gap-1 rounded-xl bg-gray-1 p-1 lg:hidden">
+                  {(["login", "signup"] as const).map((tab) => (
+                    <button
+                      key={tab}
+                      type="button"
+                      onClick={() => handleTabChange(tab)}
+                      className={cn(
+                        "h-9 rounded-lg text-[13px] font-semibold transition-all",
+                        activeTab === tab
+                          ? "bg-white text-dark shadow-sm"
+                          : "text-dark-4 hover:text-dark-2",
+                      )}
+                    >
+                      {tab === "login" ? "Sign in" : "Create account"}
+                    </button>
+                  ))}
+                </div>
+
+                <AuthHeader {...heading} />
+
+                <div className="mt-6">
+                  {activeTab === "login" && !showForgotPassword && (
+                    <LoginForm
+                      redirectUrl={redirectUrl}
+                      onShowForgotPassword={() => setShowForgotPassword(true)}
+                    />
+                  )}
+
+                  {activeTab === "login" && showForgotPassword && (
+                    <ForgotPasswordForm
+                      forgotEmail={forgotEmail}
+                      setForgotEmail={setForgotEmail}
+                      onCancel={() => {
+                        setShowForgotPassword(false);
+                        setForgotEmail("");
+                      }}
+                    />
+                  )}
+
+                  {activeTab === "signup" && (
+                    <SignupForm onSuccess={handleSignupSuccess} />
+                  )}
+                </div>
+
+                {/* On `lg` the same invitation lives on the sliding panel. */}
+                <p className="mt-6 text-center text-[13px] text-dark-4 lg:hidden">
+                  {isSignup ? "Already have an account? " : "New to us? "}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleTabChange(isSignup ? "login" : "signup")
+                    }
+                    className="font-semibold text-blue hover:underline"
+                  >
+                    {isSignup ? "Sign in" : "Create an account"}
+                  </button>
+                </p>
+              </div>
+
+              {/*
+               * Softens the cut-off when the sign-up form runs past the card.
+               * Sticky so it rides the bottom padding edge of the scroll box;
+               * the negative margin keeps it out of the layout, and over a
+               * short form it fades white into white and disappears.
+               */}
+              <div
+                aria-hidden
+                className="pointer-events-none sticky bottom-[-2.5rem] -mt-16 hidden h-16 shrink-0 bg-gradient-to-t from-white via-white/85 to-transparent lg:block"
+              />
+            </div>
+          </div>
+
+          <motion.div
+            className="absolute inset-y-0 left-0 hidden w-1/2 lg:block"
+            initial={false}
+            animate={{ x: isSignup ? "0%" : "100%" }}
+            transition={{ type: "spring", stiffness: 240, damping: 30 }}
+          >
+            <AuthBrandPanel
+              mode={activeTab}
+              onSwitch={() => handleTabChange(isSignup ? "login" : "signup")}
+            />
+          </motion.div>
         </div>
+
+        <p className="mt-5 text-center text-xs text-dark-5">
+          © {new Date().getFullYear()} {siteConfig.name}. All rights reserved.
+        </p>
       </div>
     </div>
   );

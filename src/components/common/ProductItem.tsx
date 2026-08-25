@@ -23,6 +23,7 @@ type ProductItemData = {
     thumbnails?: string[];
   };
   catalogueFile?: string | null;
+  frameColors?: string[] | null;
   description?: string;
   category?: { name?: string } | null;
   brand?: { name?: string } | null;
@@ -59,6 +60,7 @@ const ProductItem = ({
       description: item.description,
       categoryName: item.category?.name ?? null,
       brandName: item.brand?.name ?? null,
+      frameColors: item.frameColors ?? null,
       raw: item,
     }}
   />

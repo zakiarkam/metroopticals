@@ -20,6 +20,10 @@ import {
   AVAILABILITY_PILL_CLASSES,
   getAvailability,
 } from "@/features/products/utils/availability";
+import {
+  getColorSwatch,
+  normalizeColorOptions,
+} from "@/features/products/utils/colors";
 
 export const PRODUCT_FALLBACK_IMAGE = "/images/placeholder-product.svg";
 
@@ -47,6 +51,8 @@ export type ProductCardItem = {
   /** Denormalised from published reviews; null until a product has one. */
   rating?: number | null;
   reviewCount?: number | null;
+  /** Colourways this frame is sold in; drawn as swatches under the title. */
+  frameColors?: string[] | null;
   /** Raw record forwarded to quick view / details so nothing is lost. */
   raw?: unknown;
 };
@@ -80,6 +86,11 @@ export default function ProductCard({
     () => normalizeImageArray(item.images ?? []),
     [item.images]
   );
+
+  const colorOptions = useMemo(
+    () => normalizeColorOptions(item.frameColors),
+    [item.frameColors]
+  );
   const primaryImage = images[0] ?? PRODUCT_FALLBACK_IMAGE;
   const hoverImage = images[1];
 
@@ -103,8 +114,11 @@ export default function ProductCard({
       images,
       stock: item.stock ?? 0,
       status: item.status,
+      // Quick view offers the same colour chooser as the product page, so the
+      // options have to survive the hop through the store.
+      frameColors: colorOptions,
     }),
-    [images, item]
+    [colorOptions, images, item]
   );
 
   const openQuickView = useCallback(() => {
@@ -120,6 +134,9 @@ export default function ProductCard({
   const handleAddToCart = useCallback(async () => {
     if (isAddingToCart || !availability.canBuy) return;
     setIsAddingToCart(true);
+    // No colour is passed: there is no chooser on a card, so the server settles
+    // on the first colourway the product lists and the cart row lets the
+    // shopper switch it without going back to the product page.
     await addToCart(
       {
         id: item.id,
@@ -128,11 +145,19 @@ export default function ProductCard({
         discountedPrice: item.discountedPrice ?? item.price,
         images,
         stock: item.stock ?? 0,
+        frameColors: colorOptions,
       } as never,
       1
     );
     setIsAddingToCart(false);
-  }, [addToCart, availability.canBuy, images, isAddingToCart, item]);
+  }, [
+    addToCart,
+    availability.canBuy,
+    colorOptions,
+    images,
+    isAddingToCart,
+    item,
+  ]);
 
   const handleAddToWishlist = useCallback(async () => {
     if (isSavingWishlist || saved) return;
@@ -183,6 +208,39 @@ export default function ProductCard({
         <span className="text-[12px] text-dark-4">({item.reviewCount})</span>
       </div>
     ) : null;
+
+  /**
+   * The colourways, as dots.
+   *
+   * A frame sold in four finishes reads as four separate products if the card
+   * never says so. Named here as well as drawn, via the title attribute, since
+   * the dots alone carry nothing for a screen reader.
+   */
+  const colors = colorOptions.length ? (
+    <div className="flex items-center gap-1.5">
+      <span className="flex items-center gap-1" aria-hidden>
+        {colorOptions.slice(0, 5).map((color) => {
+          const swatch = getColorSwatch(color);
+
+          return swatch ? (
+            <span
+              key={color}
+              title={color}
+              className={`h-3.5 w-3.5 rounded-full ${
+                swatch.needsBorder ? "ring-1 ring-inset ring-dark/20" : ""
+              }`}
+              style={{ background: swatch.background }}
+            />
+          ) : null;
+        })}
+      </span>
+      <span className="text-[11.5px] text-dark-4">
+        {colorOptions.length === 1
+          ? colorOptions[0]
+          : `${colorOptions.length} colours`}
+      </span>
+    </div>
+  ) : null;
 
   const price = (
     <div className="flex flex-wrap items-baseline gap-2">
@@ -306,6 +364,7 @@ export default function ProductCard({
           </h3>
 
           {rating}
+          {colors}
 
           {item.description && (
             <p className="line-clamp-2 text-[13.5px] leading-relaxed text-body">
@@ -397,6 +456,7 @@ export default function ProductCard({
         </h3>
 
         {rating}
+        {colors}
 
         {showDescription && item.description ? (
           <p className="line-clamp-2 text-[13px] leading-relaxed text-body">
