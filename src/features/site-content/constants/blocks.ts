@@ -718,6 +718,47 @@ export const BLOCKS: BlockDefinition[] = [
       ],
     },
   },
+  {
+    key: "business.details",
+    label: "Business & invoice details",
+    group: "Global",
+    description:
+      "Legal name, contact and bank details printed on every invoice and receipt. Also editable from the admin profile page.",
+    fields: [
+      { name: "legalName", type: "text", label: "Registered business name", maxLength: 120 },
+      { name: "registrationNumber", type: "text", label: "Business registration / VAT no.", placeholder: "Optional", maxLength: 60 },
+      { name: "address", type: "textarea", label: "Address", rows: 2, maxLength: 240 },
+      { name: "phone", type: "text", label: "Phone", maxLength: 40 },
+      { name: "email", type: "text", label: "Email", maxLength: 120 },
+      { name: "website", type: "text", label: "Website", maxLength: 120 },
+      { name: "bankAccountName", type: "text", label: "Bank account name", maxLength: 120 },
+      { name: "bankName", type: "text", label: "Bank", maxLength: 120 },
+      { name: "bankBranch", type: "text", label: "Branch", maxLength: 120 },
+      { name: "bankAccountNumber", type: "text", label: "Account number", maxLength: 40 },
+      {
+        name: "invoiceNote",
+        type: "textarea",
+        label: "Invoice footer note",
+        rows: 2,
+        maxLength: 300,
+        help: "Payment terms, returns policy or a thank-you line. Printed at the bottom of every invoice.",
+      },
+    ],
+    defaults: {
+      legalName: "Metro Opticals",
+      registrationNumber: "",
+      address: "No 1, Main Street, Colombo, Sri Lanka",
+      phone: "011 234 5678",
+      email: "hello@metroopticals.lk",
+      website: "metroopticals.lk",
+      bankAccountName: "Metro Opticals",
+      bankName: "",
+      bankBranch: "",
+      bankAccountNumber: "",
+      invoiceNote:
+        "Thank you for shopping with Metro Opticals. Goods once sold can be exchanged within 7 days with this invoice.",
+    },
+  },
 ];
 
 export const BLOCK_MAP: Record<string, BlockDefinition> = BLOCKS.reduce(

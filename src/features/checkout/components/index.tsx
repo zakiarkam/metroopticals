@@ -568,7 +568,7 @@ const Checkout = () => {
                               alt={item.title}
                               fill
                               sizes="56px"
-                              className="object-contain p-1.5"
+                              className="object-cover"
                             />
                             <span className="absolute -right-1 -top-1 grid h-5 min-w-[20px] place-items-center rounded-full bg-blue px-1 text-[10px] font-bold text-white">
                               {item.quantity}

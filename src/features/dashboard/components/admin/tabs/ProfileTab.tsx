@@ -6,6 +6,7 @@ import { userApi } from "@/features/users/api/user-api";
 import { useDispatch } from "react-redux";
 import { api } from "@/store/services/api";
 import { authApi } from "@/features/auth/api/auth-api";
+import BusinessDetailsCard from "@/features/dashboard/components/admin/BusinessDetailsCard";
 
 type UserProfile = {
   id: number;
@@ -1051,6 +1052,8 @@ const ProfileTab: React.FC = () => {
           </div>
         </div>
       )}
+
+      <BusinessDetailsCard />
     </div>
   );
 };

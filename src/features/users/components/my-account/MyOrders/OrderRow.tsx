@@ -3,7 +3,7 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Download, ImageOff, Loader2 } from "lucide-react";
+import { Download, ImageOff, Loader2, Star } from "lucide-react";
 
 import { Order, OrderStatus } from "@/features/orders/types/order";
 import { getProductImageUrl } from "@/lib/storageUtils";
@@ -62,6 +62,11 @@ const OrderRow: React.FC<OrderRowProps> = ({
   const imageUrl = resolveImage(firstItem?.product?.images);
   const extraItems = order.items.length - 1;
 
+  const canReview = order.status === "DELIVERED";
+  const reviewableExtras = canReview
+    ? order.items.slice(1).filter((item) => item.product?.id)
+    : [];
+
   const statusLabel = order.status
     .toLowerCase()
     .split("_")
@@ -97,7 +102,7 @@ const OrderRow: React.FC<OrderRowProps> = ({
               alt={firstItem?.product?.title ?? "Order item"}
               fill
               sizes="72px"
-              className="object-contain p-2"
+              className="object-cover"
             />
           ) : (
             <span className="grid h-full w-full place-items-center text-dark-5">
@@ -138,6 +143,20 @@ const OrderRow: React.FC<OrderRowProps> = ({
           </p>
         </div>
 
+        {/* Once the order has arrived the customer can rate what they got.
+            The link lands on the product's review section, and each extra
+            item gets its own link below so a multi-item order is reviewable
+            without hunting through the catalogue. */}
+        {canReview && productUrl && (
+          <Link
+            href={`${productUrl}#reviews`}
+            className="inline-flex h-11 items-center gap-2 rounded-xl bg-blue px-5 text-[13px] font-semibold text-white transition-colors hover:bg-blue-dark"
+          >
+            <Star className="h-4 w-4" />
+            Write a review
+          </Link>
+        )}
+
         <button
           type="button"
           onClick={() => onPrintInvoice(order)}
@@ -152,6 +171,23 @@ const OrderRow: React.FC<OrderRowProps> = ({
           Invoice
         </button>
       </div>
+
+      {reviewableExtras.length > 0 && (
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-gray-3 bg-gray-2 px-5 py-3">
+          <span className="text-[12px] font-semibold text-dark-5">
+            Also review:
+          </span>
+          {reviewableExtras.map((item) => (
+            <Link
+              key={item.id}
+              href={`/shop-details/${item.product.id}#reviews`}
+              className="text-[12.5px] font-semibold text-blue underline-offset-2 hover:underline"
+            >
+              {item.product.title}
+            </Link>
+          ))}
+        </div>
+      )}
     </article>
   );
 };

@@ -479,6 +479,15 @@ export default function ShopWithSidebar() {
 
   /* -------------------------------------------------------- URL reflection */
 
+  // The header search box pushes a new `?search=` while this page is already
+  // mounted. The state initialisers above only run once, so without this the
+  // second search from the header would be silently ignored.
+  useEffect(() => {
+    const fromUrl = initialParams.get("search") ?? "";
+    if (fromUrl !== searchTerm.trim()) setSearchTerm(fromUrl);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialParams]);
+
   // Keeps the address bar shareable without pushing a history entry per tick
   // ticking five brands used to mean five Back presses to leave the page.
   useEffect(() => {

@@ -10,15 +10,20 @@ const placementEnum = z.enum(
 );
 
 /**
- * Images and links may be absolute (R2 public URL) or site-relative
- * (`/images/ads/…`, `/shop-details/12`). A bare `z.string().url()` rejects the
- * relative form, which is exactly what the upload flow and internal CTAs use.
+ * Artwork may be an uploaded R2 file name (`hero-sale-2026-08-25.png`, which
+ * is what the upload flow stores), an absolute URL, or a site-relative path
+ * (`/images/ads/…`). Links may be absolute or site-relative.
  */
+const R2_FILE_NAME = /^[A-Za-z0-9][A-Za-z0-9._-]*\.(jpe?g|png|webp|avif|gif|svg)$/i;
+
 const imageRef = z
   .string()
   .trim()
   .refine(
-    (value) => /^https?:\/\//i.test(value) || value.startsWith("/"),
+    (value) =>
+      /^https?:\/\//i.test(value) ||
+      value.startsWith("/") ||
+      R2_FILE_NAME.test(value),
     "Must be an uploaded image or a URL",
   );
 

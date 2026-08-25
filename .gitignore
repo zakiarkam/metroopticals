@@ -56,3 +56,6 @@ docs/
 # Extra build dirs used by a second dev server (see NEXT_DIST_DIR)
 .next-*
 
+
+# Generated ad artwork awaiting upload via the admin panel
+/ad-creatives/

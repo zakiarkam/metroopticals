@@ -409,9 +409,14 @@ const config: Config = {
         shimmer: {
           "100%": { transform: "translateX(100%)" },
         },
+        marquee: {
+          "0%": { transform: "translateX(0)" },
+          "100%": { transform: "translateX(-50%)" },
+        },
       },
       animation: {
         shimmer: "shimmer 2s infinite",
+        marquee: "marquee 40s linear infinite",
       },
       borderRadius: {
         lg: "var(--radius)",

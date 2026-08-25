@@ -167,7 +167,7 @@ const SingleItem = ({ item }: { item: CartItem }) => {
           alt={item.title}
           fill
           sizes="80px"
-          className="object-contain p-2"
+          className="object-cover"
         />
       </Link>
 

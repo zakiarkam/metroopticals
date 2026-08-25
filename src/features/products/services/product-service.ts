@@ -113,6 +113,8 @@ export async function getProducts(query: ProductQueryInput) {
       OR: [
         { title: { contains: search, mode: "insensitive" } },
         { description: { contains: search, mode: "insensitive" } },
+        { brand: { name: { contains: search, mode: "insensitive" } } },
+        { category: { name: { contains: search, mode: "insensitive" } } },
       ],
     });
   }
@@ -226,6 +228,8 @@ export async function getProductFacets(query: ProductQueryInput) {
       OR: [
         { title: { contains: search, mode: "insensitive" } },
         { description: { contains: search, mode: "insensitive" } },
+        { brand: { name: { contains: search, mode: "insensitive" } } },
+        { category: { name: { contains: search, mode: "insensitive" } } },
       ],
     });
   }

@@ -140,7 +140,7 @@ const CartSidebarModal = () => {
                         alt={item.title}
                         fill
                         sizes="68px"
-                        className="object-contain p-2"
+                        className="object-cover"
                       />
                     </Link>
 
