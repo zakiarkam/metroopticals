@@ -15,7 +15,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 import { deleteProduct } from "@/features/products/api/product-api";
-import { useGetProductsQuery } from "@/store/services/api";
+import { api, useGetProductsQuery } from "@/store/services/api";
+import { useDispatch } from "react-redux";
+import type { AppDispatch } from "@/store/store";
+import { toEyewearFormFields } from "./types";
 
 import { Product } from "@/features/products/types/product";
 import { Toast } from "@/lib/utils/toast";
@@ -151,9 +154,32 @@ const ProductsTab: React.FC<ProductsTabProps> = ({
     }
   }, [searchParams]);
 
+  const dispatch = useDispatch<AppDispatch>();
+
   const handleProductsChanged = useCallback(() => {
+    dispatch(api.util.invalidateTags([{ type: "Products", id: "LIST" }]));
     refetchProducts();
-  }, [refetchProducts]);
+  }, [dispatch, refetchProducts]);
+
+  const duplicatePrefill = useMemo(
+    () =>
+      duplicateSourceProduct
+        ? {
+            title: duplicateSourceProduct.title,
+            slug: duplicateSourceProduct.slug,
+            categoryId: duplicateSourceProduct.categoryId,
+            brandId: duplicateSourceProduct.brandId ?? null,
+            price: duplicateSourceProduct.price,
+            discountedPrice: duplicateSourceProduct.discountedPrice ?? undefined,
+            stock: duplicateSourceProduct.stock,
+            unitType: duplicateSourceProduct.unitType,
+            status: duplicateSourceProduct.status,
+            description: duplicateSourceProduct.description,
+            ...toEyewearFormFields(duplicateSourceProduct),
+          }
+        : undefined,
+    [duplicateSourceProduct],
+  );
 
   const handleViewDetails = (productId: number) => {
     setSelectedProductId(productId);
@@ -642,7 +668,7 @@ const ProductsTab: React.FC<ProductsTabProps> = ({
         </div>
 
         {/* Pagination */}
-        {!isLoading && products.length > 0 && (
+        {!isLoading && totalPages > 1 && (
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
@@ -663,23 +689,7 @@ const ProductsTab: React.FC<ProductsTabProps> = ({
           setDuplicateSourceProduct(null);
         }}
         onSuccess={handleProductsChanged}
-        prefillData={
-          duplicateSourceProduct
-            ? {
-                title: duplicateSourceProduct.title,
-                slug: duplicateSourceProduct.slug,
-                categoryId: duplicateSourceProduct.categoryId,
-                brandId: duplicateSourceProduct.brandId ?? null,
-                price: duplicateSourceProduct.price,
-                discountedPrice:
-                  duplicateSourceProduct.discountedPrice ?? undefined,
-                stock: duplicateSourceProduct.stock,
-                unitType: duplicateSourceProduct.unitType,
-                status: duplicateSourceProduct.status,
-                description: duplicateSourceProduct.description,
-              }
-            : undefined
-        }
+        prefillData={duplicatePrefill}
       />
 
       <EditProductDialog

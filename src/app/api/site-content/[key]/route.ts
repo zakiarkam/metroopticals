@@ -11,11 +11,17 @@ import { logApiAction, logApiError } from "@/lib/audit";
 
 type Params = { params: Promise<{ key: string }> };
 
+// Blocks that hold internal business data and must never be read anonymously.
+const PRIVATE_BLOCKS = new Set(["business.details"]);
+
 export async function GET(_request: NextRequest, { params }: Params) {
   try {
     const { key } = await params;
     if (!getBlockDefinition(key)) {
       return createSuccessResponse({ block: null }, 404);
+    }
+    if (PRIVATE_BLOCKS.has(key)) {
+      await requireAdmin();
     }
     return createSuccessResponse({ block: await getSiteBlock(key) });
   } catch (error) {

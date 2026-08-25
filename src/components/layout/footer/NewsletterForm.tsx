@@ -3,15 +3,6 @@
 import React, { useState } from "react";
 import { Check, Loader2, Mail } from "lucide-react";
 
-/**
- * Footer newsletter sign-up.
- *
- * The field used to post nowhere  a required input and a Subscribe button
- * with no handler, which looks exactly like a working form. There is no
- * subscriber table, so the address is sent through the contact endpoint and
- * lands in the shop's inbox as a sign-up request. That is a real destination,
- * and the confirmation only appears once the request succeeds.
- */
 export default function NewsletterForm({
   placeholder,
   buttonLabel,

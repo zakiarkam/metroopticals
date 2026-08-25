@@ -9,11 +9,6 @@ const placementEnum = z.enum(
   AD_PLACEMENT_IDS as [AdvertisementPlacement, ...AdvertisementPlacement[]],
 );
 
-/**
- * Artwork may be an uploaded R2 file name (`hero-sale-2026-08-25.png`, which
- * is what the upload flow stores), an absolute URL, or a site-relative path
- * (`/images/ads/…`). Links may be absolute or site-relative.
- */
 const R2_FILE_NAME = /^[A-Za-z0-9][A-Za-z0-9._-]*\.(jpe?g|png|webp|avif|gif|svg)$/i;
 
 const imageRef = z
@@ -35,14 +30,6 @@ const linkRef = z
     "Must be a full URL or a path starting with /",
   );
 
-/**
- * Nothing here is individually mandatory.
- *
- * An ad is a picture, a linked product, or both  a banner campaign is often
- * artwork with no name worth typing, and a product placement can run entirely
- * on the catalogue photo. The cross-field rules below enforce the one thing
- * that actually matters: the zone must end up with something to render.
- */
 const baseAdvertisementSchema = z.object({
   title: z.string().trim().max(200).optional().nullable(),
   imageUrl: imageRef.optional().nullable(),
@@ -56,13 +43,6 @@ const baseAdvertisementSchema = z.object({
   productId: z.coerce.number().int().positive().optional().nullable(),
 });
 
-/**
- * Cross-field rules shared by create and update:
- *  - a banner zone has only artwork to show, so it needs an image
- *  - a product zone needs either its own artwork or a product to borrow from
- *  - the slot has to be one the placement actually renders
- *  - an end date cannot precede the start date
- */
 const applyPlacementRules = (
   data: {
     placement?: AdvertisementPlacement;
@@ -73,11 +53,6 @@ const applyPlacementRules = (
     endDate?: string | null;
   },
   ctx: z.RefinementCtx,
-  /**
-   * A partial update that never mentions the artwork leaves the stored image
-   * in place, so re-checking "does this zone have something to render" would
-   * reject a perfectly valid rename.
-   */
   checkCreative = true,
 ) => {
   const meta = data.placement ? AD_PLACEMENTS[data.placement] : null;

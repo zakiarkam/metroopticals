@@ -8,15 +8,7 @@ import { uploadApi } from "@/features/uploads/api/upload-api";
 import { getAdvertisementImageUrl } from "@/lib/storageUtils";
 import type { ImageField } from "@/features/site-content/types/site-content";
 
-/**
- * Image picker for a content field.
- *
- * Content artwork shares the `advertisement/image` bucket rather than getting
- * its own: both are marketing creative uploaded by the same people, and one
- * folder means one set of storage rules to keep straight.
- */
-
-const ACCEPTED = ["image/jpeg", "image/png", "image/webp", "image/avif"];
+const ACCEPTED = ["image/jpeg", "image/png", "image/webp"];
 const MAX_BYTES = 5 * 1024 * 1024;
 
 export default function ContentImageField({

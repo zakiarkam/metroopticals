@@ -112,9 +112,6 @@ const Contact = () => {
         crumbs={[{ label: "Contact" }]}
       />
 
-      {/* Opens the page the way the lens guides do  a split heading and one
-          photograph of the actual shop, so "get in touch" has a place attached
-          to it rather than landing straight on a form. */}
       <section className="border-b border-gray-3 bg-gray-2 py-12 lg:py-16">
         <SiteContainer>
           <SectionIntro

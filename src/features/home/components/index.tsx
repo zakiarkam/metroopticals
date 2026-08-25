@@ -1,21 +1,3 @@
-/**
- * Home page composition.
- *
- * Eleven sections, in the order a visitor actually needs them:
- *
- *   hero → brands → promises → browse → new in → offer → best sellers
- *        → campaigns → how it works → reviews → visit us
- *
- * It used to run to twenty-four, including five advertising slots and six
- * editable link lists (shapes, prices, chips, feature cards, try-on, social)
- * that all pointed at the same shop page. Those shortcuts now live where a
- * shopper looks for them  the filter sidebar and the navigation panels  so
- * the page is a route to the catalogue rather than a second copy of it.
- *
- * Only the hero and the trust bar are in the initial bundle; everything below
- * the fold is code-split.
- */
-
 import dynamic from "next/dynamic";
 import AdZone from "@/features/advertisements/components/site/AdZone";
 import {

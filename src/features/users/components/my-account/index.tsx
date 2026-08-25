@@ -209,7 +209,9 @@ export default function MyAccount() {
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch (error: any) {
-      setSaveError(error.message || "Could not save changes");
+      setSaveError(
+        error?.response?.data?.message || error.message || "Could not save changes",
+      );
     } finally {
       setIsSaving(false);
     }

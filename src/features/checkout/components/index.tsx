@@ -17,7 +17,7 @@ import {
   User,
 } from "lucide-react";
 
-import { createOrder } from "@/features/orders/api/order-api";
+import { createOrder } from "@/features/orders/api/orders-api";
 import { useCachedSession } from "@/features/auth/hooks/use-cached-session";
 import { useCart } from "@/features/cart/hooks/use-cart";
 import { normalizeImageArray } from "@/lib/storageUtils";
@@ -158,7 +158,6 @@ const Checkout = () => {
   const { cartItems, clearCart } = useCart();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("cod");
-  const shippingFee = 0;
   const shippingMethod = "standard";
 
   const [billingDetails, setBillingDetails] = useState<Details>(EMPTY_DETAILS);
@@ -317,7 +316,6 @@ const Checkout = () => {
           color: item.color || undefined,
         })),
         // Shipping fee/method temporarily disabled in checkout UI.
-        shippingFee,
         paymentMethod,
         shippingMethod,
         notes,

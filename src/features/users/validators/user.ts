@@ -12,7 +12,7 @@ export const customerTypeEnum = z.enum([
 
 export const adminCreateUserSchema = z.object({
   name: z.string().min(2),
-  email: z.string().email(),
+  email: z.string().trim().toLowerCase().email(),
   password: z.string().min(8),
   role: userRoleEnum,
   customerType: customerTypeEnum.optional(),
@@ -26,7 +26,7 @@ export const adminCreateUserSchema = z.object({
 
 export const adminUpdateUserSchema = z.object({
   name: z.string().min(2).optional(),
-  email: z.string().email().optional(),
+  email: z.string().trim().toLowerCase().email().optional(),
   password: z.string().min(8).optional(),
   role: userRoleEnum.optional(),
   customerType: customerTypeEnum.optional(),

@@ -61,11 +61,6 @@ export async function getProducts(query: ProductQueryInput) {
     andFilters.push({ brand: { slug: { in: brands } } });
   }
 
-  /*
-   * "On sale" is a real comparison between two columns, not just "has a
-   * discounted price set"  plenty of rows carry a `discountedPrice` equal to
-   * the list price. Prisma field references express that without raw SQL.
-   */
   if (onSale) {
     andFilters.push({
       discountedPrice: { not: null, lt: prisma.product.fields.price },
@@ -190,13 +185,6 @@ export async function getProducts(query: ProductQueryInput) {
   };
 }
 
-/**
- * Counts for each filter option in the sidebar.
- *
- * Counts are computed against the *category/search* scope only, not the
- * currently ticked filters  otherwise ticking "Men" would drop every other
- * gender to zero and make them un-tickable.
- */
 export async function getProductFacets(query: ProductQueryInput) {
   const { category, categories, search } = query;
 
@@ -326,14 +314,6 @@ export async function getProductFacets(query: ProductQueryInput) {
   };
 }
 
-/**
- * Frame shapes the shop can actually show something for.
- *
- * The navigation used to list all eight `FrameShape` enum members, so a shopper
- * could pick "Browline" from the menu and land on an empty grid. This reads the
- * shapes present on live products, so the menu can only ever offer a shape that
- * has stock behind it.
- */
 export async function getStockedFrameShapes() {
   const rows = await prisma.product.groupBy({
     by: ["frameShape"],
@@ -349,12 +329,6 @@ export async function getStockedFrameShapes() {
     .map((row) => ({ value: row.frameShape, count: row._count._all }));
 }
 
-/**
- * Wearer categories with stock behind them, most-stocked first.
- *
- * Same reason as `getStockedFrameShapes`: the menu offered "Kids" whether or
- * not a single kids' frame was listed.
- */
 export async function getStockedGenders() {
   const rows = await prisma.product.groupBy({
     by: ["gender"],

@@ -36,19 +36,12 @@ function formatOrderNumber(orderId: number, createdAt: Date): string {
   return `${day}/${month}/${year}/MO/${orderId}`;
 }
 
-/**
- * WhatsApp notifier for ORDER PLACED (customer confirmation).
- * No manual sleep here: sendWhatsAppMessage() handles 429 retry/wait internally.
- */
 async function notifyOrderPlacedWhatsApp(params: {
   order: OrderWithItemsAndUser;
   orderData: Omit<CreateOrderInput, "items" | "shippingFee">;
 }) {
   const { order, orderData } = params;
 
-  // The colour rides along in the title: the WhatsApp formatter takes a plain
-  // product name, and a message that omits the colourway is one the customer
-  // has to ask about.
   const items = order.items.map((i) => ({
     product: {
       title: i.color ? `${i.product.title} (${i.color})` : i.product.title,
@@ -158,8 +151,14 @@ export async function getOrderById(
   return order;
 }
 
+// Delivery pricing is decided here, never by the client.
+const SHIPPING_FEES: Record<CreateOrderInput["shippingMethod"], number> = {
+  standard: 0,
+};
+
 export async function createOrder(userId: number, data: CreateOrderInput) {
-  const { items, shippingFee, ...orderData } = data;
+  const { items, ...orderData } = data;
+  const shippingFee = SHIPPING_FEES[data.shippingMethod];
 
   // Validate products + compute totals
   let subtotal = 0;
@@ -216,7 +215,7 @@ export async function createOrder(userId: number, data: CreateOrderInput) {
     });
   }
 
-  const totalAmount = subtotal + (shippingFee || 0);
+  const totalAmount = subtotal + shippingFee;
 
   // Create order in transaction
   const order = await prisma.$transaction(async (tx) => {
@@ -226,7 +225,7 @@ export async function createOrder(userId: number, data: CreateOrderInput) {
         userId,
         status: "PENDING",
         totalAmount,
-        shippingFee: shippingFee || 0,
+        shippingFee,
         subtotal,
         ...orderData,
         items: {
@@ -249,13 +248,16 @@ export async function createOrder(userId: number, data: CreateOrderInput) {
 
     // Update stock
     for (const item of validatedItems) {
-      const newStock = item.currentStock - item.quantity;
-      await tx.product.update({
-        where: { id: item.productId },
-        data: {
-          stock: { decrement: item.quantity },
-          ...(newStock === 0 ? { status: "OUT_OF_STOCK" } : {}),
-        },
+      const updated = await tx.product.updateMany({
+        where: { id: item.productId, stock: { gte: item.quantity } },
+        data: { stock: { decrement: item.quantity } },
+      });
+      if (updated.count === 0) {
+        throw new ValidationError("Insufficient stock for one of the items");
+      }
+      await tx.product.updateMany({
+        where: { id: item.productId, stock: 0 },
+        data: { status: "OUT_OF_STOCK" },
       });
     }
 
@@ -273,12 +275,6 @@ export async function createOrder(userId: number, data: CreateOrderInput) {
       },
     })) as OrderWithItemsAndUser;
   });
-
-  /**
-   * Notifications (best-effort):
-   * - We do not block order creation for external services.
-   * - On VPS/Node this is fine. (If you ever move to serverless, use a queue/job worker.)
-   */
 
   // Customer email
   void (async () => {

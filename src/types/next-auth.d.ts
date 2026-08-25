@@ -48,5 +48,6 @@ declare module "next-auth/jwt" {
     country?: string | null;
     postalCode?: string | null;
     provider?: string | null;
+    refreshedAt?: number;
   }
 }

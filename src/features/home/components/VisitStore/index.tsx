@@ -5,14 +5,6 @@ import { ArrowRight, Clock, MapPin, MessageCircle, Phone } from "lucide-react";
 import SiteContainer from "@/components/common/SiteContainer";
 import { siteConfig } from "@/config/site";
 
-/**
- * Store-visit band.
- *
- * Most of this business still closes in person, so the home page ends with the
- * physical details: where we are, when we are open, and three ways to reach us.
- * Full-bleed gold panel to give the page one strong stop before the footer.
- */
-
 const HOURS = [
   { days: "Monday – Friday", time: "9:00 am – 7:00 pm" },
   { days: "Saturday", time: "9:00 am – 6:00 pm" },

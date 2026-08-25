@@ -180,10 +180,6 @@ const QuickViewModal = () => {
         <div className="grid gap-0 lg:grid-cols-2">
           {/* ========================= gallery ========================= */}
           <div className="border-b border-gray-3 bg-gray-1 p-5 sm:p-7 lg:border-b-0 lg:border-r">
-            {/* The photograph fills the frame. It used to sit `contain`ed
-                inside 32px of padding with its own drop shadow, inside a
-                bordered box, on a tinted panel  four nested surfaces before
-                you reached the product. */}
             <div className="relative aspect-square overflow-hidden rounded-2xl bg-gray-2">
               <Image
                 src={previewImage || "/images/placeholder-product.svg"}

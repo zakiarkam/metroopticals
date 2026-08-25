@@ -126,8 +126,6 @@ const ProfileTab: React.FC = () => {
         id: response.data.id || session?.user?.id,
         name: response.data.name ?? session?.user?.name ?? null,
         email: response.data.email ?? session?.user?.email ?? null,
-        role: (session?.user as any)?.role ?? "ADMIN",
-        image: (session?.user as any)?.image ?? null,
         phone: response.data.phone ?? null,
         address: response.data.address ?? null,
         city: response.data.city ?? null,
@@ -136,7 +134,7 @@ const ProfileTab: React.FC = () => {
       };
       if (updatedUser.id) {
         try {
-          await update?.({ user: updatedUser } as any);
+          await update?.();
           dispatch(
             api.util.invalidateTags([
               { type: "Users", id: updatedUser.id },
@@ -151,7 +149,9 @@ const ProfileTab: React.FC = () => {
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch (error: any) {
-      setSaveError(error.message || "Could not save changes");
+      setSaveError(
+        error?.response?.data?.message || error.message || "Could not save changes"
+      );
     } finally {
       setIsLoading(false);
     }

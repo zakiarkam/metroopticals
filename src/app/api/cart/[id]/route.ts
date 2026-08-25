@@ -2,12 +2,8 @@ import { NextRequest } from "next/server";
 import { updateCartItem, removeFromCart } from "@/features/cart/services/cart-service";
 import { requireAuth } from "@/lib/middleware/auth";
 import { handleError, createSuccessResponse } from "@/lib/errors";
-import { z } from "zod";
+import { updateCartItemSchema } from "@/features/cart/validators/cart";
 import { logApiAction, logApiError } from "@/lib/audit";
-
-const updateCartSchema = z.object({
-  quantity: z.number().min(1, "Quantity must be at least 1"),
-});
 
 export async function PUT(
   request: NextRequest,
@@ -19,11 +15,9 @@ export async function PUT(
     const { id: rawId } = await params;
     const id = Number(rawId);
     const body = await request.json();
-    const data = updateCartSchema.parse(body);
+    const data = updateCartItemSchema.parse(body);
 
-    const cartItem = await updateCartItem(session.user.id, id, {
-      quantity: data.quantity,
-    });
+    const cartItem = await updateCartItem(session.user.id, id, data);
 
     await logApiAction({
       request,

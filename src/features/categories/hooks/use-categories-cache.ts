@@ -52,7 +52,7 @@ export const useCategoriesCache = (
 
   const fetchCategories = useCallback(
     async (force = false) => {
-      if (!force && entry?.status === "loading") return;
+      if (!force && (entry?.status === "loading" || entry?.status === "failed")) return;
 
       dispatch(
         setCategoriesCacheStatus({ key, status: "loading", error: null })

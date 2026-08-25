@@ -144,11 +144,6 @@ export const useCart = () => {
         frameColors?: string[] | null;
       },
       quantity: number = 1,
-      /**
-       * The colourway the shopper picked. Omitted from listing cards, where
-       * there is no choice on screen  the server then settles on the first
-       * colour the product lists so the line is never colour-less.
-       */
       color?: string,
     ) => {
       if (status !== "authenticated") {
@@ -156,8 +151,8 @@ export const useCart = () => {
         return false;
       }
 
+      const loadingToast = toast.loading("Adding to cart...");
       try {
-        const loadingToast = toast.loading("Adding to cart...");
 
         const response = await addToCart({
           productId: product.id,
@@ -192,6 +187,7 @@ export const useCart = () => {
         await loadCart();
         return true;
       } catch (error: any) {
+        toast.dismiss(loadingToast);
         const message =
           error.response?.data?.message || "Failed to add to cart";
         toast.error(message);
@@ -241,10 +237,17 @@ export const useCart = () => {
     [dispatch, loadCart, cartItems],
   );
 
+  // Drop the server-backed cart when the user signs out.
+  useEffect(() => {
+    if (status === "unauthenticated" && synced) {
+      dispatch(removeAllItemsFromCart());
+    }
+  }, [dispatch, status, synced]);
+
   const handleRemoveFromCart = useCallback(
     async (id: number) => {
+      const loadingToast = toast.loading("Removing item...");
       try {
-        const loadingToast = toast.loading("Removing item...");
 
         // Optimistic update
         dispatch(removeItemFromCart(id));
@@ -258,6 +261,7 @@ export const useCart = () => {
         await loadCart();
         return true;
       } catch (error) {
+        toast.dismiss(loadingToast);
         toast.error("Failed to remove item");
         // Revert on error
         await loadCart();
@@ -268,8 +272,8 @@ export const useCart = () => {
   );
 
   const handleClearCart = useCallback(async () => {
+    const loadingToast = toast.loading("Clearing cart...");
     try {
-      const loadingToast = toast.loading("Clearing cart...");
 
       await clearCart();
       dispatch(removeAllItemsFromCart());
@@ -278,6 +282,7 @@ export const useCart = () => {
       toast.success("Cart cleared");
       return true;
     } catch (error) {
+      toast.dismiss(loadingToast);
       toast.error("Failed to clear cart");
       return false;
     }

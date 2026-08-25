@@ -44,13 +44,6 @@ import Pagination from "@/components/ui/pagination";
 
 const PRICE_MIN = 0;
 const PRICE_MAX = 100000;
-/**
- * Products per page.
- *
- * Nine rather than twelve: it fills the three-column grid exactly, and with a
- * catalogue this size twelve meant `totalPages` was always 1, so the pagination
- * below the grid never rendered at all.
- */
 const PAGE_SIZE = 9;
 
 type ProductStyle = "grid" | "list";
@@ -219,9 +212,6 @@ const ShopSidebar = React.memo(function ShopSidebar({
 }) {
   return (
     <div
-      // On mobile this is a drawer over a scrim; from `xl` it is a static
-      // column. The panel is always mounted so the filter state survives a
-      // resize in either direction.
       className={`sidebar-content fixed inset-y-0 left-0 z-50 w-[86vw] max-w-[360px] overflow-y-auto bg-gray-1 p-4 shadow-4 transition-transform duration-200 ease-out xl:static xl:z-auto xl:w-[300px] xl:max-w-none xl:flex-shrink-0 xl:translate-x-0 xl:overflow-visible xl:bg-transparent xl:p-0 xl:shadow-none ${
         open ? "translate-x-0" : "-translate-x-full"
       }`}
@@ -301,15 +291,6 @@ const ShopSidebar = React.memo(function ShopSidebar({
   );
 });
 
-/**
- * Read the attribute filters out of the URL.
- *
- * Every entry point into the shop  a mega-menu shape link, a brand logo, a
- * shared or bookmarked URL  arrives as query parameters. Seeding state from
- * them is what makes those links actually filter.
- *
- * Values are comma-separated to match the API's `csvList` query schema.
- */
 const selectionFromParams = (params: URLSearchParams): FilterSelection => {
   const read = (key: FilterKey) =>
     (params.get(key) ?? "")
@@ -378,32 +359,17 @@ export default function ShopWithSidebar() {
 
   // Facet counts follow the category scope, not the ticked attribute filters
   // otherwise ticking "Round" would drop every other shape out of the list.
-  const { facets, loading: facetsLoading } = useFacets(
-    selectedCategories[0],
-    searchTerm || undefined,
-  );
-
-  /* ------------------------------------------------------------- the query */
-
-  /**
-   * One effect owns the query.
-   *
-   * There used to be six, each with its own first-run guard, and a change to
-   * two filters at once fired two overlapping requests. Debouncing is applied
-   * to the two free-typed inputs only; everything else is a discrete click and
-   * should land immediately.
-   */
   const debouncedSearch = useDebounced(searchTerm, 400);
   const debouncedPrice = useDebounced(priceRange, 300);
+
+  const { facets, loading: facetsLoading } = useFacets(
+    selectedCategories[0],
+    debouncedSearch || undefined,
+  );
 
   const categoryKey = selectedCategories.join(",");
   const filterKey = JSON.stringify(filterSelection);
 
-  /**
-   * Everything except the page number. When this changes the shopper is
-   * looking at a different result set, so the query has to restart at page one
-   *  computing it here rather than in a second effect keeps it to one request.
-   */
   const querySignature = [
     debouncedSearch.trim(),
     categoryKey,
@@ -423,14 +389,6 @@ export default function ShopWithSidebar() {
       ]),
     );
 
-    // Child categories are stored as brands in the catalogue tree.
-    const parentSlugs: string[] = [];
-    const childSlugs: string[] = [];
-    selectedCategories.forEach((slug) => {
-      const category = categories.find((cat) => cat.slug === slug);
-      if (category?.parentId) childSlugs.push(slug);
-      else parentSlugs.push(slug);
-    });
 
     const [field, order] = sortBy.includes("-")
       ? sortBy.split("-")
@@ -444,16 +402,13 @@ export default function ShopWithSidebar() {
     const page = restarted ? 1 : currentPage;
     if (restarted && currentPage !== 1) setCurrentPage(1);
 
-    const brands = [
-      ...((attributes.brands as string[] | undefined) ?? []),
-      ...childSlugs,
-    ];
+    const brands = (attributes.brands as string[] | undefined) ?? [];
 
     updateParams({
       page,
       limit: PAGE_SIZE,
       search: debouncedSearch.trim() || undefined,
-      categories: parentSlugs.length ? parentSlugs : undefined,
+      categories: selectedCategories.length ? selectedCategories : undefined,
       minPrice: atDefaultPrice ? undefined : debouncedPrice.from,
       maxPrice: atDefaultPrice ? undefined : debouncedPrice.to,
       onSale: onSale || undefined,
@@ -479,9 +434,6 @@ export default function ShopWithSidebar() {
 
   /* -------------------------------------------------------- URL reflection */
 
-  // The header search box pushes a new `?search=` while this page is already
-  // mounted. The state initialisers above only run once, so without this the
-  // second search from the header would be silently ignored.
   useEffect(() => {
     const fromUrl = initialParams.get("search") ?? "";
     if (fromUrl !== searchTerm.trim()) setSearchTerm(fromUrl);
@@ -577,11 +529,6 @@ export default function ShopWithSidebar() {
     [],
   );
 
-  /**
-   * Clear everything. The old handler reset search, categories, price and sort
-   * but left the ticked attributes applied, so "Clear all filters" on the empty
-   * state usually produced a second empty state.
-   */
   const clearEverything = useCallback(() => {
     setSearchTerm("");
     setSelectedCategories([]);
@@ -685,11 +632,6 @@ export default function ShopWithSidebar() {
                 rangeEnd={rangeEnd}
                 onOpenFilters={() => setDrawerOpen(true)}
               />
-
-              {/* No chip row here on purpose. The sidebar already shows every
-                  ticked filter with its checkbox, so repeating them above the
-                  grid stated the same thing twice and pushed the first row of
-                  products further down the page. */}
 
               {loading && (
                 <ProductsLoadingSkeleton

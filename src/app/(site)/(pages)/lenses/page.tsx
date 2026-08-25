@@ -30,14 +30,6 @@ export const metadata: Metadata = {
   },
 };
 
-/**
- * The lens guide index.
- *
- * Laid out as a bento of photographs rather than a uniform grid of white
- * cards: the tile sizes below say which lens types most customers actually
- * come in asking about, which an equal-weight grid has no way to express.
- */
-
 /** slug → how much room that lens gets in the grid. Order is the reading order. */
 const LAYOUT: { slug: string; span: string; size: "lg" | "md" | "sm" }[] = [
   { slug: "blue-cut", span: "lg:col-span-7", size: "lg" },

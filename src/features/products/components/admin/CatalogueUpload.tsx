@@ -10,6 +10,8 @@ interface CatalogueUploadProps {
   onChange: (fileName: string | null) => void;
   productTitle?: string;
   productId?: number | null;
+  /** Only update the form; the parent deletes files once the product is saved. */
+  deferDelete?: boolean;
 }
 
 const CatalogueUpload: React.FC<CatalogueUploadProps> = ({
@@ -17,6 +19,7 @@ const CatalogueUpload: React.FC<CatalogueUploadProps> = ({
   onChange,
   productTitle = "",
   productId,
+  deferDelete = false,
 }) => {
   const [uploading, setUploading] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -92,6 +95,11 @@ const CatalogueUpload: React.FC<CatalogueUploadProps> = ({
 
   const removeCatalogue = async () => {
     if (!catalogueFile) return;
+    if (deferDelete) {
+      onChange(null);
+      setInputKey(Date.now());
+      return;
+    }
 
     setDeleting(true);
     const toastId = Toast.loading("Deleting catalogue...");

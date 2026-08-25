@@ -52,10 +52,6 @@ export type OrderDetails = {
 
   items: OrderItem[];
 
-  /**
-   * If you already store totals in DB, keep this.
-   * We'll still compute subtotal from items for accuracy.
-   */
   totalAmount?: number;
 
   // optional
@@ -98,10 +94,6 @@ const R2_PUBLIC_URL = (process.env.NEXT_PUBLIC_R2_PUBLIC_URL || "").replace(
   "",
 );
 
-/**
- * Get the public R2 URL for a product image.
- * Images are stored under: <bucket>/product/image/
- */
 function getProductImageUrl(fileName: string | undefined): string {
   if (!fileName) return "";
   // If already a full URL, return as-is
@@ -111,10 +103,6 @@ function getProductImageUrl(fileName: string | undefined): string {
   return `${R2_PUBLIC_URL}/product/image/${fileName}`;
 }
 
-/**
- * Get the public R2 URL for a product catalogue.
- * Catalogues are stored under: <bucket>/product/catalogue/
- */
 function getProductCatalogueUrl(fileName: string | undefined): string {
   if (!fileName) return "";
   if (fileName.startsWith("http://") || fileName.startsWith("https://")) {
@@ -139,9 +127,6 @@ function formatDate(d = new Date()) {
   });
 }
 
-/**
- * Postcards-style pill button (Outlook-safe-ish fallback)
- */
 function buttonPill({
   href,
   label,
@@ -1098,9 +1083,6 @@ function renderAdminOrderEmail({
 </html>`;
 }
 
-/**
- * CUSTOMER: Order confirmation
- */
 export async function sendOrderConfirmationEmail(
   email: string,
   orderNumber: string,
@@ -1129,9 +1111,6 @@ export async function sendOrderConfirmationEmail(
   });
 }
 
-/**
- * ADMIN: New order notification
- */
 export async function sendOrderNotificationToAdmin(
   adminEmail: string,
   orderNumber: string,
@@ -1162,9 +1141,6 @@ export async function sendOrderNotificationToAdmin(
   });
 }
 
-/**
- * ADMIN: Contact form notification with latest email UI
- */
 export async function sendContactFormEmail(
   adminEmail: string,
   contactData: {

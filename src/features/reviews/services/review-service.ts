@@ -6,15 +6,6 @@ import type {
 } from "@/features/reviews/validators/review";
 import type { Review, ReviewSummary } from "@/features/reviews/types/review";
 
-/**
- * Product reviews.
- *
- * Only PUBLISHED reviews ever reach the storefront or the rating aggregate, so
- * a pending or rejected review cannot move a product's star score. The customer
- * who wrote one always sees their own, whatever its status, otherwise
- * submitting appears to do nothing.
- */
-
 const authorSelect = { id: true, name: true };
 
 const serialise = (row: any): Review => ({
@@ -23,13 +14,6 @@ const serialise = (row: any): Review => ({
   updatedAt: row.updatedAt.toISOString(),
 });
 
-/**
- * Recompute a product's denormalised rating from its published reviews.
- *
- * Called after every write that could change the set. Cheap enough to do
- * inline  a product has tens of reviews, not millions  and it keeps the
- * listing pages free of aggregate joins.
- */
 export async function recalculateProductRating(productId: number) {
   const aggregate = await prisma.review.aggregate({
     where: { productId, status: "PUBLISHED" },
@@ -143,9 +127,6 @@ export async function upsertReview(
 
   const verifiedPurchase = await hasPurchased(userId, productId);
 
-  // An edit re-enters moderation: the point of the queue is that no unreviewed
-  // text reaches the storefront, and an approved review could otherwise be
-  // rewritten into anything.
   const row = await prisma.review.upsert({
     where: { userId_productId: { userId, productId } },
     create: {
@@ -262,10 +243,6 @@ export async function deleteReview(id: number) {
   await recalculateProductRating(existing.productId);
 }
 
-/**
- * The five most recent published reviews, for the home page slider.
- * The full history per product lives on the product page.
- */
 export async function getFeaturedReviews(limit = 5) {
   const rows = await prisma.review.findMany({
     where: { status: "PUBLISHED", rating: { gte: 4 } },

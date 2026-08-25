@@ -125,9 +125,6 @@ const ShopDetailsClient = ({
     [product?.frameColors],
   );
 
-  // Pre-select the first colourway rather than opening on "nothing chosen":
-  // there is no such thing as a frame with no colour, so an empty state would
-  // only ever be a step to clear on the way to the same outcome.
   useEffect(() => {
     setSelectedColor((current) =>
       current && colorOptions.includes(current)
@@ -152,14 +149,6 @@ const ShopDetailsClient = ({
     product?.bridgeWidth != null ||
     product?.templeLength != null;
 
-  /**
-   * Clamp rather than refuse.
-   *
-   * The old handler fired a red toast on every keystroke past the limit and
-   * then left the input showing the rejected number  typing "12" into a
-   * 9-stock field produced two toasts and a value the buy button disagreed
-   * with. It now settles on the highest quantity that can actually be bought.
-   */
   const handleQuantityChange = useCallback(
     (next: number) => {
       const maxStock = Math.max(1, product?.stock ?? 1);

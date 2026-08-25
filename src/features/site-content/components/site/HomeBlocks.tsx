@@ -9,36 +9,12 @@ import TestimonialCarousel, {
 } from "@/features/reviews/components/site/TestimonialCarousel";
 import type { BlockData } from "@/features/site-content/types/site-content";
 
-/**
- * The content-driven home page sections.
- *
- * There are three left. Shape, price, category and brand shortcuts used to
- * live here as hand-maintained editable lists; they are now filter links into
- * `/shop-with-sidebar`, drawn from the catalogue itself, so the home page can
- * never advertise a shape or a price band the shop has nothing to show for.
- *
- * Each section bails out to `null` when its block is empty, so an admin can
- * clear a section to hide it without needing a separate on/off switch.
- */
-
 /** Content images may be R2 file names, site paths, or the bundled SVGs. */
 const img = (value?: string | null) => getAdvertisementImageUrl(value);
 const isSvg = (value: string) => value.endsWith(".svg");
 
 /* ----------------------------------------------------------- brand strip */
 
-/**
- * The designer-brand rail under the hero.
- *
- * Reads the Brand table rather than a content block: brands are catalogue data
- * that products point at and the shop sidebar filters on, so a second, editable
- * copy of the list would drift out of step with what is actually stocked.
- *
- * Every brand is shown, stocked or not  the brand wall is a statement of who
- * we carry, and a brand page with nothing in it yet is an honest empty state
- * rather than a broken link. Logos scroll continuously as a marquee (paused on
- * hover) and are shown on their own white tile at full contrast.
- */
 export function BrandStrip({
   brands,
 }: {
@@ -52,9 +28,6 @@ export function BrandStrip({
 }) {
   if (!brands.length) return null;
 
-  // The track is rendered twice so the loop is seamless: the animation slides
-  // exactly one copy's width, then restarts at a visually identical frame.
-  // Short lists are padded so the rail always overflows the viewport.
   const minTiles = 8;
   const base =
     brands.length >= minTiles
@@ -203,12 +176,6 @@ export function PromoBanners({ data }: { data: BlockData }) {
 
 /* ---------------------------------------------------------------- reviews */
 
-/**
- * Home page social proof, drawn from published customer reviews.
- *
- * Nothing here is authored by the shop  if no review has been approved yet the
- * section hides itself rather than showing invented testimonials.
- */
 export function LiveReviews({ reviews }: { reviews: TestimonialReview[] }) {
   if (!reviews.length) return null;
 

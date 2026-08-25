@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { reportQuerySchema } from '@/features/reports/validators/reports'
 import { generateMonthlyReport } from '@/features/reports/services/report-service'
-import { requireAdmin } from '@/lib/middleware/auth'
+import { requireSuperAdmin } from '@/lib/middleware/auth'
 import { handleError, createSuccessResponse } from '@/lib/errors'
 
 export async function GET(request: NextRequest) {
   try {
-    await requireAdmin()
+    await requireSuperAdmin()
     
     const { searchParams } = new URL(request.url)
     const query = reportQuerySchema.parse(Object.fromEntries(searchParams))

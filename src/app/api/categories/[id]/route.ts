@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { updateCategorySchema } from "@/features/categories/validators/category";
-import { updateCategory, deleteCategory } from "@/features/categories/services/category-service";
+import { getCategoryById, updateCategory, deleteCategory } from "@/features/categories/services/category-service";
 import { requireAdmin } from "@/lib/middleware/auth";
 import { handleError, createSuccessResponse } from "@/lib/errors";
 import { logApiAction, logApiError } from "@/lib/audit";
@@ -11,7 +11,12 @@ export async function GET(
 ) {
   const { id: rawId } = await params;
   const id = Number(rawId);
-  // ...existing code for GET handler
+  try {
+    const category = await getCategoryById(id);
+    return createSuccessResponse({ category });
+  } catch (error) {
+    return handleError(error);
+  }
 }
 
 export async function PUT(

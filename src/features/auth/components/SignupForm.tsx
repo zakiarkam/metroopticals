@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -107,7 +109,9 @@ const SignupForm = React.memo(({ onSuccess }: SignupFormProps) => {
     } catch (err: any) {
       console.error("Signup error:", err);
       Toast.error(
-        err.message || "An unexpected error occurred. Please try again.",
+        err?.response?.data?.message ||
+          err.message ||
+          "An unexpected error occurred. Please try again.",
       );
     } finally {
       setIsLoading(false);

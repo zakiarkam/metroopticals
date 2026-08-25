@@ -4,13 +4,6 @@ import { ArrowUpRight } from "lucide-react";
 
 import type { LensType } from "@/config/lenses";
 
-/**
- * A lens type as a directory row.
- *
- * The counterpart to `LensTile`: where a page has already spent its budget on
- * photography, listing the remaining lens types as ruled rows keeps them
- * available without adding a third grid of pictures competing for attention.
- */
 export default function LensRow({ lens }: { lens: LensType }) {
   return (
     <Link

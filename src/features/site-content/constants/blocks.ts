@@ -3,23 +3,6 @@ import type {
   Field,
 } from "@/features/site-content/types/site-content";
 
-/**
- * The storefront content registry.
- *
- * Everything on the site that is not catalogue data is declared here once. Each
- * entry carries the admin form schema AND the dummy content the site ships
- * with, which is why a fresh install already looks like a finished shop: the
- * read helper falls back to `defaults` whenever a block has never been saved.
- *
- * The registry is deliberately short. Anything the catalogue already knows
- * categories, brands, frame shapes, price bands  is rendered from the database
- * and filtered through `/shop-with-sidebar`, not duplicated here as editable
- * copy that drifts out of step with what is actually in stock.
- *
- * Copy and pricing are Sri Lankan throughout (LKR, Colombo, local delivery),
- * so the placeholder text reads as the real shop rather than lorem ipsum.
- */
-
 /** Icon names the storefront knows how to draw. Keep in sync with `iconMap`. */
 export const ICON_OPTIONS = [
   { value: "shield", label: "Shield" },
@@ -45,13 +28,6 @@ const SOCIAL_OPTIONS = [
   { value: "whatsapp", label: "WhatsApp" },
 ];
 
-/**
- * Columns that fill themselves from the catalogue.
- *
- * A sourced column lists only values that have stock behind them and links
- * straight into the matching shop filter, so it cannot go stale and cannot
- * send a shopper to an empty grid.
- */
 const NAV_SOURCE_OPTIONS = [
   { value: "", label: "None  use the links below" },
   { value: "genders", label: "Every stocked wearer (women, men, kids…)" },
@@ -194,9 +170,6 @@ export const BLOCKS: BlockDefinition[] = [
             type: "repeater",
             itemLabel: "column",
             titleField: "title",
-            // Four fits the 1440px panel without wrapping; the Lenses menu
-            // needs all four to list the lens-type guides beside the shop
-            // links. The panel itself renders any number.
             max: 4,
             fields: [
               { name: "title", label: "Column heading", type: "text" },
@@ -330,12 +303,6 @@ export const BLOCKS: BlockDefinition[] = [
           promoCtaHref: shop("categories=sunglasses"),
         },
         {
-          /*
-           * The lens-type columns mirror `@/config/lenses`  that module is the
-           * source of the guide pages, and these links point at them. Add a lens
-           * type there and add its row here; the two are matched by slug, so a
-           * typo lands on a 404 rather than an empty grid.
-           */
           label: "Lenses",
           href: "/lenses",
           accent: false,

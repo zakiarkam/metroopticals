@@ -4,19 +4,6 @@ import React, { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, ImageOff } from "lucide-react";
 
-/**
- * The product image viewer.
- *
- * It adapts to how many photos a product actually has, which the previous
- * version did not: one photo rendered an empty thumbnail rail's worth of gap,
- * and several photos gave no way to move between them except clicking the
- * thumbnails  no arrows, no keyboard, no sense of position.
- *
- *   0 photos → the placeholder plate with an honest caption
- *   1 photo  → the plate alone, no rail and no arrows
- *   2+       → arrows, a counter, a thumbnail rail and left/right keys
- */
-
 const FALLBACK = "/images/placeholder-product.svg";
 
 export default function ProductGallery({
@@ -47,6 +34,9 @@ export default function ProductGallery({
   useEffect(() => {
     if (!isCarousel) return;
     const onKey = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target && /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)) return;
+      if (target?.isContentEditable) return;
       if (event.key === "ArrowLeft") step(-1);
       if (event.key === "ArrowRight") step(1);
     };
@@ -87,9 +77,6 @@ export default function ProductGallery({
           fill
           priority
           sizes="(max-width: 1024px) 100vw, 45vw"
-          /* Fills the plate. Previously inset by 40px with its own drop
-             shadow, which read as a second, smaller card floating inside the
-             gallery rather than as the product itself. */
           className="object-cover"
         />
 

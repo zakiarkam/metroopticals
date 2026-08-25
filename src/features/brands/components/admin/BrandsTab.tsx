@@ -31,18 +31,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-/**
- * Brand management.
- *
- * Brands are catalogue data, not editorial content: products point at them, the
- * shop sidebar filters on them, and the storefront brand strip lists them. So
- * they are managed here like categories rather than typed into a content block.
- *
- * A brand with products cannot be deleted  the service blocks it  so the
- * delete action explains that instead of failing opaquely.
- */
-
-const ACCEPTED = ["image/jpeg", "image/png", "image/webp", "image/svg+xml"];
+const ACCEPTED = ["image/jpeg", "image/png", "image/webp"];
 
 type FormState = {
   name: string;
@@ -68,7 +57,7 @@ function LogoUpload({
 
   const upload = async (file: File) => {
     if (!ACCEPTED.includes(file.type)) {
-      Toast.error("Use a PNG, JPG, WebP or SVG logo.");
+      Toast.error("Use a PNG, JPG or WebP logo.");
       return;
     }
 
@@ -372,10 +361,6 @@ export default function BrandsTab() {
                   </button>
                 </div>
 
-                {/* Why a brand is, or is not, in the storefront's Brands menu.
-                    The rule (live, stocked, and ideally with a logo) used to be
-                    invisible here, so a newly added brand appearing nowhere on
-                    the site read as a bug. */}
                 <p
                   className={`mt-3 rounded-lg px-3 py-2 text-[12px] leading-relaxed ${
                     active && (brand.productCount ?? 0) > 0

@@ -51,3 +51,29 @@ export const updateOrderStatus = async (
   const response = await axiosInstance.patch(`/orders/${orderId}`, data);
   return response.data.order;
 };
+
+export type CreateOrderInput = {
+  items: Array<{ productId: number; quantity: number; price: number; color?: string }>;
+  paymentMethod: string;
+  shippingMethod: string;
+  notes?: string;
+  billingName: string;
+  billingEmail: string;
+  billingPhone: string;
+  billingAddress: string;
+  billingCity: string;
+  billingCountry?: string;
+  billingPostalCode?: string;
+  shippingName: string;
+  shippingEmail: string;
+  shippingPhone: string;
+  shippingAddress: string;
+  shippingCity: string;
+  shippingCountry?: string;
+  shippingPostalCode?: string;
+};
+
+export const createOrder = async (data: CreateOrderInput) => {
+  const response = await axiosInstance.post("/orders", data);
+  return response.data.data || response.data;
+};

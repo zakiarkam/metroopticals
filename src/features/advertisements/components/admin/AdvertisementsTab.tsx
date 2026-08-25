@@ -31,15 +31,6 @@ import { getAdvertisementImageUrl } from "@/lib/storageUtils";
 import { Toast } from "@/lib/utils/toast";
 import { useGetAdvertisementsQuery } from "@/store/services/api";
 
-/**
- * Advertisements admin.
- *
- * Organised by zone rather than as one flat table, because the question an
- * admin actually arrives with is "what is running in the home billboard right
- * now?"  not "show me every ad ever made". Each zone lists its slots, so an
- * empty slot is visible as an empty slot instead of being invisible.
- */
-
 type ZoneFilter = "all" | AdPlacementMeta["group"];
 
 const formatDate = (value?: string | null) =>

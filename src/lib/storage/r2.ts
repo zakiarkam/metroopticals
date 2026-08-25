@@ -17,11 +17,6 @@ export const PUBLIC_BASE_URL = (
 
 let client: S3Client | null = null;
 
-/**
- * Lazily build the S3 client so a missing credential fails on the first
- * upload with a clear message, rather than crashing at import time
- * (which would take down every route that transitively imports this).
- */
 const getClient = (): S3Client => {
   if (!ACCOUNT_ID || !ACCESS_KEY_ID || !SECRET_ACCESS_KEY) {
     throw new Error(

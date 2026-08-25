@@ -21,14 +21,6 @@ import {
 import type { Review, ReviewsResponse } from "@/features/reviews/types/review";
 import { Toast } from "@/lib/utils/toast";
 
-/**
- * Reviews on the product page.
- *
- * Customer-generated throughout: the shop cannot write these, only moderate
- * them. A submitted review is held for approval, which the form says plainly
- * otherwise the customer posts, sees nothing appear, and posts again.
- */
-
 const formatDate = (value: string) =>
   new Date(value).toLocaleDateString("en-LK", {
     day: "numeric",
@@ -42,17 +34,6 @@ const STATUS_NOTE: Record<string, string> = {
   PUBLISHED: "Your review is live.",
 };
 
-/**
- * One review as a testimonial card.
- *
- * Deliberately has no avatar and no company mark: the shop does not collect
- * either, and a row of generated initials was filler pretending to be identity.
- * What is real  the rating, whether they actually bought the frame, and when
- * carries the card instead.
- *
- * The headline is the reviewer's own title where they wrote one, so the large
- * type is always a customer's words rather than a truncation of their sentence.
- */
 function ReviewCard({
   review,
   own = false,
@@ -477,12 +458,6 @@ export default function ProductReviews({
               }
             />
           ) : (
-            /*
-             * A scroll-snap rail rather than a library carousel: it is a few
-             * lines of CSS, it stays swipeable on touch with no JS, and the
-             * arrows above simply scroll it. `-mx-*` + matching padding lets
-             * the cards bleed to the viewport edge on a phone.
-             */
             <div
               ref={railRef}
               className="-mx-4 flex snap-x snap-mandatory items-stretch gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden"

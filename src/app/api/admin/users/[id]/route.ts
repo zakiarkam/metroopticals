@@ -43,8 +43,8 @@ export async function PATCH(
         throw new ForbiddenError("Only a super admin can assign admin roles");
       }
       const target = await getUserById(id);
-      if (target.role === "SUPER_ADMIN") {
-        throw new ForbiddenError("Only a super admin can modify a super admin");
+      if (target.role !== "CUSTOMER") {
+        throw new ForbiddenError("Only a super admin can modify admin accounts");
       }
     }
 
@@ -75,10 +75,13 @@ export async function DELETE(
   try {
     const session = await requireAdmin();
 
+    if (id === session.user.id) {
+      throw new ForbiddenError("You cannot delete your own account");
+    }
     if (session.user.role !== "SUPER_ADMIN") {
       const target = await getUserById(id);
-      if (target.role === "SUPER_ADMIN") {
-        throw new ForbiddenError("Only a super admin can delete a super admin");
+      if (target.role !== "CUSTOMER") {
+        throw new ForbiddenError("Only a super admin can delete admin accounts");
       }
     }
 

@@ -91,13 +91,6 @@ export async function getAdvertisementById(id: number) {
   return advertisement;
 }
 
-/**
- * The name shown in the admin list and used as the image's alt text.
- *
- * Titles are optional  a banner is often just artwork  so a blank one falls
- * back to the linked product's name and then to the zone label. The list can
- * then never show a nameless row, and the alt text is never empty.
- */
 async function resolveAdvertisementTitle(
   title: string | null | undefined,
   placement: AdvertisementPlacement,
@@ -306,14 +299,6 @@ export async function getActiveAdvertisementsByPlacement(
   return normalizedAds as Advertisement[];
 }
 
-/**
- * The home page's scheduled promo panel.
- *
- * There used to be three product-driven home slots keyed off `priority`
- * (0/1/2), one under each of three sections. The home page now carries a
- * single promo panel, so the query is one placement ordered by slot rather
- * than three parallel priority buckets.
- */
 export async function getHomePromoAdvertisements(): Promise<Advertisement[]> {
   const now = new Date();
 
@@ -348,13 +333,6 @@ export const getProductDetailsUrl = (productId: number) => {
   return slug;
 };
 
-/**
- * Active banner ads for one zone, in slot order.
- *
- * Ordered by slot first so the admin's slot numbers map directly onto the
- * left-to-right (or top-to-bottom) position on the page; priority only breaks
- * ties when two campaigns claim the same slot, newest winning last.
- */
 export async function getBannerAdvertisements(
   placement: AdvertisementPlacement,
 ): Promise<Advertisement[]> {

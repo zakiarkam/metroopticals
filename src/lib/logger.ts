@@ -6,18 +6,6 @@ import type TransportStream from "winston-transport";
 
 const isProduction = process.env.NODE_ENV === "production";
 
-/*
- * File logging is opt-in.
- *
- * On Railway the container filesystem is ephemeral and is thrown away on every
- * deploy, so log files there are write-only  nobody ever reads them back.
- * Railway collects stdout/stderr instead, which is what the console transport
- * feeds. Locally, files are still handy for grepping a long dev session, so
- * they stay on by default outside production.
- *
- * Set LOG_TO_FILE=true (and optionally LOG_DIR) only where a real, persistent
- * volume is mounted.
- */
 const logToFile = process.env.LOG_TO_FILE
   ? process.env.LOG_TO_FILE === "true"
   : !isProduction;
@@ -46,7 +34,6 @@ const consoleTransport = new winston.transports.Console({
 
 const appTransports: TransportStream[] = [consoleTransport];
 const auditTransports: TransportStream[] = [consoleTransport];
-const performanceTransports: TransportStream[] = [consoleTransport];
 
 if (hasLogDir) {
   appTransports.push(
@@ -74,13 +61,6 @@ if (hasLogDir) {
     }),
   );
 
-  performanceTransports.push(
-    new winston.transports.File({
-      filename: path.join(logDir, "performance.log"),
-      maxsize: 5242880,
-      maxFiles: 5,
-    }),
-  );
 }
 
 export const logger = winston.createLogger({
@@ -97,12 +77,6 @@ export const auditLogger = winston.createLogger({
   transports: auditTransports,
 });
 
-export const performanceLogger = winston.createLogger({
-  level: "info",
-  defaultMeta: { service: "metro-opticals-api", type: "performance" },
-  format: baseFormat,
-  transports: performanceTransports,
-});
 
 export function serializeError(error: unknown) {
   if (error instanceof Error) {

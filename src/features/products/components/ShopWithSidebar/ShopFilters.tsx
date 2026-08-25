@@ -221,11 +221,6 @@ export default function ShopFilters({
   }, [facets]);
 
   return (
-    /*
-     * No heading of its own  the sidebar shell above already prints
-     * "Filters" and a clear-all, so this panel used to sit under a second,
-     * near-identical header saying "Refine" with a second reset link.
-     */
     <aside className="rounded-2xl border border-gray-3 bg-gray-2 px-4 shadow-2">
       {activeCount > 0 && (
         <div className="flex items-center justify-between border-b border-gray-3 py-3">

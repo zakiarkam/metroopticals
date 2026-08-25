@@ -1,11 +1,12 @@
 import { NextRequest } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { handleError, createSuccessResponse, UnauthorizedError } from '@/lib/errors'
+import { handleError, createSuccessResponse, UnauthorizedError, ValidationError } from '@/lib/errors'
 import { z } from 'zod'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/db/prisma'
 import { logApiAction, logApiError } from '@/lib/audit'
+import { rateLimit } from '@/lib/rate-limit'
 
 const changePasswordSchema = z.object({
   currentPassword: z.string().min(1, 'Current password is required'),
@@ -25,6 +26,8 @@ export async function PATCH(request: NextRequest) {
       throw new UnauthorizedError('You must be logged in to change password')
     }
 
+    rateLimit(`change-pw:${session.user.id}`, 5, 15 * 60 * 1000)
+
     const body = await request.json()
     const { currentPassword, newPassword } = changePasswordSchema.parse(body)
 
@@ -35,14 +38,14 @@ export async function PATCH(request: NextRequest) {
     })
 
     if (!user || !user.password) {
-      throw new UnauthorizedError('User not found')
+      throw new ValidationError('This account signs in with Google and has no password')
     }
 
     // Verify current password
     const isPasswordValid = await bcrypt.compare(currentPassword, user.password)
 
     if (!isPasswordValid) {
-      throw new UnauthorizedError('Current password is incorrect')
+      throw new ValidationError('Current password is incorrect')
     }
 
     // Hash new password

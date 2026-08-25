@@ -18,19 +18,6 @@ import { buildSiteUrl } from "@/lib/seo";
 
 type LensPageProps = { params: Promise<{ slug: string }> };
 
-/**
- * One lens type in full.
- *
- * Built as alternating full-width bands  intro, spec strip, how it works,
- * numbered benefits, tints, limitations, questions  rather than the sidebar
- * of stacked panels this page started as. Two photographs carry the top half
- * and the dark band closes it, so nothing needs a card border to read as a
- * separate thought.
- *
- * Static at build time: the content is a data module, not catalogue data, so
- * `dynamicParams: false` turns an unknown slug into a 404 rather than a render
- * against `undefined`.
- */
 export const dynamicParams = false;
 
 /** Spec-strip column counts, written out so Tailwind keeps the classes. */

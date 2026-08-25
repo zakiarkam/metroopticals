@@ -193,10 +193,6 @@ export default function Header({
         stickyMenu ? "shadow-3" : "shadow-none"
       }`}
     >
-      {/* Only the chrome is measured for --site-header-height. The mobile
-          drawer below is excluded on purpose: including it made the header
-          grow when the menu opened, which shrank the drawer's own max-height
-          and produced a ResizeObserver feedback loop. */}
       <div ref={headerRef} className="relative z-40 bg-gray-2">
       <Container>
         <div

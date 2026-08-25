@@ -1,23 +1,5 @@
 import type { AdvertisementPlacement } from "@/features/advertisements/types/advertisement";
 
-/**
- * Advertisement placements.
- *
- * Two kinds live side by side:
- *
- *  - `product` placements are the original home-page slots. They are driven by
- *    a linked catalogue product, so the renderer pulls title, price and image
- *    from that product and the ad row only supplies scheduling and ordering.
- *
- *  - `banner` placements are plain artwork. The admin uploads a photo, gives it
- *    an optional caption and link, and that is the whole ad. Linking a product
- *    is allowed but never required  which is why `productId` is optional on
- *    the create/update schemas.
- *
- * Every zone renders dummy artwork when nothing is configured, so the layout
- * never collapses and the site still reads as finished before the first real
- * campaign is uploaded.
- */
 export type AdPlacementKind = "product" | "banner";
 
 export interface AdPlacementMeta {
@@ -135,10 +117,6 @@ export const getPlacementMeta = (
 export const getPlacementLabel = (placement: string | null | undefined) =>
   getPlacementMeta(placement)?.label ?? placement ?? "Unknown";
 
-/**
- * Kept as its own export because the add/edit dialogs and the zod schema both
- * need the raw slot lists without pulling in the rest of the metadata.
- */
 export const placementSlotOptions = AD_PLACEMENT_IDS.reduce(
   (acc, id) => {
     acc[id] = AD_PLACEMENTS[id].slots;

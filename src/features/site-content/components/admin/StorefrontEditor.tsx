@@ -17,13 +17,6 @@ import {
 import { Toast } from "@/lib/utils/toast";
 import type { BlockData } from "@/features/site-content/types/site-content";
 
-/**
- * Storefront content editor.
- *
- * A block list on the left, the selected block's generated form on the right.
- * Nothing here is hand-written per block  the form comes from the registry, so
- * a new block appears in this screen the moment it is added to `BLOCKS`.
- */
 export default function StorefrontEditor() {
   const [blocks, setBlocks] = useState<Record<string, AdminBlock>>({});
   const [activeKey, setActiveKey] = useState<string>(BLOCKS[0]?.key ?? "");

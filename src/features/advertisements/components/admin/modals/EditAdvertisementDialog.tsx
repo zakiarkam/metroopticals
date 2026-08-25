@@ -97,7 +97,7 @@ const EditAdvertisementDialog: React.FC<EditAdvertisementDialogProps> = ({
 
         <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
           <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
-            <AdvertisementForm values={values} onChange={setValues} />
+            <AdvertisementForm values={values} onChange={setValues} disablePlacement />
           </div>
 
           <div className="flex items-center justify-end gap-3 border-t border-gray-3 bg-gray-1 px-6 py-4">

@@ -1,6 +1,6 @@
 import "../css/style.css";
 import { Suspense } from "react";
-import dynamic from "next/dynamic";
+import nextDynamic from "next/dynamic";
 import Header from "@/components/layout/header";
 import AnnouncementBar from "@/components/layout/header/AnnouncementBar";
 import { getSiteBlocks } from "@/features/site-content/services/site-content-service";
@@ -19,8 +19,11 @@ import type {
 } from "@/features/site-content/components/site/MegaMenu";
 import SiteLayoutProviders from "./_components/SiteLayoutProviders";
 
+// Navigation, announcement and footer content are admin-editable.
+export const dynamic = "force-dynamic";
+
 // Below the fold  kept out of the initial bundle.
-const Footer = dynamic(() => import("@/components/layout/footer"), {
+const Footer = nextDynamic(() => import("@/components/layout/footer"), {
   loading: () => <div className="h-80 bg-dark" />,
   ssr: true,
 });
@@ -30,9 +33,6 @@ export default async function SiteLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // The navigation needs content and catalogue rows together; both are cached
-  // per request, and the brand list is optional so a DB hiccup only costs the
-  // brands panel rather than the whole page.
   const [content, brands, shapes, genders] = await Promise.all([
     getSiteBlocks(["announcement.bar", "header.nav"]),
     getBrands().catch(() => []),
@@ -41,10 +41,6 @@ export default async function SiteLayout({
   ]);
 
   const megaNav = (content["header.nav"]?.items ?? []) as NavItem[];
-  // Shapes and genders are built from rows that have stock behind them. Brands
-  // are the exception: every active brand is listed (matching the home page
-  // brand rail), so a newly added brand is discoverable before its first
-  // product lands  the shop page shows an honest empty state.
   const catalogue: NavCatalogue = {
     brands: brands
       // The logo travels with the row so the brands panel can draw the mark

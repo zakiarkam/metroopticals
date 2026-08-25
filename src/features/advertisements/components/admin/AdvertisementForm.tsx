@@ -18,14 +18,6 @@ import {
   type AdPlacementMeta,
 } from "@/features/advertisements/constants/advertisement";
 
-/**
- * The one advertisement form.
- *
- * Add and edit differ only in their initial values and their submit handler,
- * so both dialogs render this and there is a single place where the placement
- * rules, the artwork rules and the scheduling rules live.
- */
-
 export type AdFormValues = {
   title: string;
   imageUrl: string;
@@ -52,11 +44,6 @@ export const emptyAdFormValues: AdFormValues = {
   productId: null,
 };
 
-/**
- * Blank values for a new ad, optionally pinned to the zone the admin clicked
- * "add" from. Slot follows the placement so the form never opens on a slot the
- * zone does not render.
- */
 export const advertisementFormDefaults = (
   placement?: AdvertisementPlacement,
 ): AdFormValues => {
@@ -223,9 +210,6 @@ const AdvertisementForm: React.FC<AdvertisementFormProps> = ({
     const product = products.find((item) => item.id === id);
     if (!product) return;
 
-    // Title and artwork are deliberately left alone: an empty title resolves to
-    // the product name and an empty image falls back to the product photo, so
-    // the ad keeps tracking the catalogue instead of freezing a copy of it.
     set({
       productId: id,
       link: values.link || `/shop-details/${id}`,
@@ -555,16 +539,6 @@ const AdvertisementForm: React.FC<AdvertisementFormProps> = ({
 
 export default AdvertisementForm;
 
-/**
- * Turn form values into an API payload, or explain what is missing.
- *
- * Only one thing is actually required: the zone must end up with something to
- * render. A banner needs its artwork; a product placement needs artwork or a
- * product to borrow a photo from. Everything else  the title, the link, the
- * schedule  is optional, and a blank title is filled in server-side from the
- * product name or the zone label. Mirrors the zod schema so the admin gets a
- * plain sentence at the point of failure rather than a round trip.
- */
 export const buildAdvertisementPayload = (values: AdFormValues) => {
   const meta = AD_PLACEMENTS[values.placement];
   const title = values.title.trim();
@@ -604,19 +578,17 @@ export const buildAdvertisementPayload = (values: AdFormValues) => {
   return {
     ok: true as const,
     payload: {
-      title: title || undefined,
-      imageUrl: imageUrl || undefined,
-      link: link || undefined,
+      title: title || null,
+      imageUrl: imageUrl || null,
+      link: link || null,
       placement: values.placement,
       status: values.status,
       priority: values.priority,
       slot: meta.slots.includes(values.slot) ? values.slot : meta.slots[0],
       startDate: values.startDate
         ? new Date(values.startDate).toISOString()
-        : undefined,
-      endDate: values.endDate
-        ? new Date(values.endDate).toISOString()
-        : undefined,
+        : null,
+      endDate: values.endDate ? new Date(values.endDate).toISOString() : null,
       productId: meta.kind === "product" ? values.productId : null,
     },
   };

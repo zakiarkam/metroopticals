@@ -14,14 +14,6 @@ import type { Review, ReviewStatus } from "@/features/reviews/types/review";
 import { getProductImageUrl } from "@/lib/storageUtils";
 import { Toast } from "@/lib/utils/toast";
 
-/**
- * Review moderation.
- *
- * Staff approve, reject or delete  they never author. Pending is the default
- * filter because that is the only state that needs anyone's attention; the
- * others are there for going back over a decision.
- */
-
 const TABS: { value: ReviewStatus | "ALL"; label: string }[] = [
   { value: "PENDING", label: "Pending" },
   { value: "PUBLISHED", label: "Published" },

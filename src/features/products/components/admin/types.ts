@@ -3,11 +3,6 @@ import {
   ProductStatus,
 } from "@/features/products/types/product";
 
-/**
- * Eyewear inputs are strings in the form layer: an HTML number input yields
- * "" when cleared, which must round-trip as "not specified" rather than 0.
- * They are coerced to numbers/null on submit.
- */
 export type EyewearFormFields = {
   lensWidth: string;
   bridgeWidth: string;

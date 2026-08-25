@@ -15,25 +15,6 @@ type Category = {
   productCount?: number;
 };
 
-/**
- * The category bento.
- *
- * Was a six-across Swiper of small portrait cards, which gave every category
- * the same weight and hid half of them behind arrows. A bento says something a
- * carousel cannot: the first category gets the room, and nothing is off-screen.
- *
- * The tiles are photographs with the name over them, so the fallback art below
- * is photographic too  the old line-art SVGs were drawn to sit on ivory and
- * disappeared entirely under the scrim.
- */
-
-/**
- * Bundled photography used when a category has no uploaded image.
- *
- * Admin uploads always win; this only decides what a fresh install looks like.
- * Matching on the slug covers the categories an optical shop always carries,
- * and anything unmatched falls back to the shop interior.
- */
 const CATEGORY_ART: { match: RegExp; src: string }[] = [
   { match: /sun/, src: "/images/categories/sunglasses.jpg" },
   { match: /contact/, src: "/images/categories/contact-lenses.jpg" },
@@ -59,19 +40,6 @@ const fallbackArt = (slug: string, name: string) => {
 
 type Placement = { span: string; size: PhotoTileSize };
 
-/**
- * Where each tile sits on the 12-column grid.
- *
- * The four-or-more case is the reference layout: a tall feature on the left,
- * two square tiles stacked to its right, then a wide tile beneath them. The
- * smaller cases are spelled out rather than derived because a shop with two or
- * three categories otherwise inherits the tall feature and leaves half the
- * grid empty beside it.
- *
- * Leftovers past the first four are packed three to a row, and a short final
- * row widens to fill  five categories used to leave two thirds of the last
- * row as blank ivory, which read as a loading failure rather than a layout.
- */
 const OPENING: Record<number, Placement[]> = {
   1: [{ span: "lg:col-span-12", size: "lg" }],
   2: [
@@ -149,9 +117,6 @@ const Categories = React.memo(() => {
         href="/shop-with-sidebar"
       />
 
-      {/* `auto-rows-fr` is what makes the tall tile line up with the two
-          stacked beside it  without it the row heights follow content and the
-          feature tile ends up shorter than the pair it is supposed to span. */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:auto-rows-fr lg:grid-cols-12">
         {parentCategories.map((item, index) => {
           const placement = layout[index];

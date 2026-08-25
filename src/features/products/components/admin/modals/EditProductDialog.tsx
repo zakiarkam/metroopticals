@@ -250,7 +250,7 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
         slug: generateSlug(data.slug?.trim() || data.title),
         description: data.description,
         price: data.price,
-        discountedPrice: data.discountedPrice,
+        discountedPrice: data.discountedPrice ?? null,
         images: Array.isArray(data.images)
           ? data.images.filter(
               (img) => !!img && typeof img === "string" && img.trim() !== ""
@@ -258,7 +258,7 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
           : [],
         catalogueFile: data.catalogueFile || null,
         categoryId: data.categoryId ?? undefined,
-        brandId: data.brandId ?? undefined,
+        brandId: data.brandId ?? null,
         stock: data.stock,
         status: data.status,
         unitType: data.unitType,
@@ -266,6 +266,7 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
       };
 
       await updateProduct(productId, productData);
+      await cleanupRemovedFiles();
 
       Toast.update(toastId, {
         render: "Product updated successfully!",
@@ -330,10 +331,6 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
     if (newlyUploadedFiles.images.length > 0 || newlyUploadedFiles.catalogue) {
       await cleanupNewlyUploadedFiles();
     }
-    // Clean up removed files if any
-    // if (removedFiles.images.length > 0 || removedFiles.catalogue) {
-    //   await cleanupRemovedFiles();
-    // }
     form.reset();
     setInitialValues(null);
     setNewlyUploadedFiles({ images: [], catalogue: null });
@@ -785,6 +782,7 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
                             maxFiles={5}
                             productTitle={form.watch("title")}
                             productId={productId}
+                            deferDelete
                           />
                         </FormControl>
                         <FormMessage />
@@ -825,6 +823,7 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
                             }}
                             productTitle={form.watch("title")}
                             productId={productId}
+                            deferDelete
                           />
                         </FormControl>
                         <FormMessage />

@@ -12,6 +12,8 @@ interface ImageUploadProps {
   maxFiles?: number;
   productTitle?: string;
   productId?: number | null;
+  /** Only update the form; the parent deletes files once the product is saved. */
+  deferDelete?: boolean;
 }
 
 const BLOCKED_IMAGE_EXTENSIONS = ["heif", "heic"];
@@ -31,6 +33,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   maxFiles = 5,
   productTitle = "",
   productId,
+  deferDelete = false,
 }) => {
   const [uploading, setUploading] = useState(false);
   const [deleting, setDeleting] = useState<number | null>(null);
@@ -154,6 +157,10 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
 
   const removeImage = async (index: number) => {
     const fileName = images[index];
+    if (deferDelete) {
+      onChange(images.filter((_, i) => i !== index));
+      return;
+    }
     setDeleting(index);
     const toastId = Toast.loading("Deleting image...");
 
@@ -198,7 +205,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
       {images.length > 0 && (
         <div className="grid grid-cols-3 gap-4">
           {images.map((fileName, index) => (
-            <div key={index} className="relative group">
+            <div key={fileName} className="relative group">
               <div className="relative w-full h-32 rounded-lg border border-gray-3 overflow-hidden bg-gray-1">
                 <Image
                   src={getProductImageUrl(fileName) ?? "/images/placeholder.jpg"}

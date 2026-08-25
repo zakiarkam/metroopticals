@@ -2,17 +2,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight, ChevronRight } from "lucide-react";
 
-/**
- * A full-bleed photograph that behaves as a link tile.
- *
- * The single overlay definition for the site. The lens guide and the home
- * category bento both draw these, and when the scrim lived in two components
- * the two grids drifted apart within a week  one warm, one neutral grey.
- *
- * Sizes are about how much the tile has to say, not just how big it is: `lg`
- * and `md` carry a description and an explore link, `sm` is a name and a count.
- */
-
 const SIZES = {
   lg: {
     frame: "min-h-[320px] sm:min-h-[380px] lg:min-h-[440px]",

@@ -3,10 +3,6 @@ import { productQuerySchema } from "@/features/products/validators/product";
 import { getProductFacets } from "@/features/products/services/product-service";
 import { handleError, createSuccessResponse } from "@/lib/errors";
 
-/**
- * Filter options and counts for the shop sidebar, scoped to the current
- * category/search but not to the currently ticked filters.
- */
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);

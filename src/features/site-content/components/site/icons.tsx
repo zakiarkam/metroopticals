@@ -15,11 +15,6 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-/**
- * Content blocks store an icon by name, not by component, so the JSON stays
- * portable and the admin can offer a plain dropdown. This is the only place
- * that turns those names back into something renderable.
- */
 const ICONS: Record<string, LucideIcon> = {
   shield: ShieldCheck,
   truck: Truck,

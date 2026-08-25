@@ -1,5 +1,7 @@
 "use client";
 
+import toast from "react-hot-toast";
+
 import React, { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
@@ -77,6 +79,8 @@ const OrderConfirmationClient = () => {
     setIsPrintPending(true);
     try {
       await downloadOrderReceiptPdf(order);
+    } catch {
+      toast.error("Could not generate the invoice. Please try again.");
     } finally {
       setIsPrintPending(false);
     }
@@ -94,9 +98,6 @@ const OrderConfirmationClient = () => {
     return (
       <section className="bg-gray-1 py-16">
         <SiteContainer>
-          {/* A network failure used to be reported as "order not found",
-              which tells a customer who has just paid that their order does
-              not exist. The two states are now separate. */}
           <EmptyState
             icon={<FileText className="h-7 w-7" />}
             title={

@@ -1,13 +1,6 @@
 import PhotoTile, { type PhotoTileSize } from "@/components/common/PhotoTile";
 import type { LensType } from "@/config/lenses";
 
-/**
- * A lens type as a full-bleed photo tile.
- *
- * Thin wrapper over the shared `PhotoTile` so the lens bento and the home
- * category bento are literally the same tile, and a change to the scrim or the
- * type scale lands on both.
- */
 export default function LensTile({
   lens,
   size = "md",

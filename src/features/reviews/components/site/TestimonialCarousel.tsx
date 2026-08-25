@@ -4,16 +4,6 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, Star } from "lucide-react";
 
-/**
- * Home page social proof as a horizontal slider.
- *
- * Heading, controls and a progress bar sit in a left column; review cards
- * scroll horizontally with CSS scroll-snap so touch users swipe natively and
- * the arrows simply nudge the same scroll container. Cards are speech bubbles
- * with the reviewer's initial in a gold disc  the shop never collects photos,
- * so a letter is the honest avatar.
- */
-
 export type TestimonialReview = {
   id: number;
   rating: number;

@@ -10,20 +10,6 @@ import {
   getFrameSizeLabel,
 } from "@/features/products/utils/eyewear";
 
-/**
- * The full specification table.
- *
- * The product page used to split this across two places: a row of loose chips
- * for the frame measurements and a separate definition list underneath for
- * brand, category and reference  so brand appeared three times on the page
- * (eyebrow, chips, list) and size appeared nowhere near material. One table,
- * grouped, is what a shopper comparing two frames actually needs.
- *
- * Rows whose value the catalogue does not hold are dropped rather than shown
- * as "", so a sparsely filled product gets a short table instead of a long
- * list of blanks.
- */
-
 type Row = { label: string; value: React.ReactNode };
 type Group = { title: string; rows: Row[] };
 

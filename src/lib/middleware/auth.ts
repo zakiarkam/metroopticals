@@ -5,7 +5,7 @@ import { UnauthorizedError, ForbiddenError } from "@/lib/errors";
 export async function requireAuth() {
   const session = await getServerSession(authOptions);
 
-  if (!session || !session.user) {
+  if (!session?.user || !Number.isInteger(session.user.id)) {
     throw new UnauthorizedError("Authentication required");
   }
 

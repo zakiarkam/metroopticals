@@ -1,13 +1,5 @@
 "use client";
 
-/**
- * Loading placeholders shaped like the real cards.
- *
- * The proportions here (4:3 media plate, two text lines, full-width button)
- * mirror both <ProductCard /> layouts so the grid does not jump
- * when data lands.
- */
-
 interface ProductCardSkeletonProps {
   variant?: "grid" | "list";
 }

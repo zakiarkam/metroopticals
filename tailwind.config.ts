@@ -11,15 +11,7 @@ const config: Config = {
   theme: {
     fontFamily: {
       "euclid-circular-a": ["Euclid Circular A"],
-      /*
-       * `theme.fontFamily` replaces Tailwind's defaults wholesale, so `sans`
-       * has to be redeclared here or `font-sans` would not exist at all.
-       */
       sans: ["var(--font-sans)", ...defaultTheme.fontFamily.sans],
-      /*
-       * Same face as `sans` today. Kept as its own key so the display face can
-       * be swapped without touching the ~18 headings that reference it.
-       */
       display: ["var(--font-sans)", ...defaultTheme.fontFamily.sans],
     },
     container: {
@@ -30,22 +22,6 @@ const config: Config = {
         xl: "0",
       },
     },
-    /**
-     * Metro Opticals  ivory & gold theme.
-     *
-     * Light surfaces, espresso text, gold accents. The token NAMES are used
-     * across ~250 files, so the palette is expressed by remapping their VALUES
-     * rather than rewriting every call site:
-     *   - `blue*`  is the gold accent (buttons, links, highlights)
-     *   - `gray-1..4` are surfaces and borders, LIGHTEST first
-     *   - `dark*`, `body` and `meta*` are text, from espresso down to muted
-     *
-     * Contrast rule: anything that carries text meets WCAG AA (4.5:1) against
-     * the surface it sits on. That is why the accent is a deep antique gold
-     * (#8F6A37, 4.9:1 on white) rather than the logo's literal #C09C6C, which
-     * only reaches 2.2:1  the logo tone lives on as `blue-light` for fills,
-     * borders and decoration, where contrast is not a legibility concern.
-     */
     colors: {
       current: "currentColor",
       transparent: "transparent",
@@ -69,12 +45,6 @@ const config: Config = {
       },
       /** Surfaces and borders. */
       gray: {
-        /*
-         * Elevation ladder. Light UI conveys height with SHADOW rather than
-         * lightness, so the steps here are close together and the separation
-         * comes from `boxShadow` below.
-         *   gray-1 page (ivory)  →  gray-2 card (white)  →  gray-8 hover
-         */
         "1": "#FAF8F4", // page background  warm ivory
         "2": "#FFFFFF", // card / section surface
         "3": "#E7E0D4", // borders, dividers  warm hairline
@@ -84,13 +54,6 @@ const config: Config = {
         "7": "#4A4238", // near-heading text
         "8": "#F4F0E8", // raised surface (hover, popovers, table headers)
         DEFAULT: "#FFFFFF",
-        /*
-         * Components also use Tailwind's default numeric gray scale
-         * (bg-gray-200, border-gray-200, text-gray-400, …). A custom
-         * `colors.gray` replaces the default entirely, so those keys are
-         * redefined here  warm-tinted, and in the conventional direction
-         * (low = light surface, high = dark text).
-         */
         "50": "#FAF8F4",
         "100": "#F4F0E8",
         "200": "#E7E0D4",
@@ -123,11 +86,6 @@ const config: Config = {
         "800": "#5A4120",
         "900": "#3E2C15",
       },
-      /**
-       * Status colours. The `DEFAULT` of each is dark enough to read as text on
-       * white, while `light-3`..`light-6` are pale tints for badge and banner
-       * fills.
-       */
       red: {
         DEFAULT: "#C1272D", // 5.9:1 on white
         dark: "#9E1F24",
@@ -361,14 +319,6 @@ const config: Config = {
         "99999": "99999",
         "999999": "999999",
       },
-      /*
-       * Light-theme elevation.
-       *
-       * Every shadow is a warm brown-black (39 30 20) rather than neutral
-       * black, so cards sit on the ivory page without the grey cast a pure
-       * black shadow leaves. Each level layers a tight contact shadow under a
-       * wider ambient one  that pairing is what reads as height on light UI.
-       */
       boxShadow: {
         // level 1  subtle lift (list rows, inputs)
         "1": "0 1px 2px 0 rgba(39,30,20,0.06)",
@@ -389,11 +339,6 @@ const config: Config = {
         list: "1px 0 0 0 #E7E0D4",
         input: "inset 0 0 0 2px #8F6A37",
 
-        /*
-         * Override Tailwind's DEFAULT shadow scale with the same warm tint.
-         * The app uses shadow-lg/md/xl in ~170 places, so redefining them here
-         * keeps those consistent with the numbered levels above.
-         */
         sm: "0 1px 2px 0 rgba(39,30,20,0.05)",
         DEFAULT:
           "0 1px 3px 0 rgba(39,30,20,0.08), 0 1px 2px -1px rgba(39,30,20,0.06)",

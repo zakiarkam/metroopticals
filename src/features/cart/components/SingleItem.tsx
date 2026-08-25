@@ -32,18 +32,6 @@ type CartItem = {
   };
 };
 
-/**
- * The colour on a cart line.
- *
- * A frame with more than one colourway gets a select so the choice can be
- * corrected in place; one with a single colour is just stated. Either way the
- * colour is always visible  a cart that hides it leaves the shopper checking
- * out on an assumption.
- *
- * A line saved before colours existed carries none. Rather than say nothing,
- * it opens on "Choose colour" so the shopper can set one before checkout
- * instead of leaving the warehouse to guess.
- */
 const ColorControl = ({
   item,
   onChange,
@@ -125,11 +113,6 @@ const SingleItem = ({ item }: { item: CartItem }) => {
     setIsUpdating(false);
   };
 
-  /**
-   * Changing the colour here saves a trip back to the product page for what is
-   * usually a last-second change of mind. If the same frame is already in the
-   * cart in the colour being switched to, the server merges the two lines.
-   */
   const handleColorChange = async (color: string) => {
     if (isUpdating || color === item.color) return;
 

@@ -96,9 +96,6 @@ async function main() {
     });
   }
 
-  // ---------- Products ----------
-  // Prices in LKR. Images are filenames stored in the R2 bucket
-  // under product/image/  replace with real uploads.
   const products = [
     {
       title: "Classic Black Acetate Frame",

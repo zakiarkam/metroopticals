@@ -29,7 +29,7 @@ type ReportDataset = {
       discountedPrice: number | null;
       product: { title: string; slug: string | null } | null;
     }>;
-    user: { name: string; email: string };
+    user: { name: string | null; email: string };
   }>;
   products: Array<{
     id: number;
@@ -45,14 +45,20 @@ type ReportDataset = {
   statusBreakdown: Array<{ status: OrderStatus; _count: number }>;
   topProductsGrouped: Array<{
     productId: number;
-    _count: { id: number };
-    _sum: { price: number | null };
+    sold: number;
+    revenue: number;
   }>;
   topProductDetails: Map<
     number,
     { id: number; title: string; slug: string; category: { name: string } | null }
   >;
 };
+
+const sumRevenue = (orders: Array<{ status: OrderStatus; totalAmount: number }>) =>
+  orders.reduce(
+    (sum, order) => (order.status === "CANCELLED" ? sum : sum + order.totalAmount),
+    0
+  );
 
 const formatNumber = (value: number) =>
   new Intl.NumberFormat("en-US", {
@@ -81,10 +87,14 @@ const formatFileDate = (date: Date) =>
     date.getDate()
   ).padStart(2, "0")}`;
 
+// Report boundaries are taken in the store's local time zone (Sri Lanka).
+const TZ_OFFSET = "+05:30";
+
 const buildMonthlyRange = (month: string): ReportRange => {
   const [year, monthNum] = month.split("-").map(Number);
-  const startDate = new Date(year, monthNum - 1, 1);
-  const endDate = new Date(year, monthNum, 0, 23, 59, 59);
+  const startDate = new Date(`${month}-01T00:00:00${TZ_OFFSET}`);
+  const nextMonth = monthNum === 12 ? `${year + 1}-01` : `${year}-${String(monthNum + 1).padStart(2, "0")}`;
+  const endDate = new Date(new Date(`${nextMonth}-01T00:00:00${TZ_OFFSET}`).getTime() - 1);
   return {
     startDate,
     endDate,
@@ -94,31 +104,15 @@ const buildMonthlyRange = (month: string): ReportRange => {
 };
 
 const buildCustomRange = (startDate: string, endDate: string): ReportRange => {
-  const start = new Date(startDate);
-  const end = new Date(endDate);
   return {
-    startDate: new Date(
-      start.getFullYear(),
-      start.getMonth(),
-      start.getDate(),
-      0,
-      0,
-      0
-    ),
-    endDate: new Date(
-      end.getFullYear(),
-      end.getMonth(),
-      end.getDate(),
-      23,
-      59,
-      59
-    ),
-    label: `${formatFileDate(start)}_to_${formatFileDate(end)}`,
+    startDate: new Date(`${startDate}T00:00:00${TZ_OFFSET}`),
+    endDate: new Date(`${endDate}T23:59:59.999${TZ_OFFSET}`),
+    label: `${startDate}_to_${endDate}`,
     isCustomRange: true,
   };
 };
 
-const resolveReportRange = (query: ReportQueryInput): ReportRange => {
+export const resolveReportRange = (query: ReportQueryInput): ReportRange => {
   if (query.startDate && query.endDate) {
     return buildCustomRange(query.startDate, query.endDate);
   }
@@ -138,7 +132,7 @@ export const fetchReportDataset = async (
 ): Promise<ReportDataset> => {
   const { startDate, endDate } = range;
 
-  const [orders, products, customers, statusBreakdown, topProductsGrouped] =
+  const [orders, products, customers, statusBreakdown, soldItems] =
     await Promise.all([
       prisma.order.findMany({
         where: {
@@ -172,14 +166,32 @@ export const fetchReportDataset = async (
         },
         _count: true,
       }),
-      prisma.orderItem.groupBy({
-        by: ["productId"],
-        _count: { id: true },
-        _sum: { price: true },
-        orderBy: { _count: { id: "desc" } },
-        take: 10,
+      prisma.orderItem.findMany({
+        where: {
+          order: {
+            createdAt: { gte: startDate, lte: endDate },
+            status: { not: "CANCELLED" },
+          },
+        },
+        select: { productId: true, quantity: true, price: true, discountedPrice: true },
       }),
     ]);
+
+  const sales = new Map<number, { sold: number; revenue: number }>();
+  for (const item of soldItems) {
+    const entry = sales.get(item.productId) ?? { sold: 0, revenue: 0 };
+    entry.sold += item.quantity;
+    entry.revenue += (item.discountedPrice ?? item.price) * item.quantity;
+    sales.set(item.productId, entry);
+  }
+  const topProductsGrouped = Array.from(sales.entries())
+    .sort((a, b) => b[1].sold - a[1].sold)
+    .slice(0, 10)
+    .map(([productId, stats]) => ({
+      productId,
+      sold: stats.sold,
+      revenue: stats.revenue,
+    }));
 
   const productIds = topProductsGrouped.map((item) => item.productId);
   const topProducts = await prisma.product.findMany({
@@ -204,10 +216,7 @@ export const buildMonthlySummaryFromDataset = (
   range: ReportRange,
   dataset: ReportDataset
 ): MonthlyReportData => {
-  const totalRevenue = dataset.orders.reduce(
-    (sum, order) => sum + order.totalAmount,
-    0
-  );
+  const totalRevenue = sumRevenue(dataset.orders);
   const totalOrders = dataset.orders.length;
   const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
@@ -233,10 +242,7 @@ export async function generateExcelReportForRange(
   const data = dataset ?? (await fetchReportDataset(range));
   const { orders, products, customers, statusBreakdown } = data;
 
-  const totalRevenue = orders.reduce(
-    (sum, order) => sum + order.totalAmount,
-    0
-  );
+  const totalRevenue = sumRevenue(orders);
   const totalOrders = orders.length;
   const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
@@ -487,10 +493,7 @@ export async function generatePDFReportForRange(
     }
   })();
 
-  const totalRevenue = orders.reduce(
-    (sum, order) => sum + order.totalAmount,
-    0
-  );
+  const totalRevenue = sumRevenue(orders);
   const avgOrderValue = orders.length > 0 ? totalRevenue / orders.length : 0;
 
   // Create PDF (A4, receipt-like styling)
@@ -678,8 +681,8 @@ export async function generatePDFReportForRange(
       product?.title || "Unknown",
       product?.slug || "N/A",
       product?.category?.name || "N/A",
-      item._count.id.toString(),
-      formatNumber(item._sum.price || 0),
+      item.sold.toString(),
+      formatNumber(item.revenue),
     ];
   });
 
@@ -804,8 +807,8 @@ export const buildReportPayload = (
         name: product?.title || "Unknown",
         sku: product?.slug || "N/A",
         category: product?.category?.name || "N/A",
-        sold: item._count.id,
-        revenue: item._sum.price || 0,
+        sold: item.sold,
+        revenue: item.revenue,
       };
     }),
     statusBreakdown: summary.statusBreakdown,

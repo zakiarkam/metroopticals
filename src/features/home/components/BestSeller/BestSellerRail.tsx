@@ -9,19 +9,6 @@ import type { TopProduct } from "@/features/dashboard/types/dashboard";
 import { normalizeImageArray } from "@/lib/storageUtils";
 import { formatPrice } from "@/lib/utils/price";
 
-/**
- * Best sellers as an expanding accordion.
- *
- * One panel is open at a time and carries the photograph, the description and
- * the price; the rest collapse to their title. It replaces a three-up grid of
- * ordinary product cards, which said nothing about ranking  every tile looked
- * equally important, which is the opposite of what a "best seller" list is for.
- *
- * The accordion only exists from `lg` up. Below that the panels stack open,
- * because a column of collapsed titles on a phone is just a menu with the
- * pictures hidden.
- */
-
 const FALLBACK = "/images/placeholder-product.svg";
 const ROTATE_MS = 5000;
 
@@ -96,11 +83,6 @@ export default function BestSellerRail({ items }: { items: TopProduct[] }) {
                   {item.name}
                 </span>
 
-                {/*
-                 * The description and price only exist in the open panel. A
-                 * collapsed panel is roughly 220px wide, and any body copy in
-                 * it wrapped to one word per line.
-                 */}
                 <span
                   className={`overflow-hidden transition-all duration-500 ${
                     open

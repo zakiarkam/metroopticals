@@ -40,15 +40,6 @@ export async function getCartItem(userId: number, itemId: number) {
   return cartItem;
 }
 
-/**
- * Settle which colourway a cart line is for.
- *
- * The chosen colour has to be one the product actually lists, otherwise a
- * hand-rolled request could put anything on a picking slip. A product with
- * colours that is quick-added from a listing card (no choice made) falls back
- * to the first listed colour rather than an empty one, so the warehouse always
- * has something to pick and the shopper can see what was assumed.
- */
 function resolveColor(
   requested: string | undefined,
   frameColors: string[],
@@ -82,7 +73,7 @@ export async function addToCart(userId: number, data: AddToCartInput) {
     where: { id: productId },
   });
 
-  if (!product) {
+  if (!product || product.status !== "ACTIVE") {
     throw new NotFoundError("Product not found");
   }
 
@@ -100,8 +91,11 @@ export async function addToCart(userId: number, data: AddToCartInput) {
     },
   });
 
+  if ((existingItem?.quantity ?? 0) + quantity > product.stock) {
+    throw new ValidationError(`Only ${product.stock} in stock`);
+  }
+
   if (existingItem) {
-    // Update quantity
     return prisma.cartItem.update({
       where: { id: existingItem.id },
       data: { quantity: existingItem.quantity + quantity },
@@ -147,9 +141,6 @@ export async function updateCartItem(
     throw new NotFoundError("Cart item not found");
   }
 
-  // Changing the colour of a line already in the cart can collide with a line
-  // that colour already has. Merging is the only sensible outcome  two rows
-  // for "Tortoise" would break the unique index and confuse the shopper.
   if (data.color !== undefined) {
     const color = resolveColor(data.color, cartItem.product.frameColors);
 

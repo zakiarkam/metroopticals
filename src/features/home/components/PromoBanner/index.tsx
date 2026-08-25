@@ -54,12 +54,6 @@ const buildCard = (ad: Advertisement, canViewDiscount: boolean): PromoCard => {
   };
 };
 
-/**
- * Advertisement slot rendered between home sections.
- *
- * The first ad becomes a wide feature panel; up to two more render as a pair
- * beneath it. Prices are LKR  the previous version printed `$`.
- */
 const PromoBanner = React.memo(({ ads }: { ads: Advertisement[] }) => {
   if (!ads || ads.length === 0) return null;
 

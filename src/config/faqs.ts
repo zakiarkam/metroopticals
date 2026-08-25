@@ -1,9 +1,3 @@
-/**
- * Shared FAQ copy.
- *
- * The full list renders on /faq; the home page shows the first few as a
- * preview. Keeping one array means the two can never fall out of sync.
- */
 export type Faq = { question: string; answer: string[] };
 
 export const faqs: Faq[] = [

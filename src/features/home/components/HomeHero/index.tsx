@@ -7,18 +7,6 @@ import { siteConfig } from "@/config/site";
 import { getAdvertisementImageUrl } from "@/lib/storageUtils";
 import type { BlockData } from "@/features/site-content/types/site-content";
 
-/**
- * The home page hero.
- *
- * One editorial photograph on the storefront's cream stage. The image sits on
- * the right and dissolves into the cream panel on the left, where the headline
- * and the single primary action live, so the section reads as one continuous
- * surface rather than a text column beside a picture.
- *
- * The photograph is admin-editable (`home.hero.image`); the shipped default
- * is our own still of a frame in a Metro Opticals presentation case.
- */
-
 const FALLBACK_IMAGE = "/images/hero/hero-metro-case.jpg";
 // Matches `gray-1` so the photograph's own background and the fade are one.
 const STAGE = "#FAF8F4";

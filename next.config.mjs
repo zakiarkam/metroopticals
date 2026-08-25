@@ -3,18 +3,8 @@ import { fileURLToPath } from "node:url";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  /*
-   * Pin the workspace root. Without this, Next walks up looking for a lockfile
-   * and can settle on one outside the project (e.g. a stray ~/package-lock.json),
-   * which makes file tracing resolve against the wrong directory.
-   */
   outputFileTracingRoot: dirname(fileURLToPath(import.meta.url)),
 
-  /*
-   * A second `next dev` (or a `next build` run alongside one) writes into the
-   * same `.next` and leaves the running server with a half-deleted module
-   * graph. Set NEXT_DIST_DIR to give the extra process its own directory.
-   */
   distDir: process.env.NEXT_DIST_DIR || ".next",
   // Image optimization configuration
   images: {
@@ -36,20 +26,10 @@ const nextConfig = {
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     minimumCacheTTL: 3600 * 24 * 365, // 1 year for production
-    /*
-     * The bundled placeholder and campaign artwork are SVGs. The optimizer
-     * refuses SVG unless this is set; the CSP below keeps a served SVG from
-     * executing script, which is the reason the flag is opt-in.
-     */
     dangerouslyAllowSVG: true,
     contentDispositionType: "attachment",
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
-
-  /*
-   * Railway runs `next start` against the normal build output, so the extra
-   * `.next/standalone` tree the Docker image used to copy is no longer built.
-   */
 
   // Don't advertise the framework to every visitor.
   poweredByHeader: false,
@@ -58,26 +38,12 @@ const nextConfig = {
   // because the proxy forwards the response body as-is.
   compress: true,
 
-  /*
-   * Security headers.
-   *
-   * These used to be set by nginx in front of the app. Railway's proxy does not
-   * add them, so the app has to  otherwise removing nginx would have quietly
-   * dropped HSTS and clickjacking protection.
-   *
-   * CSP ships report-only for now: Chakra/Emotion inject inline styles at
-   * runtime, so an enforcing policy strict enough to be worth having would
-   * need a nonce pipeline through the whole render tree.
-   */
   async headers() {
     return [
       {
         source: "/:path*",
         headers: [
           {
-            // Railway serves every deployment over HTTPS, so this is safe to
-            // send unconditionally. No `preload`  that is a public-list
-            // commitment and should be a deliberate, separate decision.
             key: "Strict-Transport-Security",
             value: "max-age=31536000; includeSubDomains",
           },
@@ -89,9 +55,6 @@ const nextConfig = {
             value: "camera=(), microphone=(), geolocation=()",
           },
           {
-            // Report-only while Emotion's runtime inline styles keep
-            // 'unsafe-inline' in style-src; tighten to enforcing once the
-            // violation reports come back clean.
             key: "Content-Security-Policy-Report-Only",
             value:
               "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self'",
@@ -107,11 +70,6 @@ const nextConfig = {
         ],
       },
     ];
-  },
-
-  // Experimental optimizations
-  experimental: {
-    optimizePackageImports: ["@chakra-ui/react"],
   },
 };
 

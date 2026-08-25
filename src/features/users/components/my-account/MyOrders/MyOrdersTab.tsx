@@ -1,5 +1,7 @@
 "use client";
 
+import { Toast } from "@/lib/utils/toast";
+
 import React, { useEffect, useState } from "react";
 import { Loader2, PackageOpen } from "lucide-react";
 import EmptyState from "@/components/common/EmptyState";
@@ -41,6 +43,8 @@ const MyOrdersTab: React.FC<MyOrdersTabProps> = ({ profile }) => {
     setIsPrintPending(true);
     try {
       await downloadOrderReceiptPdf(order);
+    } catch {
+      Toast.error("Could not generate the invoice. Please try again.");
     } finally {
       setIsPrintPending(false);
     }

@@ -1,8 +1,3 @@
-/**
- * WhatsApp integration for sending order notifications
- * Using WaSender API for WhatsApp Business messaging
- */
-
 import { siteConfig } from "@/config/site";
 
 export interface WhatsAppResult {
@@ -14,10 +9,6 @@ export interface WhatsAppResult {
   isInvalidNumber?: boolean;
 }
 
-/**
- * Format phone number to international format for WhatsApp
- * Handles Sri Lankan numbers and international formats
- */
 export function formatPhoneNumber(phoneNumber: string): string {
   const cleaned = phoneNumber.replace(/[^\d+]/g, "");
 
@@ -50,9 +41,6 @@ function getRetryAfterSeconds(response: Response, body: any): number | null {
   return null;
 }
 
-/**
- * Send WhatsApp message with retry logic for rate limiting
- */
 export async function sendWhatsAppMessage(
   phoneNumber: string,
   message: string,

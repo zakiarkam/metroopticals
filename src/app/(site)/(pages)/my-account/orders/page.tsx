@@ -22,7 +22,7 @@ const MyOrdersPage = () => {
   // /my-account redirected them to the login form. Both redirect now.
   const signedOut = mounted && status !== "loading" && !session?.user;
   useEffect(() => {
-    if (signedOut) router.replace("/log-in?callbackUrl=/my-account/orders");
+    if (signedOut) router.replace("/log-in?redirect=/my-account/orders");
   }, [router, signedOut]);
 
   const memberSince = useMemo(() => {

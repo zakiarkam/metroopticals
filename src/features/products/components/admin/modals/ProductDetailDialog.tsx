@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { Product } from "@/features/products/types/product";
 import { getProductById } from "@/features/products/api/product-api";
 import { getUnitLabel } from "@/lib/utils/price";
@@ -36,6 +36,9 @@ const ProductDetailDialog: React.FC<ProductDetailDialogProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [selectedImage, setSelectedImage] = useState(0);
 
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
   const loadProduct = useCallback(async () => {
     if (!productId) return;
 
@@ -52,11 +55,11 @@ const ProductDetailDialog: React.FC<ProductDetailDialogProps> = ({
         "Failed to load product details";
 
       Toast.error(errorMessage);
-      onClose();
+      onCloseRef.current();
     } finally {
       setIsLoading(false);
     }
-  }, [productId, onClose]);
+  }, [productId]);
 
   useEffect(() => {
     if (isOpen && productId) {

@@ -3,12 +3,6 @@
 import React from "react";
 import ProductCard from "./ProductCard";
 
-/**
- * Adapter kept for the home carousels, which pass the raw API product shape
- * (images may arrive as `images`, `imgs.previews` or `imgs.thumbnails`).
- * All visual decisions live in <ProductCard />.
- */
-
 type ProductItemData = {
   id: number;
   title: string;

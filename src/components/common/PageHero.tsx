@@ -5,13 +5,6 @@ import SiteContainer from "./SiteContainer";
 
 export type Crumb = { label: string; href?: string };
 
-/**
- * Header band for every inner customer page (cart, wishlist, contact, …).
- *
- * Replaces the old `<Breadcrumb />`, which hard-coded a large top padding to
- * clear the fixed header. The site layout now offsets content with the
- * `--site-header-height` variable, so this component only owns its own design.
- */
 export default function PageHero({
   title,
   description,

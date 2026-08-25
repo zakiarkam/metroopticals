@@ -1,12 +1,3 @@
-/**
- * Railway pre-deploy step: apply migrations, then bootstrap.
- *
- * Postgres on Railway occasionally restarts at the same moment a deploy
- * starts, and `prisma migrate deploy` then dies with "the database system is
- * starting up". That is a ten-second condition, not a broken migration, so
- * the migrate step is retried with a short back-off before the deploy is
- * declared failed.
- */
 import { execSync } from "node:child_process";
 
 const MAX_ATTEMPTS = 6;

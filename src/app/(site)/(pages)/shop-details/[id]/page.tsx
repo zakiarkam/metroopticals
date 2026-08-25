@@ -156,11 +156,11 @@ const ShopDetailsPage = async ({ params }: ShopDetailsPageProps) => {
       itemCondition: "https://schema.org/NewCondition",
     },
     aggregateRating:
-      typeof product.rating === "number" && product.reviews > 0
+      typeof product.rating === "number" && (product.reviewCount ?? 0) > 0
         ? {
             "@type": "AggregateRating",
             ratingValue: product.rating,
-            reviewCount: product.reviews,
+            reviewCount: product.reviewCount,
           }
         : undefined,
   };
@@ -170,9 +170,6 @@ const ShopDetailsPage = async ({ params }: ShopDetailsPageProps) => {
       <ShopDetailsClient productId={productId} initialProduct={initialProduct} />
       <script
         type="application/ld+json"
-        // Structured data for product SEO (JSON-LD).
-        // JSON.stringify doesn't escape "<", so a "</script>" inside a product
-        // field could otherwise break out of this tag.
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
         }}

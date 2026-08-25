@@ -2,8 +2,8 @@ import { configureStore } from "@reduxjs/toolkit";
 import { setupListeners } from "@reduxjs/toolkit/query";
 
 import quickViewReducer from "./features/quickView-slice";
-import cartReducer from "./features/cart-slice";
-import wishlistReducer from "./features/wishlist-slice";
+import cartReducer, { syncCartItems } from "./features/cart-slice";
+import wishlistReducer, { syncWishlistItems } from "./features/wishlist-slice";
 import productDetailsReducer from "./features/product-details";
 import categoriesCacheReducer from "./features/categories-cache";
 import { api } from "./services/api";
@@ -12,37 +12,26 @@ import { TypedUseSelectorHook, useSelector } from "react-redux";
 
 const CART_STORAGE_KEY = "metro_cart_v1";
 const WISHLIST_STORAGE_KEY = "metro_wishlist_v1";
-const loadCartFromStorage = () => {
-  if (typeof window === "undefined") return undefined;
+
+const readStorage = (key: string): { items?: unknown } | undefined => {
   try {
-    const raw = window.localStorage.getItem(CART_STORAGE_KEY);
-    if (!raw) return undefined;
-    return JSON.parse(raw);
-  } catch (error) {
-    console.warn("Failed to load cart from storage:", error);
+    const raw = window.localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : undefined;
+  } catch {
     return undefined;
   }
 };
-const loadWishlistFromStorage = () => {
-  if (typeof window === "undefined") return undefined;
-  try {
-    const raw = window.localStorage.getItem(WISHLIST_STORAGE_KEY);
-    if (!raw) return undefined;
-    return JSON.parse(raw);
-  } catch (error) {
-    console.warn("Failed to load wishlist from storage:", error);
-    return undefined;
+
+// Called after mount so server and first client render agree (no hydration mismatch).
+export const hydrateFromStorage = () => {
+  if (typeof window === "undefined") return;
+  const cart = readStorage(CART_STORAGE_KEY);
+  if (Array.isArray(cart?.items)) store.dispatch(syncCartItems(cart.items));
+  const wishlist = readStorage(WISHLIST_STORAGE_KEY);
+  if (Array.isArray(wishlist?.items)) {
+    store.dispatch(syncWishlistItems(wishlist.items));
   }
 };
-const preloadedCart = loadCartFromStorage();
-const preloadedWishlist = loadWishlistFromStorage();
-const preloadedState =
-  preloadedCart || preloadedWishlist
-    ? {
-        cartReducer: preloadedCart,
-        wishlistReducer: preloadedWishlist,
-      }
-    : undefined;
 
 export const store = configureStore({
   reducer: {
@@ -53,7 +42,6 @@ export const store = configureStore({
     categoriesCache: categoriesCacheReducer,
     [api.reducerPath]: api.reducer,
   },
-  preloadedState,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(api.middleware),
 });

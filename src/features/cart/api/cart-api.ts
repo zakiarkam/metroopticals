@@ -33,16 +33,11 @@ export type UpdateCartItemInput = {
 };
 
 export const getCartItems = async (): Promise<{ cartItems: CartItem[] }> => {
-  try {
-    const response = await axiosInstance.get("/cart");
-    const apiData = response.data;
-    return {
-      cartItems: apiData.data?.cartItems || apiData.cartItems || [],
-    };
-  } catch (error) {
-    console.error("Failed to fetch cart items:", error);
-    return { cartItems: [] };
-  }
+  const response = await axiosInstance.get("/cart");
+  const apiData = response.data;
+  return {
+    cartItems: apiData.data?.cartItems || apiData.cartItems || [],
+  };
 };
 
 export const addToCart = async (

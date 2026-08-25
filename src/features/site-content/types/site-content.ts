@@ -1,12 +1,3 @@
-/**
- * Field vocabulary for editable storefront blocks.
- *
- * The admin renders forms straight from these definitions, and the storefront
- * reads the same block's `defaults` when nothing has been saved yet. Adding a
- * field to a block therefore updates the editor and the shipped dummy content
- * in one edit, with no migration  the row is a single JSON column.
- */
-
 export type FieldType =
   | "text"
   | "textarea"

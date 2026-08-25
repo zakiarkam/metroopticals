@@ -1,17 +1,3 @@
-/**
- * Turning a colourway name into something you can see.
- *
- * Colours are typed free-hand by the admin ("Tortoise", "Matte Black",
- * "Rose Gold"), so there is no colour code to read  the swatch is derived from
- * the words instead. Matching is done on whole words against a table of the
- * finishes eyewear is actually sold in, longest phrase first so "Rose Gold"
- * wins over "Gold" and "Matte Black" over "Black".
- *
- * A name nothing matches gets no swatch at all rather than a guessed one: a
- * wrong colour dot is worse than a plain text chip, because the shopper
- * believes it.
- */
-
 export type ColorSwatch = {
   /** CSS background for the dot  flat, or a gradient for two-tone finishes. */
   background: string;

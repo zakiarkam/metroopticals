@@ -1,10 +1,5 @@
 import axiosInstance from "@/lib/axiosInstance";
 
-export interface LoginCredentials {
-  email: string;
-  password: string;
-}
-
 export interface SignupData {
   name: string;
   email: string;
@@ -121,16 +116,3 @@ export const authApi = {
   },
 };
 
-export const adminAuthApi = {
-  login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
-    const response = await axiosInstance.post<AuthResponse>(
-      "/auth/admin/login",
-      credentials
-    );
-    return response.data;
-  },
-
-  logout: async (): Promise<void> => {
-    await axiosInstance.post("/auth/admin/logout");
-  },
-};

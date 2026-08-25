@@ -19,15 +19,6 @@ export const metadata: Metadata = {
   alternates: { canonical: buildSiteUrl("/faq") },
 };
 
-/**
- * FAQ page. Questions live in `@/config/faqs` so the home-page preview and this
- * full list stay in sync.
- *
- * Laid out to match the lens guides: a sticky heading against a flat, ruled
- * accordion, and the shared dark band closing the page. The previous version
- * stacked every question in its own bordered card next to a card-shaped help
- * rail, which made a page of plain text look like a dashboard.
- */
 export default function FAQPage() {
   const faqJsonLd = {
     "@context": "https://schema.org",

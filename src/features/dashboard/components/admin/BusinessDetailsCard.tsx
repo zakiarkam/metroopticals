@@ -7,13 +7,6 @@ import { saveSiteContentBlock } from "@/features/site-content/api/site-content-a
 import { getBlockDefinition } from "@/features/site-content/constants/blocks";
 import { Toast } from "@/lib/utils/toast";
 
-/**
- * Business & invoice details, edited from the admin profile page.
- *
- * Writes the `business.details` content block, which the invoice PDF reads
- * at download time, so a change here shows on the very next invoice.
- */
-
 const BLOCK_KEY = "business.details";
 
 type Values = Record<string, string>;

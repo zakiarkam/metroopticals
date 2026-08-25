@@ -1,18 +1,3 @@
-/**
- * The lens library.
- *
- * Every lens type the store fits has one entry here, and that entry is the only
- * source for the header menu, the /lenses index and the /lenses/[slug] detail
- * page. Adding a lens type is a single object  no new route file, no second
- * copy of the copy in the mega-menu block.
- *
- * The optical copy is written from published sources rather than from supplier
- * marketing, which is why several entries carry a `goodToKnow` line that cuts
- * against the sale (photochromics behind a windscreen, the Cochrane finding on
- * blue-light filtering, polarised lenses against an LCD dashboard). A lens page
- * that only lists benefits is the one customers come back to argue with.
- */
-
 export type LensGroup =
   | "Clear & coated"
   | "Screen & indoor"
@@ -41,11 +26,6 @@ export type LensType = {
   icon: string;
   image: string;
   imageAlt: string;
-  /**
-   * A second, human photograph of the lens in the situation it is for.
-   * The detail page pairs it with "How it works" so the page carries a
-   * product shot and a context shot rather than one image and a lot of boxes.
-   */
   imageInUse: string;
   imageInUseAlt: string;
   /** Opening paragraphs. */
@@ -60,11 +40,6 @@ export type LensType = {
   faqs: { question: string; answer: string[] }[];
   /** Slugs of the lens types worth comparing this one against. */
   compareWith: string[];
-  /**
-   * Set when the entry describes a supplier range whose exact specification is
-   * confirmed in store rather than published. The page draws a note instead of
-   * stating figures the site cannot stand behind.
-   */
   supplierRange?: boolean;
 };
 

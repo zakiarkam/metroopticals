@@ -31,10 +31,6 @@ interface EyewearSpecFieldsProps {
   form: UseFormReturn<ProductFormData>;
 }
 
-/**
- * Optional eyewear specification inputs, shared by the Add and Edit product
- * dialogs so the two forms can never drift apart.
- */
 export default function EyewearSpecFields({ form }: EyewearSpecFieldsProps) {
   const lensWidth = form.watch("lensWidth");
   const bridgeWidth = form.watch("bridgeWidth");

@@ -23,13 +23,8 @@ export type AddToWishlistInput = {
 export const getWishlistItems = async (): Promise<{
   wishlistItems: WishlistItem[];
 }> => {
-  try {
-    const response = await axiosInstance.get("/wishlist");
-    return response.data.data || response.data;
-  } catch (error) {
-    console.error("Failed to fetch wishlist items:", error);
-    return { wishlistItems: [] };
-  }
+  const response = await axiosInstance.get("/wishlist");
+  return response.data.data || response.data;
 };
 
 export const addToWishlist = async (

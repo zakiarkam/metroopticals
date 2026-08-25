@@ -14,12 +14,6 @@ import { rateLimit } from "@/lib/rate-limit";
 
 type Params = { params: Promise<{ id: string }> };
 
-/**
- * Public list of a product's published reviews.
- *
- * Reads the session without requiring one so a signed-in customer also gets
- * their own review back, whatever its moderation status.
- */
 export async function GET(request: NextRequest, { params }: Params) {
   try {
     const { id } = await params;
@@ -35,8 +29,8 @@ export async function GET(request: NextRequest, { params }: Params) {
     const result = await getProductReviews(
       productId,
       {
-        page: Number(searchParams.get("page")) || 1,
-        limit: Number(searchParams.get("limit")) || 10,
+        page: Math.max(1, Number(searchParams.get("page")) || 1),
+        limit: Math.min(50, Math.max(1, Number(searchParams.get("limit")) || 10)),
       },
       Number.isFinite(viewerId) ? viewerId : null
     );

@@ -3,19 +3,6 @@ import autoTable from "jspdf-autotable";
 import type { Order } from "@/features/orders/types/order";
 import { siteConfig } from "@/config/site";
 
-/**
- * Customer invoice (A4 portrait).
- *
- * Layout: charcoal header band with the white logo and invoice meta, gold
- * accent rule, seller / bill-to / ship-to columns, a line-item table with a
- * charcoal header, right-aligned totals, then a payment box that carries the
- * bank details and the admin's footer note.
- *
- * Business details come from the `business.details` content block so the
- * admin can change them from the profile page without a deploy; the site
- * config is only the fallback when the fetch fails.
- */
-
 type BusinessDetails = {
   legalName: string;
   registrationNumber: string;

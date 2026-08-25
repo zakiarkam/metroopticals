@@ -1,8 +1,3 @@
-/**
- * Session Storage Utility
- * Manages user session data in localStorage for quick access
- */
-
 export interface StoredUser {
   id: number;
   name: string | null;
@@ -19,9 +14,6 @@ export interface StoredUser {
 
 const SESSION_KEY = "user_session";
 
-/**
- * Save user session to localStorage
- */
 export function saveUserSession(user: StoredUser): void {
   if (typeof window === "undefined") return;
 
@@ -32,9 +24,6 @@ export function saveUserSession(user: StoredUser): void {
   }
 }
 
-/**
- * Get user session from localStorage
- */
 export function getUserSession(): StoredUser | null {
   if (typeof window === "undefined") return null;
 
@@ -47,9 +36,6 @@ export function getUserSession(): StoredUser | null {
   }
 }
 
-/**
- * Clear user session from localStorage
- */
 export function clearUserSession(): void {
   if (typeof window === "undefined") return;
 
@@ -59,14 +45,13 @@ export function clearUserSession(): void {
     localStorage.removeItem("authToken");
     localStorage.removeItem("admin_user");
     localStorage.removeItem("nextauth.message");
+    localStorage.removeItem("metro_cart_v1");
+    localStorage.removeItem("metro_wishlist_v1");
   } catch (error) {
     console.error("Failed to clear user session:", error);
   }
 }
 
-/**
- * Check if user session exists in localStorage
- */
 export function hasUserSession(): boolean {
   if (typeof window === "undefined") return false;
 

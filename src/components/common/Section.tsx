@@ -4,15 +4,6 @@ import { ArrowRight } from "lucide-react";
 import Reveal from "./Reveal";
 import SiteContainer from "./SiteContainer";
 
-/**
- * Shared section shell + heading used by every customer-facing section.
- *
- * The old code repeated a bespoke `<section>` + icon + `<h2>` block in each
- * feature folder, so vertical rhythm and heading sizes drifted apart. These two
- * components are the single source of truth: change the spacing scale or the
- * eyebrow treatment here and the whole storefront follows.
- */
-
 export function Section({
   children,
   className = "",

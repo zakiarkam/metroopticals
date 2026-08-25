@@ -6,7 +6,7 @@ import {
   deleteProduct,
 } from "@/features/products/services/product-service";
 import { requireAdmin } from "@/lib/middleware/auth";
-import { handleError, createSuccessResponse } from "@/lib/errors";
+import { handleError, createSuccessResponse, NotFoundError } from "@/lib/errors";
 import { logApiAction, logApiError } from "@/lib/audit";
 
 export async function GET(
@@ -18,6 +18,11 @@ export async function GET(
 
   try {
     const product = await getProductById(id);
+    if (product.status !== "ACTIVE") {
+      await requireAdmin().catch(() => {
+        throw new NotFoundError("Product not found");
+      });
+    }
     return createSuccessResponse({ product });
   } catch (error) {
     return handleError(error);

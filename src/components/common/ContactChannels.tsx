@@ -2,14 +2,6 @@ import React from "react";
 import { Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import { siteConfig } from "@/config/site";
 
-/**
- * The "how to reach us" list.
- *
- * The contact page hand-wrote four of these rows and the FAQ page mapped three
- * from its own array  same markup, same icons, two sources of truth, and the
- * two had already drifted on which channels they offered.
- */
-
 type Channel = "phone" | "email" | "whatsapp" | "address";
 
 const CHANNELS: Record<

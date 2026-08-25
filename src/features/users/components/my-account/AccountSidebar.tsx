@@ -26,13 +26,6 @@ const getInitials = (name?: string | null) => {
     .slice(0, 2);
 };
 
-/**
- * These are navigation, so they are links.
- *
- * They used to be `<button>`s whose handlers called `router.push`  no href
- * meant no middle-click, no "open in new tab", no prefetch, and an
- * `aria-current="page"` on an element that is not a link.
- */
 const sectionItems: {
   key: SectionKey;
   label: string;
