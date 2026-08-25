@@ -2,17 +2,6 @@
 
 import React, { useEffect, useRef, useState } from "react";
 
-/**
- * Fade-and-lift a block into view the first time it is scrolled to.
- *
- * Hand-rolled on IntersectionObserver rather than framer-motion: this wraps
- * every storefront section, and pulling an animation library into all of them
- * would cost far more bundle than the effect is worth.
- *
- * Two safeguards keep it from ever hiding content:
- *  - `prefers-reduced-motion` skips straight to the visible state
- *  - the element starts visible if IntersectionObserver is unavailable
- */
 export default function Reveal({
   children,
   className = "",

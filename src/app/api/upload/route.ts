@@ -13,8 +13,8 @@ const ALLOWED_FOLDERS: UploadFolder[] = [
   "brand/image",
 ];
 
-const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5 MB
-const MAX_PDF_BYTES = 20 * 1024 * 1024; // 20 MB
+// Every upload  image or catalogue PDF  is capped at 5 MB.
+const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 
 // Verify the declared MIME type against the file's magic bytes so a
 // client-forged Content-Type can't smuggle another format through.
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
           { status: 400 },
         );
       }
-      if (file.size > MAX_IMAGE_BYTES) {
+      if (file.size > MAX_UPLOAD_BYTES) {
         return NextResponse.json(
           { error: "Image must be 5MB or smaller" },
           { status: 400 },
@@ -89,9 +89,9 @@ export async function POST(request: NextRequest) {
           { status: 400 },
         );
       }
-      if (file.size > MAX_PDF_BYTES) {
+      if (file.size > MAX_UPLOAD_BYTES) {
         return NextResponse.json(
-          { error: "PDF must be 20MB or smaller" },
+          { error: "PDF must be 5MB or smaller" },
           { status: 400 },
         );
       }

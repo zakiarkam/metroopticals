@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
-import { requireAdmin } from "@/lib/middleware/auth";
+import { reportQuerySchema } from "@/features/reports/validators/reports";
+import { requireSuperAdmin } from "@/lib/middleware/auth";
 import { handleError } from "@/lib/errors";
 import { logger, serializeError } from "@/lib/logger";
 import {
@@ -7,6 +8,7 @@ import {
   fetchReportDataset,
   generateExcelReportForRange,
   generatePDFReportForRange,
+  resolveReportRange,
 } from "@/features/reports/services/report-service";
 
 type CachedReport = {
@@ -19,13 +21,17 @@ const CACHE_TTL_MS = 5 * 60 * 1000;
 
 export async function GET(request: NextRequest) {
   try {
-    await requireAdmin();
+    await requireSuperAdmin();
 
     const { searchParams } = new URL(request.url);
-    const month = searchParams.get("month") || "";
-    const startDate = searchParams.get("startDate") || "";
-    const endDate = searchParams.get("endDate") || "";
-    const format = searchParams.get("format") || "excel";
+    const parsed = reportQuerySchema.parse({
+      ...Object.fromEntries(searchParams),
+      format: searchParams.get("format") || "excel",
+    });
+    const month = parsed.month || "";
+    const startDate = parsed.startDate || "";
+    const endDate = parsed.endDate || "";
+    const format = parsed.format;
 
     if ((startDate && !endDate) || (!startDate && endDate)) {
       return new Response(
@@ -37,79 +43,24 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    if (startDate && endDate && startDate > endDate) {
+      return new Response(
+        JSON.stringify({ error: "startDate must be before endDate" }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
     let buffer: Buffer;
     let contentType: string;
     let filename: string;
 
-    let rangeStart: Date | null = null;
-    let rangeEnd: Date | null = null;
-
-    if (startDate && endDate) {
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-      if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
-        return new Response(
-          JSON.stringify({ error: "Invalid startDate or endDate" }),
-          {
-            status: 400,
-            headers: { "Content-Type": "application/json" },
-          }
-        );
-      }
-      if (start > end) {
-        return new Response(
-          JSON.stringify({ error: "startDate must be before endDate" }),
-          {
-            status: 400,
-            headers: { "Content-Type": "application/json" },
-          }
-        );
-      }
-      rangeStart = new Date(
-        start.getFullYear(),
-        start.getMonth(),
-        start.getDate(),
-        0,
-        0,
-        0
-      );
-      rangeEnd = new Date(
-        end.getFullYear(),
-        end.getMonth(),
-        end.getDate(),
-        23,
-        59,
-        59
-      );
-    }
-
-    const buildMonthRange = (value: string) => {
-      const [year, monthNum] = value.split("-").map(Number);
-      const start = new Date(year, monthNum - 1, 1, 0, 0, 0);
-      const end = new Date(year, monthNum, 0, 23, 59, 59);
-      return { start, end };
-    };
-
-    const rangeLabel =
-      startDate && endDate ? `${startDate}_to_${endDate}` : month;
-
-    const reportRange =
-      startDate && endDate && rangeStart && rangeEnd
-        ? {
-            startDate: rangeStart,
-            endDate: rangeEnd,
-            label: rangeLabel,
-            isCustomRange: true,
-          }
-        : (() => {
-            const monthRange = buildMonthRange(month);
-            return {
-              startDate: monthRange.start,
-              endDate: monthRange.end,
-              label: rangeLabel,
-              isCustomRange: false,
-            };
-          })();
+    const reportRange = resolveReportRange({
+      month: month || undefined,
+      startDate: startDate || undefined,
+      endDate: endDate || undefined,
+      format,
+    });
+    const rangeLabel = reportRange.label;
 
     const cacheKey = JSON.stringify({
       month: month || undefined,
@@ -161,7 +112,7 @@ export async function GET(request: NextRequest) {
       filename =
         startDate && endDate
           ? `report-${rangeLabel}.pdf`
-          : `monthly-report-${month}.pdf`;
+          : `monthly-report-${rangeLabel}.pdf`;
     } else {
       const dataset =
         getCachedDataset() ?? storeDataset(await fetchReportDataset(reportRange));
@@ -172,7 +123,7 @@ export async function GET(request: NextRequest) {
       filename =
         startDate && endDate
           ? `report-${rangeLabel}.xlsx`
-          : `monthly-report-${month}.xlsx`;
+          : `monthly-report-${rangeLabel}.xlsx`;
     }
 
     return new Response(new Uint8Array(buffer), {

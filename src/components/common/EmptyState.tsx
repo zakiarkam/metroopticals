@@ -1,18 +1,9 @@
+"use client";
+
 import React from "react";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 
-/**
- * Shared "nothing here yet" panel. Every list page (cart, wishlist, orders,
- * empty search results) previously drew its own  with different icon sizes,
- * copy weight and button styles.
- *
- * Deliberately not a dashed outline any more: a dashed box is the convention
- * for a drop target or a broken image, so an empty cart read as a page that
- * had failed to load rather than one that was simply waiting for something.
- * It is now a finished-looking panel with the same warm ground as the rest of
- * the storefront.
- */
 export default function EmptyState({
   icon,
   title,

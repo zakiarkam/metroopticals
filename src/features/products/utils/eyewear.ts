@@ -41,11 +41,6 @@ export const hasEyewearSpec = (spec: EyewearSpec) =>
   !!spec.gender ||
   !!spec.rimType;
 
-/**
- * The industry size code stamped inside a frame, e.g. `50 □ 17 - 140`.
- * Returns null unless all three measurements are present, since a partial
- * code would be misleading.
- */
 export const formatFrameSizeCode = ({
   lensWidth,
   bridgeWidth,
@@ -57,10 +52,6 @@ export const formatFrameSizeCode = ({
   return `${lensWidth} □ ${bridgeWidth} - ${templeLength}`;
 };
 
-/**
- * Frame size bucket derived from lens width, matching how opticians describe
- * fit. Boundaries follow common retail practice.
- */
 export const getFrameSizeLabel = (lensWidth?: number | null) => {
   if (lensWidth == null) return null;
   if (lensWidth < 48) return "Small";

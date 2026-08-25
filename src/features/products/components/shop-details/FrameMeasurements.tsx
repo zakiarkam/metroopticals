@@ -12,14 +12,6 @@ interface FrameMeasurementsProps {
   className?: string;
 }
 
-/**
- * Technical diagram of a frame's three published measurements.
- *
- * Deliberately omits lens height and total frame width: those are not
- * collected, and showing unlabelled dimensions invites questions we cannot
- * answer. The drawing is schematic  it is not to scale, so a 48mm and a
- * 54mm lens render identically; the numbers carry the meaning.
- */
 export default function FrameMeasurements({
   lensWidth,
   bridgeWidth,

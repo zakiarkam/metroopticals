@@ -1,4 +1,5 @@
 "use client";
+import { safeRedirectPath } from "@/lib/safe-redirect";
 import React, { useState, useEffect, useRef } from "react";
 import { useCachedSession } from "@/features/auth/hooks/use-cached-session";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -11,17 +12,6 @@ import { cn } from "@/lib/utils";
 import { siteConfig } from "@/config/site";
 import AuthPageSkeleton from "./AuthPageSkeleton";
 import AuthHeader from "./AuthHeader";
-
-/**
- * Sign-in / sign-up screen.
- *
- * One card, two halves: the form and a gold brand panel. Above `lg` the panel
- * SLIDES between the halves when you switch form  sign-in keeps the form on
- * the left, sign-up moves it to the right  which is what makes the switch
- * read as one screen rather than two pages. Below `lg` there is no room for
- * that, so the panel collapses to a ribbon and the two forms swap under a pair
- * of pill tabs.
- */
 
 const AuthBrandPanel = dynamic(() => import("./AuthBrandPanel"), {
   ssr: false,
@@ -80,7 +70,7 @@ const HEADINGS = {
 const AuthAdmin = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectUrl = searchParams.get("redirect") || "/admin";
+  const redirectParam = searchParams.get("redirect");
   const { data: session, status, update } = useCachedSession();
 
   /* `?mode=signup` opens the registration form directly. */
@@ -96,12 +86,15 @@ const AuthAdmin = () => {
 
     if (status === "authenticated" && session && !hasRedirectedRef.current) {
       hasRedirectedRef.current = true;
-      // Update session once to ensure latest data, then redirect
-      update().then(() => {
-        router.replace(redirectUrl);
-      });
+      const role = session.user?.role;
+      const fallback =
+        role === "SUPER_ADMIN" ? "/admin" : role === "ADMIN" ? "/admin/users" : "/";
+      const target = safeRedirectPath(redirectParam, fallback);
+      update()
+        .catch(() => undefined)
+        .finally(() => router.replace(target));
     }
-  }, [status, session, router, redirectUrl, update]);
+  }, [status, session, router, redirectParam, update]);
 
   if (status === "authenticated") {
     return null;
@@ -170,13 +163,6 @@ const AuthAdmin = () => {
           </div>
 
           <div className="grid lg:h-[680px] lg:grid-cols-2">
-            {/*
-             * The card keeps one height whichever form is showing, so the
-             * sliding panel never jumps. The taller sign-up form scrolls
-             * inside this column instead. `m-auto` on the inner block centres
-             * a short form but collapses to zero once the content overflows,
-             * which `justify-center` would not do  it would clip the top.
-             */}
             <div
               className={cn(
                 "flex flex-col px-6 py-8 sm:px-10 sm:py-10 lg:row-start-1 lg:h-full lg:overflow-y-auto lg:px-12",
@@ -192,7 +178,7 @@ const AuthAdmin = () => {
                       type="button"
                       onClick={() => handleTabChange(tab)}
                       className={cn(
-                        "h-9 rounded-lg text-[13px] font-semibold transition-all",
+                        "h-10 rounded-lg text-[13px] font-semibold transition-all",
                         activeTab === tab
                           ? "bg-white text-dark shadow-sm"
                           : "text-dark-4 hover:text-dark-2",
@@ -208,7 +194,7 @@ const AuthAdmin = () => {
                 <div className="mt-6">
                   {activeTab === "login" && !showForgotPassword && (
                     <LoginForm
-                      redirectUrl={redirectUrl}
+                      redirectUrl={safeRedirectPath(redirectParam, "/")}
                       onShowForgotPassword={() => setShowForgotPassword(true)}
                     />
                   )}
@@ -244,12 +230,6 @@ const AuthAdmin = () => {
                 </p>
               </div>
 
-              {/*
-               * Softens the cut-off when the sign-up form runs past the card.
-               * Sticky so it rides the bottom padding edge of the scroll box;
-               * the negative margin keeps it out of the layout, and over a
-               * short form it fades white into white and disappears.
-               */}
               <div
                 aria-hidden
                 className="pointer-events-none sticky bottom-[-2.5rem] -mt-16 hidden h-16 shrink-0 bg-gradient-to-t from-white via-white/85 to-transparent lg:block"

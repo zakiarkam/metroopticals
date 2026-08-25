@@ -39,6 +39,9 @@ const OrderDetailDialog: React.FC<OrderDetailDialogProps> = ({
   const [isGeneratingReceipt, setIsGeneratingReceipt] = useState(false);
   const loadingToastIdRef = useRef<string | number | null>(null);
 
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
   const loadOrder = useCallback(async () => {
     if (!orderId) return;
 
@@ -55,11 +58,11 @@ const OrderDetailDialog: React.FC<OrderDetailDialogProps> = ({
           "Failed to load order details",
       );
 
-      onClose();
+      onCloseRef.current();
     } finally {
       setIsLoading(false);
     }
-  }, [orderId, onClose]);
+  }, [orderId]);
 
   useEffect(() => {
     if (isOpen && orderId) loadOrder();
@@ -356,9 +359,6 @@ const OrderDetailDialog: React.FC<OrderDetailDialogProps> = ({
                                   </h5>
                                   <p className="text-xs md:text-sm text-body mt-1">
                                     {item.product.category.name}
-                                    {/* The colourway as sold  what the shelf
-                                        is picked from, so it sits with the
-                                        product name rather than in a note. */}
                                     {item.color ? ` · ${item.color}` : ""}
                                   </p>
                                 </div>

@@ -3,25 +3,34 @@ import { z } from "zod";
 import { logger, getRequestMeta } from "@/lib/logger";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
-const MAX_CONTEXT_BYTES = 4 * 1024;
+const MAX_MESSAGE_CHARS = 1024;
+const MAX_CONTEXT_CHARS = 8 * 1024;
 
+// Oversized entries are truncated rather than rejected: a client error report
+// that is dropped for being too long is exactly the one you wanted to see.
 const payloadSchema = z.object({
   level: z.enum(["info", "warn", "error"]),
-  message: z.string().min(1).max(1024),
+  message: z
+    .string()
+    .min(1)
+    .transform((m) => m.slice(0, MAX_MESSAGE_CHARS)),
   event_type: z.string().max(128).optional(),
   requestId: z.string().max(128).optional(),
   context: z
     .record(z.string(), z.any())
     .optional()
-    .refine(
-      (ctx) => !ctx || JSON.stringify(ctx).length <= MAX_CONTEXT_BYTES,
-      { message: "context too large" }
-    ),
+    .transform((ctx) => {
+      if (!ctx) return ctx;
+      const raw = JSON.stringify(ctx);
+      return raw.length <= MAX_CONTEXT_CHARS
+        ? ctx
+        : { truncated: true, preview: raw.slice(0, MAX_CONTEXT_CHARS) };
+    }),
 });
 
 export async function POST(request: NextRequest) {
   try {
-    rateLimit(`logs:${getClientIp(request)}`, 60, 60 * 1000);
+    rateLimit(`logs:${getClientIp(request)}`, 120, 60 * 1000);
 
     const payload = payloadSchema.parse(await request.json());
     const meta = getRequestMeta(request);

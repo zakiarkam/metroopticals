@@ -5,13 +5,6 @@ import SiteContainer from "./SiteContainer";
 
 export type Crumb = { label: string; href?: string };
 
-/**
- * Header band for every inner customer page (cart, wishlist, contact, …).
- *
- * Replaces the old `<Breadcrumb />`, which hard-coded a large top padding to
- * clear the fixed header. The site layout now offsets content with the
- * `--site-header-height` variable, so this component only owns its own design.
- */
 export default function PageHero({
   title,
   description,
@@ -64,13 +57,13 @@ export default function PageHero({
         </nav>
 
         <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-          <div className="max-w-2xl">
+          <div className="min-w-0 max-w-2xl">
             {eyebrow && (
               <span className="mb-2 block text-[11px] font-bold uppercase tracking-[0.24em] text-blue">
                 {eyebrow}
               </span>
             )}
-            <h1 className="font-display text-[1.75rem] font-bold leading-[1.1] tracking-[-0.03em] text-dark sm:text-[2.25rem]">
+            <h1 className="break-words font-display text-[1.75rem] font-bold leading-[1.1] tracking-[-0.03em] text-dark sm:text-[2.25rem]">
               {title}
             </h1>
             {description && (
@@ -80,7 +73,7 @@ export default function PageHero({
             )}
           </div>
 
-          {actions && <div className="shrink-0">{actions}</div>}
+          {actions && <div className="min-w-0 sm:shrink-0">{actions}</div>}
         </div>
       </SiteContainer>
     </header>

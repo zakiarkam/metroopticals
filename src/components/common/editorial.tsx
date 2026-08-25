@@ -5,22 +5,8 @@ import { ArrowUpRight } from "lucide-react";
 
 import SiteContainer from "@/components/common/SiteContainer";
 
-/**
- * Layout primitives for the lens guide.
- *
- * The first version of these pages was a stack of white rounded cards  benefit
- * cards, variant cards, list cards, a card rail  and every section read the
- * same weight, so nothing led. These pieces give the pages a rhythm instead:
- * a split editorial heading, hairline-ruled numbered columns, full-bleed photo
- * tiles and one dark band. Boxes are now the exception rather than the default.
- */
-
 /* --------------------------------------------------------------- buttons */
 
-/**
- * The primary call to action  a gold pill with a dark circular arrow badge.
- * `tone="light"` is the version for the dark band, where the pill is ivory.
- */
 export function PillLink({
   href,
   children,
@@ -28,11 +14,6 @@ export function PillLink({
 }: {
   href: string;
   children: React.ReactNode;
-  /**
-   * `light` and `outline` are the pair for the dark band; `quiet` is the
-   * secondary action on a light section  an ivory pill on an ivory ground
-   * reads as a floating arrow with no button behind it.
-   */
   tone?: "accent" | "light" | "outline" | "quiet";
 }) {
   const shell = {
@@ -90,12 +71,6 @@ export function QuietLink({
 
 /* ------------------------------------------------------- section heading */
 
-/**
- * The split editorial heading: eyebrow and a two-tone display title on the
- * left, supporting copy and an optional action on the right. One heading
- * treatment across both lens pages keeps them recognisably one section of
- * the site rather than two pages that happen to share a URL prefix.
- */
 export function SectionIntro({
   eyebrow,
   title,
@@ -122,7 +97,7 @@ export function SectionIntro({
             {eyebrow}
           </span>
         )}
-        <h2 className="font-display text-[2rem] font-bold leading-[1.05] tracking-[-0.035em] text-dark sm:text-[2.6rem] lg:text-[3rem]">
+        <h2 className="break-words font-display text-[2rem] font-bold leading-[1.05] tracking-[-0.035em] text-dark sm:text-[2.6rem] lg:text-[3rem]">
           {title}
           {titleAccent && (
             <>
@@ -149,13 +124,6 @@ export function SectionIntro({
 
 export type Step = { title: string; body: string };
 
-/**
- * Ghost-numbered columns under a hairline.
- *
- * Deliberately unboxed: the rule and the oversized faded numeral do the
- * separating that a card border used to do, which lets four of these sit in a
- * row without the page turning into a wall of panels.
- */
 export function NumberedSteps({
   steps,
   columns = 4,
@@ -193,13 +161,6 @@ export function NumberedSteps({
 
 /* ------------------------------------------------------------ dark band */
 
-/**
- * The one dark section on each page.
- *
- * Two light pages in a row read as flat no matter how well the sections are
- * composed, so both lens pages break to warm near-black once  text and
- * actions on the left, a photograph on the right.
- */
 export function ConsultBand({
   eyebrow = "Talk to us",
   title,
@@ -241,7 +202,7 @@ export function ConsultBand({
         }}
       />
 
-      <SiteContainer className="relative py-14 lg:py-20">
+      <SiteContainer className="relative py-12 sm:py-14 lg:py-20">
         <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-16">
           <div>
             <span className="mb-4 block text-[11px] font-bold uppercase tracking-[0.24em] text-blue-light">

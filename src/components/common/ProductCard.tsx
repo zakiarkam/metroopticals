@@ -35,16 +35,6 @@ import {
 
 export const PRODUCT_FALLBACK_IMAGE = "/images/placeholder-product.svg";
 
-/**
- * The one product card used across the storefront  home carousels, best
- * sellers, the wishlist and both shop views all render this.
- *
- * `layout` picks the arrangement. The list view used to be a separate 247-line
- * component, so switching the shop from grid to list swapped you between two
- * independently maintained cards that showed different information about the
- * same product. Both layouts now read from the same data and the same actions.
- */
-
 export type ProductCardItem = {
   id: number;
   title: string;
@@ -68,18 +58,12 @@ export type ProductCardItem = {
 export default function ProductCard({
   item,
   layout = "grid",
-  showDescription = false,
   featured = false,
   onRemove,
   className = "",
 }: {
   item: ProductCardItem;
   layout?: "grid" | "list";
-  showDescription?: boolean;
-  /**
-   * The lifted card in a carousel  larger type and a full-width buy button
-   * instead of the icon, so one card in view reads as the one being offered.
-   */
   featured?: boolean;
   /** Shown by the wishlist, which needs an "unsave" alongside the usual tools. */
   onRemove?: () => void | Promise<void>;
@@ -103,13 +87,6 @@ export default function ProductCard({
     () => normalizeColorOptions(item.frameColors),
     [item.frameColors],
   );
-  /**
-   * Which photo the card is showing.
-   *
-   * A frame shot from three angles used to be a single static thumbnail plus a
-   * hidden hover swap, so two of the three were invisible on touch. The dots
-   * under the image expose them all and are keyboard reachable.
-   */
   const [imageIndex, setImageIndex] = useState(0);
   const hasPhoto = images.length > 0;
   const activeImage = images[imageIndex] ?? images[0] ?? PRODUCT_FALLBACK_IMAGE;
@@ -154,9 +131,6 @@ export default function ProductCard({
   const handleAddToCart = useCallback(async () => {
     if (isAddingToCart || !availability.canBuy) return;
     setIsAddingToCart(true);
-    // No colour is passed: there is no chooser on a card, so the server settles
-    // on the first colourway the product lists and the cart row lets the
-    // shopper switch it without going back to the product page.
     await addToCart(
       {
         id: item.id,
@@ -196,7 +170,7 @@ export default function ProductCard({
   /* ------------------------------------------------------ shared fragments */
 
   const meta = (
-    <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-dark-4">
+    <div className="flex min-w-0 items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-dark-4">
       <span className="truncate">{item.categoryName || "Eyewear"}</span>
       {item.brandName && (
         <>
@@ -226,17 +200,9 @@ export default function ProductCard({
         <span className="text-[13px] font-bold text-dark">
           {item.rating.toFixed(1)}
         </span>
-        <span className="text-[12.5px] text-dark-4">({item.reviewCount})</span>
       </div>
     ) : null;
 
-  /**
-   * The colourways, as dots.
-   *
-   * A frame sold in four finishes reads as four separate products if the card
-   * never says so. Named here as well as drawn, via the title attribute, since
-   * the dots alone carry nothing for a screen reader.
-   */
   const colors = colorOptions.length ? (
     <div className="flex items-center gap-1.5">
       <span className="flex items-center gap-1" aria-hidden>
@@ -341,13 +307,16 @@ export default function ProductCard({
       </span>
     ) : null;
 
+  // Cards don't advertise how few are left  a low count reads as "In stock"
+  // here; the product page still shows the real figure.
+  const chipTone = availability.tone === "low" ? "in" : availability.tone;
   const availabilityChip = (
     <span
       className={`inline-block whitespace-nowrap rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.1em] ${
-        AVAILABILITY_PILL_CLASSES[availability.tone]
+        AVAILABILITY_PILL_CLASSES[chipTone]
       }`}
     >
-      {availability.label}
+      {chipTone === "in" ? "In stock" : availability.label}
     </span>
   );
 
@@ -362,7 +331,7 @@ export default function ProductCard({
           href={detailsHref}
           onClick={rememberForDetails}
           aria-label={item.title}
-          className="relative aspect-[4/3] w-full shrink-0 overflow-hidden rounded-xl bg-gray-1 sm:w-[240px]"
+          className="relative aspect-[4/3] w-full shrink-0 overflow-hidden rounded-xl bg-gray-1 sm:w-[200px] md:w-[240px]"
         >
           <Image
             src={activeImage}
@@ -380,22 +349,22 @@ export default function ProductCard({
             {availabilityChip}
           </div>
 
-          <h3 className="text-[16px] font-semibold capitalize leading-snug text-dark">
+          <h3 className="break-words text-[16px] font-semibold capitalize leading-snug text-dark">
             {title}
           </h3>
+
+          {item.description ? (
+            <p className="line-clamp-2 text-[13px] leading-relaxed text-body">
+              {item.description}
+            </p>
+          ) : null}
 
           {rating}
           {colors}
 
-          {item.description && (
-            <p className="line-clamp-2 text-[13.5px] leading-relaxed text-body">
-              {item.description}
-            </p>
-          )}
-
           <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-2">
             {price}
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               {quickViewButton}
               {removeButton ?? wishlistButton}
               {addToCartButton("px-6")}
@@ -408,10 +377,6 @@ export default function ProductCard({
 
   /* ------------------------------------------------------------ grid view */
 
-  /**
-   * The image fills its frame edge to edge. The old card inset it by 24px,
-   * which left every product floating in a box of ivory.
-   */
   const imageDots =
     images.length > 1 ? (
       <div className="flex items-center justify-center gap-1.5">
@@ -436,13 +401,9 @@ export default function ProductCard({
 
   return (
     <article
-      /* Every card carries the same shadow. The lifted card used to take a
-         heavier one plus a gold ring, which read as a second, competing border
-         once the pair was already a size larger than its neighbours  the size
-         difference alone says which cards are in focus. */
-      className={`group relative flex h-full flex-col overflow-hidden rounded-3xl bg-gray-2 shadow-2 ring-1 ring-gray-3 transition-all duration-300 hover:-translate-y-1 hover:shadow-gold ${className}`}
+      className={`group relative flex h-full flex-col overflow-hidden rounded-2xl bg-gray-2 shadow-2 ring-1 ring-gray-3 transition-all duration-300 hover:-translate-y-1 hover:shadow-gold ${className}`}
     >
-      <div className="relative aspect-square w-full overflow-hidden bg-gray-1">
+      <div className="relative aspect-[5/4] w-full overflow-hidden bg-gray-1">
         {/* Gold pool sits behind the placeholder so the line art has a ground;
             a real photograph covers it entirely. */}
         {!hasPhoto && (
@@ -467,10 +428,6 @@ export default function ProductCard({
             alt={item.title}
             fill
             sizes="(max-width: 640px) 90vw, (max-width: 1280px) 45vw, 24vw"
-            /* `cover` for everything, placeholder included: the brief was that
-               the photo fills its frame with no ivory gutter around it, and a
-               `contain` fallback reintroduced exactly that gutter on every
-               product still waiting for real photography. */
             className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.06]"
           />
         </Link>
@@ -482,13 +439,9 @@ export default function ProductCard({
             </span>
           ) : null}
 
-          {availability.tone !== "in" && (
+          {(availability.tone === "out" || availability.tone === "inactive") && (
             <span
-              className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.1em] shadow-1 backdrop-blur-sm ${
-                availability.tone === "low"
-                  ? "bg-gray-2/95 text-dark"
-                  : "bg-dark/85 text-white"
-              }`}
+              className="rounded-full bg-dark/85 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.1em] text-white shadow-1 backdrop-blur-sm"
             >
               {availability.label}
             </span>
@@ -505,21 +458,21 @@ export default function ProductCard({
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col gap-2.5 p-5">
-        {imageDots && <div className="pb-1">{imageDots}</div>}
+      <div className="flex flex-1 flex-col gap-1.5 p-3.5 sm:p-4">
+        {imageDots && <div className="pb-0.5">{imageDots}</div>}
 
         {meta}
 
         <h3
-          className={`font-display font-bold capitalize leading-snug tracking-[-0.02em] text-dark ${
-            featured ? "text-[1.15rem]" : "text-[15.5px]"
+          className={`break-words font-display font-bold capitalize leading-snug tracking-[-0.02em] text-dark ${
+            featured ? "text-[1.1rem]" : "text-[14.5px]"
           }`}
         >
           {title}
         </h3>
 
-        {showDescription && item.description ? (
-          <p className="line-clamp-2 text-[13px] leading-relaxed text-body">
+        {item.description ? (
+          <p className="line-clamp-2 text-[12.5px] leading-snug text-body">
             {item.description}
           </p>
         ) : null}
@@ -527,10 +480,7 @@ export default function ProductCard({
         {rating}
         {colors}
 
-        {/* Price and buy sit on one line: the button is the card's only action
-            once the image is a link, so it does not need a full row of its own
-            unless this is the lifted card. */}
-        <div className="mt-auto flex items-end justify-between gap-3 pt-3">
+        <div className="mt-auto flex items-end justify-between gap-3 pt-2">
           {price}
 
           {featured ? null : (
@@ -539,7 +489,7 @@ export default function ProductCard({
               onClick={handleAddToCart}
               disabled={isAddingToCart || !availability.canBuy}
               aria-label={`${availability.actionLabel}  ${item.title}`}
-              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-blue-light-4 text-blue-dark transition-colors hover:bg-blue hover:text-white disabled:cursor-not-allowed disabled:bg-gray-8 disabled:text-dark-5"
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-light-4 text-blue-dark transition-colors hover:bg-blue hover:text-white disabled:cursor-not-allowed disabled:bg-gray-8 disabled:text-dark-5"
             >
               {isAddingToCart ? (
                 <Loader2 className="h-[18px] w-[18px] animate-spin" />

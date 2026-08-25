@@ -5,14 +5,6 @@ import { ArrowRight, Clock, MapPin, MessageCircle, Phone } from "lucide-react";
 import SiteContainer from "@/components/common/SiteContainer";
 import { siteConfig } from "@/config/site";
 
-/**
- * Store-visit band.
- *
- * Most of this business still closes in person, so the home page ends with the
- * physical details: where we are, when we are open, and three ways to reach us.
- * Full-bleed gold panel to give the page one strong stop before the footer.
- */
-
 const HOURS = [
   { days: "Monday – Friday", time: "9:00 am – 7:00 pm" },
   { days: "Saturday", time: "9:00 am – 6:00 pm" },
@@ -25,7 +17,7 @@ export default function VisitStore() {
       <SiteContainer>
         <div className="grid overflow-hidden rounded-3xl border border-gray-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)]">
           {/* ---------- copy side ---------- */}
-          <div className="relative bg-gradient-to-br from-blue-light-3 via-blue-light-2 to-blue-light p-8 sm:p-10 lg:p-12">
+          <div className="relative bg-gradient-to-br from-blue-light-3 via-blue-light-2 to-blue-light p-6 sm:p-10 lg:p-12">
             <div
               aria-hidden
               className="pointer-events-none absolute inset-0 opacity-[0.12]"
@@ -75,7 +67,7 @@ export default function VisitStore() {
                     <dt className="text-[11px] font-bold uppercase tracking-[0.14em] text-dark-2">
                       Where
                     </dt>
-                    <dd className="mt-1 text-[13.5px] font-semibold leading-snug text-dark">
+                    <dd className="mt-1 break-words text-[13.5px] font-semibold leading-snug text-dark">
                       {siteConfig.contact.address}
                     </dd>
                   </div>
@@ -117,7 +109,7 @@ export default function VisitStore() {
               />
             </div>
 
-            <div className="p-8 sm:p-10">
+            <div className="p-6 sm:p-10">
               <p className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-blue">
                 <Clock className="h-4 w-4" />
                 Opening hours
@@ -127,7 +119,7 @@ export default function VisitStore() {
                 {HOURS.map((slot) => (
                   <div
                     key={slot.days}
-                    className="flex items-center justify-between gap-4 py-3.5"
+                    className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 py-3.5"
                   >
                     <dt className="text-[13.5px] font-medium text-dark-3">
                       {slot.days}

@@ -1,11 +1,15 @@
 import { NextAuthOptions } from "next-auth";
+import type { JWT } from "next-auth/jwt";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { prisma } from "@/lib/db/prisma";
 import { verifyUser } from "@/features/auth/services/auth-service";
 import { logger, serializeError } from "@/lib/logger";
-import { rateLimit } from "@/lib/rate-limit";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
+
+// How often a JWT re-syncs role/profile with the database.
+const REFRESH_INTERVAL_MS = 5 * 60 * 1000;
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
@@ -24,17 +28,14 @@ export const authOptions: NextAuthOptions = {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         if (!credentials?.email || !credentials?.password) {
           throw new Error("Email and password are required");
         }
 
-        // Throttle brute-force attempts per account.
-        rateLimit(
-          `login:${credentials.email.toLowerCase()}`,
-          10,
-          15 * 60 * 1000
-        );
+        const ip = getClientIp(req?.headers ?? {});
+        rateLimit(`login-ip:${ip}`, 50, 15 * 60 * 1000);
+        rateLimit(`login:${credentials.email.trim().toLowerCase()}`, 10, 15 * 60 * 1000);
 
         try {
           const user = await verifyUser(
@@ -102,24 +103,43 @@ export const authOptions: NextAuthOptions = {
         }
       }
 
-      // Handle session update
-      if (trigger === "update" && session?.user) {
-        const updatedUser = session.user as any;
-        token.id = updatedUser.id ?? token.id;
-        token.email = updatedUser.email ?? token.email;
-        token.name = updatedUser.name ?? token.name;
-        token.image = updatedUser.image ?? token.image;
-        token.role = updatedUser.role ?? token.role;
-        token.customerType = updatedUser.customerType ?? token.customerType;
-        token.phone = updatedUser.phone ?? token.phone;
-        token.address = updatedUser.address ?? token.address;
-        token.city = updatedUser.city ?? token.city;
-        token.country = updatedUser.country ?? token.country;
-        token.postalCode = updatedUser.postalCode ?? token.postalCode;
-      }
-
-      if (trigger === "update" && session?.user?.provider) {
-        token.provider = session.user.provider;
+      // Session updates and periodic refreshes re-read the user from the
+      // database; client-supplied session data is never copied into the token.
+      const refreshedAt = typeof token.refreshedAt === "number" ? token.refreshedAt : 0;
+      const stale = Date.now() - refreshedAt > REFRESH_INTERVAL_MS;
+      const tokenId =
+        typeof token.id === "number" ? token.id : Number(token.id ?? NaN);
+      if ((trigger === "update" || stale) && Number.isInteger(tokenId)) {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: tokenId },
+          select: {
+            email: true,
+            name: true,
+            image: true,
+            role: true,
+            customerType: true,
+            phone: true,
+            address: true,
+            city: true,
+            country: true,
+            postalCode: true,
+          },
+        });
+        if (!dbUser) {
+          // Account removed: drop identity so the session is unusable.
+          return { refreshedAt: Date.now() } as unknown as JWT;
+        }
+        token.email = dbUser.email;
+        token.name = dbUser.name;
+        token.image = dbUser.image ?? token.image;
+        token.role = dbUser.role;
+        token.customerType = dbUser.customerType;
+        token.phone = dbUser.phone;
+        token.address = dbUser.address;
+        token.city = dbUser.city;
+        token.country = dbUser.country;
+        token.postalCode = dbUser.postalCode;
+        token.refreshedAt = Date.now();
       }
 
       return token;
@@ -156,10 +176,6 @@ export const authOptions: NextAuthOptions = {
       if (url.startsWith("/")) return `${baseUrl}${url}`;
       return baseUrl;
     },
-  },
-  events: {
-    async signIn({ user }) {},
-    async signOut() {},
   },
   secret: process.env.NEXTAUTH_SECRET,
   debug: process.env.NODE_ENV === "development",

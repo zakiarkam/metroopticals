@@ -99,6 +99,22 @@ export function handleError(error: unknown): NextResponse {
     }
   }
 
+  if (
+    error &&
+    typeof error === "object" &&
+    !(error instanceof Error) &&
+    typeof (error as { message?: unknown }).message === "string"
+  ) {
+    return NextResponse.json(
+      {
+        error: true,
+        message: (error as { message: string }).message,
+        code: "VALIDATION_ERROR",
+      },
+      { status: 400 }
+    );
+  }
+
   // Unknown errors
   return NextResponse.json(
     {

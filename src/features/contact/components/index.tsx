@@ -6,7 +6,6 @@ import {
   CalendarCheck,
   CheckCircle2,
   Clock,
-  Facebook,
   Instagram,
   Loader2,
   Send,
@@ -113,9 +112,6 @@ const Contact = () => {
         crumbs={[{ label: "Contact" }]}
       />
 
-      {/* Opens the page the way the lens guides do  a split heading and one
-          photograph of the actual shop, so "get in touch" has a place attached
-          to it rather than landing straight on a form. */}
       <section className="border-b border-gray-3 bg-gray-2 py-12 lg:py-16">
         <SiteContainer>
           <SectionIntro
@@ -126,7 +122,7 @@ const Contact = () => {
             action={<PillLink href="#contact-form">Send a message</PillLink>}
           />
 
-          <div className="relative mt-12 aspect-[21/9] overflow-hidden rounded-2xl bg-gray-1">
+          <div className="relative mt-10 aspect-[16/9] overflow-hidden rounded-2xl bg-gray-1 sm:mt-12 sm:aspect-[21/9]">
             <Image
               src="/images/store/consult.jpg"
               alt="An optician fitting a pair of spectacles onto a smiling customer in the store"
@@ -150,7 +146,7 @@ const Contact = () => {
               {/* Flattened to hairlines: a bordered panel inside a bordered
                   panel was two boxes doing one job. */}
               <div className="overflow-hidden border-y border-gray-3 bg-gray-2">
-                <div className="border-b border-gray-3 px-6 py-4">
+                <div className="border-b border-gray-3 px-5 py-4 sm:px-6">
                   <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-blue">
                     Reach us
                   </p>
@@ -161,16 +157,7 @@ const Contact = () => {
 
                 <ContactChannels />
 
-                <div className="flex items-center gap-3 border-t border-gray-3 px-6 py-4">
-                  <a
-                    href={siteConfig.social.facebook}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label="Metro Opticals on Facebook"
-                    className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-3 text-dark-4 transition-colors hover:border-blue hover:text-blue"
-                  >
-                    <Facebook className="h-[18px] w-[18px]" />
-                  </a>
+                <div className="flex items-center gap-3 border-t border-gray-3 px-5 py-4 sm:px-6">
                   <a
                     href={siteConfig.social.instagram}
                     target="_blank"
@@ -180,11 +167,22 @@ const Contact = () => {
                   >
                     <Instagram className="h-[18px] w-[18px]" />
                   </a>
+                  <a
+                    href={siteConfig.social.tiktok}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Metro Opticals on TikTok"
+                    className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-3 text-dark-4 transition-colors hover:border-blue hover:text-blue"
+                  >
+                    <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="currentColor" aria-hidden="true">
+                      <path d="M16.5 3c.4 2.4 1.9 4 4.5 4.2v3.1c-1.7 0-3.2-.5-4.5-1.4v6.3A5.8 5.8 0 1 1 10.7 9.4v3.2a2.7 2.7 0 1 0 2.7 2.7V3h3.1z" />
+                    </svg>
+                  </a>
                 </div>
               </div>
 
               {/* ------------------------ hours ------------------------ */}
-              <div className="border-y border-gray-3 bg-gray-2 px-6 py-6">
+              <div className="border-y border-gray-3 bg-gray-2 px-5 py-6 sm:px-6">
                 <p className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.18em] text-blue">
                   <Clock className="h-4 w-4" />
                   Opening hours
@@ -215,7 +213,7 @@ const Contact = () => {
             {/* ------------------------ form ------------------------ */}
             <div
               id="contact-form"
-              className="scroll-mt-32 rounded-2xl border border-gray-3 bg-gray-2 p-6 shadow-2 sm:p-8"
+              className="scroll-mt-32 rounded-2xl border border-gray-3 bg-gray-2 p-5 shadow-2 sm:p-8"
             >
               <h2 className="text-[1.35rem] font-bold tracking-tight text-dark sm:text-[1.6rem]">
                 Send us a message

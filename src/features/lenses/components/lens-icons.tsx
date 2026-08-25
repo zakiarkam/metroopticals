@@ -10,13 +10,6 @@ import {
   Waves,
 } from "lucide-react";
 
-/**
- * Icon names the lens library is allowed to use.
- *
- * `lensTypes` stores a string rather than a component so the library stays a
- * plain data module that a server component, the sitemap and the nav can all
- * import without pulling React icons into their bundles.
- */
 export const LENS_ICONS: Record<
   string,
   React.ComponentType<{ className?: string }>

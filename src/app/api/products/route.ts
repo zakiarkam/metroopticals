@@ -12,6 +12,14 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const query = productQuerySchema.parse(Object.fromEntries(searchParams));
+    if (query.status !== "ACTIVE" || !searchParams.has("status")) {
+      const isAdmin = await requireAdmin().then(() => true, () => false);
+      if (isAdmin) {
+        if (!searchParams.has("status")) delete (query as { status?: string }).status;
+      } else {
+        query.status = "ACTIVE";
+      }
+    }
 
     const result = await getProducts(query);
 

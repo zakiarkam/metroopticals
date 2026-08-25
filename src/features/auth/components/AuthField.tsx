@@ -1,15 +1,8 @@
+"use client";
+
 import React from "react";
 import { Eye, EyeOff, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-/**
- * One labelled field on the auth screens.
- *
- * The auth pages use a taller, ivory-filled input than the rest of the admin
- * UI  the form is the only thing on the screen, so the controls carry more
- * weight. Keeping that treatment in one component stops the login, signup and
- * reset forms from drifting apart.
- */
 
 interface AuthFieldProps {
   id: string;
@@ -67,7 +60,7 @@ export const PasswordToggle = ({
     type="button"
     onClick={onToggle}
     aria-label={shown ? "Hide password" : "Show password"}
-    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-dark-5 transition-colors hover:text-blue"
+    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-2 text-dark-5 transition-colors hover:text-blue"
   >
     {shown ? (
       <EyeOff className="h-4 w-4" aria-hidden />

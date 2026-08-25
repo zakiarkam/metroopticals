@@ -6,19 +6,6 @@ import {
 } from "@/features/site-content/constants/blocks";
 import type { BlockData } from "@/features/site-content/types/site-content";
 
-/**
- * Reading and writing storefront content.
- *
- * Every read merges the saved row over the block's shipped defaults, so:
- *  - a block that has never been edited renders the dummy content
- *  - a field added to the registry later appears immediately, populated,
- *    instead of arriving as `undefined` and crashing a component
- *
- * The merge is deliberately shallow. Repeater values are whole arrays and the
- * admin always submits the complete list, so a deep merge would resurrect
- * items the editor just deleted.
- */
-
 const mergeWithDefaults = (
   key: string,
   saved?: BlockData | null,
@@ -28,12 +15,6 @@ const mergeWithDefaults = (
   return { ...definition.defaults, ...(saved ?? {}) };
 };
 
-/**
- * One block, ready to render.
- *
- * Wrapped in React's `cache` so a layout and a page asking for the same block
- * in one render share a single query.
- */
 export const getSiteBlock = cache(async (key: string): Promise<BlockData> => {
   try {
     const row = await prisma.siteContent.findUnique({ where: { key } });

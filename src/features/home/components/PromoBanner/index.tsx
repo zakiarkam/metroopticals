@@ -54,12 +54,6 @@ const buildCard = (ad: Advertisement, canViewDiscount: boolean): PromoCard => {
   };
 };
 
-/**
- * Advertisement slot rendered between home sections.
- *
- * The first ad becomes a wide feature panel; up to two more render as a pair
- * beneath it. Prices are LKR  the previous version printed `$`.
- */
 const PromoBanner = React.memo(({ ads }: { ads: Advertisement[] }) => {
   if (!ads || ads.length === 0) return null;
 
@@ -71,12 +65,12 @@ const PromoBanner = React.memo(({ ads }: { ads: Advertisement[] }) => {
       <div className="mx-auto w-full max-w-[1560px] px-4 sm:px-6 lg:px-10">
         {/* ------------------------- feature panel ------------------------- */}
         <div className="relative grid overflow-hidden rounded-3xl border border-gray-3 bg-gray-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.85fr)]">
-          <div className="relative z-10 flex flex-col justify-center p-7 sm:p-10 lg:p-12">
+          <div className="relative z-10 flex min-w-0 flex-col justify-center p-6 sm:p-10 lg:p-12">
             <span className="w-fit rounded-full border border-blue/30 bg-blue/10 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.16em] text-blue">
               {mainCard.label}
             </span>
 
-            <h2 className="mt-5 font-display text-[1.75rem] font-bold leading-[1.1] tracking-[-0.03em] text-dark sm:text-[2.3rem]">
+            <h2 className="mt-5 break-words font-display text-[1.75rem] font-bold leading-[1.1] tracking-[-0.03em] text-dark sm:text-[2.3rem]">
               {mainCard.title}
             </h2>
 
@@ -130,9 +124,9 @@ const PromoBanner = React.memo(({ ads }: { ads: Advertisement[] }) => {
               <Link
                 key={card.id}
                 href={card.link}
-                className="group flex items-center gap-5 overflow-hidden rounded-2xl border border-gray-3 bg-gray-2 p-5 transition-colors hover:border-blue/45 sm:gap-7 sm:p-6"
+                className="group flex items-center gap-4 overflow-hidden rounded-2xl border border-gray-3 bg-gray-2 p-4 transition-colors hover:border-blue/45 sm:gap-7 sm:p-6"
               >
-                <div className="relative h-[110px] w-[110px] shrink-0 overflow-hidden rounded-xl bg-gray-1 sm:h-[130px] sm:w-[130px]">
+                <div className="relative h-[88px] w-[88px] shrink-0 overflow-hidden rounded-xl bg-gray-1 sm:h-[130px] sm:w-[130px]">
                   <Image
                     src={card.image}
                     alt={card.title}
@@ -146,7 +140,7 @@ const PromoBanner = React.memo(({ ads }: { ads: Advertisement[] }) => {
                   <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-blue">
                     {card.label}
                   </span>
-                  <h3 className="mt-2 line-clamp-2 text-[16px] font-semibold capitalize leading-snug text-dark transition-colors group-hover:text-blue">
+                  <h3 className="mt-2 line-clamp-2 break-words text-[15px] font-semibold capitalize leading-snug text-dark transition-colors group-hover:text-blue sm:text-[16px]">
                     {card.title}
                   </h3>
 

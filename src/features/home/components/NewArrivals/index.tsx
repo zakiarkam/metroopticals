@@ -10,14 +10,6 @@ import { Section, SectionHeading } from "@/components/common/Section";
 import { useProducts } from "@/features/products/hooks/use-products";
 import type { Product } from "@/features/products/types/product";
 
-/**
- * Latest eight products.
- *
- * The rail is a native scroll-snap container rather than the old
- * measure-and-translate carousel: it keeps touch/trackpad scrolling working for
- * free, needs no resize observers, and cannot desync from the card width.
- */
-
 const ProductRail = React.memo(({ products }: { products: Product[] }) => {
   const trackRef = useRef<HTMLDivElement | null>(null);
   const [active, setActive] = useState(0);
@@ -25,13 +17,6 @@ const ProductRail = React.memo(({ products }: { products: Product[] }) => {
   const [atEnd, setAtEnd] = useState(false);
   const frame = useRef<number | null>(null);
 
-  /**
-   * Which card the rail is parked on.
-   *
-   * Measured from the DOM rather than tracked as an index we increment: the
-   * rail is also scrollable by touch and trackpad, and a counter desynced from
-   * the real scroll position the moment anyone swiped it.
-   */
   const sync = useCallback(() => {
     const el = trackRef.current;
     if (!el) return;
@@ -77,14 +62,6 @@ const ProductRail = React.memo(({ products }: { products: Product[] }) => {
     el.scrollTo({ left: card.offsetLeft, behavior: "smooth" });
   };
 
-  /*
-   * One card is shown at full size and the rest step back.
-   *
-   * It is the second card in view rather than the first: the leading card sits
-   * hard against the start of the rail, so emphasising it reads as a card that
-   * is half-arrived. The one behind it is clear of the edge and looks chosen.
-   * Clamped so the last card takes the emphasis at the end of the rail.
-   */
   const focusIndex = Math.min(active + 1, products.length - 1);
 
   const arrowClass =
@@ -92,11 +69,6 @@ const ProductRail = React.memo(({ products }: { products: Product[] }) => {
 
   return (
     <div>
-      {/*
-       * The arrows live in their own box with the rail so `top-1/2` centres on
-       * the cards. When the dots shared this wrapper the arrows were centred on
-       * the cards *plus* the dot row, and sat visibly low.
-       */}
       <div className="relative">
         <button
           type="button"

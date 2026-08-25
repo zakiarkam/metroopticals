@@ -30,6 +30,7 @@ import { Button } from "@/components/ui/button";
 import {
   ProductFormData,
   EMPTY_EYEWEAR_FIELDS,
+  type EyewearFormFields,
   toEyewearPayload,
 } from "../types";
 import EyewearSpecFields from "../EyewearSpecFields";
@@ -42,7 +43,7 @@ import { Toast } from "@/lib/utils/toast";
 import { useBrands } from "@/features/brands/hooks/use-brands";
 import { useCategoriesCache } from "@/features/categories/hooks/use-categories-cache";
 
-interface PrefillData {
+interface PrefillData extends Partial<EyewearFormFields> {
   title: string;
   slug: string;
   categoryId: number | null;
@@ -145,6 +146,13 @@ const AddProductDialog: React.FC<AddProductDialogProps> = ({
         unitType: prefillData.unitType as any,
         status: prefillData.status as ProductStatus,
         description: prefillData.description,
+        ...EMPTY_EYEWEAR_FIELDS,
+        ...Object.fromEntries(
+          Object.keys(EMPTY_EYEWEAR_FIELDS).map((key) => [
+            key,
+            (prefillData as unknown as Record<string, unknown>)[key] ?? "",
+          ]),
+        ),
         images: [],
         catalogueFile: null,
       });
@@ -221,7 +229,7 @@ const AddProductDialog: React.FC<AddProductDialogProps> = ({
         categoryId: data.categoryId ?? undefined,
         brandId: data.brandId ?? undefined,
         stock: data.stock,
-        status: "ACTIVE" as ProductStatus,
+        status: data.status,
         unitType: data.unitType,
         ...toEyewearPayload(data),
       };

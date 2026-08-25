@@ -129,6 +129,7 @@ const DashboardTab: React.FC<DashboardTabProps> = ({ dateRange }) => {
   };
 
   const handleDownloadReport = async (format: "excel" | "pdf") => {
+    let toastId: string | number | null = null;
     try {
       if (!reportData) {
         Toast.error("Apply a report range before downloading.");
@@ -144,9 +145,7 @@ const DashboardTab: React.FC<DashboardTabProps> = ({ dateRange }) => {
         return;
       }
 
-      const toastId = Toast.loading(
-        `Generating ${format.toUpperCase()} report...`
-      );
+      toastId = Toast.loading(`Generating ${format.toUpperCase()} report...`);
 
       const blob =
         format === "pdf"
@@ -171,6 +170,7 @@ const DashboardTab: React.FC<DashboardTabProps> = ({ dateRange }) => {
       Toast.dismiss(toastId);
       Toast.success(`${format.toUpperCase()} report downloaded successfully!`);
     } catch (err: any) {
+      if (toastId !== null) Toast.dismiss(toastId);
       console.error("Failed to download report:", err);
       Toast.error(
         err?.response?.data?.message ||

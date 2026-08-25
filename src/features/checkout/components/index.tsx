@@ -17,7 +17,7 @@ import {
   User,
 } from "lucide-react";
 
-import { createOrder } from "@/features/orders/api/order-api";
+import { createOrder } from "@/features/orders/api/orders-api";
 import { useCachedSession } from "@/features/auth/hooks/use-cached-session";
 import { useCart } from "@/features/cart/hooks/use-cart";
 import { normalizeImageArray } from "@/lib/storageUtils";
@@ -158,7 +158,6 @@ const Checkout = () => {
   const { cartItems, clearCart } = useCart();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("cod");
-  const shippingFee = 0;
   const shippingMethod = "standard";
 
   const [billingDetails, setBillingDetails] = useState<Details>(EMPTY_DETAILS);
@@ -317,7 +316,6 @@ const Checkout = () => {
           color: item.color || undefined,
         })),
         // Shipping fee/method temporarily disabled in checkout UI.
-        shippingFee,
         paymentMethod,
         shippingMethod,
         notes,
@@ -568,7 +566,7 @@ const Checkout = () => {
                               alt={item.title}
                               fill
                               sizes="56px"
-                              className="object-contain p-1.5"
+                              className="object-cover"
                             />
                             <span className="absolute -right-1 -top-1 grid h-5 min-w-[20px] place-items-center rounded-full bg-blue px-1 text-[10px] font-bold text-white">
                               {item.quantity}
@@ -578,7 +576,7 @@ const Checkout = () => {
                           <div className="min-w-0 flex-1">
                             <Link
                               href={productUrl}
-                              className="line-clamp-2 text-[13px] font-medium capitalize text-dark transition-colors hover:text-blue"
+                              className="line-clamp-2 break-words text-[13px] font-medium capitalize text-dark transition-colors hover:text-blue"
                             >
                               {item.title}
                             </Link>

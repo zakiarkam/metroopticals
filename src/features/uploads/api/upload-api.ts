@@ -25,9 +25,6 @@ export type UploadFolder =
 
 // Upload API Service
 export const uploadApi = {
-  /**
-   * Upload a single file
-   */
   uploadFile: async (
     file: File,
     folder?: string,
@@ -54,9 +51,6 @@ export const uploadApi = {
     return response.data;
   },
 
-  /**
-   * Upload multiple files
-   */
   uploadMultipleFiles: async (
     files: File[],
     folder?: string
@@ -81,9 +75,6 @@ export const uploadApi = {
     return response.data;
   },
 
-  /**
-   * Delete a file by key
-   */
   deleteFile: async (
     folder: UploadFolder,
     fileName: string
@@ -93,9 +84,6 @@ export const uploadApi = {
     });
   },
 
-  /**
-   * Delete product files
-   */
   deleteProductFile: async (
     productId: number,
     type: "image" | "catalogue",

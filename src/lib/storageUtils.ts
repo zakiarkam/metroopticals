@@ -53,13 +53,6 @@ export const getCategoryImageUrl = (value?: string | null) => {
   return buildStorageUrl("category/image", trimmed);
 };
 
-/**
- * Advertisement artwork.
- *
- * Ads store one of three shapes in `imageUrl`: a bare R2 file name (uploaded
- * through the admin), a site-relative path (the bundled dummy artwork), or a
- * full URL (pasted in by hand). Only the first needs the bucket prefix.
- */
 export const getAdvertisementImageUrl = (value?: string | null) => {
   if (!value) return null;
   const trimmed = value.trim();

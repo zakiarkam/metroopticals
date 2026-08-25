@@ -10,9 +10,6 @@ export async function GET() {
       _count: {
         id: true,
       },
-      _sum: {
-        price: true,
-      },
       orderBy: {
         _count: {
           id: "desc",
@@ -26,6 +23,7 @@ export async function GET() {
     const products = await prisma.product.findMany({
       where: {
         id: { in: productIds },
+        status: "ACTIVE",
       },
       include: {
         category: {
@@ -47,7 +45,6 @@ export async function GET() {
               name: product.title,
               category: product.category?.name,
               sold: item._count.id,
-              revenue: item._sum.price || 0,
               price: product.price,
               discountedPrice: product.discountedPrice,
               images: product.images || [],

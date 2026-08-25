@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
@@ -20,10 +22,7 @@ const GoogleSignInButton = dynamic(() => import("./GoogleSignInButton"), {
   ),
 });
 
-const loginSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-});
+import { loginSchema } from "@/features/auth/validators/auth";
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
@@ -80,7 +79,7 @@ const LoginForm = React.memo(
           } else if (session?.user?.role === "ADMIN") {
             router.push("/admin/users");
           } else {
-            router.push("/");
+            router.push(redirectUrl || "/");
           }
         }
       } catch (err: any) {
@@ -135,14 +134,14 @@ const LoginForm = React.memo(
         </AuthField>
 
         <div className="flex items-center justify-between">
-          <label className="flex cursor-pointer items-center gap-2">
+          <label className="-my-2 flex cursor-pointer items-center gap-2 py-2">
             <Checkbox id="remember" />
             <span className="text-[13px] text-dark-4">Remember me</span>
           </label>
           <button
             type="button"
             onClick={onShowForgotPassword}
-            className="text-[13px] font-semibold text-blue transition-colors hover:text-blue-dark hover:underline"
+            className="-my-2 py-2 text-[13px] font-semibold text-blue transition-colors hover:text-blue-dark hover:underline"
           >
             Forgot password?
           </button>

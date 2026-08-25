@@ -3,23 +3,6 @@ import type {
   Field,
 } from "@/features/site-content/types/site-content";
 
-/**
- * The storefront content registry.
- *
- * Everything on the site that is not catalogue data is declared here once. Each
- * entry carries the admin form schema AND the dummy content the site ships
- * with, which is why a fresh install already looks like a finished shop: the
- * read helper falls back to `defaults` whenever a block has never been saved.
- *
- * The registry is deliberately short. Anything the catalogue already knows
- * categories, brands, frame shapes, price bands  is rendered from the database
- * and filtered through `/shop-with-sidebar`, not duplicated here as editable
- * copy that drifts out of step with what is actually in stock.
- *
- * Copy and pricing are Sri Lankan throughout (LKR, Colombo, local delivery),
- * so the placeholder text reads as the real shop rather than lorem ipsum.
- */
-
 /** Icon names the storefront knows how to draw. Keep in sync with `iconMap`. */
 export const ICON_OPTIONS = [
   { value: "shield", label: "Shield" },
@@ -45,13 +28,6 @@ const SOCIAL_OPTIONS = [
   { value: "whatsapp", label: "WhatsApp" },
 ];
 
-/**
- * Columns that fill themselves from the catalogue.
- *
- * A sourced column lists only values that have stock behind them and links
- * straight into the matching shop filter, so it cannot go stale and cannot
- * send a shopper to an empty grid.
- */
 const NAV_SOURCE_OPTIONS = [
   { value: "", label: "None  use the links below" },
   { value: "genders", label: "Every stocked wearer (women, men, kids…)" },
@@ -103,7 +79,7 @@ export const BLOCKS: BlockDefinition[] = [
     ],
     defaults: {
       enabled: true,
-      message: "Island-wide delivery in 2 days  order before 2pm.",
+      message: "Island-wide delivery in 2 days.",
       ctaLabel: "Shop now",
       ctaHref: shop(),
       rightLabel: "Book an eye test",
@@ -194,9 +170,6 @@ export const BLOCKS: BlockDefinition[] = [
             type: "repeater",
             itemLabel: "column",
             titleField: "title",
-            // Four fits the 1440px panel without wrapping; the Lenses menu
-            // needs all four to list the lens-type guides beside the shop
-            // links. The panel itself renders any number.
             max: 4,
             fields: [
               { name: "title", label: "Column heading", type: "text" },
@@ -330,12 +303,6 @@ export const BLOCKS: BlockDefinition[] = [
           promoCtaHref: shop("categories=sunglasses"),
         },
         {
-          /*
-           * The lens-type columns mirror `@/config/lenses`  that module is the
-           * source of the guide pages, and these links point at them. Add a lens
-           * type there and add its row here; the two are matched by slug, so a
-           * typo lands on a 404 rather than an empty grid.
-           */
           label: "Lenses",
           href: "/lenses",
           accent: false,
@@ -508,12 +475,21 @@ export const BLOCKS: BlockDefinition[] = [
         label: "Small print under the buttons",
         type: "text",
       },
+      {
+        name: "image",
+        label: "Hero photograph",
+        type: "image",
+        aspect: "16 / 9",
+        recommended: "1920 × 1080px, dark background, subject on the right",
+        help: "Fades into the dark panel on the left, so keep the left third of the photo empty.",
+      },
     ],
     defaults: {
       eyebrow: "Free eye test with every pair",
-      headline: "Glasses that fit",
-      headlineSecondLine: "your face and your budget",
-      body: "Prescription frames from Rs 2,900, cut and fitted in Colombo. Choose a frame, add your lenses, and we deliver island-wide in two days.",
+      headline: "See More.",
+      headlineSecondLine: "Experience More.",
+      body: "Designer frames and precision lenses, fitted by our opticians in Nawalapitiya. Choose a frame, add your prescription, and we deliver island-wide.",
+      image: "/images/hero/hero-metro-case.jpg",
       ctaLabel: "Shop eyeglasses",
       ctaHref: shop(),
       secondaryLabel: "Book an eye test",
@@ -706,16 +682,89 @@ export const BLOCKS: BlockDefinition[] = [
           },
           { name: "href", label: "Profile URL", type: "link" },
         ],
-        defaultItem: { platform: "facebook", href: "https://facebook.com" },
+        defaultItem: {
+          platform: "instagram",
+          href: "https://www.instagram.com/metropticals",
+        },
       },
     ],
     defaults: {
       items: [
-        { platform: "facebook", href: "https://facebook.com" },
-        { platform: "instagram", href: "https://instagram.com" },
-        { platform: "tiktok", href: "https://tiktok.com" },
-        { platform: "whatsapp", href: "https://wa.me/94770000000" },
+        {
+          platform: "instagram",
+          href: "https://www.instagram.com/metropticals",
+        },
+        { platform: "tiktok", href: "https://www.tiktok.com/@metropticals" },
+        { platform: "whatsapp", href: "https://wa.me/94766638682" },
       ],
+    },
+  },
+  {
+    key: "business.details",
+    label: "Business & invoice details",
+    group: "Global",
+    description:
+      "Legal name, contact and bank details printed on every invoice and receipt. Also editable from the admin profile page.",
+    fields: [
+      {
+        name: "legalName",
+        type: "text",
+        label: "Registered business name",
+        maxLength: 120,
+      },
+      {
+        name: "registrationNumber",
+        type: "text",
+        label: "Business registration / VAT no.",
+        placeholder: "Optional",
+        maxLength: 60,
+      },
+      {
+        name: "address",
+        type: "textarea",
+        label: "Address",
+        rows: 2,
+        maxLength: 240,
+      },
+      { name: "phone", type: "text", label: "Phone", maxLength: 40 },
+      { name: "email", type: "text", label: "Email", maxLength: 120 },
+      { name: "website", type: "text", label: "Website", maxLength: 120 },
+      {
+        name: "bankAccountName",
+        type: "text",
+        label: "Bank account name",
+        maxLength: 120,
+      },
+      { name: "bankName", type: "text", label: "Bank", maxLength: 120 },
+      { name: "bankBranch", type: "text", label: "Branch", maxLength: 120 },
+      {
+        name: "bankAccountNumber",
+        type: "text",
+        label: "Account number",
+        maxLength: 40,
+      },
+      {
+        name: "invoiceNote",
+        type: "textarea",
+        label: "Invoice footer note",
+        rows: 2,
+        maxLength: 300,
+        help: "Payment terms, returns policy or a thank-you line. Printed at the bottom of every invoice.",
+      },
+    ],
+    defaults: {
+      legalName: "Metro Opticals",
+      registrationNumber: "",
+      address: "No 98, Super Commercial Complex, Nawalapitiya, Sri Lanka",
+      phone: "076 663 8682",
+      email: "hello@metroopticals.lk",
+      website: "metroopticals.lk",
+      bankAccountName: "Metro Opticals",
+      bankName: "",
+      bankBranch: "",
+      bankAccountNumber: "",
+      invoiceNote:
+        "Thank you for shopping with Metro Opticals. Goods once sold can be exchanged within 7 days with this invoice.",
     },
   },
 ];

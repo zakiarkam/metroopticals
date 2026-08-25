@@ -5,20 +5,29 @@ import { ChevronDown, GripVertical, Plus, Trash2 } from "lucide-react";
 import ContentImageField from "./ContentImageField";
 import type { Field } from "@/features/site-content/types/site-content";
 
-/**
- * Renders one registry field as a form control.
- *
- * Recursive: a repeater renders the same component for each of its sub-fields,
- * which is what lets a footer column own its own list of links, or a mega-menu
- * item own four separate lists, without any bespoke form code.
- */
-
 const inputClass =
   "w-full rounded-xl border border-gray-3 bg-gray-2 px-3.5 py-2.5 text-[13.5px] text-dark outline-none transition-colors placeholder:text-dark-5 focus:border-blue focus:ring-1 focus:ring-blue";
 
 const labelClass = "mb-1.5 block text-[12.5px] font-semibold text-dark";
 
 /** A repeater row: collapsible, so a 12-link column stays manageable. */
+// Item identity survives reorders and removals so per-row UI state follows the item.
+const rowKeyMap = new WeakMap<object, string>();
+let rowKeySeq = 0;
+function getRowKeys(items: unknown[]): string[] {
+  return items.map((item, index) => {
+    if (item && typeof item === "object") {
+      let key = rowKeyMap.get(item);
+      if (!key) {
+        key = `row-${++rowKeySeq}`;
+        rowKeyMap.set(item, key);
+      }
+      return key;
+    }
+    return `row-primitive-${index}`;
+  });
+}
+
 function RepeaterRow({
   index,
   title,
@@ -176,6 +185,7 @@ export default function FieldRenderer({
 
     case "repeater": {
       const items: any[] = Array.isArray(value) ? value : [];
+      const rowKeys = getRowKeys(items);
       const atMax = field.max !== undefined && items.length >= field.max;
       const atMin = field.min !== undefined && items.length <= field.min;
 
@@ -224,7 +234,7 @@ export default function FieldRenderer({
 
             {items.map((item, index) => (
               <RepeaterRow
-                key={index}
+                key={rowKeys[index]}
                 index={index}
                 title={
                   field.titleField

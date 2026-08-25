@@ -12,10 +12,9 @@ export const createOrderSchema = z.object({
       })
     )
     .min(1),
-  shippingFee: z.number().nonnegative(),
-  paymentMethod: z.string().min(1),
-  shippingMethod: z.string().min(1),
-  notes: z.string().optional(),
+  paymentMethod: z.enum(["cod"]),
+  shippingMethod: z.enum(["standard"]),
+  notes: z.string().trim().max(1000).optional(),
   billingName: z.string().min(1),
   billingEmail: z.string().email(),
   billingPhone: z.string().min(1),

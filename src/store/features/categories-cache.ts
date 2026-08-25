@@ -55,6 +55,7 @@ const categoriesCache = createSlice({
         ...existing,
         status,
         error: error ?? null,
+        ...(status === "failed" ? { lastFetched: Date.now() } : {}),
       };
     },
     upsertCategoriesCache: (

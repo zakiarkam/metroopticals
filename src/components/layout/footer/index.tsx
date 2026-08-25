@@ -17,15 +17,6 @@ import { getStockedGenders } from "@/features/products/services/product-service"
 import { GENDER_LABELS } from "@/features/products/utils/eyewear";
 import { siteConfig } from "@/config/site";
 
-/**
- * Site footer, driven by the `footer.*` content blocks.
- *
- * Columns, links, social profiles and the newsletter copy are all editable, so
- * seasonal link changes never need a deploy. Only the contact details and the
- * legal line come from `siteConfig`, because those belong with the rest of the
- * business identity rather than with merchandising.
- */
-
 /** Brand marks lucide does not ship, drawn inline at the same weight. */
 const TikTokIcon = ({ className }: { className?: string }) => (
   <svg
@@ -146,11 +137,6 @@ export default async function Footer() {
     href: shopLink(`genders=${value}`),
   }));
 
-  /**
-   * Every rendered link points at a filter the shop actually honours.
-   * A catalogue-sourced column that has nothing behind it is dropped rather
-   * than rendered as a heading with no links under it.
-   */
   const columns = authored
     .map((column) => {
       if (column.source === "categories")
@@ -193,7 +179,7 @@ export default async function Footer() {
                   <li>
                     <a
                       href={`mailto:${siteConfig.contact.email}`}
-                      className="flex items-center gap-2.5 transition-colors hover:text-blue-light"
+                      className="flex items-center gap-2.5 break-all transition-colors hover:text-blue-light"
                     >
                       <Mail className="h-4 w-4 shrink-0 text-blue-light" />
                       {siteConfig.contact.email}

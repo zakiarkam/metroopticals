@@ -3,19 +3,6 @@ import SiteContainer from "@/components/common/SiteContainer";
 import { ContentIcon } from "@/features/site-content/components/site/icons";
 import type { BlockData } from "@/features/site-content/types/site-content";
 
-/**
- * Reassurance strip directly under the hero.
- *
- * Sits between the hero and the catalogue so the things customers ask about
- * most (fit, lens quality, delivery, aftercare) are answered before they start
- * browsing. The promises come from the `site.trust` content block.
- *
- * Drawn on warm near-black. As a light strip it sat between an ivory hero and
- * an ivory catalogue and read as a run of small print; the dark ground gives
- * the hero a floor to land on and makes four short promises look deliberate
- * rather than like a footer that drifted up the page.
- */
-
 export default function TrustBar({ data }: { data?: BlockData }) {
   const promises = (data?.items ?? []) as {
     icon?: string;

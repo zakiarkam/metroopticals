@@ -32,18 +32,6 @@ type CartItem = {
   };
 };
 
-/**
- * The colour on a cart line.
- *
- * A frame with more than one colourway gets a select so the choice can be
- * corrected in place; one with a single colour is just stated. Either way the
- * colour is always visible  a cart that hides it leaves the shopper checking
- * out on an assumption.
- *
- * A line saved before colours existed carries none. Rather than say nothing,
- * it opens on "Choose colour" so the shopper can set one before checkout
- * instead of leaving the warehouse to guess.
- */
 const ColorControl = ({
   item,
   onChange,
@@ -125,11 +113,6 @@ const SingleItem = ({ item }: { item: CartItem }) => {
     setIsUpdating(false);
   };
 
-  /**
-   * Changing the colour here saves a trip back to the product page for what is
-   * usually a last-second change of mind. If the same frame is already in the
-   * cart in the colour being switched to, the server merges the two lines.
-   */
   const handleColorChange = async (color: string) => {
     if (isUpdating || color === item.color) return;
 
@@ -167,14 +150,14 @@ const SingleItem = ({ item }: { item: CartItem }) => {
           alt={item.title}
           fill
           sizes="80px"
-          className="object-contain p-2"
+          className="object-cover"
         />
       </Link>
 
       <div className="min-w-0 flex-1">
         <Link
           href={productUrl}
-          className="line-clamp-2 text-[14.5px] font-semibold capitalize text-dark transition-colors hover:text-blue"
+          className="line-clamp-2 break-words text-[14.5px] font-semibold capitalize text-dark transition-colors hover:text-blue"
         >
           {item.title}
         </Link>
@@ -202,7 +185,7 @@ const SingleItem = ({ item }: { item: CartItem }) => {
         </div>
       </div>
 
-      <div className="flex items-center justify-between gap-4 sm:justify-end">
+      <div className="flex min-w-0 items-center justify-between gap-3 sm:gap-4 sm:justify-end">
         <div className="flex items-center overflow-hidden rounded-xl border border-gray-3 bg-gray-1">
           <button
             type="button"
@@ -230,7 +213,7 @@ const SingleItem = ({ item }: { item: CartItem }) => {
           </button>
         </div>
 
-        <p className="w-[110px] shrink-0 text-right text-[15px] font-bold text-dark">
+        <p className="min-w-[80px] flex-1 text-right text-[15px] font-bold text-dark sm:w-[110px] sm:flex-none">
           {formatPrice(item.discountedPrice * item.quantity)}
         </p>
 

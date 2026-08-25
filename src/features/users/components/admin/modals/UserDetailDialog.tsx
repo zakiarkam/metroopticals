@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -28,6 +28,9 @@ const UserDetailDialog: React.FC<UserDetailDialogProps> = ({
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
   const loadUser = useCallback(async () => {
     if (!userId) return;
 
@@ -45,11 +48,11 @@ const UserDetailDialog: React.FC<UserDetailDialogProps> = ({
           "Failed to load user details"
       );
 
-      onClose();
+      onCloseRef.current();
     } finally {
       setIsLoading(false);
     }
-  }, [userId, onClose]);
+  }, [userId]);
 
   useEffect(() => {
     if (isOpen && userId) loadUser();

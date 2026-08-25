@@ -1,13 +1,3 @@
-/**
- * Post-migration bootstrap  runs on every deploy, before the new container
- * takes traffic (Railway "Pre-deploy Command").
- *
- * It must be safe to run on an already-populated database, so every step is an
- * upsert or a no-op. Nothing here destroys data.
- *
- * Deliberately plain JavaScript, not TypeScript: production installs prune
- * devDependencies, so `ts-node` is not available at deploy time.
- */
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 

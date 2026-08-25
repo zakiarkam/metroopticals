@@ -1,12 +1,3 @@
-/**
- * Single source of truth for "can this product be bought, and what do we call
- * that state?".
- *
- * The same INACTIVE / OUT_OF_STOCK / stock-count ladder was re-implemented in
- * every card, the details page, the cart row and the wishlist row  and they
- * had already drifted (some treated `stock === 0` as out of stock, some didn't).
- */
-
 export type AvailabilityTone = "in" | "low" | "out" | "inactive";
 
 export type Availability = {

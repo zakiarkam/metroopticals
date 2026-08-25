@@ -21,18 +21,6 @@ import {
 } from "lucide-react";
 import { useCachedSession } from "@/features/auth/hooks/use-cached-session";
 
-/**
- * Admin navigation.
- *
- * Grouped by what the admin is doing rather than listed flat  catalogue work,
- * storefront merchandising and order handling are different jobs, and the
- * groups make the sidebar scannable as it grows.
- *
- * Items are plain rows with a single filled pill for the active route. The
- * previous version gave every item its own border and drop shadow, which made
- * seven equal-weight cards compete with the one that mattered.
- */
-
 type NavItem = {
   id: string;
   label: string;

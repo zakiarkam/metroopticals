@@ -9,14 +9,6 @@ import { ExternalLink, LogOut, Menu } from "lucide-react";
 import { clearUserSession } from "@/lib/sessionStorage";
 import { useCachedSession } from "@/features/auth/hooks/use-cached-session";
 
-/**
- * Admin top bar.
- *
- * Carries the current section name, because with the sidebar collapsed (or on
- * mobile, where it is hidden entirely) nothing else on the page said where you
- * were.
- */
-
 const PAGE_TITLES: Record<string, { title: string; subtitle: string }> = {
   "/admin": {
     title: "Dashboard",

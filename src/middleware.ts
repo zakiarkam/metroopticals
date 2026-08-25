@@ -1,20 +1,16 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
+import { safeRedirectPath } from "@/lib/safe-redirect";
 
 export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
 
-  const isAdminRoute =
-    path.startsWith("/admin") && !path.startsWith("/admin/api");
-  const isAuthAdminRoute = path === "/log-in"; // tighter match
+  const isAdminRoute = path.startsWith("/admin");
+  const isAuthAdminRoute = path === "/log-in";
   const isCustomerProtectedRoute =
-    path.startsWith("/profile") ||
-    path.startsWith("/orders") ||
-    path.startsWith("/checkout") ||
-    path.startsWith("/my-account");
+    path.startsWith("/checkout") || path.startsWith("/my-account");
 
-  // ✅ Robust token detection for both secure + non-secure cookie names
   const token =
     (await getToken({
       req: request,
@@ -27,7 +23,7 @@ export async function middleware(request: NextRequest) {
       secureCookie: false,
     }));
 
-  // Handle admin routes
+  // Handle admin routess
   if (isAdminRoute) {
     if (!token) {
       const url = new URL("/log-in", request.url);
@@ -53,9 +49,10 @@ export async function middleware(request: NextRequest) {
     const role = (token as any).role;
 
     if (role === "ADMIN" || role === "SUPER_ADMIN") {
-      const redirectParam = request.nextUrl.searchParams.get("redirect");
-      const redirectUrl =
-        redirectParam || (role === "SUPER_ADMIN" ? "/admin" : "/admin/users");
+      const redirectUrl = safeRedirectPath(
+        request.nextUrl.searchParams.get("redirect"),
+        role === "SUPER_ADMIN" ? "/admin" : "/admin/users",
+      );
 
       return NextResponse.redirect(new URL(redirectUrl, request.url));
     }
@@ -77,8 +74,6 @@ export const config = {
   matcher: [
     "/admin/:path*",
     "/log-in",
-    "/profile/:path*",
-    "/orders/:path*",
     "/checkout/:path*",
     "/my-account/:path*",
   ],

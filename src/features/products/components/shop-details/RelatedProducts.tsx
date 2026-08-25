@@ -7,13 +7,6 @@ import { SectionHeading } from "@/components/common/Section";
 import { useProducts } from "@/features/products/hooks/use-products";
 import type { Product } from "@/features/products/types/product";
 
-/**
- * "You may also like" rail on the product page.
- *
- * Pulls from the same category when the product has one, otherwise falls back
- * to the newest stock  so the block never renders empty on an uncategorised
- * product. Renders nothing at all if fewer than one sibling comes back.
- */
 export default function RelatedProducts({
   currentId,
   categorySlug,

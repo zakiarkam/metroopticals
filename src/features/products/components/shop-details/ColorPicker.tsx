@@ -4,18 +4,6 @@ import React from "react";
 import { Check } from "lucide-react";
 import { getColorSwatch } from "@/features/products/utils/colors";
 
-/**
- * The colourway chooser on the product page.
- *
- * A frame is usually stocked in several finishes and the one a shopper wants is
- * part of what they are buying, so the choice is made here rather than left to
- * a note at checkout. The selection travels with the cart line all the way to
- * the order, which is what the picking slip reads.
- *
- * Chips carry both a swatch and the name. The swatch alone would fail anyone
- * who cannot distinguish the colours, and several eyewear finishes ("Havana",
- * "Demi") are names first and colours second.
- */
 const ColorPicker = ({
   colors,
   value,
@@ -52,7 +40,7 @@ const ColorPicker = ({
               role="radio"
               aria-checked={selected}
               onClick={() => onChange(color)}
-              className={`inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-[13px] font-semibold transition-all ${
+              className={`inline-flex min-h-[40px] items-center gap-2 rounded-xl border px-3 py-2 text-[13px] font-semibold transition-all ${
                 selected
                   ? "border-blue bg-blue/[0.07] text-dark shadow-[0_0_0_1px_rgba(37,89,168,0.35)]"
                   : "border-gray-3 bg-gray-2 text-dark-2 hover:border-blue/45 hover:text-dark"

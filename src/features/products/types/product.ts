@@ -23,10 +23,6 @@ export type Brand = {
   status: string;
 };
 
-/**
- * Eyewear specification. Every field is optional because non-frame products
- * (lens solution, cleaning kits) legitimately have none of them.
- */
 export type EyewearSpec = {
   /** mm, width of a single lens */
   lensWidth?: number | null;

@@ -4,16 +4,6 @@ import Image from "next/image";
 import { ArrowRight, Eye, ShieldCheck, Truck } from "lucide-react";
 import { siteConfig } from "@/config/site";
 
-/**
- * The gold half of the auth card.
- *
- * On large screens this panel slides between the two halves of the card (see
- * `components/index.tsx`) and its copy swaps to invite the visitor to the
- * *other* form  sign-in offers "create an account", sign-up offers "sign in".
- * It is the only surface on the auth screens that carries colour, which keeps
- * the form side plain white and easy to read.
- */
-
 const POINTS = [
   { icon: Eye, label: "Free eye test with every pair" },
   { icon: Truck, label: "Island-wide delivery in 2 days" },

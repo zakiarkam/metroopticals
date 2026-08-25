@@ -1,17 +1,3 @@
-/**
- * ✅ OPTIMIZED HOME PAGE
- *
- * Performance strategy:
- * 1. Dynamic rendering (no static generation to avoid build-time DB connection)
- * 2. Server Component - data fetched on demand
- * 3. Home component uses strategic lazy loading internally
- * 4. Cached at edge for fast global delivery
- *
- * Expected metrics:
- * - LCP: < 1.5s (Largest Contentful Paint)
- * - FCP: < 1.0s (First Contentful Paint)
- * - TTI: < 2.0s (Time to Interactive)
- */
 import nextDynamic from "next/dynamic";
 import Loading from "./loading";
 import { Metadata } from "next";

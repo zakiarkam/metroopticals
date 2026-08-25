@@ -45,8 +45,8 @@ export async function GET(request: NextRequest) {
 
 const updateProfileSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  email: z.string().email("Invalid email address"),
+  lastName: z.string().optional().default(""),
+  email: z.string().email().optional(),
   customerType: z.enum(["END_USER", "WHOLESALER", "RESELLER", "INSTALLER", "PROJECTS", "COMPANY"]).optional(),
   phone: z.string().min(1, "Phone number is required"),
   address: z.string().min(1, "Address is required"),
@@ -68,7 +68,6 @@ export async function PATCH(request: NextRequest) {
       where: { id: session.user.id },
       data: {
         name,
-        email: data.email,
         ...(data.customerType ? { customerType: data.customerType } : {}),
         phone: data.phone,
         address: data.address,

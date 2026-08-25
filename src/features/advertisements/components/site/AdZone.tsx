@@ -4,13 +4,6 @@ import { getBannerAdvertisements } from "@/features/advertisements/services/adve
 import type { AdvertisementPlacement } from "@/features/advertisements/types/advertisement";
 import AdZoneView from "./AdZoneView";
 
-/**
- * Server-rendered advertisement zone.
- *
- * Reads the database directly, so the artwork is in the HTML on first paint
- * use this wherever the surrounding page is a server component. Inside client
- * trees (the shop, cart and product pages) use `AdZoneClient` instead.
- */
 export default async function AdZone({
   placement,
   contained = true,

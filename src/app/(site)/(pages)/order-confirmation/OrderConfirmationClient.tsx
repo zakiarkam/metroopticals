@@ -1,5 +1,7 @@
 "use client";
 
+import toast from "react-hot-toast";
+
 import React, { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
@@ -77,6 +79,8 @@ const OrderConfirmationClient = () => {
     setIsPrintPending(true);
     try {
       await downloadOrderReceiptPdf(order);
+    } catch {
+      toast.error("Could not generate the invoice. Please try again.");
     } finally {
       setIsPrintPending(false);
     }
@@ -94,9 +98,6 @@ const OrderConfirmationClient = () => {
     return (
       <section className="bg-gray-1 py-16">
         <SiteContainer>
-          {/* A network failure used to be reported as "order not found",
-              which tells a customer who has just paid that their order does
-              not exist. The two states are now separate. */}
           <EmptyState
             icon={<FileText className="h-7 w-7" />}
             title={
@@ -150,11 +151,11 @@ const OrderConfirmationClient = () => {
                 prescription within one working day.
               </p>
 
-              <div className="mt-6 inline-flex items-center gap-2.5 rounded-full border border-gray-3 bg-gray-1 px-5 py-2.5">
+              <div className="mt-6 inline-flex max-w-full flex-wrap items-center justify-center gap-x-2.5 gap-y-1 rounded-full border border-gray-3 bg-gray-1 px-5 py-2.5">
                 <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-dark-5">
                   Order
                 </span>
-                <span className="text-[14px] font-bold text-blue">
+                <span className="break-all text-[14px] font-bold text-blue">
                   {order.orderNumber}
                 </span>
               </div>
@@ -249,8 +250,8 @@ const OrderConfirmationClient = () => {
       </SiteContainer>
 
       {isPrintPending && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="rounded-2xl border border-gray-3 bg-gray-2 px-8 py-7 text-center shadow-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl border border-gray-3 bg-gray-2 px-8 py-7 text-center shadow-4">
             <Loader2 className="mx-auto h-8 w-8 animate-spin text-blue" />
             <p className="mt-4 text-[14px] font-semibold text-dark">
               Preparing invoice…

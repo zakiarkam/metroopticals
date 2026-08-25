@@ -45,9 +45,9 @@ const OrderSummary = () => {
           <span className="font-semibold text-dark">{formatPrice(totalPrice)}</span>
         </div>
 
-        <div className="flex items-center justify-between text-[14px]">
+        <div className="flex items-center justify-between gap-3 text-[14px]">
           <span className="text-dark-4">Delivery</span>
-          <span className="font-semibold text-dark">
+          <span className="text-right font-semibold text-dark">
             Calculated at checkout
           </span>
         </div>

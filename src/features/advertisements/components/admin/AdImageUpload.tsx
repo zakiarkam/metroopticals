@@ -8,16 +8,8 @@ import { getAdvertisementImageUrl } from "@/lib/storageUtils";
 import { uploadApi } from "@/features/uploads/api/upload-api";
 import type { AdPlacementMeta } from "@/features/advertisements/constants/advertisement";
 
-/**
- * Artwork picker for an advertisement.
- *
- * The preview box is locked to the placement's own aspect ratio, so what the
- * admin sees here is the crop the site will actually render  the single most
- * common way banner uploads go wrong is a tall photo dropped into a wide slot.
- */
-
 const MAX_BYTES = 5 * 1024 * 1024;
-const ACCEPTED = ["image/jpeg", "image/png", "image/webp", "image/avif"];
+const ACCEPTED = ["image/jpeg", "image/png", "image/webp"];
 
 const buildFileName = (
   title: string,

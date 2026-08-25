@@ -16,12 +16,6 @@ export const RIM_TYPES = ["FULL_RIM", "SEMI_RIMLESS", "RIMLESS"] as const;
 export const GENDERS = ["MEN", "WOMEN", "UNISEX", "KIDS"] as const;
 export const FRAME_SIZES = ["SMALL", "MEDIUM", "LARGE"] as const;
 
-/**
- * Optional millimetre measurement. Empty strings from HTML inputs become
- * null rather than 0, so "not specified" stays distinct from "zero".
- * Ranges are the realistic bounds for eyewear, which catches typos like
- * entering 500 instead of 50.
- */
 const mm = (min: number, max: number, label: string) =>
   z.preprocess(
     (v) => (v === "" || v === undefined || v === null ? null : Number(v)),
@@ -96,7 +90,10 @@ export const createProductSchema = z.object({
   stock: z.number().int().min(0, "Stock must be non-negative"),
   unitType: z.enum(["METER", "PIECES", "BOX", "DRUM"]).default("PIECES"),
   status: z.enum(["ACTIVE", "INACTIVE", "OUT_OF_STOCK"]).default("ACTIVE"),
-});
+}).refine(
+  (d) => d.discountedPrice == null || d.discountedPrice < d.price,
+  { message: "Discounted price must be lower than price", path: ["discountedPrice"] },
+);
 
 export const updateProductSchema = z.object({
   ...eyewearSpecFields,

@@ -77,7 +77,7 @@ const CartSidebarModal = () => {
       <aside
         aria-label="Shopping cart"
         aria-hidden={!isCartModalOpen}
-        className={`fixed right-0 top-0 z-999999 flex h-screen w-full max-w-[420px] flex-col border-l border-gray-3 bg-gray-2 shadow-4 transition-transform duration-300 ${
+        className={`fixed right-0 top-0 z-999999 flex h-[100dvh] w-full max-w-[420px] flex-col border-l border-gray-3 bg-gray-2 shadow-4 transition-transform duration-300 ${
           isCartModalOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
@@ -140,7 +140,7 @@ const CartSidebarModal = () => {
                         alt={item.title}
                         fill
                         sizes="68px"
-                        className="object-contain p-2"
+                        className="object-cover"
                       />
                     </Link>
 
@@ -166,11 +166,11 @@ const CartSidebarModal = () => {
                             }
                             disabled={item.quantity <= 1}
                             aria-label="Decrease quantity"
-                            className="grid h-8 w-8 place-items-center text-dark transition-colors hover:text-blue disabled:cursor-not-allowed disabled:opacity-40"
+                            className="grid h-10 w-10 place-items-center text-dark transition-colors hover:text-blue disabled:cursor-not-allowed disabled:opacity-40 sm:h-8 sm:w-8"
                           >
                             <Minus className="h-3.5 w-3.5" />
                           </button>
-                          <span className="grid h-8 w-8 place-items-center border-x border-gray-3 text-[12.5px] font-bold text-dark">
+                          <span className="grid h-10 w-9 place-items-center border-x border-gray-3 text-[12.5px] font-bold text-dark sm:h-8 sm:w-8">
                             {item.quantity}
                           </span>
                           <button
@@ -179,7 +179,7 @@ const CartSidebarModal = () => {
                               updateQuantity(item.id, item.quantity + 1)
                             }
                             aria-label="Increase quantity"
-                            className="grid h-8 w-8 place-items-center text-dark transition-colors hover:text-blue"
+                            className="grid h-10 w-10 place-items-center text-dark transition-colors hover:text-blue sm:h-8 sm:w-8"
                           >
                             <Plus className="h-3.5 w-3.5" />
                           </button>
@@ -189,7 +189,7 @@ const CartSidebarModal = () => {
                           type="button"
                           onClick={() => removeFromCart(item.id)}
                           aria-label={`Remove ${item.title}`}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-3 text-dark-4 transition-colors hover:border-red hover:text-red"
+                          className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-gray-3 text-dark-4 sm:h-8 sm:w-8 transition-colors hover:border-red hover:text-red"
                         >
                           <Trash2 className="h-[15px] w-[15px]" />
                         </button>
@@ -204,7 +204,7 @@ const CartSidebarModal = () => {
 
         {/* ---------------------------- footer ---------------------------- */}
         {cartItems.length > 0 && (
-          <div className="border-t border-gray-3 px-5 py-5 sm:px-6">
+          <div className="border-t border-gray-3 px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-5 sm:px-6">
             <div className="flex items-baseline justify-between">
               <span className="text-[14px] font-semibold text-dark">
                 Subtotal

@@ -11,18 +11,6 @@ import {
   getProductImageUrl,
 } from "@/lib/storageUtils";
 
-/**
- * Presentational half of an advertisement zone.
- *
- * Deliberately data-free: the server zone hands it rows straight from the
- * database and the client zone hands it rows from the public API, so the two
- * render identically and there is only one piece of layout to maintain.
- *
- * When a slot has no active ad it draws the bundled dummy artwork instead of
- * collapsing. An empty gap mid-page reads as a broken layout, and the shop is
- * meant to look finished before the first campaign is ever uploaded.
- */
-
 type Slot = {
   key: string;
   image: string;
@@ -92,9 +80,6 @@ const AdImage = ({
       fill
       sizes={sizes}
       priority={priority}
-      // The bundled dummy artwork is SVG, which the image optimizer refuses
-      // to process; serving it straight from /public sidesteps that without
-      // having to enable `dangerouslyAllowSVG` for every remote image too.
       unoptimized={slot.isPlaceholder}
       className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
     />

@@ -1,5 +1,8 @@
+"use client";
+
 import React from "react";
 import { signIn } from "next-auth/react";
+import { safeRedirectPath } from "@/lib/safe-redirect";
 import { Toast } from "@/lib/utils/toast";
 
 interface GoogleSignInButtonProps {
@@ -17,11 +20,9 @@ const GoogleSignInButton = React.memo(
     const handleGoogleSignIn = async () => {
       setGoogleLoading(true);
       try {
-        // ✅ OAuth MUST redirect to Google to complete
         await signIn("google", {
-          callbackUrl: redirectUrl || "/",
+          callbackUrl: safeRedirectPath(redirectUrl, "/"),
         });
-        // no code after this runs because browser navigates
       } catch (e) {
         console.error(e);
         Toast.error("Failed to sign in with Google. Please try again.");

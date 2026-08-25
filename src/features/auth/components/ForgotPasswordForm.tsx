@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 import { ArrowLeft, Loader2, Mail } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -32,7 +34,9 @@ const ForgotPasswordForm = React.memo(
       } catch (err: any) {
         console.error("Forgot password error:", err);
         Toast.error(
-          err.message || "Failed to send reset email. Please try again.",
+          err?.response?.data?.message ||
+            err.message ||
+            "Failed to send reset email. Please try again.",
         );
       } finally {
         setIsSubmitting(false);

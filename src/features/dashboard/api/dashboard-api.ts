@@ -3,14 +3,9 @@ import type { DashboardData } from "@/features/dashboard/types/dashboard";
 import type { ReportExportPayload } from "@/features/reports/types/report";
 
 export type GetDashboardParams = {
-  // optional: keep this if you want to send dateRange to backend
-  // (backend can ignore it if not used)
   dateRange?: string;
 };
 
-/**
- * Raw request (no dedupe)
- */
 export const getDashboardData = async (
   params?: GetDashboardParams
 ): Promise<DashboardData> => {
@@ -21,11 +16,6 @@ export const getDashboardData = async (
   return response.data?.data ?? response.data;
 };
 
-/**
- * Dedupe GET requests:
- * - If React StrictMode runs effects twice in dev, the 2nd call reuses the same promise
- * - If user clicks refresh quickly while request is in-flight, still only 1 network call
- */
 const dashboardInFlight = new Map<string, Promise<DashboardData>>();
 
 export const getDashboardDataOnce = (params?: GetDashboardParams) => {

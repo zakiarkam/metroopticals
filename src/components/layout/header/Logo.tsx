@@ -11,7 +11,7 @@ const Logo = memo(function Logo() {
       {/* The lockup stacks a glasses mark over the wordmark, so it needs real
           height to stay legible  at 44px the "opticals" line was a smudge. */}
       <Image
-        src={siteConfig.logo}
+        src="/images/logo/logo-header.png"
         alt={siteConfig.name}
         width={867}
         height={983}

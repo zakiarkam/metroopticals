@@ -7,21 +7,6 @@ import { usePathname } from "next/navigation";
 import { ChevronDown } from "lucide-react";
 import { getAdvertisementImageUrl, getBrandLogoUrl } from "@/lib/storageUtils";
 
-/**
- * Primary navigation with drop-down panels.
- *
- * Labels and link columns come from the `header.nav` content block, so
- * merchandising changes never require a deploy. Two panels fill themselves
- * from the catalogue instead: `source: "brands"` lists the live Brand table
- * and `source: "shapes"` lists the frame shapes the shop filters on. Both
- * deep-link into `/shop-with-sidebar` with the matching filter applied, which
- * keeps one set of facets rather than a hand-maintained copy in the menu.
- *
- * Opening is hover-with-intent on pointer devices and click on touch, and the
- * panel closes on Escape or on route change. A pure-CSS `group-hover` version
- * was simpler but stayed stuck open after navigating on touch devices.
- */
-
 export type NavLink = {
   label?: string;
   href?: string;
@@ -52,13 +37,6 @@ export type NavItem = {
   promoCtaHref?: string;
 };
 
-/**
- * Live catalogue rows the menu can render without another round trip.
- *
- * Brands carry their logo as well as their name: the brands panel is a wall of
- * marks rather than a list of words, which is how shoppers actually recognise
- * eyewear labels.
- */
 export type NavCatalogueRow = {
   label: string;
   value: string;
@@ -80,14 +58,6 @@ const SOURCE_PARAM: Record<Exclude<NavSource, "">, keyof NavCatalogue> = {
   genders: "genders",
 };
 
-/**
- * The link columns a panel will actually draw.
- *
- * A column either lists authored links or fills itself from the catalogue.
- * Catalogue columns only ever contain values that have stock behind them, so
- * the menu cannot offer a filter that lands on an empty grid  "Kids" and
- * "Browline" both used to do exactly that.
- */
 function resolveColumns(item: NavItem, catalogue: NavCatalogue): NavColumn[] {
   return (item.columns ?? [])
     .map((column) => {
@@ -113,15 +83,6 @@ const hasPanel = (item: NavItem, catalogue: NavCatalogue) =>
 
 /* ------------------------------------------------------- the brands panel */
 
-/**
- * The brands drop-down.
- *
- * Brands are recognised by their mark, not by their name in a list, so this
- * column draws every brand the admin has added as a logo tile  the same set
- * the shop sidebar filters on, so a brand added in the admin appears here on
- * its next page load with no content edit. A brand with no logo uploaded falls
- * back to its name set as a wordmark, which keeps the grid even.
- */
 function BrandColumn({
   column,
   onNavigate,
@@ -197,13 +158,6 @@ function BrandColumn({
 
 /* -------------------------------------------------------------- the panel */
 
-/**
- * A single drop-down.
- *
- * Columns are capped at 220px and the promo at a fixed 280px so a panel with
- * one column looks the same weight as a panel with three  the previous
- * `minmax(0,1fr)` filler stretched a lone column across the viewport.
- */
 function Panel({
   item,
   catalogue,

@@ -12,14 +12,6 @@ import {
 } from "@/features/site-content/components/site/MegaMenu";
 import { getBrandLogoUrl } from "@/lib/storageUtils";
 
-/**
- * The small-screen navigation drawer.
- *
- * It expands the same panels the desktop mega menu draws  the old drawer
- * showed top-level labels only, so brands, shapes and lens types were
- * unreachable on a phone. Sections are accordions because the full link set
- * is far taller than a phone viewport.
- */
 export default function MobileNav({
   items,
   catalogue = EMPTY_CATALOGUE,

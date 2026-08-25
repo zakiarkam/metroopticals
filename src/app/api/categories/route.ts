@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { createCategorySchema } from "@/features/categories/validators/category";
+import { createCategorySchema, getCategoriesQuerySchema } from "@/features/categories/validators/category";
 import { getCategories, createCategory } from "@/features/categories/services/category-service";
 import { requireAdmin } from "@/lib/middleware/auth";
 import { handleError, createSuccessResponse } from "@/lib/errors";
@@ -7,18 +7,11 @@ import { logApiAction, logApiError } from "@/lib/audit";
 
 export async function GET(request: NextRequest) {
   try {
-    const searchParams = request.nextUrl.searchParams;
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "50");
-    const search = searchParams.get("search") || "";
-    const status = searchParams.get("status") as "active" | "inactive" | undefined;
+    const query = getCategoriesQuerySchema.parse(
+      Object.fromEntries(request.nextUrl.searchParams)
+    );
 
-    const result = await getCategories({
-      page,
-      limit,
-      search,
-      status,
-    });
+    const result = await getCategories(query);
 
     return createSuccessResponse(result);
   } catch (error) {

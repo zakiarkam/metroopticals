@@ -209,7 +209,9 @@ export default function MyAccount() {
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch (error: any) {
-      setSaveError(error.message || "Could not save changes");
+      setSaveError(
+        error?.response?.data?.message || error.message || "Could not save changes",
+      );
     } finally {
       setIsSaving(false);
     }
@@ -578,11 +580,11 @@ export default function MyAccount() {
                         </div>
                       </div>
 
-                      <div className="flex flex-wrap gap-3 pt-2">
+                      <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:flex-wrap">
                         <button
                           type="submit"
                           disabled={isSaving}
-                          className="inline-flex h-11 items-center gap-2 rounded-xl bg-blue px-7 text-[13px] font-bold text-white transition-colors hover:bg-blue-dark disabled:cursor-not-allowed disabled:opacity-60"
+                          className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-blue px-7 text-[13px] font-bold text-white transition-colors hover:bg-blue-dark disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                         >
                           {isSaving ? (
                             <>
@@ -600,7 +602,7 @@ export default function MyAccount() {
                           type="button"
                           onClick={handleCancelEdit}
                           disabled={isSaving}
-                          className="inline-flex h-11 items-center gap-2 rounded-xl border border-gray-3 px-7 text-[13px] font-semibold text-dark transition-colors hover:border-blue hover:text-blue disabled:cursor-not-allowed disabled:opacity-60"
+                          className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-gray-3 px-7 text-[13px] font-semibold text-dark transition-colors hover:border-blue hover:text-blue disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                         >
                           Cancel
                         </button>

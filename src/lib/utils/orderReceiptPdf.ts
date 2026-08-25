@@ -3,186 +3,205 @@ import autoTable from "jspdf-autotable";
 import type { Order } from "@/features/orders/types/order";
 import { siteConfig } from "@/config/site";
 
-const COMPANY = {
-  name: siteConfig.legalName,
+type BusinessDetails = {
+  legalName: string;
+  registrationNumber: string;
+  address: string;
+  phone: string;
+  email: string;
+  website: string;
+  bankAccountName: string;
+  bankName: string;
+  bankBranch: string;
+  bankAccountNumber: string;
+  invoiceNote: string;
+};
+
+const FALLBACK_BUSINESS: BusinessDetails = {
+  legalName: siteConfig.legalName,
+  registrationNumber: "",
   address: siteConfig.contact.address,
   phone: siteConfig.contact.phone,
   email: siteConfig.contact.email,
   website: siteConfig.domain,
-  logoPath: siteConfig.logo,
+  bankAccountName: siteConfig.banking.accountName,
+  bankName: siteConfig.banking.bank,
+  bankBranch: siteConfig.banking.branch,
+  bankAccountNumber: siteConfig.banking.accountNumber,
+  invoiceNote: "Thank you for shopping with Metro Opticals.",
 };
 
-const BANKING = {
-  name: siteConfig.banking.accountName,
-  account: siteConfig.banking.accountNumber,
-  bank: siteConfig.banking.bank,
-  branch: siteConfig.banking.branch,
+const fetchBusinessDetails = async (): Promise<BusinessDetails> => {
+  try {
+    const response = await fetch("/api/site-content/business.details", {
+      cache: "no-store",
+    });
+    const payload = await response.json();
+    const block = payload?.data?.block ?? payload?.block;
+    if (!block) return FALLBACK_BUSINESS;
+    return { ...FALLBACK_BUSINESS, ...block };
+  } catch {
+    return FALLBACK_BUSINESS;
+  }
 };
 
-const formatPrice = (value: number) =>
-  `${new Intl.NumberFormat("en-LK", {
+type RGB = [number, number, number];
+const CHARCOAL: RGB = [26, 26, 26];
+const GOLD: RGB = [143, 106, 55];
+const INK: RGB = [36, 36, 36];
+const MUTED: RGB = [110, 110, 110];
+const RULE: RGB = [225, 221, 214];
+const PANEL: RGB = [248, 246, 242];
+const WHITE: RGB = [255, 255, 255];
+const GREEN: RGB = [34, 139, 84];
+
+const money = (value: number) =>
+  `Rs ${new Intl.NumberFormat("en-LK", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(value)}`;
 
-const formatDate = (value: string) =>
-  new Date(value).toLocaleDateString("en-US", {
+const longDate = (value: string) =>
+  new Date(value).toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "long",
     year: "numeric",
-    month: "short",
-    day: "numeric",
   });
 
-const formatDateTime = (value: string) =>
-  new Date(value).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+const clean = (value?: string | null) =>
+  (value ?? "").replace(/\s+/g, " ").trim();
 
-const safeLine = (value: string) => value.replace(/\s+/g, " ").trim();
-
-const loadImageData = async (
+const loadImage = async (
   path: string,
-  maxWidthPx: number
-): Promise<{ dataUrl: string; format: "PNG" } | null> => {
+  maxWidthPx: number,
+): Promise<string | null> => {
   try {
-    const response = await fetch(path);
-    const blob = await response.blob();
-    const imageBitmap = await createImageBitmap(blob);
-
-    const scale = Math.min(1, maxWidthPx / imageBitmap.width);
-    const targetWidth = Math.round(imageBitmap.width * scale);
-    const targetHeight = Math.round(imageBitmap.height * scale);
-
+    const blob = await (await fetch(path)).blob();
+    const bitmap = await createImageBitmap(blob);
+    const scale = Math.min(1, maxWidthPx / bitmap.width);
     const canvas = document.createElement("canvas");
-    canvas.width = targetWidth;
-    canvas.height = targetHeight;
+    canvas.width = Math.round(bitmap.width * scale);
+    canvas.height = Math.round(bitmap.height * scale);
     const ctx = canvas.getContext("2d");
-    if (!ctx) {
-      return null;
-    }
-
-    ctx.clearRect(0, 0, targetWidth, targetHeight);
-    ctx.drawImage(imageBitmap, 0, 0, targetWidth, targetHeight);
-
-    const dataUrl = canvas.toDataURL("image/png");
-    return { dataUrl, format: "PNG" };
+    if (!ctx) return null;
+    ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL("image/png");
   } catch {
     return null;
   }
 };
 
+const statusLabel = (status: string) =>
+  status
+    .toLowerCase()
+    .split("_")
+    .map((s) => s[0].toUpperCase() + s.slice(1))
+    .join(" ");
+
 export const downloadOrderReceiptPdf = async (order: Order) => {
-  const doc = new jsPDF({
-    format: "a5",
-    orientation: "landscape",
-    unit: "mm",
-  });
+  const [business, logo] = await Promise.all([
+    fetchBusinessDetails(),
+    loadImage(siteConfig.logoOnDark, 400),
+  ]);
 
-  const marginX = 6;
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const pageHeight = doc.internal.pageSize.getHeight();
-  let cursorY = 8;
-  const lightGray: [number, number, number] = [245, 245, 245];
-  const midGray: [number, number, number] = [120, 120, 120];
-  const darkGray: [number, number, number] = [40, 40, 40];
+  const doc = new jsPDF({ format: "a4", orientation: "portrait", unit: "mm" });
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
+  const mx = 16;
+  const contentW = pageW - mx * 2;
 
-  const logoImage = await loadImageData(COMPANY.logoPath, 300);
-  if (logoImage?.dataUrl) {
-    doc.addImage(
-      logoImage.dataUrl,
-      logoImage.format,
-      marginX,
-      cursorY - 2,
-      24,
-      12,
-      undefined,
-      "FAST"
-    );
+  const setText = (color: RGB, size: number, style: "normal" | "bold" = "normal") => {
+    doc.setTextColor(color[0], color[1], color[2]);
+    doc.setFontSize(size);
+    doc.setFont("helvetica", style);
+  };
+
+  /* ------------------------------------------------------------ header */
+  const headerH = 40;
+  doc.setFillColor(CHARCOAL[0], CHARCOAL[1], CHARCOAL[2]);
+  doc.rect(0, 0, pageW, headerH, "F");
+  doc.setFillColor(GOLD[0], GOLD[1], GOLD[2]);
+  doc.rect(0, headerH, pageW, 1.2, "F");
+
+  if (logo) {
+    // Lockup is roughly 867×983; keep it inside a 26mm-tall box.
+    const h = 26;
+    const w = h * (867 / 983);
+    doc.addImage(logo, "PNG", mx, 7, w, h, undefined, "FAST");
+  } else {
+    setText(WHITE, 18, "bold");
+    doc.text(business.legalName, mx, 22);
   }
 
-  doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(12);
-  doc.text(COMPANY.name, marginX + 30, cursorY + 2);
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(7.5);
-  doc.setTextColor(midGray[0], midGray[1], midGray[2]);
-  doc.text(COMPANY.address, marginX + 30, cursorY + 7);
-  doc.text(`${COMPANY.phone} | ${COMPANY.email}`, marginX + 30, cursorY + 11);
+  setText(WHITE, 22, "bold");
+  doc.text("INVOICE", pageW - mx, 17, { align: "right" });
+  setText([200, 200, 200], 9);
+  doc.text(`Invoice no.  ${order.orderNumber}`, pageW - mx, 25, { align: "right" });
+  doc.text(`Date  ${longDate(order.createdAt)}`, pageW - mx, 30.5, { align: "right" });
+  setText(GOLD, 8.5, "bold");
+  doc.text(statusLabel(order.status).toUpperCase(), pageW - mx, 36, { align: "right" });
 
-  doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(13);
-  doc.text("INVOICE", pageWidth - marginX, cursorY + 2, {
-    align: "right",
+  /* -------------------------------------------------- parties (3 columns) */
+  let y = headerH + 12;
+  const colW = (contentW - 8) / 3;
+  const columns: { title: string; lines: string[] }[] = [
+    {
+      title: "From",
+      lines: [
+        business.legalName,
+        ...(business.registrationNumber ? [`Reg. no. ${business.registrationNumber}`] : []),
+        business.address,
+        business.phone,
+        business.email,
+        business.website,
+      ].map(clean).filter(Boolean),
+    },
+    {
+      title: "Bill to",
+      lines: [
+        order.billingName,
+        order.billingAddress,
+        `${order.billingCity}${order.billingPostalCode ? ` ${order.billingPostalCode}` : ""}, ${order.billingCountry}`,
+        order.billingPhone,
+        order.billingEmail,
+      ].map(clean).filter(Boolean),
+    },
+    {
+      title: "Ship to",
+      lines: [
+        order.shippingName,
+        order.shippingAddress,
+        `${order.shippingCity}${order.shippingPostalCode ? ` ${order.shippingPostalCode}` : ""}, ${order.shippingCountry}`,
+        order.shippingPhone,
+      ].map(clean).filter(Boolean),
+    },
+  ];
+
+  let partiesBottom = y;
+  columns.forEach((col, i) => {
+    const x = mx + i * (colW + 4);
+    setText(GOLD, 7.5, "bold");
+    doc.text(col.title.toUpperCase(), x, y);
+    let ly = y + 5;
+    col.lines.forEach((line, li) => {
+      setText(li === 0 ? INK : MUTED, li === 0 ? 9.5 : 8.5, li === 0 ? "bold" : "normal");
+      const wrapped = doc.splitTextToSize(line, colW) as string[];
+      doc.text(wrapped, x, ly);
+      ly += wrapped.length * 4.2;
+    });
+    partiesBottom = Math.max(partiesBottom, ly);
   });
-  doc.setFontSize(7.5);
-  doc.setTextColor(midGray[0], midGray[1], midGray[2]);
-  doc.setFont("helvetica", "bold");
-  doc.text(`#${order.orderNumber}`, pageWidth - marginX, cursorY + 7, {
-    align: "right",
-  });
-  doc.setFont("helvetica", "normal");
-  doc.text(formatDateTime(order.createdAt), pageWidth - marginX, cursorY + 11, {
-    align: "right",
-  });
 
-  cursorY += 16;
-  doc.setLineWidth(0.4);
-  doc.setDrawColor(70, 70, 70);
-  doc.line(marginX, cursorY, pageWidth - marginX, cursorY);
-  cursorY += 4;
+  y = partiesBottom + 4;
+  doc.setDrawColor(RULE[0], RULE[1], RULE[2]);
+  doc.setLineWidth(0.3);
+  doc.line(mx, y, pageW - mx, y);
+  y += 8;
 
-  const billLine = safeLine(
-    `${order.billingName} | ${order.billingAddress}, ${order.billingCity} ${
-      order.billingPostalCode || ""
-    }, ${order.billingCountry} | ${order.billingPhone} | ${order.billingEmail}`
-  );
-  const shipLine = safeLine(
-    `${order.shippingName} | ${order.shippingAddress}, ${order.shippingCity} ${
-      order.shippingPostalCode || ""
-    }, ${order.shippingCountry} | ${order.shippingPhone} | ${
-      order.shippingEmail
-    }`
-  );
-
-  doc.setFontSize(8.2);
-  doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
-  doc.setFont("helvetica", "bold");
-  doc.text("BILL TO:", marginX, cursorY);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(midGray[0], midGray[1], midGray[2]);
-  doc.text(billLine, marginX + 18, cursorY);
-
-  cursorY += 5;
-  doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
-  doc.setFont("helvetica", "bold");
-  doc.text("SHIP TO:", marginX, cursorY);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(midGray[0], midGray[1], midGray[2]);
-  doc.text(shipLine, marginX + 18, cursorY);
-
-  cursorY += 5;
-  doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
-  doc.setFont("helvetica", "bold");
-  doc.text("BANKING DETAILS:", marginX, cursorY);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(midGray[0], midGray[1], midGray[2]);
-  doc.text(
-    `${BANKING.name} | Account Number: ${BANKING.account} | Bank: ${BANKING.bank} | Branch: ${BANKING.branch}`,
-    marginX + 33,
-    cursorY
-  );
-
-  cursorY += 6;
-
+  /* ------------------------------------------------------------- items */
   const hasDiscounts = order.items.some(
-    (item) => item.discountedPrice != null && item.discountedPrice < item.price
+    (item) => item.discountedPrice != null && item.discountedPrice < item.price,
   );
-
   const totalDiscount = order.items.reduce((acc, item) => {
     if (item.discountedPrice != null && item.discountedPrice < item.price) {
       acc += (item.price - item.discountedPrice) * item.quantity;
@@ -191,186 +210,174 @@ export const downloadOrderReceiptPdf = async (order: Order) => {
   }, 0);
 
   const rows = order.items.map((item, index) => {
-    const netPrice = item.discountedPrice ?? item.price;
-    const discount =
-      item.discountedPrice != null && item.discountedPrice < item.price
-        ? item.price - item.discountedPrice
-        : 0;
-
-    if (hasDiscounts) {
-      return [
-        String(index + 1),
-        safeLine(item.product.title),
-        item.product.slug || "-",
-        String(item.quantity),
-        formatPrice(item.price),
-        discount > 0 ? `-${formatPrice(discount)}` : "-",
-        formatPrice(netPrice),
-        formatPrice(netPrice * item.quantity),
-      ];
-    }
-
-    return [
-      String(index + 1),
-      safeLine(item.product.title),
-      item.product.slug || "-",
-      String(item.quantity),
-      formatPrice(item.price),
-      formatPrice(netPrice * item.quantity),
-    ];
+    const net = item.discountedPrice ?? item.price;
+    const label = item.color
+      ? `${clean(item.product.title)}\n${item.color}`
+      : clean(item.product.title);
+    const base = [String(index + 1), label, String(item.quantity), money(item.price)];
+    return hasDiscounts
+      ? [...base, money(net), money(net * item.quantity)]
+      : [...base, money(net * item.quantity)];
   });
-
-  const tableHead = hasDiscounts
-    ? [["#", "PRODUCT", "SKU CODE", "QTY", "UNIT PRICE", "DISCOUNT", "NET PRICE", "TOTAL"]]
-    : [["#", "PRODUCT", "SKU CODE", "QTY", "PRICE", "TOTAL"]];
-
-  const columnStyles = hasDiscounts
-    ? {
-        0: { cellWidth: 6 },
-        2: { cellWidth: 24 },
-        3: { cellWidth: 8 },
-        4: { cellWidth: 18 },
-        5: { cellWidth: 18 },
-        6: { cellWidth: 18 },
-        7: { cellWidth: 18 },
-      }
-    : {
-        0: { cellWidth: 6 },
-        2: { cellWidth: 30 },
-        3: { cellWidth: 10 },
-        4: { cellWidth: 20 },
-        5: { cellWidth: 20 },
-      };
 
   autoTable(doc, {
-    startY: cursorY,
-    head: tableHead,
+    startY: y,
+    head: [
+      hasDiscounts
+        ? ["#", "Item", "Qty", "Unit price", "Net price", "Amount"]
+        : ["#", "Item", "Qty", "Unit price", "Amount"],
+    ],
     body: rows,
     theme: "plain",
-    styles: { fontSize: 7, cellPadding: 1.5, lineWidth: 0 },
-    showHead: "everyPage",
-    headStyles: {
-      fillColor: lightGray,
-      textColor: darkGray,
-      lineWidth: 0,
-      fontStyle: "bold",
+    margin: { left: mx, right: mx },
+    styles: {
+      font: "helvetica",
+      fontSize: 8.8,
+      cellPadding: { top: 3, bottom: 3, left: 2, right: 2 },
+      textColor: INK,
+      lineColor: RULE,
+      lineWidth: { bottom: 0.2 },
+      valign: "middle",
     },
-    margin: { left: marginX, right: marginX },
-    pageBreak: "auto",
-    rowPageBreak: "auto",
-    columnStyles,
+    headStyles: {
+      fillColor: CHARCOAL,
+      textColor: WHITE,
+      fontStyle: "bold",
+      fontSize: 8,
+      lineWidth: 0,
+    },
+    columnStyles: hasDiscounts
+      ? {
+          0: { cellWidth: 9, textColor: MUTED },
+          2: { cellWidth: 14, halign: "center" },
+          3: { cellWidth: 28, halign: "right" },
+          4: { cellWidth: 28, halign: "right" },
+          5: { cellWidth: 30, halign: "right", fontStyle: "bold" },
+        }
+      : {
+          0: { cellWidth: 9, textColor: MUTED },
+          2: { cellWidth: 14, halign: "center" },
+          3: { cellWidth: 32, halign: "right" },
+          4: { cellWidth: 34, halign: "right", fontStyle: "bold" },
+        },
     didParseCell: (data) => {
-      if (data.section === "body" && data.column.index === 0) {
-        data.cell.styles.fontStyle = "bold";
-      }
-      // Highlight discount column in green
-      if (
-        hasDiscounts &&
-        data.section === "body" &&
-        data.column.index === 5 &&
-        data.cell.text[0] !== "-"
-      ) {
-        data.cell.styles.textColor = [34, 173, 92]; // green
+      if (data.section === "head" && data.column.index >= 2) {
+        data.cell.styles.halign = data.column.index === 2 ? "center" : "right";
       }
     },
   });
 
-  const drawFooter = (pageNumber: number, totalPages: number) => {
-    const footerTop = pageHeight - 8;
+  y = ((doc as any).lastAutoTable?.finalY ?? y) + 6;
 
-    doc.setLineWidth(0.4);
-    doc.setDrawColor(70, 70, 70);
-    doc.line(marginX, footerTop - 3, pageWidth - marginX, footerTop - 3);
-
-    doc.setFontSize(8.2);
-    doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
-    doc.setFont("helvetica", "bold");
-    doc.text("Thank you for your business!", pageWidth / 2, footerTop + 0.5, {
-      align: "center",
-    });
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(7);
-    doc.setTextColor(midGray[0], midGray[1], midGray[2]);
-    doc.text(
-      `Questions? Contact ${COMPANY.email} | ${COMPANY.phone} | ${COMPANY.website}`,
-      pageWidth / 2,
-      footerTop + 3.5,
-      { align: "center" }
-    );
-
-    doc.setFontSize(6.5);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(midGray[0], midGray[1], midGray[2]);
-    doc.text(
-      `Page ${pageNumber} of ${totalPages}`,
-      pageWidth / 2,
-      pageHeight - 2,
-      { align: "center" }
-    );
-  };
-
-  const tableFinalY = (doc as any).lastAutoTable?.finalY ?? cursorY + 10;
-  const footerHeight = 20;
-  const totalsHeight = hasDiscounts && totalDiscount > 0 ? 21 : 16;
-  let totalsY = tableFinalY + 6;
-
-  if (totalsY + totalsHeight + footerHeight > pageHeight) {
-    doc.addPage();
-    totalsY = 14;
-  }
-
-  doc.setFontSize(8.2);
-  doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
-  doc.setFont("helvetica", "bold");
-  doc.text(
-    `PAYMENT: ${(order.paymentMethod || "").toUpperCase()}`,
-    marginX,
-    totalsY
-  );
-  doc.setTextColor(midGray[0], midGray[1], midGray[2]);
-  doc.setFont("helvetica", "bold");
-  doc.text(`STATUS: ${order.status}`, marginX, totalsY + 5);
-
-  doc.setTextColor(midGray[0], midGray[1], midGray[2]);
-  doc.setFontSize(8.2);
-  doc.text(
-    `Subtotal: ${formatPrice(order.subtotal)}`,
-    pageWidth - marginX,
-    totalsY,
-    { align: "right" }
-  );
-
-  let totalBoxOffsetY = 2.5;
+  /* ------------------------------------------------------------ totals */
+  const totalsW = 78;
+  const totalsX = pageW - mx - totalsW;
+  const totalLines: { label: string; value: string; color?: RGB }[] = [
+    { label: "Subtotal", value: money(order.subtotal) },
+  ];
   if (hasDiscounts && totalDiscount > 0) {
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(8.2);
-    doc.setTextColor(34, 173, 92);
-    doc.text(
-      `You saved: -Rs ${formatPrice(totalDiscount)}`,
-      pageWidth - marginX,
-      totalsY + 5,
-      { align: "right" }
-    );
-    totalBoxOffsetY = 8;
+    totalLines.push({ label: "Discount", value: `- ${money(totalDiscount)}`, color: GREEN });
+  }
+  totalLines.push({
+    label: "Delivery",
+    value: order.shippingFee > 0 ? money(order.shippingFee) : "Free",
+  });
+
+  const totalsBlockH = totalLines.length * 6 + 12;
+  if (y + totalsBlockH + 50 > pageH) {
+    doc.addPage();
+    y = 20;
   }
 
-  doc.setFillColor(lightGray[0], lightGray[1], lightGray[2]);
-  doc.rect(pageWidth - marginX - 60, totalsY + totalBoxOffsetY, 60, 7.5, "F");
-  doc.setFontSize(9.5);
-  doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
-  doc.setFont("helvetica", "bold");
+  // Amounts sit 4mm in from the right edge so the figures never touch the
+  // page margin; the label column starts at the same inset.
+  const amountX = pageW - mx - 4;
+  totalLines.forEach((line) => {
+    setText(MUTED, 9);
+    doc.text(line.label, totalsX, y);
+    setText(line.color ?? INK, 9, "bold");
+    doc.text(line.value, amountX, y, { align: "right" });
+    y += 6.5;
+  });
+
+  y += 1;
+  doc.setDrawColor(CHARCOAL[0], CHARCOAL[1], CHARCOAL[2]);
+  doc.setLineWidth(0.5);
+  doc.line(totalsX, y, pageW - mx, y);
+  y += 7;
+  setText(INK, 10, "bold");
+  doc.text("Total", totalsX, y);
+  setText(INK, 13, "bold");
+  doc.text(money(order.totalAmount), amountX, y, { align: "right" });
+  y += 18;
+
+  /* ----------------------------------------------------- payment panel */
+  const bankLines = [
+    business.bankAccountName && `Account name: ${business.bankAccountName}`,
+    business.bankName && `Bank: ${business.bankName}`,
+    business.bankBranch && `Branch: ${business.bankBranch}`,
+    business.bankAccountNumber && `Account no.: ${business.bankAccountNumber}`,
+  ].filter(Boolean) as string[];
+
+  const noteLines = business.invoiceNote
+    ? (doc.splitTextToSize(clean(business.invoiceNote), contentW - 12) as string[])
+    : [];
+
+  const panelH = 14 + Math.max(bankLines.length, 1) * 4.6 + (noteLines.length ? noteLines.length * 4.2 + 4 : 0);
+  if (y + panelH + 24 > pageH) {
+    doc.addPage();
+    y = 20;
+  }
+
+  doc.setFillColor(PANEL[0], PANEL[1], PANEL[2]);
+  doc.roundedRect(mx, y, contentW, panelH, 2, 2, "F");
+  doc.setFillColor(GOLD[0], GOLD[1], GOLD[2]);
+  doc.rect(mx, y, 1.2, panelH, "F");
+
+  let py = y + 7;
+  setText(GOLD, 7.5, "bold");
+  doc.text("PAYMENT", mx + 6, py);
+  setText(INK, 9, "bold");
   doc.text(
-    `TOTAL: Rs ${formatPrice(order.totalAmount)}`,
-    pageWidth - marginX,
-    totalsY + totalBoxOffsetY + 5.5,
-    { align: "right" }
+    `${(order.paymentMethod || "Not specified").replace(/_/g, " ").toUpperCase()}`,
+    mx + 28,
+    py,
   );
+  py += 6;
 
-  const totalPages = doc.getNumberOfPages();
-  for (let pageNumber = 1; pageNumber <= totalPages; pageNumber += 1) {
-    doc.setPage(pageNumber);
-    drawFooter(pageNumber, totalPages);
+  if (bankLines.length) {
+    setText(GOLD, 7.5, "bold");
+    doc.text("BANK TRANSFER", mx + 6, py);
+    setText(MUTED, 8.5);
+    bankLines.forEach((line, i) => doc.text(line, mx + 34, py + i * 4.6));
+    py += bankLines.length * 4.6 + 2;
+  } else {
+    py += 1;
   }
 
-  doc.save(`Order-${order.orderNumber}.pdf`);
+  if (noteLines.length) {
+    setText(MUTED, 8.2);
+    doc.text(noteLines, mx + 6, py + 2);
+  }
+
+  /* ------------------------------------------------------------ footer */
+  const pages = doc.getNumberOfPages();
+  for (let p = 1; p <= pages; p += 1) {
+    doc.setPage(p);
+    const fy = pageH - 14;
+    doc.setDrawColor(RULE[0], RULE[1], RULE[2]);
+    doc.setLineWidth(0.3);
+    doc.line(mx, fy, pageW - mx, fy);
+    setText(INK, 8.5, "bold");
+    doc.text(business.legalName, mx, fy + 5.5);
+    setText(MUTED, 7.8);
+    doc.text(
+      [business.phone, business.email, business.website].filter(Boolean).join("   ·   "),
+      mx,
+      fy + 10,
+    );
+    doc.text(`Page ${p} of ${pages}`, pageW - mx, fy + 10, { align: "right" });
+  }
+
+  doc.save(`Invoice-${order.orderNumber.replace(/\//g, "-")}.pdf`);
 };

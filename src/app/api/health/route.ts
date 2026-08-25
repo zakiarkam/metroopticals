@@ -2,12 +2,6 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { logger, serializeError } from "@/lib/logger";
 
-/**
- * Health check endpoint. Railway polls this after each deploy and will not
- * switch traffic to a new container until it returns 200.
- *
- * GET /api/health
- */
 // Never let a cached 200 stand in for a real check.
 export const dynamic = "force-dynamic";
 export async function GET() {
@@ -37,11 +31,6 @@ export async function GET() {
           database: "disconnected",
           api: "operational",
         },
-        /*
-         * Deliberately generic. This endpoint is unauthenticated, and the
-         * driver's message can name the host, database and user. The real
-         * error goes to the logs above, where Railway can show it.
-         */
         error: "Database connectivity check failed",
       },
       { status: 503 }

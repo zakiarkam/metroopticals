@@ -113,7 +113,10 @@ const EditCategoryDialog: React.FC<EditCategoryDialogProps> = ({
   const availableParents = useMemo(
     () =>
       combinedCategories.filter(
-        (item) => item.id !== category?.id && !descendantIds.has(item.id)
+        (item) =>
+          item.id !== category?.id &&
+          !item.parentId &&
+          !descendantIds.has(item.id)
       ),
     [combinedCategories, category?.id, descendantIds]
   );

@@ -10,20 +10,6 @@ import {
   getFrameSizeLabel,
 } from "@/features/products/utils/eyewear";
 
-/**
- * The full specification table.
- *
- * The product page used to split this across two places: a row of loose chips
- * for the frame measurements and a separate definition list underneath for
- * brand, category and reference  so brand appeared three times on the page
- * (eyebrow, chips, list) and size appeared nowhere near material. One table,
- * grouped, is what a shopper comparing two frames actually needs.
- *
- * Rows whose value the catalogue does not hold are dropped rather than shown
- * as "", so a sparsely filled product gets a short table instead of a long
- * list of blanks.
- */
-
 type Row = { label: string; value: React.ReactNode };
 type Group = { title: string; rows: Row[] };
 
@@ -143,7 +129,7 @@ export default function ProductSpecTable({
         product.slug && {
           label: "Reference",
           value: (
-            <span className="font-mono text-[12.5px] normal-case text-dark-3">
+            <span className="break-all font-mono text-[12.5px] normal-case text-dark-3">
               {product.slug}
             </span>
           ),
@@ -166,7 +152,7 @@ export default function ProductSpecTable({
     <div
       className={`overflow-hidden rounded-2xl border border-gray-3 bg-gray-2 ${className}`}
     >
-      <table className="w-full border-collapse text-left">
+      <table className="w-full table-fixed border-collapse text-left">
         <caption className="sr-only">
           Specifications for {product.title}
         </caption>
@@ -177,7 +163,7 @@ export default function ProductSpecTable({
                 <th
                   scope="colgroup"
                   colSpan={2}
-                  className="border-b border-gray-3 bg-gray-8 px-5 py-2.5 text-[10.5px] font-bold uppercase tracking-[0.16em] text-dark-4"
+                  className="border-b border-gray-3 bg-gray-8 px-4 py-2.5 text-[10.5px] font-bold uppercase tracking-[0.16em] text-dark-4 sm:px-5"
                 >
                   {group.title}
                 </th>
@@ -190,11 +176,11 @@ export default function ProductSpecTable({
                 >
                   <th
                     scope="row"
-                    className="w-[42%] px-5 py-3 align-top text-[13px] font-medium text-dark-4"
+                    className="w-[42%] px-4 py-3 align-top text-[13px] font-medium text-dark-4 sm:px-5"
                   >
                     {row.label}
                   </th>
-                  <td className="px-5 py-3 align-top text-[13.5px] font-semibold text-dark">
+                  <td className="break-words px-4 py-3 align-top text-[13.5px] font-semibold text-dark sm:px-5">
                     {row.value}
                   </td>
                 </tr>

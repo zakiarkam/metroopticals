@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db/prisma";
-import { NotFoundError } from "@/lib/errors";
+import { NotFoundError, ValidationError } from "@/lib/errors";
 import { Prisma } from "@prisma/client";
 import type {
   CreateCategoryInput,
@@ -301,6 +301,15 @@ export async function updateCategory(id: number, data: UpdateCategoryInput) {
 }
 
 export async function deleteCategory(id: number) {
+  const [products, children] = await Promise.all([
+    prisma.product.count({ where: { categoryId: id } }),
+    prisma.category.count({ where: { parentId: id } }),
+  ]);
+  if (products > 0 || children > 0) {
+    throw new ValidationError(
+      `Category still has ${products} product(s) and ${children} sub-categor${children === 1 ? "y" : "ies"}. Move or delete them first.`
+    );
+  }
   await prisma.category.delete({
     where: { id },
   });

@@ -10,7 +10,10 @@ import { Button } from "@/components/ui/button";
 import { deleteCategory } from "@/features/categories/api/category-api";
 import { Category } from "@/features/categories/types/category";
 import { Toast } from "@/lib/utils/toast";
-import { useGetCategoriesQuery } from "@/store/services/api";
+import { api, useGetCategoriesQuery } from "@/store/services/api";
+import { useDispatch } from "react-redux";
+import type { AppDispatch } from "@/store/store";
+import { invalidateAllCategoriesCache } from "@/store/features/categories-cache";
 
 type CategoriesTabProps = {
   dateRange: string;
@@ -101,9 +104,13 @@ const CategoriesTab: React.FC<CategoriesTabProps> = ({ dateRange }) => {
     setCurrentPage(1);
   };
 
+  const dispatch = useDispatch<AppDispatch>();
+
   const handleCategoriesChanged = useCallback(() => {
+    dispatch(invalidateAllCategoriesCache());
+    dispatch(api.util.invalidateTags([{ type: "Categories", id: "LIST" }]));
     refetchCategories();
-  }, [refetchCategories]);
+  }, [dispatch, refetchCategories]);
 
   const childrenByParent = useMemo(() => {
     const map: Record<number, Category[]> = {};

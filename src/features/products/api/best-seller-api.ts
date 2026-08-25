@@ -22,7 +22,7 @@ export const getBestSellersCached = async (): Promise<TopProduct[]> => {
     .get("/best-sellers")
     .then((response) => {
       const data = response.data;
-      const topProducts = data.data?.topProducts || [];
+      const topProducts = data?.topProducts ?? data?.data?.topProducts ?? [];
       bestSellersCache = {
         data: topProducts,
         expiresAt: now + BEST_SELLERS_TTL_MS,

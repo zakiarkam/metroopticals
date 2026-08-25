@@ -119,19 +119,23 @@ export default function Header({
   megaNav?: NavItem[];
   catalogue?: NavCatalogue;
 }) {
-  const headerRef = useRef<HTMLElement | null>(null);
+  const headerRef = useRef<HTMLDivElement | null>(null);
   useHeaderHeightCssVar(headerRef);
 
   const stickyMenu = useSticky(80);
   const [navigationOpen, setNavigationOpen] = useState(false);
   useLockBodyScroll(navigationOpen);
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("0");
-
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
+
+  // Mirror the active query so a shared /shop-with-sidebar?search=… link
+  // shows what it is filtered by, and the box empties when leaving the shop.
+  const activeSearch = searchParams.get("search") ?? "";
+  const [searchQuery, setSearchQuery] = useState(activeSearch);
+  useEffect(() => setSearchQuery(activeSearch), [activeSearch, pathname]);
+  const [selectedCategory, setSelectedCategory] = useState("0");
 
   const { openCartModal } = useCartModalContext();
   const product = useAppSelector((state) => state.cartReducer.items);
@@ -185,11 +189,11 @@ export default function Header({
 
   return (
     <header
-      ref={headerRef}
       className={`sticky top-0 z-40 w-full border-b border-gray-3 bg-gray-2 transition-shadow duration-200 ${
         stickyMenu ? "shadow-3" : "shadow-none"
       }`}
     >
+      <div ref={headerRef} className="relative z-40 bg-gray-2">
       <Container>
         <div
           className={`flex items-center gap-4 transition-[padding] ${
@@ -254,6 +258,7 @@ export default function Header({
       </Container>
 
       <MegaMenu items={navItems} catalogue={catalogue} />
+      </div>
 
       {navigationOpen && (
         <>

@@ -88,9 +88,6 @@ export const getCategories = async (
   };
 };
 
-/**
- * ✅ Dedupe in-flight GETs
- */
 const categoriesInFlight = new Map<string, Promise<CategoriesResponse>>();
 
 export const getCategoriesOnce = (params?: CategoryQueryParams) => {

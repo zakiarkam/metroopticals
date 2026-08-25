@@ -10,9 +10,6 @@ export class RateLimitError extends AppError {
 
 type Bucket = { count: number; resetAt: number };
 
-// Fixed-window in-memory limiter. The app runs as a single instance on
-// Railway, so process-local state is sufficient; swap for Redis if the
-// deployment ever scales horizontally.
 const buckets = new Map<string, Bucket>();
 const MAX_BUCKETS = 10_000;
 
@@ -23,9 +20,6 @@ const prune = (now: number) => {
   });
 };
 
-/**
- * Throws RateLimitError when `key` exceeds `limit` calls per `windowMs`.
- */
 export function rateLimit(key: string, limit: number, windowMs: number): void {
   const now = Date.now();
   prune(now);
@@ -42,9 +36,28 @@ export function rateLimit(key: string, limit: number, windowMs: number): void {
   }
 }
 
-/** Best-effort client IP for rate-limit keys (Railway sets x-forwarded-for). */
-export function getClientIp(request: NextRequest): string {
-  const forwarded = request.headers.get("x-forwarded-for");
-  if (forwarded) return forwarded.split(",")[0].trim();
-  return request.headers.get("x-real-ip") ?? "unknown";
+type HeaderSource =
+  | NextRequest
+  | Request
+  | { headers?: Record<string, string | string[] | undefined> };
+
+function readHeader(source: HeaderSource, name: string): string | null {
+  const headers = (source as { headers?: unknown }).headers;
+  if (!headers) return null;
+  if (typeof (headers as Headers).get === "function") {
+    return (headers as Headers).get(name);
+  }
+  const value = (headers as Record<string, string | string[] | undefined>)[name];
+  return Array.isArray(value) ? value[0] ?? null : value ?? null;
+}
+
+// The trusted proxy appends the real client to x-forwarded-for, so the last
+// entry is the only one a client cannot spoof.
+export function getClientIp(source: HeaderSource): string {
+  const forwarded = readHeader(source, "x-forwarded-for");
+  if (forwarded) {
+    const parts = forwarded.split(",").map((p) => p.trim()).filter(Boolean);
+    if (parts.length) return parts[parts.length - 1];
+  }
+  return readHeader(source, "x-real-ip") ?? "unknown";
 }

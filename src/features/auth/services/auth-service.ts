@@ -10,6 +10,8 @@ import type {
   ResetPasswordInput,
 } from "@/features/auth/validators/auth";
 
+const DUMMY_HASH = bcrypt.hashSync("placeholder-password", 12);
+
 export async function createUser(data: SignupInput) {
   // Check if user already exists
   const existingUser = await prisma.user.findUnique({
@@ -88,8 +90,11 @@ export async function requestPasswordReset(data: ForgotPasswordInput) {
     },
   });
 
-  // Send reset email
-  await sendPasswordResetEmail(user.email, token);
+  try {
+    await sendPasswordResetEmail(user.email, token);
+  } catch (error) {
+    logger.error("Failed to send password reset email", serializeError(error));
+  }
 
   return { message: "A reset link has been sent" };
 }
@@ -133,7 +138,7 @@ export async function resetPassword(data: ResetPasswordInput) {
 export async function verifyUser(email: string, password: string) {
   try {
     const user = await prisma.user.findUnique({
-      where: { email },
+      where: { email: email.trim().toLowerCase() },
       select: {
         id: true,
         email: true,
@@ -149,7 +154,9 @@ export async function verifyUser(email: string, password: string) {
       },
     });
 
-    if (!user) {
+    if (!user || !user.password) {
+      // Keep timing identical whether or not the account exists.
+      await bcrypt.compare(password, DUMMY_HASH);
       return null;
     }
 
