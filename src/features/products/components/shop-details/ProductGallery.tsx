@@ -10,7 +10,7 @@ import { ChevronLeft, ChevronRight, ImageOff } from "lucide-react";
  * It adapts to how many photos a product actually has, which the previous
  * version did not: one photo rendered an empty thumbnail rail's worth of gap,
  * and several photos gave no way to move between them except clicking the
- * thumbnails — no arrows, no keyboard, no sense of position.
+ * thumbnails  no arrows, no keyboard, no sense of position.
  *
  *   0 photos → the placeholder plate with an honest caption
  *   1 photo  → the plate alone, no rail and no arrows
@@ -41,7 +41,7 @@ export default function ProductGallery({
 
   const step = useCallback(
     (delta: number) => setIndex((i) => (i + delta + count) % count),
-    [count]
+    [count],
   );
 
   useEffect(() => {
@@ -63,7 +63,9 @@ export default function ProductGallery({
         className="group relative aspect-square overflow-hidden rounded-3xl border border-gray-3 bg-gray-2"
         role={isCarousel ? "group" : undefined}
         aria-roledescription={isCarousel ? "carousel" : undefined}
-        aria-label={isCarousel ? `${title} — image ${index + 1} of ${count}` : undefined}
+        aria-label={
+          isCarousel ? `${title}  image ${index + 1} of ${count}` : undefined
+        }
       >
         <div
           aria-hidden
@@ -79,13 +81,16 @@ export default function ProductGallery({
           src={images[index] ?? FALLBACK}
           alt={
             hasPhotos
-              ? `${title}${isCarousel ? ` — view ${index + 1}` : ""}`
-              : `${title} — no photograph available`
+              ? `${title}${isCarousel ? `  view ${index + 1}` : ""}`
+              : `${title}  no photograph available`
           }
           fill
           priority
           sizes="(max-width: 1024px) 100vw, 45vw"
-          className="relative object-contain p-10 drop-shadow-[0_18px_30px_rgba(39,30,20,0.16)]"
+          /* Fills the plate. Previously inset by 40px with its own drop
+             shadow, which read as a second, smaller card floating inside the
+             gallery rather than as the product itself. */
+          className="object-cover"
         />
 
         {badges}
@@ -120,7 +125,7 @@ export default function ProductGallery({
       {!hasPhotos && (
         <p className="mt-3 flex items-center justify-center gap-2 text-[12.5px] text-dark-5">
           <ImageOff className="h-4 w-4" aria-hidden />
-          Photography for this frame is on its way — call us for a closer look.
+          Photography for this frame is on its way call us for a closer look.
         </p>
       )}
 
@@ -144,7 +149,7 @@ export default function ProductGallery({
                   alt=""
                   fill
                   sizes="90px"
-                  className="object-contain p-2"
+                  className="object-cover"
                 />
               </button>
             </li>

@@ -9,7 +9,7 @@
  * It used to run to twenty-four, including five advertising slots and six
  * editable link lists (shapes, prices, chips, feature cards, try-on, social)
  * that all pointed at the same shop page. Those shortcuts now live where a
- * shopper looks for them — the filter sidebar and the navigation panels — so
+ * shopper looks for them  the filter sidebar and the navigation panels  so
  * the page is a route to the catalogue rather than a second copy of it.
  *
  * Only the hero and the trust bar are in the initial bundle; everything below
@@ -29,7 +29,7 @@ import { getFeaturedReviews } from "@/features/reviews/services/review-service";
 import { getHomePromoAdvertisements } from "@/features/advertisements/services/advertisement-service";
 import HomeSectionSkeleton from "./HomeSectionSkeleton";
 
-// Above the fold — shipped eagerly.
+// Above the fold  shipped eagerly.
 import HomeHero from "./HomeHero";
 import TrustBar from "./TrustBar";
 
@@ -76,7 +76,7 @@ const Home = async () => {
     getFeaturedReviews(3).catch(() => []),
   ]);
 
-  // No <main> here — the site layout already provides one, and nesting two is
+  // No <main> here  the site layout already provides one, and nesting two is
   // invalid HTML that screen readers report as a second landmark.
   return (
     <>

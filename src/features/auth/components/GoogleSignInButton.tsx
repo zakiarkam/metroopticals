@@ -1,7 +1,5 @@
 import React from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
 import { Toast } from "@/lib/utils/toast";
 
 interface GoogleSignInButtonProps {
@@ -16,8 +14,6 @@ const GoogleSignInButton = React.memo(
     googleLoading,
     setGoogleLoading,
   }: GoogleSignInButtonProps) => {
-    const router = useRouter();
-
     const handleGoogleSignIn = async () => {
       setGoogleLoading(true);
       try {
@@ -35,16 +31,19 @@ const GoogleSignInButton = React.memo(
 
     return (
       <>
-        <div className="relative flex items-center justify-center">
-          <span className="text-xs text-muted-foreground">Or login with</span>
+        <div className="flex items-center gap-3 pt-1">
+          <span className="h-px flex-1 bg-gray-3" />
+          <span className="text-[11px] font-medium uppercase tracking-[0.16em] text-dark-5">
+            or continue with
+          </span>
+          <span className="h-px flex-1 bg-gray-3" />
         </div>
 
-        <Button
+        <button
           type="button"
-          variant="outline"
           onClick={handleGoogleSignIn}
           disabled={googleLoading}
-          className="w-full"
+          className="flex h-11 w-full items-center justify-center gap-2.5 rounded-xl border border-gray-3 bg-white text-sm font-semibold text-dark-2 transition-all hover:border-blue-light hover:bg-blue-light-5 disabled:cursor-not-allowed disabled:opacity-60"
         >
           <svg
             width="18"
@@ -52,6 +51,7 @@ const GoogleSignInButton = React.memo(
             viewBox="0 0 18 18"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
+            aria-hidden
           >
             <path
               d="M17.64 9.2c0-.64-.06-1.25-.17-1.84H9v3.48h4.86c-.21 1.16-.86 2.14-1.84 2.8l2.97 2.3c1.74-1.6 2.75-3.97 2.75-6.74z"
@@ -70,11 +70,11 @@ const GoogleSignInButton = React.memo(
               fill="#EA4335"
             />
           </svg>
-          {googleLoading ? "Redirecting..." : "Continue with Google"}
-        </Button>
+          {googleLoading ? "Redirecting..." : "Google"}
+        </button>
       </>
     );
-  }
+  },
 );
 
 GoogleSignInButton.displayName = "GoogleSignInButton";

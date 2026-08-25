@@ -7,7 +7,7 @@ import type { BlockData } from "@/features/site-content/types/site-content";
  *
  * It sits in normal document flow, above the sticky header, so it scrolls away
  * on its own. It used to live *inside* the fixed header and unmount once the
- * page scrolled past 80px — which changed the header's height mid-scroll, and
+ * page scrolled past 80px  which changed the header's height mid-scroll, and
  * with it the `--site-header-height` offset every page was padded by. The
  * result was the page heading sliding up underneath the header.
  */

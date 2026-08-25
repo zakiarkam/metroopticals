@@ -12,14 +12,18 @@ import type { AdPlacementMeta } from "@/features/advertisements/constants/advert
  * Artwork picker for an advertisement.
  *
  * The preview box is locked to the placement's own aspect ratio, so what the
- * admin sees here is the crop the site will actually render — the single most
+ * admin sees here is the crop the site will actually render  the single most
  * common way banner uploads go wrong is a tall photo dropped into a wide slot.
  */
 
 const MAX_BYTES = 5 * 1024 * 1024;
 const ACCEPTED = ["image/jpeg", "image/png", "image/webp", "image/avif"];
 
-const buildFileName = (title: string, placementId: string, original: string) => {
+const buildFileName = (
+  title: string,
+  placementId: string,
+  original: string,
+) => {
   const slug =
     title
       .toLowerCase()
@@ -28,9 +32,9 @@ const buildFileName = (title: string, placementId: string, original: string) => 
       .slice(0, 40) || "advertisement";
   const now = new Date();
   const stamp = `${now.toISOString().split("T")[0]}-${String(
-    now.getHours()
+    now.getHours(),
   ).padStart(2, "0")}${String(now.getMinutes()).padStart(2, "0")}${String(
-    now.getSeconds()
+    now.getSeconds(),
   ).padStart(2, "0")}`;
   const extension = original.split(".").pop()?.toLowerCase() || "jpg";
 
@@ -41,7 +45,7 @@ interface AdImageUploadProps {
   value?: string | null;
   placement: AdPlacementMeta;
   title?: string;
-  /** Product-linked ads inherit the product photo — uploading is optional. */
+  /** Product-linked ads inherit the product photo  uploading is optional. */
   helperText?: string;
   inputId?: string;
   onChange: (value: string | null) => void;
@@ -69,7 +73,7 @@ const AdImageUpload: React.FC<AdImageUploadProps> = ({
       }
 
       if (file.size > MAX_BYTES) {
-        Toast.error("That image is over 5MB — please compress it first.");
+        Toast.error("That image is over 5MB  please compress it first.");
         return;
       }
 
@@ -81,7 +85,7 @@ const AdImageUpload: React.FC<AdImageUploadProps> = ({
         const response = await uploadApi.uploadFile(
           file,
           "advertisement/image",
-          fileName
+          fileName,
         );
 
         onChange(response.fileName || fileName);
@@ -109,7 +113,7 @@ const AdImageUpload: React.FC<AdImageUploadProps> = ({
         if (inputRef.current) inputRef.current.value = "";
       }
     },
-    [onChange, placement.id, title]
+    [onChange, placement.id, title],
   );
 
   const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {

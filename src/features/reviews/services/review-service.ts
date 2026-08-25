@@ -27,7 +27,7 @@ const serialise = (row: any): Review => ({
  * Recompute a product's denormalised rating from its published reviews.
  *
  * Called after every write that could change the set. Cheap enough to do
- * inline — a product has tens of reviews, not millions — and it keeps the
+ * inline  a product has tens of reviews, not millions  and it keeps the
  * listing pages free of aggregate joins.
  */
 export async function recalculateProductRating(productId: number) {
@@ -67,7 +67,7 @@ async function hasPurchased(userId: number, productId: number) {
 export async function getProductReviews(
   productId: number,
   query: { page?: number; limit?: number },
-  viewerId?: number | null
+  viewerId?: number | null,
 ) {
   const page = query.page ?? 1;
   const limit = query.limit ?? 10;
@@ -96,7 +96,13 @@ export async function getProductReviews(
       : null,
   ]);
 
-  const distribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 } as ReviewSummary["distribution"];
+  const distribution = {
+    1: 0,
+    2: 0,
+    3: 0,
+    4: 0,
+    5: 0,
+  } as ReviewSummary["distribution"];
   let weighted = 0;
 
   for (const row of grouped) {
@@ -127,7 +133,7 @@ export async function getProductReviews(
 export async function upsertReview(
   userId: number,
   productId: number,
-  data: CreateReviewInput
+  data: CreateReviewInput,
 ) {
   const product = await prisma.product.findUnique({
     where: { id: productId },
@@ -223,7 +229,7 @@ export async function getReviews(query: ReviewQueryInput) {
 
 export async function setReviewStatus(
   id: number,
-  status: "PENDING" | "PUBLISHED" | "REJECTED"
+  status: "PENDING" | "PUBLISHED" | "REJECTED",
 ) {
   const existing = await prisma.review.findUnique({
     where: { id },

@@ -31,7 +31,7 @@ export async function PUT(request: NextRequest, { params }: Params) {
     const { key } = await params;
     const body = await request.json();
 
-    // The block registry is the schema — anything not declared is dropped, so
+    // The block registry is the schema  anything not declared is dropped, so
     // a stale or hand-crafted payload cannot write arbitrary keys into the row.
     const definition = getBlockDefinition(key);
     if (!definition) {
@@ -40,7 +40,7 @@ export async function PUT(request: NextRequest, { params }: Params) {
 
     const allowed = new Set(definition.fields.map((field) => field.name));
     const data = Object.fromEntries(
-      Object.entries(body?.data ?? {}).filter(([name]) => allowed.has(name))
+      Object.entries(body?.data ?? {}).filter(([name]) => allowed.has(name)),
     );
 
     const block = await saveSiteBlock(key, data);

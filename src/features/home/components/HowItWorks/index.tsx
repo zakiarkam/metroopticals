@@ -4,7 +4,7 @@ import { Section, SectionHeading } from "@/components/common/Section";
 /**
  * Four-step explainer for the order journey.
  *
- * Buying prescription eyewear online is unfamiliar to most customers — the
+ * Buying prescription eyewear online is unfamiliar to most customers  the
  * question "what actually happens after I pay?" is the main hesitation, so it
  * gets answered on the home page rather than buried in the FAQ.
  */
@@ -33,26 +33,34 @@ export default function HowItWorks() {
     <Section>
       <SectionHeading
         eyebrow="How it works"
-        title="From frame to fitting in four steps"
-        description="No guesswork and no hidden lab fees — here is exactly what happens once you place an order."
+        title="From frame to fitting"
+        titleAccent="in four steps."
+        description="No guesswork and no hidden lab fees  here is exactly what happens once you place an order."
       />
 
-      <ol className="grid grid-cols-1 gap-px overflow-hidden rounded-2xl border border-gray-3 bg-gray-3 sm:grid-cols-2 lg:grid-cols-4">
+      {/*
+       * Ghost numerals on a hairline rather than numbered pills inside a
+       * bordered grid  the same treatment the lens guides use, so the two
+       * "here is how it works" sections on the site read as one system.
+       *
+       * An earlier attempt at ghost numerals set them at 7% opacity on ivory
+       * and they came out as smudges; `text-gray-3` is a solid warm tone at
+       * full opacity, which is why this one is legible.
+       */}
+      <ol className="grid grid-cols-1 gap-x-10 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
         {STEPS.map((step, i) => (
-          <li
-            key={step.title}
-            className="bg-gray-2 p-7 transition-colors duration-300 hover:bg-gray-8"
-          >
-            {/* One step number. The ghost numeral behind it was set at 7%
-                opacity on ivory, so it read as a smudge rather than a number. */}
-            <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-blue text-[13px] font-bold text-white">
-              {i + 1}
+          <li key={step.title} className="border-t border-gray-3 pt-6">
+            <span
+              aria-hidden
+              className="block font-display text-[3.25rem] font-bold leading-none tracking-[-0.04em] text-gray-3"
+            >
+              {String(i + 1).padStart(2, "0")}
             </span>
 
-            <h3 className="mt-5 text-[16px] font-bold text-dark">
+            <h3 className="mt-5 text-[15px] font-bold leading-snug text-dark">
               {step.title}
             </h3>
-            <p className="mt-2.5 text-[13.5px] leading-relaxed text-body">
+            <p className="mt-2.5 text-[14px] leading-relaxed text-body">
               {step.copy}
             </p>
           </li>

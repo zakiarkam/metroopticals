@@ -19,7 +19,10 @@ import InlineSpinner from "@/components/common/InlineSpinner";
 import { useDispatch } from "react-redux";
 import { api } from "@/store/services/api";
 import { userApi } from "@/features/users/api/user-api";
-import { CUSTOMER_TYPE_LABELS, type CustomerType } from "@/features/users/types/user";
+import {
+  CUSTOMER_TYPE_LABELS,
+  type CustomerType,
+} from "@/features/users/types/user";
 import AccountSidebar from "./AccountSidebar";
 import { inputClasses } from "@/components/common/form";
 
@@ -180,7 +183,8 @@ export default function MyAccount() {
         name: response.data.name ?? session?.user?.name ?? null,
         email: response.data.email ?? session?.user?.email ?? null,
         role: (session?.user as any)?.role ?? "CUSTOMER",
-        customerType: (response.data as any).customerType ?? editForm.customerType,
+        customerType:
+          (response.data as any).customerType ?? editForm.customerType,
         image: (session?.user as any)?.image ?? null,
         phone: response.data.phone ?? null,
         address: response.data.address ?? null,
@@ -195,7 +199,7 @@ export default function MyAccount() {
             api.util.invalidateTags([
               { type: "Users", id: updatedUser.id },
               { type: "Users", id: "LIST" },
-            ])
+            ]),
           );
         } catch (error) {
           console.warn("Failed to refresh session data:", error);
@@ -215,7 +219,7 @@ export default function MyAccount() {
   const isReady = mounted && status === "authenticated" && !!userForUI;
 
   const memberSince = useMemo(() => {
-    // No join date is better than today's date — the old fallback told a brand
+    // No join date is better than today's date  the old fallback told a brand
     // new visitor they had been a member since this morning.
     const createdAt = (session?.user as any)?.createdAt;
     if (!createdAt) return undefined;
@@ -242,7 +246,7 @@ export default function MyAccount() {
     label: string,
     value?: string | null,
     hint?: string,
-    span = false
+    span = false,
   ) => (
     <div
       key={label}
@@ -320,273 +324,289 @@ export default function MyAccount() {
                 </div>
 
                 <div className="p-5 sm:p-6">
-                {saveSuccess && (
-                  <div className="mb-5 flex items-start gap-2.5 rounded-xl border border-green/30 bg-green/10 px-4 py-3.5">
-                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green" />
-                    <p className="text-[13px] font-semibold text-green">
-                      Profile updated successfully.
-                    </p>
-                  </div>
-                )}
-
-                {!isEditingDetails ? (
-                  <div>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      {detailTile("Full name", profile?.name || fullName)}
-                      {detailTile("Email address", email, "Email cannot be changed")}
-                      {detailTile("Phone number", profile?.phone)}
-                      {detailTile(
-                        "Customer type",
-                        CUSTOMER_TYPE_LABELS[profile?.customerType || "END_USER"]
-                      )}
-                      {detailTile("City", profile?.city)}
-                      {detailTile("Postal code", profile?.postalCode)}
-                      {detailTile("Address", profile?.address, undefined, true)}
-                      {detailTile("Country", profile?.country, undefined, true)}
-                    </div>
-
-                    {profileError && (
-                      <p className="mt-4 text-[13px] text-red" role="alert">
-                        {profileError}
+                  {saveSuccess && (
+                    <div className="mb-5 flex items-start gap-2.5 rounded-xl border border-green/30 bg-green/10 px-4 py-3.5">
+                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green" />
+                      <p className="text-[13px] font-semibold text-green">
+                        Profile updated successfully.
                       </p>
-                    )}
-                  </div>
-                ) : (
-                  <form onSubmit={handleSaveDetails} className="space-y-4">
-                    {saveError && (
-                      <div className="flex items-start gap-2.5 rounded-xl border border-red/30 bg-red/10 px-4 py-3.5">
-                        <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red" />
-                        <p className="text-[13px] text-red">{saveError}</p>
-                      </div>
-                    )}
-
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <div>
-                        <label
-                          htmlFor="edit-firstname"
-                          className="mb-2 block text-[12.5px] font-semibold text-dark"
-                        >
-                          First Name
-                        </label>
-                        <input
-                          id="edit-firstname"
-                          type="text"
-                          value={editForm.firstName}
-                          onChange={(e) =>
-                            setEditForm({
-                              ...editForm,
-                              firstName: e.target.value,
-                            })
-                          }
-                          className={inputClasses}
-                          required
-                        />
-                      </div>
-
-                      <div>
-                        <label
-                          htmlFor="edit-lastname"
-                          className="mb-2 block text-[12.5px] font-semibold text-dark"
-                        >
-                          Last Name
-                        </label>
-                        <input
-                          id="edit-lastname"
-                          type="text"
-                          value={editForm.lastName}
-                          onChange={(e) =>
-                            setEditForm({
-                              ...editForm,
-                              lastName: e.target.value,
-                            })
-                          }
-                          className={inputClasses}
-                          required
-                        />
-                      </div>
-
-                      <div>
-                        <label
-                          htmlFor="edit-email"
-                          className="mb-2 block text-[12.5px] font-semibold text-dark"
-                        >
-                          Email Address
-                        </label>
-                        <input
-                          id="edit-email"
-                          type="email"
-                          value={editForm.email}
-                          disabled
-                          className="h-11 w-full cursor-not-allowed rounded-xl border border-gray-3 bg-gray-8 px-4 text-[14px] text-dark-5"
-                        />
-                        <p className="mt-1.5 text-[11px] text-dark-5">
-                          Email cannot be changed
-                        </p>
-                      </div>
-
-                      <div>
-                        <label
-                          htmlFor="edit-phone"
-                          className="mb-2 block text-[12.5px] font-semibold text-dark"
-                        >
-                          Phone Number
-                        </label>
-                        <input
-                          id="edit-phone"
-                          type="tel"
-                          value={editForm.phone}
-                          onChange={(e) =>
-                            setEditForm({
-                              ...editForm,
-                              phone: e.target.value,
-                            })
-                          }
-                          className={inputClasses}
-                          required
-                        />
-                      </div>
-
-                      <div>
-                        <label
-                          htmlFor="edit-customer-type"
-                          className="mb-2 block text-[12.5px] font-semibold text-dark"
-                        >
-                          Customer Type
-                        </label>
-                        <select
-                          id="edit-customer-type"
-                          value={editForm.customerType}
-                          onChange={(e) =>
-                            setEditForm({
-                              ...editForm,
-                              customerType: e.target.value as CustomerType,
-                            })
-                          }
-                          className={inputClasses}
-                        >
-                          {CUSTOMER_TYPE_OPTIONS.map((opt) => (
-                            <option key={opt.value} value={opt.value}>
-                              {opt.label}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div>
-                        <label
-                          htmlFor="edit-city"
-                          className="mb-2 block text-[12.5px] font-semibold text-dark"
-                        >
-                          City
-                        </label>
-                        <input
-                          id="edit-city"
-                          type="text"
-                          value={editForm.city}
-                          onChange={(e) =>
-                            setEditForm({ ...editForm, city: e.target.value })
-                          }
-                          className={inputClasses}
-                          required
-                        />
-                      </div>
-
-                      <div>
-                        <label
-                          htmlFor="edit-address"
-                          className="mb-2 block text-[12.5px] font-semibold text-dark"
-                        >
-                          Address
-                        </label>
-                        <input
-                          id="edit-address"
-                          type="text"
-                          value={editForm.address}
-                          onChange={(e) =>
-                            setEditForm({
-                              ...editForm,
-                              address: e.target.value,
-                            })
-                          }
-                          className={inputClasses}
-                          required
-                        />
-                      </div>
-
-                      <div>
-                        <label
-                          htmlFor="edit-postal"
-                          className="mb-2 block text-[12.5px] font-semibold text-dark"
-                        >
-                          Postal Code
-                        </label>
-                        <input
-                          id="edit-postal"
-                          type="text"
-                          value={editForm.postalCode}
-                          onChange={(e) =>
-                            setEditForm({
-                              ...editForm,
-                              postalCode: e.target.value,
-                            })
-                          }
-                          className={inputClasses}
-                          required
-                        />
-                      </div>
-
-                      <div className="sm:col-span-2">
-                        <label
-                          htmlFor="edit-country"
-                          className="mb-2 block text-[12.5px] font-semibold text-dark"
-                        >
-                          Country
-                        </label>
-                        <input
-                          id="edit-country"
-                          type="text"
-                          value={editForm.country}
-                          onChange={(e) =>
-                            setEditForm({
-                              ...editForm,
-                              country: e.target.value,
-                            })
-                          }
-                          className={inputClasses}
-                          required
-                        />
-                      </div>
                     </div>
+                  )}
 
-                    <div className="flex flex-wrap gap-3 pt-2">
-                      <button
-                        type="submit"
-                        disabled={isSaving}
-                        className="inline-flex h-11 items-center gap-2 rounded-xl bg-blue px-7 text-[13px] font-bold text-white transition-colors hover:bg-blue-dark disabled:cursor-not-allowed disabled:opacity-60"
-                      >
-                        {isSaving ? (
-                          <>
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            Saving…
-                          </>
-                        ) : (
-                          <>
-                            <Check className="h-4 w-4" />
-                            Save changes
-                          </>
+                  {!isEditingDetails ? (
+                    <div>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        {detailTile("Full name", profile?.name || fullName)}
+                        {detailTile(
+                          "Email address",
+                          email,
+                          "Email cannot be changed",
                         )}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleCancelEdit}
-                        disabled={isSaving}
-                        className="inline-flex h-11 items-center gap-2 rounded-xl border border-gray-3 px-7 text-[13px] font-semibold text-dark transition-colors hover:border-blue hover:text-blue disabled:cursor-not-allowed disabled:opacity-60"
-                      >
-                        Cancel
-                      </button>
+                        {detailTile("Phone number", profile?.phone)}
+                        {detailTile(
+                          "Customer type",
+                          CUSTOMER_TYPE_LABELS[
+                            profile?.customerType || "END_USER"
+                          ],
+                        )}
+                        {detailTile("City", profile?.city)}
+                        {detailTile("Postal code", profile?.postalCode)}
+                        {detailTile(
+                          "Address",
+                          profile?.address,
+                          undefined,
+                          true,
+                        )}
+                        {detailTile(
+                          "Country",
+                          profile?.country,
+                          undefined,
+                          true,
+                        )}
+                      </div>
+
+                      {profileError && (
+                        <p className="mt-4 text-[13px] text-red" role="alert">
+                          {profileError}
+                        </p>
+                      )}
                     </div>
-                  </form>
-                )}
+                  ) : (
+                    <form onSubmit={handleSaveDetails} className="space-y-4">
+                      {saveError && (
+                        <div className="flex items-start gap-2.5 rounded-xl border border-red/30 bg-red/10 px-4 py-3.5">
+                          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red" />
+                          <p className="text-[13px] text-red">{saveError}</p>
+                        </div>
+                      )}
+
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <div>
+                          <label
+                            htmlFor="edit-firstname"
+                            className="mb-2 block text-[12.5px] font-semibold text-dark"
+                          >
+                            First Name
+                          </label>
+                          <input
+                            id="edit-firstname"
+                            type="text"
+                            value={editForm.firstName}
+                            onChange={(e) =>
+                              setEditForm({
+                                ...editForm,
+                                firstName: e.target.value,
+                              })
+                            }
+                            className={inputClasses}
+                            required
+                          />
+                        </div>
+
+                        <div>
+                          <label
+                            htmlFor="edit-lastname"
+                            className="mb-2 block text-[12.5px] font-semibold text-dark"
+                          >
+                            Last Name
+                          </label>
+                          <input
+                            id="edit-lastname"
+                            type="text"
+                            value={editForm.lastName}
+                            onChange={(e) =>
+                              setEditForm({
+                                ...editForm,
+                                lastName: e.target.value,
+                              })
+                            }
+                            className={inputClasses}
+                            required
+                          />
+                        </div>
+
+                        <div>
+                          <label
+                            htmlFor="edit-email"
+                            className="mb-2 block text-[12.5px] font-semibold text-dark"
+                          >
+                            Email Address
+                          </label>
+                          <input
+                            id="edit-email"
+                            type="email"
+                            value={editForm.email}
+                            disabled
+                            className="h-11 w-full cursor-not-allowed rounded-xl border border-gray-3 bg-gray-8 px-4 text-[14px] text-dark-5"
+                          />
+                          <p className="mt-1.5 text-[11px] text-dark-5">
+                            Email cannot be changed
+                          </p>
+                        </div>
+
+                        <div>
+                          <label
+                            htmlFor="edit-phone"
+                            className="mb-2 block text-[12.5px] font-semibold text-dark"
+                          >
+                            Phone Number
+                          </label>
+                          <input
+                            id="edit-phone"
+                            type="tel"
+                            value={editForm.phone}
+                            onChange={(e) =>
+                              setEditForm({
+                                ...editForm,
+                                phone: e.target.value,
+                              })
+                            }
+                            className={inputClasses}
+                            required
+                          />
+                        </div>
+
+                        <div>
+                          <label
+                            htmlFor="edit-customer-type"
+                            className="mb-2 block text-[12.5px] font-semibold text-dark"
+                          >
+                            Customer Type
+                          </label>
+                          <select
+                            id="edit-customer-type"
+                            value={editForm.customerType}
+                            onChange={(e) =>
+                              setEditForm({
+                                ...editForm,
+                                customerType: e.target.value as CustomerType,
+                              })
+                            }
+                            className={inputClasses}
+                          >
+                            {CUSTOMER_TYPE_OPTIONS.map((opt) => (
+                              <option key={opt.value} value={opt.value}>
+                                {opt.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div>
+                          <label
+                            htmlFor="edit-city"
+                            className="mb-2 block text-[12.5px] font-semibold text-dark"
+                          >
+                            City
+                          </label>
+                          <input
+                            id="edit-city"
+                            type="text"
+                            value={editForm.city}
+                            onChange={(e) =>
+                              setEditForm({ ...editForm, city: e.target.value })
+                            }
+                            className={inputClasses}
+                            required
+                          />
+                        </div>
+
+                        <div>
+                          <label
+                            htmlFor="edit-address"
+                            className="mb-2 block text-[12.5px] font-semibold text-dark"
+                          >
+                            Address
+                          </label>
+                          <input
+                            id="edit-address"
+                            type="text"
+                            value={editForm.address}
+                            onChange={(e) =>
+                              setEditForm({
+                                ...editForm,
+                                address: e.target.value,
+                              })
+                            }
+                            className={inputClasses}
+                            required
+                          />
+                        </div>
+
+                        <div>
+                          <label
+                            htmlFor="edit-postal"
+                            className="mb-2 block text-[12.5px] font-semibold text-dark"
+                          >
+                            Postal Code
+                          </label>
+                          <input
+                            id="edit-postal"
+                            type="text"
+                            value={editForm.postalCode}
+                            onChange={(e) =>
+                              setEditForm({
+                                ...editForm,
+                                postalCode: e.target.value,
+                              })
+                            }
+                            className={inputClasses}
+                            required
+                          />
+                        </div>
+
+                        <div className="sm:col-span-2">
+                          <label
+                            htmlFor="edit-country"
+                            className="mb-2 block text-[12.5px] font-semibold text-dark"
+                          >
+                            Country
+                          </label>
+                          <input
+                            id="edit-country"
+                            type="text"
+                            value={editForm.country}
+                            onChange={(e) =>
+                              setEditForm({
+                                ...editForm,
+                                country: e.target.value,
+                              })
+                            }
+                            className={inputClasses}
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap gap-3 pt-2">
+                        <button
+                          type="submit"
+                          disabled={isSaving}
+                          className="inline-flex h-11 items-center gap-2 rounded-xl bg-blue px-7 text-[13px] font-bold text-white transition-colors hover:bg-blue-dark disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {isSaving ? (
+                            <>
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              Saving…
+                            </>
+                          ) : (
+                            <>
+                              <Check className="h-4 w-4" />
+                              Save changes
+                            </>
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleCancelEdit}
+                          disabled={isSaving}
+                          className="inline-flex h-11 items-center gap-2 rounded-xl border border-gray-3 px-7 text-[13px] font-semibold text-dark transition-colors hover:border-blue hover:text-blue disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </form>
+                  )}
                 </div>
               </div>
             </div>

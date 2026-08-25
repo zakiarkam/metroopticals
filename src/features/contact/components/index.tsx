@@ -12,7 +12,10 @@ import {
   Send,
 } from "lucide-react";
 
+import Image from "next/image";
+
 import SiteContainer from "@/components/common/SiteContainer";
+import { PillLink, SectionIntro } from "@/components/common/editorial";
 import ContactChannels from "@/components/common/ContactChannels";
 import PageHero from "@/components/common/PageHero";
 import { contactApi } from "@/features/contact/api/contact-api";
@@ -23,7 +26,6 @@ type FormStatus = {
   type: "success" | "error";
   message: string;
 } | null;
-
 
 const HOURS = [
   { days: "Mon – Fri", time: "9:00 am – 7:00 pm" },
@@ -107,9 +109,35 @@ const Contact = () => {
       <PageHero
         eyebrow="We're here to help"
         title="Get in touch"
-        description="Questions about a prescription, a frame, or an order? Call the store, message us on WhatsApp, or send the form — whichever is easiest."
+        description="Questions about a prescription, a frame, or an order? Call the store, message us on WhatsApp, or send the form  whichever is easiest."
         crumbs={[{ label: "Contact" }]}
       />
+
+      {/* Opens the page the way the lens guides do  a split heading and one
+          photograph of the actual shop, so "get in touch" has a place attached
+          to it rather than landing straight on a form. */}
+      <section className="border-b border-gray-3 bg-gray-2 py-12 lg:py-16">
+        <SiteContainer>
+          <SectionIntro
+            eyebrow="Come and see us"
+            title="Colombo shop,"
+            titleAccent="open six days a week."
+            body="Walk in for a free fitting, a lens adjustment or an eye test  no appointment needed. If it is quicker to ask than to visit, the form below reaches the same people."
+            action={<PillLink href="#contact-form">Send a message</PillLink>}
+          />
+
+          <div className="relative mt-12 aspect-[21/9] overflow-hidden rounded-2xl bg-gray-1">
+            <Image
+              src="/images/store/consult.jpg"
+              alt="An optician fitting a pair of spectacles onto a smiling customer in the store"
+              fill
+              priority
+              sizes="100vw"
+              className="object-cover"
+            />
+          </div>
+        </SiteContainer>
+      </section>
 
       <section className="bg-gray-1 py-10 lg:py-14">
         <SiteContainer>
@@ -119,7 +147,9 @@ const Contact = () => {
               className="flex flex-col gap-6 lg:sticky lg:self-start"
               style={{ top: "calc(var(--site-header-height, 132px) + 1.5rem)" }}
             >
-              <div className="overflow-hidden rounded-2xl border border-gray-3 bg-gray-2 shadow-2">
+              {/* Flattened to hairlines: a bordered panel inside a bordered
+                  panel was two boxes doing one job. */}
+              <div className="overflow-hidden border-y border-gray-3 bg-gray-2">
                 <div className="border-b border-gray-3 px-6 py-4">
                   <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-blue">
                     Reach us
@@ -154,7 +184,7 @@ const Contact = () => {
               </div>
 
               {/* ------------------------ hours ------------------------ */}
-              <div className="rounded-2xl border border-gray-3 bg-gray-2 p-6 shadow-2">
+              <div className="border-y border-gray-3 bg-gray-2 px-6 py-6">
                 <p className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.18em] text-blue">
                   <Clock className="h-4 w-4" />
                   Opening hours
@@ -183,7 +213,10 @@ const Contact = () => {
             </div>
 
             {/* ------------------------ form ------------------------ */}
-            <div className="rounded-2xl border border-gray-3 bg-gray-2 p-6 shadow-2 sm:p-8">
+            <div
+              id="contact-form"
+              className="scroll-mt-32 rounded-2xl border border-gray-3 bg-gray-2 p-6 shadow-2 sm:p-8"
+            >
               <h2 className="text-[1.35rem] font-bold tracking-tight text-dark sm:text-[1.6rem]">
                 Send us a message
               </h2>
@@ -259,7 +292,9 @@ const Contact = () => {
                       className="mb-2 block text-[12.5px] font-semibold text-dark"
                     >
                       Phone{" "}
-                      <span className="font-normal text-dark-5">(optional)</span>
+                      <span className="font-normal text-dark-5">
+                        (optional)
+                      </span>
                     </label>
                     <input
                       type="tel"
@@ -305,7 +340,7 @@ const Contact = () => {
                     name="message"
                     id="message"
                     rows={6}
-                    placeholder="Tell us what you need — the more detail, the faster we can help."
+                    placeholder="Tell us what you need  the more detail, the faster we can help."
                     value={message}
                     onChange={(event) => setMessage(event.target.value)}
                     className={textareaClasses}

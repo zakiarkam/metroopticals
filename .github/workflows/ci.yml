@@ -63,7 +63,7 @@ jobs:
         run: npx prisma migrate deploy
 
       - name: Check schema and migrations have not drifted apart
-        # Exits non-zero when the migrated database differs from schema.prisma —
+        # Exits non-zero when the migrated database differs from schema.prisma
         # i.e. someone edited the schema without generating a migration, which
         # would make Railway's `migrate deploy` a silent no-op.
         run: |

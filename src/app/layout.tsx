@@ -11,8 +11,8 @@ import { siteConfig } from "@/config/site";
 /**
  * One family, the whole site.
  *
- * Poppins is a geometric sans — circular bowls, straight-tailed descenders,
- * horizontal terminals — which is the look the brief asked for. Running a
+ * Poppins is a geometric sans  circular bowls, straight-tailed descenders,
+ * horizontal terminals  which is the look the brief asked for. Running a
  * single family across headings, body, navigation and the admin is what makes
  * the result read as a designed system rather than a page with two fonts on it;
  * hierarchy comes from weight, size and tracking instead.
@@ -22,7 +22,7 @@ import { siteConfig } from "@/config/site";
  * swapping the display face later is a one-line change here rather than an
  * edit to every heading in the codebase.
  *
- * Weights are limited to the four actually used (regular through bold) —
+ * Weights are limited to the four actually used (regular through bold)
  * every extra weight is another font file on the critical path.
  */
 const poppins = Poppins({

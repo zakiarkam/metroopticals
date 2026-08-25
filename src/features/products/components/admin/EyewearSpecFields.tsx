@@ -24,7 +24,7 @@ import {
 } from "@/features/products/utils/eyewear";
 import type { ProductFormData } from "./types";
 
-/** Sentinel for "no selection" — Radix Select forbids an empty-string value. */
+/** Sentinel for "no selection"  Radix Select forbids an empty-string value. */
 const NONE = "__none__";
 
 interface EyewearSpecFieldsProps {
@@ -50,7 +50,7 @@ export default function EyewearSpecFields({ form }: EyewearSpecFieldsProps) {
     label: string,
     placeholder: string,
     hint: string,
-    unit: string
+    unit: string,
   ) => (
     <FormField
       control={form.control}
@@ -58,8 +58,7 @@ export default function EyewearSpecFields({ form }: EyewearSpecFieldsProps) {
       render={({ field }) => (
         <FormItem>
           <FormLabel>
-            {label}{" "}
-            <span className="font-normal text-dark-5">({unit})</span>
+            {label} <span className="font-normal text-dark-5">({unit})</span>
           </FormLabel>
           <FormControl>
             <Input
@@ -80,7 +79,7 @@ export default function EyewearSpecFields({ form }: EyewearSpecFieldsProps) {
   const selectField = (
     name: "frameShape" | "rimType" | "gender",
     label: string,
-    labels: Record<string, string>
+    labels: Record<string, string>,
   ) => (
     <FormField
       control={form.control}
@@ -119,7 +118,7 @@ export default function EyewearSpecFields({ form }: EyewearSpecFieldsProps) {
           Eyewear specification
         </h3>
         <p className="mt-1 text-custom-xs text-body">
-          Optional — fill these in for frames and sunglasses. Leave blank for
+          Optional fill these in for frames and sunglasses. Leave blank for
           accessories, solutions and other non-frame products.
         </p>
       </header>
@@ -130,21 +129,21 @@ export default function EyewearSpecFields({ form }: EyewearSpecFieldsProps) {
           "Lens width",
           "50",
           "Width of one lens, 20–90mm.",
-          "mm"
+          "mm",
         )}
         {numberField(
           "bridgeWidth",
           "Bridge width",
           "17",
           "Gap between lenses, 8–40mm.",
-          "mm"
+          "mm",
         )}
         {numberField(
           "templeLength",
           "Temple length",
           "140",
           "Arm length, 100–200mm.",
-          "mm"
+          "mm",
         )}
       </div>
 
@@ -198,7 +197,7 @@ export default function EyewearSpecFields({ form }: EyewearSpecFieldsProps) {
           "Weight",
           "11",
           "1–200g. Under 20g shows as “Lightweight”.",
-          "g"
+          "g",
         )}
         {selectField("frameShape", "Shape", FRAME_SHAPE_LABELS)}
         {selectField("rimType", "Rim", RIM_TYPE_LABELS)}

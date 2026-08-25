@@ -5,6 +5,8 @@ export type CartItem = {
   userId: number;
   productId: number;
   quantity: number;
+  /** The chosen colourway; empty when the product lists no colours. */
+  color?: string;
   createdAt: string;
   updatedAt: string;
   product: {
@@ -15,16 +17,19 @@ export type CartItem = {
     images: string[];
     stock: number;
     status: string;
+    frameColors?: string[];
   };
 };
 
 export type AddToCartInput = {
   productId: number;
   quantity: number;
+  color?: string;
 };
 
 export type UpdateCartItemInput = {
   quantity: number;
+  color?: string;
 };
 
 export const getCartItems = async (): Promise<{ cartItems: CartItem[] }> => {

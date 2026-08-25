@@ -13,6 +13,8 @@ export interface OrderItem {
   quantity: number;
   price: number;
   discountedPrice?: number | null;
+  /** The colourway as sold, frozen at checkout. */
+  color?: string | null;
   createdAt: string;
   product: {
     id: number;

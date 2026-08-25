@@ -5,13 +5,7 @@ import quickViewReducer from "./features/quickView-slice";
 import cartReducer from "./features/cart-slice";
 import wishlistReducer from "./features/wishlist-slice";
 import productDetailsReducer from "./features/product-details";
-import adsCacheReducer from "./features/ads-cache";
 import categoriesCacheReducer from "./features/categories-cache";
-import dashboardCacheReducer from "./features/dashboard-cache";
-import ordersCacheReducer from "./features/orders-cache";
-import productsCacheReducer from "./features/products-cache";
-import sessionCacheReducer from "./features/session-cache";
-import usersCacheReducer from "./features/users-cache";
 import { api } from "./services/api";
 
 import { TypedUseSelectorHook, useSelector } from "react-redux";
@@ -56,13 +50,7 @@ export const store = configureStore({
     cartReducer,
     wishlistReducer,
     productDetailsReducer,
-    adsCache: adsCacheReducer,
     categoriesCache: categoriesCacheReducer,
-    dashboardCache: dashboardCacheReducer,
-    ordersCache: ordersCacheReducer,
-    productsCache: productsCacheReducer,
-    sessionCache: sessionCacheReducer,
-    usersCache: usersCacheReducer,
     [api.reducerPath]: api.reducer,
   },
   preloadedState,

@@ -80,10 +80,15 @@ export const Wishlist = () => {
               action={{ label: "Sign in", href: "/log-in" }}
             />
           ) : hasItems ? (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+            /* Rows rather than a grid. A wishlist is a list of decisions still
+               to be made, and the row layout gives each saved frame its price,
+               its stock and both actions on one line  a grid of tiles made
+               people open every one again to remember why they saved it. */
+            <div className="flex flex-col gap-4">
               {(wishlistItems as WishlistItem[]).map((item) => (
                 <ProductCard
                   key={item.id}
+                  layout="list"
                   onRemove={async () => {
                     await removeFromWishlist(item.id);
                   }}

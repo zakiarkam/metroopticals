@@ -26,11 +26,16 @@ const isSvg = (value: string) => value.endsWith(".svg");
 /* ----------------------------------------------------------- brand strip */
 
 /**
- * The designer-brand logo row under the hero.
+ * The designer-brand row under the hero.
  *
  * Reads the Brand table rather than a content block: brands are catalogue data
  * that products point at and the shop sidebar filters on, so a second, editable
  * copy of the list would drift out of step with what is actually stocked.
+ *
+ * Logos sit on their own white tile at full contrast. The row used to print
+ * them straight onto the page at 55% opacity, which is a common "logo garden"
+ * treatment but made dark wordmarks like Ray-Ban and Swarovski hard to read
+ * and gave every brand a different apparent weight depending on its artwork.
  */
 export function BrandStrip({
   brands,
@@ -48,41 +53,62 @@ export function BrandStrip({
   if (!stocked.length) return null;
 
   return (
-    <div className="border-y border-gray-3 bg-gray-2 py-6">
+    <section className="border-y border-gray-3 bg-gray-2 py-8 sm:py-10">
       <SiteContainer>
-        <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-5 sm:gap-x-14">
-          {stocked.slice(0, 8).map((brand) => {
+        <div className="mb-5 flex items-baseline justify-between gap-4">
+          <h2 className="text-[11px] font-bold uppercase tracking-[0.18em] text-dark-5">
+            Shop by brand
+          </h2>
+          <Link
+            href="/shop-with-sidebar"
+            className="text-[12.5px] font-bold text-blue underline-offset-2 hover:underline"
+          >
+            View all
+          </Link>
+        </div>
+
+        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+          {stocked.slice(0, 12).map((brand) => {
             const logo = getBrandLogoUrl(brand.logo);
 
             return (
-              <Link
-                key={brand.id}
-                href={`/shop-with-sidebar?brands=${encodeURIComponent(brand.slug)}`}
-                aria-label={`Shop ${brand.name}`}
-                className="opacity-55 transition-opacity duration-300 hover:opacity-100"
-              >
-                {logo ? (
-                  <span className="relative block h-7 w-[92px] sm:h-8 sm:w-[110px]">
-                    <Image
-                      src={logo}
-                      alt={brand.name}
-                      fill
-                      sizes="110px"
-                      unoptimized={isSvg(logo)}
-                      className="object-contain"
-                    />
-                  </span>
-                ) : (
-                  <span className="text-[14px] font-bold uppercase tracking-[0.12em] text-dark">
-                    {brand.name}
-                  </span>
-                )}
-              </Link>
+              <li key={brand.id}>
+                <Link
+                  href={`/shop-with-sidebar?brands=${encodeURIComponent(brand.slug)}`}
+                  aria-label={`Shop ${brand.name}`}
+                  className="group flex h-full flex-col items-center justify-center rounded-2xl border border-gray-3 bg-gray-1 px-4 py-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-blue/40 hover:shadow-2"
+                >
+                  {/* With a logo the name is repeated underneath, the way a
+                      brand wall reads. Without one the wordmark *is* the name,
+                      so printing it twice would just be a stutter. */}
+                  {logo ? (
+                    <>
+                      <span className="relative flex h-10 w-full items-center justify-center overflow-hidden">
+                        <Image
+                          src={logo}
+                          alt={brand.name}
+                          fill
+                          sizes="(max-width: 768px) 45vw, 180px"
+                          unoptimized={isSvg(logo)}
+                          className="object-contain"
+                        />
+                      </span>
+                      <span className="mt-3 line-clamp-1 text-center text-[13px] font-semibold text-dark-2 transition-colors group-hover:text-blue">
+                        {brand.name}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="flex min-h-[3.25rem] items-center text-center text-[15px] font-bold uppercase tracking-[0.1em] text-dark transition-colors group-hover:text-blue">
+                      {brand.name}
+                    </span>
+                  )}
+                </Link>
+              </li>
             );
           })}
-        </div>
+        </ul>
       </SiteContainer>
-    </div>
+    </section>
   );
 }
 
@@ -150,7 +176,7 @@ export function PromoBanners({ data }: { data: BlockData }) {
 /**
  * Home page social proof, drawn from published customer reviews.
  *
- * Nothing here is authored by the shop — if no review has been approved yet the
+ * Nothing here is authored by the shop  if no review has been approved yet the
  * section hides itself rather than showing invented testimonials.
  */
 export function LiveReviews({

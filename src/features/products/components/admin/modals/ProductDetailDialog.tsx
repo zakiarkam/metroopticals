@@ -9,10 +9,7 @@ import {
   buildSpecRows,
   hasEyewearSpec,
 } from "@/features/products/utils/eyewear";
-import {
-  getProductImageUrl,
-  getProductCatalogueUrl,
-} from "@/lib/storageUtils";
+import { getProductImageUrl, getProductCatalogueUrl } from "@/lib/storageUtils";
 import {
   Dialog,
   DialogContent,
@@ -82,8 +79,7 @@ const ProductDetailDialog: React.FC<ProductDetailDialogProps> = ({
       minute: "2-digit",
     });
 
-  const getImageUrl = (fileName: string) =>
-    getProductImageUrl(fileName) ?? "";
+  const getImageUrl = (fileName: string) => getProductImageUrl(fileName) ?? "";
 
   const getCatalogueUrl = (fileName: string) =>
     getProductCatalogueUrl(fileName) ?? "";
@@ -107,13 +103,13 @@ const ProductDetailDialog: React.FC<ProductDetailDialogProps> = ({
       DRAFT: "bg-gray-2 text-dark-3",
       SCHEDULED: "bg-blue-light-5 text-blue",
     }),
-    []
+    [],
   );
 
   const discountPct =
     product?.discountedPrice && product?.price
       ? Math.round(
-          ((product.price - product.discountedPrice) / product.price) * 100
+          ((product.price - product.discountedPrice) / product.price) * 100,
         )
       : 0;
 
@@ -348,18 +344,6 @@ const ProductDetailDialog: React.FC<ProductDetailDialogProps> = ({
                         </>
                       )}
                     </div>
-
-                    {/* Product ID (scroll-safe) */}
-                    {/* <div className="rounded-lg border border-gray-3 bg-gray-1 px-3 py-2">
-                      <p className="text-[11px] text-body uppercase tracking-wide">
-                        Product ID
-                      </p>
-                      <div className="mt-1 overflow-x-auto">
-                        <p className="font-mono text-xs md:text-sm text-dark whitespace-nowrap">
-                          {product.id}
-                        </p>
-                      </div>
-                    </div> */}
                   </div>
                 </section>
               </div>
@@ -374,7 +358,7 @@ const ProductDetailDialog: React.FC<ProductDetailDialogProps> = ({
                 </p>
               </section>
 
-              {/* Eyewear specification — frames only */}
+              {/* Eyewear specification  frames only */}
               {hasEyewearSpec(product) && (
                 <section className="rounded-xl border border-gray-3 bg-gray-2 shadow-sm p-3 md:p-4">
                   <h3 className="text-sm md:text-base font-semibold text-dark">

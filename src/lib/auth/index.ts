@@ -5,6 +5,7 @@ import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { prisma } from "@/lib/db/prisma";
 import { verifyUser } from "@/features/auth/services/auth-service";
 import { logger, serializeError } from "@/lib/logger";
+import { rateLimit } from "@/lib/rate-limit";
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
@@ -27,6 +28,13 @@ export const authOptions: NextAuthOptions = {
         if (!credentials?.email || !credentials?.password) {
           throw new Error("Email and password are required");
         }
+
+        // Throttle brute-force attempts per account.
+        rateLimit(
+          `login:${credentials.email.toLowerCase()}`,
+          10,
+          15 * 60 * 1000
+        );
 
         try {
           const user = await verifyUser(

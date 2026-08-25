@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { requireAdmin } from "@/lib/middleware/auth";
 import { adminUpdateUserSchema } from "@/features/users/validators/user";
-import { createSuccessResponse, handleError } from "@/lib/errors";
+import { createSuccessResponse, handleError, ForbiddenError } from "@/lib/errors";
 import {
   getUserById,
   updateUserByAdmin,
@@ -32,10 +32,21 @@ export async function PATCH(
   const id = Number(rawId);
   const start = Date.now();
   try {
-    await requireAdmin();
+    const session = await requireAdmin();
 
     const body = await request.json();
     const data = adminUpdateUserSchema.parse(body);
+
+    // Only a SUPER_ADMIN may grant elevated roles or modify a SUPER_ADMIN.
+    if (session.user.role !== "SUPER_ADMIN") {
+      if (data.role && data.role !== "CUSTOMER") {
+        throw new ForbiddenError("Only a super admin can assign admin roles");
+      }
+      const target = await getUserById(id);
+      if (target.role === "SUPER_ADMIN") {
+        throw new ForbiddenError("Only a super admin can modify a super admin");
+      }
+    }
 
     const user = await updateUserByAdmin(id, data);
 
@@ -62,7 +73,15 @@ export async function DELETE(
   const id = Number(rawId);
   const start = Date.now();
   try {
-    await requireAdmin();
+    const session = await requireAdmin();
+
+    if (session.user.role !== "SUPER_ADMIN") {
+      const target = await getUserById(id);
+      if (target.role === "SUPER_ADMIN") {
+        throw new ForbiddenError("Only a super admin can delete a super admin");
+      }
+    }
+
     const result = await deleteUserByAdmin(id);
 
     await logApiAction({

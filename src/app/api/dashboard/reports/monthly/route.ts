@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { requireAuth } from "@/lib/middleware/auth";
+import { requireAdmin } from "@/lib/middleware/auth";
 import { handleError } from "@/lib/errors";
 import { logger, serializeError } from "@/lib/logger";
 import {
@@ -19,7 +19,7 @@ const CACHE_TTL_MS = 5 * 60 * 1000;
 
 export async function GET(request: NextRequest) {
   try {
-    await requireAuth();
+    await requireAdmin();
 
     const { searchParams } = new URL(request.url);
     const month = searchParams.get("month") || "";
@@ -128,6 +128,11 @@ export async function GET(request: NextRequest) {
     };
 
     const storeDataset = (dataset: Awaited<ReturnType<typeof fetchReportDataset>>) => {
+      // Bound the in-process cache so varied date ranges can't grow it forever.
+      if (reportCache.size >= 50) {
+        const oldestKey = reportCache.keys().next().value;
+        if (oldestKey !== undefined) reportCache.delete(oldestKey);
+      }
       reportCache.set(cacheKey, {
         dataset,
         expiresAt: Date.now() + CACHE_TTL_MS,

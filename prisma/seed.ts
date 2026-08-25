@@ -10,6 +10,12 @@ const slugify = (value: string) =>
     .replace(/(^-|-$)/g, "");
 
 async function main() {
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(
+      "Refusing to seed: NODE_ENV is 'production'. The seed data contains known development passwords and must never run against a production database.",
+    );
+  }
+
   // ---------- Users ----------
   const adminPassword = await bcrypt.hash("admin123", 10);
   await prisma.user.upsert({
@@ -92,7 +98,7 @@ async function main() {
 
   // ---------- Products ----------
   // Prices in LKR. Images are filenames stored in the R2 bucket
-  // under product/image/ — replace with real uploads.
+  // under product/image/  replace with real uploads.
   const products = [
     {
       title: "Classic Black Acetate Frame",
@@ -270,7 +276,9 @@ async function main() {
         category: {
           connect: { id: categories[categorySlug].id },
         },
-        ...(brandSlug ? { brand: { connect: { id: brands[brandSlug].id } } } : {}),
+        ...(brandSlug
+          ? { brand: { connect: { id: brands[brandSlug].id } } }
+          : {}),
       },
     });
   }

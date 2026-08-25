@@ -10,6 +10,7 @@ import {
   upsertReview,
 } from "@/features/reviews/services/review-service";
 import { logApiAction, logApiError } from "@/lib/audit";
+import { rateLimit } from "@/lib/rate-limit";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -52,6 +53,7 @@ export async function POST(request: NextRequest, { params }: Params) {
   try {
     const session = await requireAuth();
     const userId = Number((session.user as any).id);
+    rateLimit(`review:${userId}`, 10, 60 * 60 * 1000);
 
     const { id } = await params;
     const productId = Number(id);

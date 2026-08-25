@@ -3,8 +3,14 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import {
-  BarChart3, CalendarClock, ImageOff, LayoutTemplate, Pencil,
-  Plus, Search, Trash2,
+  BarChart3,
+  CalendarClock,
+  ImageOff,
+  LayoutTemplate,
+  Pencil,
+  Plus,
+  Search,
+  Trash2,
 } from "lucide-react";
 import AddAdvertisementDialog from "./modals/AddAdvertisementDialog";
 import EditAdvertisementDialog from "./modals/EditAdvertisementDialog";
@@ -30,7 +36,7 @@ import { useGetAdvertisementsQuery } from "@/store/services/api";
  *
  * Organised by zone rather than as one flat table, because the question an
  * admin actually arrives with is "what is running in the home billboard right
- * now?" — not "show me every ad ever made". Each zone lists its slots, so an
+ * now?"  not "show me every ad ever made". Each zone lists its slots, so an
  * empty slot is visible as an empty slot instead of being invisible.
  */
 
@@ -45,7 +51,7 @@ const formatDate = (value?: string | null) =>
       })
     : null;
 
-/** An ad can be active but outside its window — worth calling out. */
+/** An ad can be active but outside its window  worth calling out. */
 const liveState = (ad: Advertisement) => {
   if (ad.status !== "active") return "paused" as const;
   const now = Date.now();
@@ -196,7 +202,7 @@ const AdCard = ({
   );
 };
 
-/** An unfilled slot — shows the dummy artwork the site is currently using. */
+/** An unfilled slot  shows the dummy artwork the site is currently using. */
 const EmptySlotCard = ({
   meta,
   slotIndex,
@@ -233,7 +239,7 @@ const EmptySlotCard = ({
           Slot {meta.slots[slotIndex]} is empty
         </span>
         <span className="block text-[12px] text-dark-4">
-          Sample artwork is showing — upload a photo to replace it.
+          Sample artwork is showing upload a photo to replace it.
         </span>
       </span>
     </div>
@@ -262,25 +268,23 @@ const AdvertisementsTab: React.FC<AdvertisementsTabProps> = () => {
     return () => clearTimeout(timer);
   }, [search]);
 
-  // The board shows every ad at once — grouping happens client-side, so the
+  // The board shows every ad at once  grouping happens client-side, so the
   // page load is one request rather than one per zone.
-  const {
-    data,
-    isLoading,
-    error,
-    refetch,
-  } = useGetAdvertisementsQuery({ limit: 100 }, { refetchOnFocus: true });
+  const { data, isLoading, error, refetch } = useGetAdvertisementsQuery(
+    { limit: 100 },
+    { refetchOnFocus: true },
+  );
 
   useEffect(() => {
     if (!error) return;
     Toast.error(
-      (error as any)?.data?.message || "Could not load advertisements."
+      (error as any)?.data?.message || "Could not load advertisements.",
     );
   }, [error]);
 
   const advertisements = useMemo(
     () => data?.advertisements ?? [],
-    [data?.advertisements]
+    [data?.advertisements],
   );
 
   const byPlacement = useMemo(() => {
@@ -292,7 +296,7 @@ const AdvertisementsTab: React.FC<AdvertisementsTabProps> = () => {
         term
           ? ad.title.toLowerCase().includes(term) ||
             (ad.link || "").toLowerCase().includes(term)
-          : true
+          : true,
       )
       .forEach((ad) => {
         const list = grouped.get(ad.placement) ?? [];
@@ -301,7 +305,9 @@ const AdvertisementsTab: React.FC<AdvertisementsTabProps> = () => {
       });
 
     grouped.forEach((list) =>
-      list.sort((a, b) => (a.slot ?? 1) - (b.slot ?? 1) || b.priority - a.priority)
+      list.sort(
+        (a, b) => (a.slot ?? 1) - (b.slot ?? 1) || b.priority - a.priority,
+      ),
     );
 
     return grouped;
@@ -310,7 +316,9 @@ const AdvertisementsTab: React.FC<AdvertisementsTabProps> = () => {
   const stats = useMemo(() => {
     const live = advertisements.filter((ad) => liveState(ad) === "live").length;
     const zonesFilled = AD_PLACEMENT_IDS.filter((id) =>
-      advertisements.some((ad) => ad.placement === id && ad.status === "active")
+      advertisements.some(
+        (ad) => ad.placement === id && ad.status === "active",
+      ),
     ).length;
     const clicks = advertisements.reduce((sum, ad) => sum + ad.clickCount, 0);
 
@@ -356,7 +364,7 @@ const AdvertisementsTab: React.FC<AdvertisementsTabProps> = () => {
   };
 
   const visibleGroups = AD_PLACEMENT_GROUPS.filter(
-    (group) => zoneFilter === "all" || zoneFilter === group
+    (group) => zoneFilter === "all" || zoneFilter === group,
   );
 
   return (
@@ -369,8 +377,8 @@ const AdvertisementsTab: React.FC<AdvertisementsTabProps> = () => {
           </h2>
           <p className="mt-1 max-w-2xl text-[13.5px] leading-relaxed text-dark-4">
             Every advertising zone on the storefront. Empty slots fall back to
-            sample artwork, so the site always looks complete — upload a photo
-            to take one over.
+            sample artwork, so the site always looks complete upload a photo to
+            take one over.
           </p>
         </div>
 
@@ -457,7 +465,7 @@ const AdvertisementsTab: React.FC<AdvertisementsTabProps> = () => {
         <div className="space-y-8">
           {visibleGroups.map((group) => {
             const placements = AD_PLACEMENT_IDS.filter(
-              (id) => AD_PLACEMENTS[id].group === group
+              (id) => AD_PLACEMENTS[id].group === group,
             );
 
             return (
@@ -524,7 +532,7 @@ const AdvertisementsTab: React.FC<AdvertisementsTabProps> = () => {
                           .map((slot, index) => ({ slot, index }))
                           .filter(
                             ({ slot }) =>
-                              !ads.some((ad) => (ad.slot ?? 1) === slot)
+                              !ads.some((ad) => (ad.slot ?? 1) === slot),
                           )
                           .map(({ slot, index }) => (
                             <EmptySlotCard

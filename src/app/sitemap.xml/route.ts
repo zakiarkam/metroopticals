@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { buildSiteUrl } from "@/lib/seo";
+import { lensSlugs } from "@/config/lenses";
 
 export const dynamic = "force-dynamic";
 
@@ -77,6 +78,18 @@ export async function GET() {
       changeFrequency: "daily",
       priority: 0.8,
     },
+    {
+      url: buildSiteUrl("/lenses"),
+      changeFrequency: "monthly",
+      priority: 0.7,
+    },
+    // The lens guides are static pages built from `@/config/lenses`, so they
+    // are listed straight from that module rather than hand-maintained here.
+    ...lensSlugs.map((slug) => ({
+      url: buildSiteUrl(`/lenses/${slug}`),
+      changeFrequency: "monthly" as const,
+      priority: 0.6,
+    })),
   ];
 
   let productRoutes: SitemapUrl[] = [];

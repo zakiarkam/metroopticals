@@ -1,5 +1,5 @@
 /**
- * Post-migration bootstrap — runs on every deploy, before the new container
+ * Post-migration bootstrap  runs on every deploy, before the new container
  * takes traffic (Railway "Pre-deploy Command").
  *
  * It must be safe to run on an already-populated database, so every step is an
@@ -36,7 +36,7 @@ function fail(message) {
 async function bootstrapAdmin() {
   if (!email || !password) {
     console.log(
-      "[bootstrap] ADMIN_BOOTSTRAP_EMAIL / ADMIN_BOOTSTRAP_PASSWORD not set — skipping admin bootstrap."
+      "[bootstrap] ADMIN_BOOTSTRAP_EMAIL / ADMIN_BOOTSTRAP_PASSWORD not set  skipping admin bootstrap."
     );
     return true;
   }
@@ -78,8 +78,8 @@ async function bootstrapAdmin() {
     return true;
   }
 
-  // The account is already there. Only ever widen its role and — on explicit
-  // request — rotate its password. Never silently overwrite a working login.
+  // The account is already there. Only ever widen its role and  on explicit
+  // request  rotate its password. Never silently overwrite a working login.
   const data = {};
 
   if (existing.role !== "SUPER_ADMIN") {
@@ -91,7 +91,7 @@ async function bootstrapAdmin() {
   }
 
   if (Object.keys(data).length === 0) {
-    console.log(`[bootstrap] Admin ${email} already correct — nothing to do.`);
+    console.log(`[bootstrap] Admin ${email} already correct  nothing to do.`);
     return true;
   }
 
@@ -113,7 +113,7 @@ async function main() {
 
   const ok = await bootstrapAdmin();
   if (!ok) {
-    throw new Error("Admin bootstrap failed — see errors above.");
+    throw new Error("Admin bootstrap failed  see errors above.");
   }
 }
 

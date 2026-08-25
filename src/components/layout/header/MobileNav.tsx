@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { ChevronDown, Headset, Heart, MapPin } from "lucide-react";
 import {
@@ -9,11 +10,12 @@ import {
   type NavCatalogue,
   type NavItem,
 } from "@/features/site-content/components/site/MegaMenu";
+import { getBrandLogoUrl } from "@/lib/storageUtils";
 
 /**
  * The small-screen navigation drawer.
  *
- * It expands the same panels the desktop mega menu draws — the old drawer
+ * It expands the same panels the desktop mega menu draws  the old drawer
  * showed top-level labels only, so brands, shapes and lens types were
  * unreachable on a phone. Sections are accordions because the full link set
  * is far taller than a phone viewport.
@@ -92,21 +94,64 @@ export default function MobileNav({
                           {column.title}
                         </p>
                       )}
-                      <ul className="grid grid-cols-2 gap-x-4 gap-y-2">
-                        {(column.links ?? []).map((link, linkIndex) => (
-                          <li key={linkIndex}>
-                            <Link
-                              href={link.href || "#"}
-                              onClick={onNavigate}
-                              className={`block text-[13.5px] transition-colors hover:text-blue ${
-                                link.accent ? "text-red" : "text-body"
-                              }`}
-                            >
-                              {link.label}
-                            </Link>
-                          </li>
-                        ))}
-                      </ul>
+
+                      {/* Brands read as logos on a phone too  the same tiles
+                          the desktop panel draws, two to a row. */}
+                      {column.source === "brands" ? (
+                        <ul className="grid grid-cols-2 gap-2.5">
+                          {(column.links ?? []).map((link, linkIndex) => {
+                            const logo = getBrandLogoUrl(link.logo);
+
+                            return (
+                              <li key={linkIndex}>
+                                <Link
+                                  href={link.href || "#"}
+                                  onClick={onNavigate}
+                                  className="block rounded-xl border border-gray-3 bg-gray-1 p-2.5"
+                                >
+                                  {logo ? (
+                                    <>
+                                      <span className="relative flex h-9 items-center justify-center overflow-hidden">
+                                        <Image
+                                          src={logo}
+                                          alt={link.label || ""}
+                                          fill
+                                          sizes="140px"
+                                          unoptimized={logo.endsWith(".svg")}
+                                          className="object-contain"
+                                        />
+                                      </span>
+                                      <span className="mt-1.5 block truncate text-center text-[12px] font-semibold text-dark-2">
+                                        {link.label}
+                                      </span>
+                                    </>
+                                  ) : (
+                                    <span className="flex min-h-[3.25rem] items-center justify-center text-center text-[12px] font-bold uppercase leading-snug tracking-[0.08em] text-dark">
+                                      {link.label}
+                                    </span>
+                                  )}
+                                </Link>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      ) : (
+                        <ul className="grid grid-cols-2 gap-x-4 gap-y-2">
+                          {(column.links ?? []).map((link, linkIndex) => (
+                            <li key={linkIndex}>
+                              <Link
+                                href={link.href || "#"}
+                                onClick={onNavigate}
+                                className={`block text-[13.5px] transition-colors hover:text-blue ${
+                                  link.accent ? "text-red" : "text-body"
+                                }`}
+                              >
+                                {link.label}
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                     </div>
                   ))}
                 </div>

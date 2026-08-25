@@ -41,10 +41,8 @@ const Cart = () => {
 
   const itemCount = cartItems.reduce(
     (sum: number, item: { quantity: number }) => sum + item.quantity,
-    0
+    0,
   );
-
-
 
   return (
     <>
@@ -54,7 +52,7 @@ const Cart = () => {
         description={
           cartItems.length
             ? `${itemCount} ${itemCount === 1 ? "item" : "items"} ready to check out. Lenses are fitted after your prescription is confirmed.`
-            : "Nothing here yet — everything you add will be saved to your account."
+            : "Nothing here yet  everything you add will be saved to your account."
         }
         crumbs={[{ label: "Cart" }]}
         actions={
@@ -109,7 +107,7 @@ const Cart = () => {
             <EmptyState
               icon={<ShoppingCart className="h-7 w-7" />}
               title="Your cart is empty"
-              description="Browse the collection and add a frame — we'll hold it here while you decide on lenses."
+              description="Browse the collection and add a frame  we'll hold it here while you decide on lenses."
               action={{ label: "Start shopping", href: "/shop-with-sidebar" }}
             />
           )}

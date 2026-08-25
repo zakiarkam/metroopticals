@@ -23,6 +23,7 @@ type ProductItemData = {
     thumbnails?: string[];
   };
   catalogueFile?: string | null;
+  frameColors?: string[] | null;
   description?: string;
   category?: { name?: string } | null;
   brand?: { name?: string } | null;
@@ -35,19 +36,25 @@ const pickImages = (item: ProductItemData) => {
     item.imgs?.previews,
     item.imgs?.thumbnails,
   ];
-  return candidates.find((list) => Array.isArray(list) && list.length > 0) ?? [];
+  return (
+    candidates.find((list) => Array.isArray(list) && list.length > 0) ?? []
+  );
 };
 
 const ProductItem = ({
   item,
+  featured = false,
   hoverActions: _hoverActions = false,
 }: {
   item: ProductItemData;
+  /** Lifts this card in a carousel  see `featured` on <ProductCard />. */
+  featured?: boolean;
   /** Retained for call-site compatibility; the card is always interactive. */
   hoverActions?: boolean;
 }) => (
   <ProductCard
     showDescription
+    featured={featured}
     item={{
       id: item.id,
       title: item.title,
@@ -59,6 +66,7 @@ const ProductItem = ({
       description: item.description,
       categoryName: item.category?.name ?? null,
       brandName: item.brand?.name ?? null,
+      frameColors: item.frameColors ?? null,
       raw: item,
     }}
   />

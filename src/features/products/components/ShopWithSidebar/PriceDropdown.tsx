@@ -9,7 +9,7 @@ interface PriceDropdownProps {
   onPriceChange: (range: { from: number; to: number }) => void;
   minPrice: number;
   maxPrice: number;
-  /** Render bare, without the card chrome and its own "Price" header —
+  /** Render bare, without the card chrome and its own "Price" header
    *  used when the parent filter panel already provides the section. */
   embedded?: boolean;
 }

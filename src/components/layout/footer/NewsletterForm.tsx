@@ -6,7 +6,7 @@ import { Check, Loader2, Mail } from "lucide-react";
 /**
  * Footer newsletter sign-up.
  *
- * The field used to post nowhere — a required input and a Subscribe button
+ * The field used to post nowhere  a required input and a Subscribe button
  * with no handler, which looks exactly like a working form. There is no
  * subscriber table, so the address is sent through the contact endpoint and
  * lands in the shop's inbox as a sign-up request. That is a real destination,
@@ -21,7 +21,7 @@ export default function NewsletterForm({
 }) {
   const [email, setEmail] = useState("");
   const [state, setState] = useState<"idle" | "sending" | "done" | "error">(
-    "idle"
+    "idle",
   );
 
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -56,7 +56,7 @@ export default function NewsletterForm({
         className="flex items-center gap-2.5 rounded-xl bg-white px-5 py-4 text-[14px] font-semibold text-dark"
       >
         <Check className="h-5 w-5 text-green" aria-hidden />
-        You&apos;re on the list — watch your inbox for new arrivals.
+        You&apos;re on the list watch your inbox for new arrivals.
       </p>
     );
   }
@@ -91,7 +91,10 @@ export default function NewsletterForm({
       </form>
 
       {state === "error" && (
-        <p role="alert" className="mt-2 text-[12.5px] font-semibold text-red-dark">
+        <p
+          role="alert"
+          className="mt-2 text-[12.5px] font-semibold text-red-dark"
+        >
           That didn&apos;t go through. Please try again, or email us directly.
         </p>
       )}

@@ -1,6 +1,12 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useSearchParams } from "next/navigation";
 import {
   LayoutGrid,
@@ -38,7 +44,14 @@ import Pagination from "@/components/ui/pagination";
 
 const PRICE_MIN = 0;
 const PRICE_MAX = 100000;
-const PAGE_SIZE = 12;
+/**
+ * Products per page.
+ *
+ * Nine rather than twelve: it fills the three-column grid exactly, and with a
+ * catalogue this size twelve meant `totalPages` was always 1, so the pagination
+ * below the grid never rendered at all.
+ */
+const PAGE_SIZE = 9;
 
 type ProductStyle = "grid" | "list";
 
@@ -56,7 +69,11 @@ const SIZE_LABELS: Record<string, string> = {
 };
 
 /** Human label for one ticked filter value, used by the removable chips. */
-const filterValueLabel = (key: FilterKey, value: string, facets: ProductFacets | null) => {
+const filterValueLabel = (
+  key: FilterKey,
+  value: string,
+  facets: ProductFacets | null,
+) => {
   switch (key) {
     case "genders":
       return (GENDER_LABELS as Record<string, string>)[value] ?? value;
@@ -101,7 +118,7 @@ const ShopToolbar = React.memo(function ShopToolbar({
         : "border-gray-3 bg-gray-1 text-dark hover:border-blue hover:text-blue"
     }`;
 
-  // "Showing 49–60 of 340" — the old copy printed the current page size against
+  // "Showing 49–60 of 340"  the old copy printed the current page size against
   // the total, so page five still claimed to be showing the first twelve.
   const count =
     total === 0 ? (
@@ -128,7 +145,11 @@ const ShopToolbar = React.memo(function ShopToolbar({
           Filters
         </button>
 
-        <CustomSelect options={sortOptions} value={sortBy} onChange={setSortBy} />
+        <CustomSelect
+          options={sortOptions}
+          value={sortBy}
+          onChange={setSortBy}
+        />
       </div>
 
       <div className="flex items-center gap-4">
@@ -204,7 +225,9 @@ const ShopSidebar = React.memo(function ShopSidebar({
       className={`sidebar-content fixed inset-y-0 left-0 z-50 w-[86vw] max-w-[360px] overflow-y-auto bg-gray-1 p-4 shadow-4 transition-transform duration-200 ease-out xl:static xl:z-auto xl:w-[300px] xl:max-w-none xl:flex-shrink-0 xl:translate-x-0 xl:overflow-visible xl:bg-transparent xl:p-0 xl:shadow-none ${
         open ? "translate-x-0" : "-translate-x-full"
       }`}
-      style={{ paddingTop: open ? "var(--site-header-height, 132px)" : undefined }}
+      style={{
+        paddingTop: open ? "var(--site-header-height, 132px)" : undefined,
+      }}
       aria-hidden={!open ? undefined : false}
     >
       <div className="flex flex-col gap-4">
@@ -281,8 +304,8 @@ const ShopSidebar = React.memo(function ShopSidebar({
 /**
  * Read the attribute filters out of the URL.
  *
- * Every entry point into the shop — a mega-menu shape link, a brand logo, a
- * shared or bookmarked URL — arrives as query parameters. Seeding state from
+ * Every entry point into the shop  a mega-menu shape link, a brand logo, a
+ * shared or bookmarked URL  arrives as query parameters. Seeding state from
  * them is what makes those links actually filter.
  *
  * Values are comma-separated to match the API's `csvList` query schema.
@@ -314,28 +337,34 @@ export default function ShopWithSidebar() {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const [searchTerm, setSearchTerm] = useState(
-    () => initialParams.get("search") ?? ""
+    () => initialParams.get("search") ?? "",
   );
   const [selectedCategories, setSelectedCategories] = useState<string[]>(() => {
-    const raw = initialParams.get("categories") || initialParams.get("category");
-    return raw ? raw.split(",").map((v) => v.trim()).filter(Boolean) : [];
+    const raw =
+      initialParams.get("categories") || initialParams.get("category");
+    return raw
+      ? raw
+          .split(",")
+          .map((v) => v.trim())
+          .filter(Boolean)
+      : [];
   });
   const [priceRange, setPriceRange] = useState(() => ({
     from: Number(initialParams.get("minPrice")) || PRICE_MIN,
     to: Number(initialParams.get("maxPrice")) || PRICE_MAX,
   }));
   const [sortBy, setSortBy] = useState(
-    () => initialParams.get("sortBy") ?? "createdAt"
+    () => initialParams.get("sortBy") ?? "createdAt",
   );
   /** The "Offers" entry point in the navigation arrives as `?onSale=true`. */
   const [onSale, setOnSale] = useState(
-    () => initialParams.get("onSale") === "true"
+    () => initialParams.get("onSale") === "true",
   );
   const [currentPage, setCurrentPage] = useState(1);
 
   /** Attribute filters (gender, brand, size, shape, colour, material, rim). */
   const [filterSelection, setFilterSelection] = useState<FilterSelection>(() =>
-    selectionFromParams(new URLSearchParams(initialParams.toString()))
+    selectionFromParams(new URLSearchParams(initialParams.toString())),
   );
 
   const { data, loading, error, updateParams } = useProducts({
@@ -347,11 +376,11 @@ export default function ShopWithSidebar() {
 
   const { categories, loading: categoriesLoading } = useCategories();
 
-  // Facet counts follow the category scope, not the ticked attribute filters —
+  // Facet counts follow the category scope, not the ticked attribute filters
   // otherwise ticking "Round" would drop every other shape out of the list.
   const { facets, loading: facetsLoading } = useFacets(
     selectedCategories[0],
-    searchTerm || undefined
+    searchTerm || undefined,
   );
 
   /* ------------------------------------------------------------- the query */
@@ -373,7 +402,7 @@ export default function ShopWithSidebar() {
   /**
    * Everything except the page number. When this changes the shopper is
    * looking at a different result set, so the query has to restart at page one
-   * — computing it here rather than in a second effect keeps it to one request.
+   *  computing it here rather than in a second effect keeps it to one request.
    */
   const querySignature = [
     debouncedSearch.trim(),
@@ -391,7 +420,7 @@ export default function ShopWithSidebar() {
       Object.entries(filterSelection).map(([key, values]) => [
         key,
         values.length ? values : undefined,
-      ])
+      ]),
     );
 
     // Child categories are stored as brands in the catalogue tree.
@@ -450,7 +479,7 @@ export default function ShopWithSidebar() {
 
   /* -------------------------------------------------------- URL reflection */
 
-  // Keeps the address bar shareable without pushing a history entry per tick —
+  // Keeps the address bar shareable without pushing a history entry per tick
   // ticking five brands used to mean five Back presses to leave the page.
   useEffect(() => {
     const params = new URLSearchParams();
@@ -460,8 +489,10 @@ export default function ShopWithSidebar() {
     Object.entries(filterSelection).forEach(([key, values]) => {
       if (values.length) params.set(key, values.join(","));
     });
-    if (priceRange.from !== PRICE_MIN) params.set("minPrice", String(priceRange.from));
-    if (priceRange.to !== PRICE_MAX) params.set("maxPrice", String(priceRange.to));
+    if (priceRange.from !== PRICE_MIN)
+      params.set("minPrice", String(priceRange.from));
+    if (priceRange.to !== PRICE_MAX)
+      params.set("maxPrice", String(priceRange.to));
     if (sortBy !== "createdAt") params.set("sortBy", sortBy);
     if (onSale) params.set("onSale", "true");
 
@@ -469,9 +500,16 @@ export default function ShopWithSidebar() {
     window.history.replaceState(
       null,
       "",
-      qs ? `${window.location.pathname}?${qs}` : window.location.pathname
+      qs ? `${window.location.pathname}?${qs}` : window.location.pathname,
     );
-  }, [searchTerm, selectedCategories, filterSelection, priceRange, sortBy, onSale]);
+  }, [
+    searchTerm,
+    selectedCategories,
+    filterSelection,
+    priceRange,
+    sortBy,
+    onSale,
+  ]);
 
   /* ------------------------------------------------------------- the drawer */
 
@@ -527,7 +565,7 @@ export default function ShopWithSidebar() {
 
   const clearAttributeFilters = useCallback(
     () => setFilterSelection(EMPTY_SELECTION),
-    []
+    [],
   );
 
   /**
@@ -565,9 +603,9 @@ export default function ShopWithSidebar() {
             key,
             value,
             label: filterValueLabel(key, value, facets),
-          }))
+          })),
       ),
-    [facets, filterSelection]
+    [facets, filterSelection],
   );
 
   const hasAnyFilter =
@@ -583,7 +621,7 @@ export default function ShopWithSidebar() {
       <PageHero
         eyebrow="The collection"
         title="Shop all eyewear"
-        description="Prescription frames, sunglasses and lenses — filter by shape, size, brand or budget to narrow it down."
+        description="Prescription frames, sunglasses and lenses  filter by shape, size, brand or budget to narrow it down."
         crumbs={[{ label: "Shop" }]}
       />
 
@@ -639,40 +677,10 @@ export default function ShopWithSidebar() {
                 onOpenFilters={() => setDrawerOpen(true)}
               />
 
-              {(activeChips.length > 0 || onSale) && (
-                <div className="mb-5 flex flex-wrap items-center gap-2">
-                  {onSale && (
-                    <button
-                      type="button"
-                      onClick={() => setOnSale(false)}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-blue/40 bg-blue-light-5 py-1.5 pl-3.5 pr-2.5 text-[12.5px] font-semibold text-blue-dark transition-colors hover:bg-blue-light-4"
-                    >
-                      On sale
-                      <X className="h-3.5 w-3.5" aria-hidden />
-                      <span className="sr-only">Remove filter</span>
-                    </button>
-                  )}
-                  {activeChips.map((chip) => (
-                    <button
-                      key={`${chip.key}:${chip.value}`}
-                      type="button"
-                      onClick={() => toggleFilterValue(chip.key, chip.value)}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-blue/40 bg-blue-light-5 py-1.5 pl-3.5 pr-2.5 text-[12.5px] font-semibold capitalize text-blue-dark transition-colors hover:bg-blue-light-4"
-                    >
-                      {chip.label}
-                      <X className="h-3.5 w-3.5" aria-hidden />
-                      <span className="sr-only">Remove filter</span>
-                    </button>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={clearAttributeFilters}
-                    className="ml-1 text-[12.5px] font-semibold text-dark-4 underline underline-offset-2 transition-colors hover:text-blue"
-                  >
-                    Clear
-                  </button>
-                </div>
-              )}
+              {/* No chip row here on purpose. The sidebar already shows every
+                  ticked filter with its checkbox, so repeating them above the
+                  grid stated the same thing twice and pushed the first row of
+                  products further down the page. */}
 
               {loading && (
                 <ProductsLoadingSkeleton
@@ -686,7 +694,7 @@ export default function ShopWithSidebar() {
                 <div
                   className={
                     productStyle === "grid"
-                      ? "grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 2xl:grid-cols-4"
+                      ? "grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3"
                       : "flex flex-col gap-4"
                   }
                 >
@@ -707,6 +715,7 @@ export default function ShopWithSidebar() {
                         brandName: item.brand?.name ?? null,
                         rating: item.rating ?? null,
                         reviewCount: item.reviewCount ?? null,
+                        frameColors: item.frameColors ?? null,
                         raw: item,
                       }}
                     />
@@ -718,7 +727,7 @@ export default function ShopWithSidebar() {
                 <EmptyState
                   icon={<PackageSearch className="h-7 w-7" />}
                   title="No frames match those filters"
-                  description="Try widening the price range or clearing a filter or two — there is a good chance we stock something close."
+                  description="Try widening the price range or clearing a filter or two  there is a good chance we stock something close."
                   action={
                     hasAnyFilter
                       ? { label: "Clear all filters", onClick: clearEverything }

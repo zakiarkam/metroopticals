@@ -9,6 +9,11 @@ import type { BlockData } from "@/features/site-content/types/site-content";
  * Sits between the hero and the catalogue so the things customers ask about
  * most (fit, lens quality, delivery, aftercare) are answered before they start
  * browsing. The promises come from the `site.trust` content block.
+ *
+ * Drawn on warm near-black. As a light strip it sat between an ivory hero and
+ * an ivory catalogue and read as a run of small print; the dark ground gives
+ * the hero a floor to land on and makes four short promises look deliberate
+ * rather than like a footer that drifted up the page.
  */
 
 export default function TrustBar({ data }: { data?: BlockData }) {
@@ -21,27 +26,46 @@ export default function TrustBar({ data }: { data?: BlockData }) {
   if (!promises.length) return null;
 
   return (
-    <section className="border-y border-gray-3 bg-gray-2">
-      <SiteContainer>
+    <section className="relative overflow-hidden bg-dark">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(80% 140% at 12% 0%, rgba(192,156,108,0.16) 0%, transparent 62%)",
+        }}
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 opacity-[0.14]"
+        style={{
+          backgroundImage:
+            "radial-gradient(rgba(233,218,192,0.5) 1px, transparent 1px)",
+          backgroundSize: "22px 22px",
+        }}
+      />
+
+      <SiteContainer className="relative">
         {/* `divide-*` draws the separators rather than five conditional border
             classes per cell, which used to double up at the `sm` breakpoint. */}
-        <ul className="grid grid-cols-1 divide-y divide-gray-3 sm:grid-cols-2 sm:divide-x lg:grid-cols-4 lg:divide-y-0">
+        <ul className="grid grid-cols-1 divide-y divide-white/10 sm:grid-cols-2 sm:divide-x lg:grid-cols-4 lg:divide-y-0">
           {promises.map(({ icon, label, copy }, i) => (
             <li
               key={`${label}-${i}`}
-              className="flex items-start gap-4 px-0 py-6 sm:px-6 sm:py-7 lg:first:pl-0 lg:last:pr-0"
+              className="group px-0 py-7 sm:px-7 sm:py-9 lg:first:pl-0 lg:last:pr-0"
             >
-              <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-blue/25 bg-blue/10 text-blue">
+              <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-blue-light/30 bg-blue-light/10 text-blue-light transition-colors duration-300 group-hover:border-blue-light/60 group-hover:bg-blue-light/20">
                 <ContentIcon name={icon} className="h-5 w-5" />
               </span>
-              <div className="min-w-0">
-                <p className="text-[14px] font-bold text-dark">{label}</p>
-                {copy && (
-                  <p className="mt-1 text-[12.5px] leading-relaxed text-body">
-                    {copy}
-                  </p>
-                )}
-              </div>
+
+              <p className="mt-5 font-display text-[15.5px] font-bold leading-snug tracking-[-0.01em] text-white">
+                {label}
+              </p>
+              {copy && (
+                <p className="mt-2 text-[13px] leading-relaxed text-gray-4">
+                  {copy}
+                </p>
+              )}
             </li>
           ))}
         </ul>

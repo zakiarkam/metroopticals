@@ -215,18 +215,6 @@ const StatusDialog: React.FC<StatusDialogProps> = ({
                       Out of Stock
                     </span>
                   </SelectItem>
-                  {/* <SelectItem value="DRAFT">
-                    <span className="flex items-center gap-2">
-                      <span className="h-2 w-2 rounded-full bg-gray-4"></span>
-                      Draft
-                    </span>
-                  </SelectItem>
-                  <SelectItem value="SCHEDULED">
-                    <span className="flex items-center gap-2">
-                      <span className="h-2 w-2 rounded-full bg-blue"></span>
-                      Scheduled
-                    </span>
-                  </SelectItem> */}
                 </SelectContent>
               </Select>
             </div>

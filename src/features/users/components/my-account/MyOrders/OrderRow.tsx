@@ -15,7 +15,7 @@ type OrderRowProps = {
   isPrintPending: boolean;
 };
 
-/** Status chips. Every label is an AA-contrast token on its own tint — `SHIPPED` used to be `text-blue-light`, which is decoration-only gold. */
+/** Status chips. Every label is an AA-contrast token on its own tint  `SHIPPED` used to be `text-blue-light`, which is decoration-only gold. */
 const statusStyles: Record<OrderStatus, string> = {
   PENDING: "border-yellow/30 bg-yellow/10 text-yellow",
   CONFIRMED: "border-blue/30 bg-blue/10 text-blue",
@@ -33,7 +33,7 @@ const formatDate = (value: string) =>
   });
 
 const resolveImage = (
-  images?: string[] | { previews?: string[]; thumbnails?: string[] }
+  images?: string[] | { previews?: string[]; thumbnails?: string[] },
 ) => {
   if (!images) return null;
 
@@ -45,7 +45,9 @@ const resolveImage = (
     if (images.thumbnails?.length) flatList.push(...images.thumbnails);
   }
 
-  return flatList.map((value) => getProductImageUrl(value)).find(Boolean) || null;
+  return (
+    flatList.map((value) => getProductImageUrl(value)).find(Boolean) || null
+  );
 };
 
 const OrderRow: React.FC<OrderRowProps> = ({
@@ -107,7 +109,10 @@ const OrderRow: React.FC<OrderRowProps> = ({
         <div className="min-w-[180px] flex-1">
           <p className="text-[15px] font-semibold capitalize text-dark">
             {productUrl ? (
-              <Link href={productUrl} className="transition-colors hover:text-blue">
+              <Link
+                href={productUrl}
+                className="transition-colors hover:text-blue"
+              >
                 {firstItem?.product?.title ?? "Order items"}
               </Link>
             ) : (
@@ -115,6 +120,9 @@ const OrderRow: React.FC<OrderRowProps> = ({
             )}
           </p>
           <p className="mt-1 text-[12.5px] text-dark-5">
+            {/* The colourway is part of what was bought, so the summary line
+                names it rather than making the customer open the invoice. */}
+            {firstItem?.color ? `${firstItem.color} · ` : ""}
             {extraItems > 0
               ? `+ ${extraItems} more ${extraItems === 1 ? "item" : "items"}`
               : "1 item"}

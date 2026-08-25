@@ -7,7 +7,7 @@ import AdZoneView from "./AdZoneView";
 /**
  * Server-rendered advertisement zone.
  *
- * Reads the database directly, so the artwork is in the HTML on first paint —
+ * Reads the database directly, so the artwork is in the HTML on first paint
  * use this wherever the surrounding page is a server component. Inside client
  * trees (the shop, cart and product pages) use `AdZoneClient` instead.
  */
@@ -23,7 +23,7 @@ export default async function AdZone({
   className?: string;
   priority?: boolean;
 }) {
-  // A dead advertisements table must never take the page down with it — the
+  // A dead advertisements table must never take the page down with it  the
   // zone falls back to its dummy artwork exactly as it does when unconfigured.
   const ads = await getBannerAdvertisements(placement).catch(() => []);
 

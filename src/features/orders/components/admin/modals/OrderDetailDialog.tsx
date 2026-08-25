@@ -52,7 +52,7 @@ const OrderDetailDialog: React.FC<OrderDetailDialogProps> = ({
       Toast.error(
         err?.response?.data?.message ||
           err?.message ||
-          "Failed to load order details"
+          "Failed to load order details",
       );
 
       onClose();
@@ -93,7 +93,7 @@ const OrderDetailDialog: React.FC<OrderDetailDialogProps> = ({
   }, []);
 
   const resolveImage = (
-    images?: string[] | { previews?: string[]; thumbnails?: string[] }
+    images?: string[] | { previews?: string[]; thumbnails?: string[] },
   ) => {
     if (!images) return null;
 
@@ -250,7 +250,7 @@ const OrderDetailDialog: React.FC<OrderDetailDialogProps> = ({
                   <div className="flex items-center gap-2">
                     <span
                       className={`inline-flex w-fit rounded-full px-2.5 py-1 text-[11px] font-semibold ${statusPill(
-                        order.status
+                        order.status,
                       )}`}
                     >
                       {order.status}
@@ -356,6 +356,10 @@ const OrderDetailDialog: React.FC<OrderDetailDialogProps> = ({
                                   </h5>
                                   <p className="text-xs md:text-sm text-body mt-1">
                                     {item.product.category.name}
+                                    {/* The colourway as sold  what the shelf
+                                        is picked from, so it sits with the
+                                        product name rather than in a note. */}
+                                    {item.color ? ` · ${item.color}` : ""}
                                   </p>
                                 </div>
 
@@ -402,14 +406,6 @@ const OrderDetailDialog: React.FC<OrderDetailDialogProps> = ({
                       {formatPrice(order.subtotal)}
                     </span>
                   </div>
-                  {/* <div className="flex items-center justify-between gap-3">
-                    <span className="text-xs md:text-sm text-body">
-                      Shipping Fee
-                    </span>
-                    <span className="text-xs md:text-sm font-semibold text-dark">
-                      {formatPrice(order.shippingFee)}
-                    </span>
-                  </div> */}
                   <div className="h-px bg-gray-2 my-2" />
                   <div className="flex items-center justify-between gap-3">
                     <span className="text-sm md:text-base font-semibold text-dark">

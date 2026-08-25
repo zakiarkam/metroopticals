@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronDown } from "lucide-react";
-import { getAdvertisementImageUrl } from "@/lib/storageUtils";
+import { getAdvertisementImageUrl, getBrandLogoUrl } from "@/lib/storageUtils";
 
 /**
  * Primary navigation with drop-down panels.
@@ -22,7 +22,13 @@ import { getAdvertisementImageUrl } from "@/lib/storageUtils";
  * was simpler but stayed stuck open after navigating on touch devices.
  */
 
-export type NavLink = { label?: string; href?: string; accent?: boolean };
+export type NavLink = {
+  label?: string;
+  href?: string;
+  accent?: boolean;
+  /** Set on catalogue-sourced brand rows so the panel can draw the mark. */
+  logo?: string | null;
+};
 
 /** Columns that fill themselves from catalogue data rather than content. */
 export type NavSource = "" | "brands" | "shapes" | "genders";
@@ -46,11 +52,23 @@ export type NavItem = {
   promoCtaHref?: string;
 };
 
-/** Live catalogue rows the menu can render without another round trip. */
+/**
+ * Live catalogue rows the menu can render without another round trip.
+ *
+ * Brands carry their logo as well as their name: the brands panel is a wall of
+ * marks rather than a list of words, which is how shoppers actually recognise
+ * eyewear labels.
+ */
+export type NavCatalogueRow = {
+  label: string;
+  value: string;
+  logo?: string | null;
+};
+
 export type NavCatalogue = {
-  brands: { label: string; value: string }[];
-  shapes: { label: string; value: string }[];
-  genders: { label: string; value: string }[];
+  brands: NavCatalogueRow[];
+  shapes: NavCatalogueRow[];
+  genders: NavCatalogueRow[];
 };
 
 const EMPTY_CATALOGUE: NavCatalogue = { brands: [], shapes: [], genders: [] };
@@ -67,7 +85,7 @@ const SOURCE_PARAM: Record<Exclude<NavSource, "">, keyof NavCatalogue> = {
  *
  * A column either lists authored links or fills itself from the catalogue.
  * Catalogue columns only ever contain values that have stock behind them, so
- * the menu cannot offer a filter that lands on an empty grid — "Kids" and
+ * the menu cannot offer a filter that lands on an empty grid  "Kids" and
  * "Browline" both used to do exactly that.
  */
 function resolveColumns(item: NavItem, catalogue: NavCatalogue): NavColumn[] {
@@ -83,6 +101,7 @@ function resolveColumns(item: NavItem, catalogue: NavCatalogue): NavColumn[] {
         links: rows.map((row) => ({
           label: row.label,
           href: `/shop-with-sidebar?${key}=${encodeURIComponent(row.value)}`,
+          logo: row.logo ?? null,
         })),
       };
     })
@@ -92,13 +111,97 @@ function resolveColumns(item: NavItem, catalogue: NavCatalogue): NavColumn[] {
 const hasPanel = (item: NavItem, catalogue: NavCatalogue) =>
   resolveColumns(item, catalogue).length > 0;
 
+/* ------------------------------------------------------- the brands panel */
+
+/**
+ * The brands drop-down.
+ *
+ * Brands are recognised by their mark, not by their name in a list, so this
+ * column draws every brand the admin has added as a logo tile  the same set
+ * the shop sidebar filters on, so a brand added in the admin appears here on
+ * its next page load with no content edit. A brand with no logo uploaded falls
+ * back to its name set as a wordmark, which keeps the grid even.
+ */
+function BrandColumn({
+  column,
+  onNavigate,
+  shopAllHref,
+}: {
+  column: NavColumn;
+  onNavigate: () => void;
+  shopAllHref?: string;
+}) {
+  const links = column.links ?? [];
+
+  return (
+    <div className="min-w-0 flex-1">
+      <div className="mb-4 flex items-baseline justify-between gap-4">
+        <p className="text-[10.5px] font-bold uppercase tracking-[0.16em] text-dark-5">
+          {column.title || "Brands"}
+        </p>
+        {shopAllHref && (
+          <Link
+            href={shopAllHref}
+            onClick={onNavigate}
+            className="text-[12px] font-bold text-blue underline-offset-2 hover:underline"
+          >
+            View all
+          </Link>
+        )}
+      </div>
+
+      {/* Fixed-width tiles rather than a stretching grid: a shop with three
+          brands would otherwise draw three tiles the width of the panel. */}
+      <ul className="flex flex-wrap gap-3">
+        {links.map((link, index) => {
+          const logo = getBrandLogoUrl(link.logo);
+
+          return (
+            <li key={index}>
+              <Link
+                href={link.href || "#"}
+                onClick={onNavigate}
+                title={link.label}
+                className="group/brand flex h-[104px] w-[168px] flex-col items-center justify-center rounded-xl border border-gray-3 bg-gray-1 px-3 py-3 transition-all hover:-translate-y-0.5 hover:border-blue/40 hover:shadow-2"
+              >
+                {logo ? (
+                  <>
+                    <span className="relative flex h-11 w-full items-center justify-center overflow-hidden">
+                      <Image
+                        src={logo}
+                        alt={link.label || ""}
+                        fill
+                        sizes="168px"
+                        unoptimized={logo.endsWith(".svg")}
+                        className="object-contain"
+                      />
+                    </span>
+                    <span className="mt-2.5 block w-full truncate text-center text-[12.5px] font-semibold text-dark-2 transition-colors group-hover/brand:text-blue">
+                      {link.label}
+                    </span>
+                  </>
+                ) : (
+                  // No logo uploaded: the name set as a wordmark is the tile.
+                  <span className="text-center text-[13px] font-bold uppercase leading-snug tracking-[0.08em] text-dark transition-colors group-hover/brand:text-blue">
+                    {link.label}
+                  </span>
+                )}
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
 /* -------------------------------------------------------------- the panel */
 
 /**
  * A single drop-down.
  *
  * Columns are capped at 220px and the promo at a fixed 280px so a panel with
- * one column looks the same weight as a panel with three — the previous
+ * one column looks the same weight as a panel with three  the previous
  * `minmax(0,1fr)` filler stretched a lone column across the viewport.
  */
 function Panel({
@@ -116,30 +219,39 @@ function Panel({
   return (
     <div className="mx-auto flex w-full max-w-[1440px] items-start gap-10 px-4 py-8 sm:px-6 lg:px-8">
       <div className="flex min-w-0 flex-1 flex-wrap gap-x-12 gap-y-7">
-        {columns.map((column, index) => (
-          <div key={index} className="min-w-[168px]">
-            {column.title && (
-              <p className="mb-3 text-[10.5px] font-bold uppercase tracking-[0.16em] text-dark-5">
-                {column.title}
-              </p>
-            )}
-            <ul className="space-y-2">
-              {(column.links ?? []).map((link, linkIndex) => (
-                <li key={linkIndex}>
-                  <Link
-                    href={link.href || "#"}
-                    onClick={onNavigate}
-                    className={`text-[14px] font-medium transition-colors hover:text-blue ${
-                      link.accent ? "text-red" : "text-dark-2"
-                    }`}
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
+        {columns.map((column, index) =>
+          column.source === "brands" ? (
+            <BrandColumn
+              key={index}
+              column={column}
+              onNavigate={onNavigate}
+              shopAllHref={item.href}
+            />
+          ) : (
+            <div key={index} className="min-w-[168px]">
+              {column.title && (
+                <p className="mb-3 text-[10.5px] font-bold uppercase tracking-[0.16em] text-dark-5">
+                  {column.title}
+                </p>
+              )}
+              <ul className="space-y-2">
+                {(column.links ?? []).map((link, linkIndex) => (
+                  <li key={linkIndex}>
+                    <Link
+                      href={link.href || "#"}
+                      onClick={onNavigate}
+                      className={`text-[14px] font-medium transition-colors hover:text-blue ${
+                        link.accent ? "text-red" : "text-dark-2"
+                      }`}
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ),
+        )}
       </div>
 
       {promo && (
@@ -199,7 +311,7 @@ export default function MegaMenu({
 
   const close = () => setOpenIndex(null);
 
-  // Close on navigation — otherwise the panel hangs over the new page.
+  // Close on navigation  otherwise the panel hangs over the new page.
   useEffect(close, [pathname]);
 
   useEffect(() => {
@@ -214,7 +326,7 @@ export default function MegaMenu({
     () => () => {
       if (closeTimer.current) clearTimeout(closeTimer.current);
     },
-    []
+    [],
   );
 
   const cancelClose = () => {

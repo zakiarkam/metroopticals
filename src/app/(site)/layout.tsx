@@ -19,7 +19,7 @@ import type {
 } from "@/features/site-content/components/site/MegaMenu";
 import SiteLayoutProviders from "./_components/SiteLayoutProviders";
 
-// Below the fold — kept out of the initial bundle.
+// Below the fold  kept out of the initial bundle.
 const Footer = dynamic(() => import("@/components/layout/footer"), {
   loading: () => <div className="h-80 bg-dark" />,
   ssr: true,
@@ -46,7 +46,13 @@ export default async function SiteLayout({
   const catalogue: NavCatalogue = {
     brands: brands
       .filter((brand) => brand.productCount > 0)
-      .map((brand) => ({ label: brand.name, value: brand.slug })),
+      // The logo travels with the row so the brands panel can draw the mark
+      // rather than the name  see BrandColumn in MegaMenu.
+      .map((brand) => ({
+        label: brand.name,
+        value: brand.slug,
+        logo: brand.logo,
+      })),
     shapes: shapes.map(({ value }) => ({
       value,
       label: FRAME_SHAPE_LABELS[value] ?? value,
@@ -74,7 +80,7 @@ export default async function SiteLayout({
         <Header megaNav={megaNav} catalogue={catalogue} />
       </Suspense>
 
-      {/* No padding offset — the header is sticky, not fixed, so it takes up
+      {/* No padding offset  the header is sticky, not fixed, so it takes up
           its own space and can never sit on top of a page heading. */}
       <main>{children}</main>
 

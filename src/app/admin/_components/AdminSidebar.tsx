@@ -24,7 +24,7 @@ import { useCachedSession } from "@/features/auth/hooks/use-cached-session";
 /**
  * Admin navigation.
  *
- * Grouped by what the admin is doing rather than listed flat — catalogue work,
+ * Grouped by what the admin is doing rather than listed flat  catalogue work,
  * storefront merchandising and order handling are different jobs, and the
  * groups make the sidebar scannable as it grows.
  *
@@ -62,7 +62,12 @@ const NAV_GROUPS: NavGroup[] = [
   {
     title: "Catalogue",
     items: [
-      { id: "products", label: "Products", href: "/admin/products", icon: Package },
+      {
+        id: "products",
+        label: "Products",
+        href: "/admin/products",
+        icon: Package,
+      },
       {
         id: "categories",
         label: "Categories",
@@ -92,7 +97,12 @@ const NAV_GROUPS: NavGroup[] = [
   {
     title: "Commerce",
     items: [
-      { id: "orders", label: "Orders", href: "/admin/orders", icon: ScrollText },
+      {
+        id: "orders",
+        label: "Orders",
+        href: "/admin/orders",
+        icon: ScrollText,
+      },
       { id: "reviews", label: "Reviews", href: "/admin/reviews", icon: Star },
       { id: "users", label: "Users", href: "/admin/users", icon: Users },
     ],
@@ -100,7 +110,12 @@ const NAV_GROUPS: NavGroup[] = [
   {
     title: "Account",
     items: [
-      { id: "profile", label: "Profile", href: "/admin/profile", icon: Settings },
+      {
+        id: "profile",
+        label: "Profile",
+        href: "/admin/profile",
+        icon: Settings,
+      },
     ],
   },
 ];
@@ -123,7 +138,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
   const groups = NAV_GROUPS.map((group) => ({
     ...group,
     items: group.items.filter(
-      (item) => !item.superAdminOnly || role === "SUPER_ADMIN"
+      (item) => !item.superAdminOnly || role === "SUPER_ADMIN",
     ),
   })).filter((group) => group.items.length > 0);
 

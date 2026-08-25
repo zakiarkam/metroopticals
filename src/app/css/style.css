@@ -58,7 +58,7 @@
   }
 
   /*
-   * Headings run tight and bold — the hierarchy in a single-family system has
+   * Headings run tight and bold  the hierarchy in a single-family system has
    * to come from weight and tracking, since there is no second face to switch
    * to. Components still set their own size and colour.
    */
@@ -86,7 +86,7 @@
     @apply text-dark-5;
   }
 
-  /* Native dropdown options render in the OS layer — colour them explicitly. */
+  /* Native dropdown options render in the OS layer  colour them explicitly. */
   select option {
     background-color: #ffffff;
     color: #1b1713;

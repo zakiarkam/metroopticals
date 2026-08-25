@@ -42,12 +42,6 @@ export const metadata: Metadata = {
 // This prevents Docker build failures when database is not available
 export const dynamic = "force-dynamic";
 
-// ✅ Server Component - Fetches data on demand
-// Home component internally uses:
-// - Dynamic imports for below-the-fold sections
-// - React.memo for client components
-// - Strategic lazy loading for optimal performance
-
 export default function HomePage() {
   return <Home />;
 }

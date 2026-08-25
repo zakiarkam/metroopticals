@@ -41,14 +41,15 @@ export default function AdZoneClient({
         // The list endpoint is not date-filtered, so scheduling is applied here.
         const now = Date.now();
         const live = (data.advertisements || []).filter((ad) => {
-          const startsOk = !ad.startDate || new Date(ad.startDate).getTime() <= now;
+          const startsOk =
+            !ad.startDate || new Date(ad.startDate).getTime() <= now;
           const endsOk = !ad.endDate || new Date(ad.endDate).getTime() >= now;
           return startsOk && endsOk;
         });
         setAds(live);
       })
       .catch(() => {
-        // Keep the placeholders — a failed ad fetch is not worth surfacing.
+        // Keep the placeholders  a failed ad fetch is not worth surfacing.
       });
 
     return () => {

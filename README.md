@@ -1,24 +1,24 @@
 # Metro Opticals
 
-E-commerce storefront and admin dashboard for **Metro Opticals** — prescription eyeglasses, sunglasses, contact lenses and eye care.
+E-commerce storefront and admin dashboard for **Metro Opticals** prescription eyeglasses, sunglasses, contact lenses and eye care.
 
 Built with Next.js 15 (App Router), Prisma, PostgreSQL, NextAuth and Cloudflare
-R2. Deployed on Railway — see **[RAILWAY.md](RAILWAY.md)**.
+R2. Deployed on Railway see **[RAILWAY.md](RAILWAY.md)**.
 
 ---
 
 ## Stack
 
-| Concern    | Choice                                  |
-| ---------- | --------------------------------------- |
-| Framework  | Next.js 15 (App Router, React 19)       |
-| Database   | PostgreSQL via Prisma                   |
-| Auth       | NextAuth (credentials + Google OAuth)   |
-| Storage    | Cloudflare R2 (S3-compatible API)       |
-| Email      | Resend                                  |
-| Styling    | Tailwind CSS + Radix UI                 |
-| State      | Redux Toolkit                           |
-| Hosting    | Railway (`dev` → development, `main` → production) |
+| Concern   | Choice                                             |
+| --------- | -------------------------------------------------- |
+| Framework | Next.js 15 (App Router, React 19)                  |
+| Database  | PostgreSQL via Prisma                              |
+| Auth      | NextAuth (credentials + Google OAuth)              |
+| Storage   | Cloudflare R2 (S3-compatible API)                  |
+| Email     | Resend                                             |
+| Styling   | Tailwind CSS + Radix UI                            |
+| State     | Redux Toolkit                                      |
+| Hosting   | Railway (`dev` → development, `main` → production) |
 
 ---
 
@@ -38,11 +38,11 @@ cp .env.example .env
 
 Then fill in `.env`. The values that must be set before the app will run:
 
-| Variable          | Notes                                                     |
-| ----------------- | --------------------------------------------------------- |
-| `DATABASE_URL`    | Postgres connection string — used for queries and migrations |
-| `NEXTAUTH_URL`    | `http://localhost:4500` in development                     |
-| `NEXTAUTH_SECRET` | At least 32 characters — `openssl rand -base64 32`. The app refuses to boot with less |
+| Variable          | Notes                                                                               |
+| ----------------- | ----------------------------------------------------------------------------------- |
+| `DATABASE_URL`    | Postgres connection string used for queries and migrations                          |
+| `NEXTAUTH_URL`    | `http://localhost:4500` in development                                              |
+| `NEXTAUTH_SECRET` | At least 32 characters `openssl rand -base64 32`. The app refuses to boot with less |
 
 Storage and email can be left blank while developing; uploads will fail with a
 clear error and emails are logged to the console while `USE_MOCK_EMAIL=true`.
@@ -63,7 +63,7 @@ npm run dev
 
 The app runs at <http://localhost:4500>.
 
-Seeded logins — **local development only**, never deployed:
+Seeded logins **local development only**, never deployed:
 
 - Admin: `admin@metroopticals.lk` / `admin123`
 - Customer: `customer@example.com` / `customer123`
@@ -90,8 +90,8 @@ R2_SECRET_ACCESS_KEY="..."   # S3 API secret (64-char hex, shown once)
 ```
 
 `R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY` come from **Cloudflare dashboard →
-R2 → Manage API Tokens**. Note that a Cloudflare API token (`cfat_…`) is *not*
-the same as the S3 secret access key — the S3 API needs the latter.
+R2 → Manage API Tokens**. Note that a Cloudflare API token (`cfat_…`) is _not_
+the same as the S3 secret access key the S3 API needs the latter.
 
 ### Bucket layout
 
@@ -118,7 +118,7 @@ hostname to `images.remotePatterns` in [`next.config.mjs`](next.config.mjs).
 
 Store name, contact details, social links and bank details live in one place:
 [`src/config/site.ts`](src/config/site.ts). Update that file rather than editing
-components — the header, footer, contact page, emails, receipts and invoices all
+components the header, footer, contact page, emails, receipts and invoices all
 read from it.
 
 > **Before going live**, replace the placeholder values in `siteConfig.banking`
@@ -128,22 +128,22 @@ read from it.
 
 ## Scripts
 
-| Command                 | Description                                  |
-| ----------------------- | -------------------------------------------- |
-| `npm run dev`           | Development server on port 4500              |
-| `npm run build`         | Production build                             |
-| `npm run start`         | Serve the production build                   |
-| `npm run lint`          | ESLint                                       |
-| `npm run typecheck`     | `tsc --noEmit`                               |
-| `npm run deploy:release`| Apply migrations, then bootstrap the admin (Railway pre-deploy) |
-| `npm run db:migrate`    | Create and apply a migration (local)         |
-| `npm run db:migrate:deploy` | Apply pending migrations without creating one |
-| `npm run db:bootstrap`  | Create or promote the admin from `ADMIN_BOOTSTRAP_*` |
-| `npm run db:push`       | Push the schema with no migration — **local experiments only** |
-| `npm run db:studio`     | Open Prisma Studio                           |
-| `npm run db:seed`       | Seed sample data (local only)                |
-| `npm run db:generate`   | Regenerate the Prisma client                 |
-| `npm run clean`         | Remove `.next` and the module cache          |
+| Command                     | Description                                                     |
+| --------------------------- | --------------------------------------------------------------- |
+| `npm run dev`               | Development server on port 4500                                 |
+| `npm run build`             | Production build                                                |
+| `npm run start`             | Serve the production build                                      |
+| `npm run lint`              | ESLint                                                          |
+| `npm run typecheck`         | `tsc --noEmit`                                                  |
+| `npm run deploy:release`    | Apply migrations, then bootstrap the admin (Railway pre-deploy) |
+| `npm run db:migrate`        | Create and apply a migration (local)                            |
+| `npm run db:migrate:deploy` | Apply pending migrations without creating one                   |
+| `npm run db:bootstrap`      | Create or promote the admin from `ADMIN_BOOTSTRAP_*`            |
+| `npm run db:push`           | Push the schema with no migration **local experiments only**    |
+| `npm run db:studio`         | Open Prisma Studio                                              |
+| `npm run db:seed`           | Seed sample data (local only)                                   |
+| `npm run db:generate`       | Regenerate the Prisma client                                    |
+| `npm run clean`             | Remove `.next` and the module cache                             |
 
 ---
 
@@ -183,8 +183,8 @@ for `/api/health` to pass before taking traffic. A failed migration leaves the
 previous version running.
 
 Build and runtime settings are committed in [`railway.json`](railway.json).
-The full setup — environments, branch mapping, the variable list, migration and
-admin-password procedures, and troubleshooting — is in
+The full setup environments, branch mapping, the variable list, migration and
+admin-password procedures, and troubleshooting is in
 **[RAILWAY.md](RAILWAY.md)**.
 
 [`.github/workflows/ci.yml`](.github/workflows/ci.yml) is a quality gate only:

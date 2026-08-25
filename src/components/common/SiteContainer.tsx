@@ -5,7 +5,7 @@ import React from "react";
  *
  * `Section` and `PageHero` both wrap their content in this, so the hero title
  * on an inner page lines up with the cards beneath it. They used to declare
- * their own widths — 1560px against SiteContainer's 1600px — which left every
+ * their own widths  1560px against SiteContainer's 1600px  which left every
  * inner page misaligned by 36px on a wide display.
  */
 export default function SiteContainer({

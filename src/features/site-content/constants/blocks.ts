@@ -1,4 +1,7 @@
-import type { BlockDefinition, Field } from "@/features/site-content/types/site-content";
+import type {
+  BlockDefinition,
+  Field,
+} from "@/features/site-content/types/site-content";
 
 /**
  * The storefront content registry.
@@ -8,8 +11,8 @@ import type { BlockDefinition, Field } from "@/features/site-content/types/site-
  * with, which is why a fresh install already looks like a finished shop: the
  * read helper falls back to `defaults` whenever a block has never been saved.
  *
- * The registry is deliberately short. Anything the catalogue already knows —
- * categories, brands, frame shapes, price bands — is rendered from the database
+ * The registry is deliberately short. Anything the catalogue already knows
+ * categories, brands, frame shapes, price bands  is rendered from the database
  * and filtered through `/shop-with-sidebar`, not duplicated here as editable
  * copy that drifts out of step with what is actually in stock.
  *
@@ -50,14 +53,14 @@ const SOCIAL_OPTIONS = [
  * send a shopper to an empty grid.
  */
 const NAV_SOURCE_OPTIONS = [
-  { value: "", label: "None — use the links below" },
+  { value: "", label: "None  use the links below" },
   { value: "genders", label: "Every stocked wearer (women, men, kids…)" },
   { value: "shapes", label: "Every stocked frame shape" },
   { value: "brands", label: "Every stocked brand" },
 ];
 
 const FOOTER_SOURCE_OPTIONS = [
-  { value: "", label: "None — use the links below" },
+  { value: "", label: "None  use the links below" },
   { value: "categories", label: "Every active category" },
   { value: "genders", label: "Every stocked wearer" },
   { value: "brands", label: "Every stocked brand" },
@@ -67,7 +70,12 @@ const FOOTER_SOURCE_OPTIONS = [
 
 const linkFields: Field[] = [
   { name: "label", label: "Label", type: "text" },
-  { name: "href", label: "Links to", type: "link", placeholder: "/shop-with-sidebar" },
+  {
+    name: "href",
+    label: "Links to",
+    type: "link",
+    placeholder: "/shop-with-sidebar",
+  },
 ];
 
 const D = "/images/dummy";
@@ -95,7 +103,7 @@ export const BLOCKS: BlockDefinition[] = [
     ],
     defaults: {
       enabled: true,
-      message: "Island-wide delivery in 2 days — order before 2pm.",
+      message: "Island-wide delivery in 2 days  order before 2pm.",
       ctaLabel: "Shop now",
       ctaHref: shop(),
       rightLabel: "Book an eye test",
@@ -106,7 +114,8 @@ export const BLOCKS: BlockDefinition[] = [
     key: "site.trust",
     label: "Trust bar",
     group: "Global",
-    description: "The reassurance row shown under the hero and on product pages.",
+    description:
+      "The reassurance row shown under the hero and on product pages.",
     fields: [
       {
         name: "items",
@@ -116,7 +125,12 @@ export const BLOCKS: BlockDefinition[] = [
         titleField: "label",
         max: 4,
         fields: [
-          { name: "icon", label: "Icon", type: "select", options: ICON_OPTIONS },
+          {
+            name: "icon",
+            label: "Icon",
+            type: "select",
+            options: ICON_OPTIONS,
+          },
           { name: "label", label: "Title", type: "text" },
           { name: "copy", label: "Supporting line", type: "textarea", rows: 2 },
         ],
@@ -155,7 +169,7 @@ export const BLOCKS: BlockDefinition[] = [
     label: "Main navigation",
     group: "Navigation",
     description:
-      "The menu bar and its drop-down panels. Each item can list its own link columns, or pull a column straight from the catalogue — pick 'Every active brand' or 'Every frame shape' and the panel stays in step with the shop on its own.",
+      "The menu bar and its drop-down panels. Each item can list its own link columns, or pull a column straight from the catalogue  pick 'Every active brand' or 'Every frame shape' and the panel stays in step with the shop on its own.",
     fields: [
       {
         name: "items",
@@ -168,14 +182,22 @@ export const BLOCKS: BlockDefinition[] = [
           { name: "label", label: "Label", type: "text" },
           { name: "href", label: "Links to", type: "link" },
           { name: "accent", label: "Highlight in red", type: "boolean" },
-          { name: "badge", label: "Badge text", type: "text", placeholder: "New" },
+          {
+            name: "badge",
+            label: "Badge text",
+            type: "text",
+            placeholder: "New",
+          },
           {
             name: "columns",
             label: "Link columns",
             type: "repeater",
             itemLabel: "column",
             titleField: "title",
-            max: 3,
+            // Four fits the 1440px panel without wrapping; the Lenses menu
+            // needs all four to list the lens-type guides beside the shop
+            // links. The panel itself renders any number.
+            max: 4,
             fields: [
               { name: "title", label: "Column heading", type: "text" },
               {
@@ -193,7 +215,11 @@ export const BLOCKS: BlockDefinition[] = [
                 max: 8,
                 fields: [
                   ...linkFields,
-                  { name: "accent", label: "Highlight in red", type: "boolean" },
+                  {
+                    name: "accent",
+                    label: "Highlight in red",
+                    type: "boolean",
+                  },
                 ],
                 defaultItem: { label: "New link", href: shop(), accent: false },
               },
@@ -245,8 +271,16 @@ export const BLOCKS: BlockDefinition[] = [
                   href: shop("sortBy=createdAt&sortOrder=desc"),
                   accent: false,
                 },
-                { label: "Under Rs 2,900", href: shop("maxPrice=2900"), accent: false },
-                { label: "Under Rs 4,900", href: shop("maxPrice=4900"), accent: false },
+                {
+                  label: "Under Rs 2,900",
+                  href: shop("maxPrice=2900"),
+                  accent: false,
+                },
+                {
+                  label: "Under Rs 4,900",
+                  href: shop("maxPrice=4900"),
+                  accent: false,
+                },
                 { label: "On sale", href: shop("onSale=true"), accent: true },
               ],
             },
@@ -276,7 +310,9 @@ export const BLOCKS: BlockDefinition[] = [
                 },
                 {
                   label: "Cheapest first",
-                  href: shop("categories=sunglasses&sortBy=price&sortOrder=asc"),
+                  href: shop(
+                    "categories=sunglasses&sortBy=price&sortOrder=asc",
+                  ),
                   accent: false,
                 },
                 {
@@ -294,13 +330,65 @@ export const BLOCKS: BlockDefinition[] = [
           promoCtaHref: shop("categories=sunglasses"),
         },
         {
+          /*
+           * The lens-type columns mirror `@/config/lenses`  that module is the
+           * source of the guide pages, and these links point at them. Add a lens
+           * type there and add its row here; the two are matched by slug, so a
+           * typo lands on a 404 rather than an empty grid.
+           */
           label: "Lenses",
-          href: shop("categories=contact-lenses"),
+          href: "/lenses",
           accent: false,
           badge: "",
           columns: [
             {
               title: "Lens type",
+              source: "",
+              links: [
+                {
+                  label: "U/C (Uncoated)",
+                  href: "/lenses/uncoated",
+                  accent: false,
+                },
+                { label: "Blue Cut", href: "/lenses/blue-cut", accent: false },
+                {
+                  label: "Blue Filter",
+                  href: "/lenses/blue-filter",
+                  accent: false,
+                },
+                {
+                  label: "Photochromic",
+                  href: "/lenses/photochromic",
+                  accent: false,
+                },
+                {
+                  label: "Polarized",
+                  href: "/lenses/polarized",
+                  accent: false,
+                },
+              ],
+            },
+            {
+              title: "Vision & premium",
+              source: "",
+              links: [
+                { label: "Bifocal", href: "/lenses/bifocal", accent: false },
+                {
+                  label: "Progressive",
+                  href: "/lenses/progressive",
+                  accent: false,
+                },
+                {
+                  label: "Neo Vision",
+                  href: "/lenses/neo-vision",
+                  accent: false,
+                },
+                { label: "Omega", href: "/lenses/omega", accent: false },
+                { label: "All lens types", href: "/lenses", accent: true },
+              ],
+            },
+            {
+              title: "Shop lenses",
               source: "",
               links: [
                 {
@@ -321,29 +409,34 @@ export const BLOCKS: BlockDefinition[] = [
               ],
             },
             {
-              title: "Guides",
-              source: "",
-              links: [
-                { label: "How to read a prescription", href: "/faq", accent: false },
-                { label: "How to measure your PD", href: "/faq", accent: false },
-                { label: "Frame size guide", href: "/faq", accent: false },
-              ],
-            },
-            {
-              title: "In store",
+              title: "In store & guides",
               source: "",
               links: [
                 { label: "Book an eye test", href: "/contact", accent: false },
-                { label: "Lens fitting service", href: "/contact", accent: false },
-                { label: "Ask about your prescription", href: "/contact", accent: false },
+                {
+                  label: "Lens fitting service",
+                  href: "/contact",
+                  accent: false,
+                },
+                {
+                  label: "How to read a prescription",
+                  href: "/faq",
+                  accent: false,
+                },
+                {
+                  label: "How to measure your PD",
+                  href: "/faq",
+                  accent: false,
+                },
+                { label: "Frame size guide", href: "/faq", accent: false },
               ],
             },
           ],
-          promoImage: "",
-          promoTitle: "",
-          promoCopy: "",
-          promoCtaLabel: "",
-          promoCtaHref: "",
+          promoImage: "/images/lenses/guide.jpg",
+          promoTitle: "Which lens is right for you?",
+          promoCopy: "Nine lens types, what each one does  and what it won't.",
+          promoCtaLabel: "Read the lens guide",
+          promoCtaHref: "/lenses",
         },
         {
           label: "Brands",
@@ -390,24 +483,37 @@ export const BLOCKS: BlockDefinition[] = [
     key: "home.hero",
     label: "Hero panel",
     group: "Home",
-    description: "The headline, supporting line and buttons at the top of the home page.",
+    description:
+      "The headline, supporting line and buttons at the top of the home page.",
     fields: [
       { name: "eyebrow", label: "Small heading", type: "text" },
       { name: "headline", label: "Headline", type: "text" },
-      { name: "headlineSecondLine", label: "Headline, second line", type: "text" },
-      { name: "body", label: "Supporting paragraph", type: "textarea", rows: 3 },
+      {
+        name: "headlineSecondLine",
+        label: "Headline, second line",
+        type: "text",
+      },
+      {
+        name: "body",
+        label: "Supporting paragraph",
+        type: "textarea",
+        rows: 3,
+      },
       { name: "ctaLabel", label: "Button text", type: "text" },
       { name: "ctaHref", label: "Button target", type: "link" },
       { name: "secondaryLabel", label: "Second button", type: "text" },
       { name: "secondaryHref", label: "Second button target", type: "link" },
-      { name: "hoursNote", label: "Small print under the buttons", type: "text" },
+      {
+        name: "hoursNote",
+        label: "Small print under the buttons",
+        type: "text",
+      },
     ],
     defaults: {
       eyebrow: "Free eye test with every pair",
       headline: "Glasses that fit",
       headlineSecondLine: "your face and your budget",
-      body:
-        "Prescription frames from Rs 2,900, cut and fitted in Colombo. Choose a frame, add your lenses, and we deliver island-wide in two days.",
+      body: "Prescription frames from Rs 2,900, cut and fitted in Colombo. Choose a frame, add your lenses, and we deliver island-wide in two days.",
       ctaLabel: "Shop eyeglasses",
       ctaHref: shop(),
       secondaryLabel: "Book an eye test",
@@ -429,7 +535,13 @@ export const BLOCKS: BlockDefinition[] = [
         titleField: "title",
         max: 2,
         fields: [
-          { name: "image", label: "Image", type: "image", aspect: "7 / 4", recommended: "1400 × 800px" },
+          {
+            name: "image",
+            label: "Image",
+            type: "image",
+            aspect: "7 / 4",
+            recommended: "1400 × 800px",
+          },
           { name: "eyebrow", label: "Small heading", type: "text" },
           { name: "title", label: "Title", type: "text" },
           { name: "ctaLabel", label: "Button text", type: "text" },
@@ -480,8 +592,7 @@ export const BLOCKS: BlockDefinition[] = [
     defaults: {
       enabled: true,
       headline: "New arrivals and offers, before everyone else",
-      note:
-        "By subscribing you confirm you are over 18 and agree that Metro Opticals may email you news and offers.",
+      note: "By subscribing you confirm you are over 18 and agree that Metro Opticals may email you news and offers.",
       placeholder: "Your email address",
       buttonLabel: "Subscribe",
     },
@@ -526,7 +637,7 @@ export const BLOCKS: BlockDefinition[] = [
       columns: [
         {
           title: "Shop",
-          // Filled from the Category table — no hand-written slugs to go stale.
+          // Filled from the Category table  no hand-written slugs to go stale.
           source: "categories",
           links: [],
         },
@@ -542,7 +653,10 @@ export const BLOCKS: BlockDefinition[] = [
             { label: "All frames", href: shop() },
             { label: "On sale", href: shop("onSale=true") },
             { label: "Under Rs 4,900", href: shop("maxPrice=4900") },
-            { label: "Newest first", href: shop("sortBy=createdAt&sortOrder=desc") },
+            {
+              label: "Newest first",
+              href: shop("sortBy=createdAt&sortOrder=desc"),
+            },
           ],
         },
         {
@@ -584,7 +698,12 @@ export const BLOCKS: BlockDefinition[] = [
         titleField: "platform",
         max: 6,
         fields: [
-          { name: "platform", label: "Platform", type: "select", options: SOCIAL_OPTIONS },
+          {
+            name: "platform",
+            label: "Platform",
+            type: "select",
+            options: SOCIAL_OPTIONS,
+          },
           { name: "href", label: "Profile URL", type: "link" },
         ],
         defaultItem: { platform: "facebook", href: "https://facebook.com" },
@@ -606,7 +725,7 @@ export const BLOCK_MAP: Record<string, BlockDefinition> = BLOCKS.reduce(
     acc[block.key] = block;
     return acc;
   },
-  {} as Record<string, BlockDefinition>
+  {} as Record<string, BlockDefinition>,
 );
 
 export const BLOCK_GROUPS = ["Global", "Navigation", "Home", "Footer"] as const;

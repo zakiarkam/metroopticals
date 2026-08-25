@@ -9,7 +9,7 @@ const Logo = memo(function Logo() {
   return (
     <Link className="flex-shrink-0" href="/" aria-label="Go to Home">
       {/* The lockup stacks a glasses mark over the wordmark, so it needs real
-          height to stay legible — at 44px the "opticals" line was a smudge. */}
+          height to stay legible  at 44px the "opticals" line was a smudge. */}
       <Image
         src={siteConfig.logo}
         alt={siteConfig.name}

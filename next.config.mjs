@@ -62,13 +62,12 @@ const nextConfig = {
    * Security headers.
    *
    * These used to be set by nginx in front of the app. Railway's proxy does not
-   * add them, so the app has to — otherwise removing nginx would have quietly
+   * add them, so the app has to  otherwise removing nginx would have quietly
    * dropped HSTS and clickjacking protection.
    *
-   * No Content-Security-Policy here on purpose: Chakra/Emotion inject inline
-   * styles at runtime, so a policy strict enough to be worth having would need
-   * a nonce pipeline through the whole render tree. That is a separate piece of
-   * work, not a deployment config change.
+   * CSP ships report-only for now: Chakra/Emotion inject inline styles at
+   * runtime, so an enforcing policy strict enough to be worth having would
+   * need a nonce pipeline through the whole render tree.
    */
   async headers() {
     return [
@@ -77,7 +76,7 @@ const nextConfig = {
         headers: [
           {
             // Railway serves every deployment over HTTPS, so this is safe to
-            // send unconditionally. No `preload` — that is a public-list
+            // send unconditionally. No `preload`  that is a public-list
             // commitment and should be a deliberate, separate decision.
             key: "Strict-Transport-Security",
             value: "max-age=31536000; includeSubDomains",
@@ -88,6 +87,14 @@ const nextConfig = {
           {
             key: "Permissions-Policy",
             value: "camera=(), microphone=(), geolocation=()",
+          },
+          {
+            // Report-only while Emotion's runtime inline styles keep
+            // 'unsafe-inline' in style-src; tighten to enforcing once the
+            // violation reports come back clean.
+            key: "Content-Security-Policy-Report-Only",
+            value:
+              "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self'",
           },
         ],
       },

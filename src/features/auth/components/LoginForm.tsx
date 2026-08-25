@@ -1,25 +1,22 @@
 import React, { useState } from "react";
-import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { useCachedSession } from "@/features/auth/hooks/use-cached-session";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Button } from "@/components/ui/button";
+import { Loader2, Lock, Mail } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Toast } from "@/lib/utils/toast";
 import { authApi } from "@/features/auth/api/auth-api";
 import dynamic from "next/dynamic";
+import AuthField, { authInputClasses, PasswordToggle } from "./AuthField";
 
 const GoogleSignInButton = dynamic(() => import("./GoogleSignInButton"), {
   ssr: false,
   loading: () => (
-    <Button variant="outline" disabled className="w-full">
-      Loading...
-    </Button>
+    <div className="h-11 w-full animate-pulse rounded-xl border border-gray-3 bg-gray-1" />
   ),
 });
 
@@ -59,7 +56,7 @@ const LoginForm = React.memo(
 
         if (result?.error) {
           Toast.error(
-            "Invalid credentials. Please check your email and password."
+            "Invalid credentials. Please check your email and password.",
           );
           return;
         }
@@ -95,115 +92,81 @@ const LoginForm = React.memo(
     };
 
     return (
-      <motion.form
-        key="login"
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: 20 }}
+      <form
         onSubmit={loginForm.handleSubmit(onSubmit)}
-        className="space-y-3"
+        className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300 ease-out"
       >
-        <div className="space-y-1.5">
-          <Label htmlFor="email">Email</Label>
+        <AuthField
+          id="email"
+          label="Email"
+          icon={Mail}
+          error={loginForm.formState.errors.email?.message}
+        >
           <Input
             id="email"
             {...loginForm.register("email")}
             type="email"
-            placeholder="john@example.com"
+            autoComplete="email"
+            placeholder="you@example.com"
+            className={authInputClasses}
           />
-          {loginForm.formState.errors.email && (
-            <p className="text-xs text-red">
-              {loginForm.formState.errors.email.message}
-            </p>
-          )}
-        </div>
+        </AuthField>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="password">Password</Label>
-          <div className="relative">
-            <Input
-              id="password"
-              {...loginForm.register("password")}
-              type={showPassword ? "text" : "password"}
-              placeholder="••••••••"
-              className="pr-10"
+        <AuthField
+          id="password"
+          label="Password"
+          icon={Lock}
+          error={loginForm.formState.errors.password?.message}
+          trailing={
+            <PasswordToggle
+              shown={showPassword}
+              onToggle={() => setShowPassword(!showPassword)}
             />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-5 hover:text-dark"
-            >
-              {showPassword ? (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={1.5}
-                  stroke="currentColor"
-                  className="h-5 w-5"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"
-                  />
-                </svg>
-              ) : (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={1.5}
-                  stroke="currentColor"
-                  className="h-5 w-5"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                  />
-                </svg>
-              )}
-            </button>
-          </div>
-          {loginForm.formState.errors.password && (
-            <p className="text-xs text-red">
-              {loginForm.formState.errors.password.message}
-            </p>
-          )}
-        </div>
+          }
+        >
+          <Input
+            id="password"
+            {...loginForm.register("password")}
+            type={showPassword ? "text" : "password"}
+            autoComplete="current-password"
+            placeholder="••••••••"
+            className={`${authInputClasses} pr-11`}
+          />
+        </AuthField>
 
-        <div className="flex items-center justify-between text-sm">
-          <label className="flex items-center gap-2 cursor-pointer">
+        <div className="flex items-center justify-between">
+          <label className="flex cursor-pointer items-center gap-2">
             <Checkbox id="remember" />
-            <span className="text-sm text-dark-4">Remember me</span>
+            <span className="text-[13px] text-dark-4">Remember me</span>
           </label>
           <button
             type="button"
             onClick={onShowForgotPassword}
-            className="text-sm font-medium text-primary hover:underline"
+            className="text-[13px] font-semibold text-blue transition-colors hover:text-blue-dark hover:underline"
           >
-            Forgot Password?
+            Forgot password?
           </button>
         </div>
 
-        <Button type="submit" disabled={isLoading} className="w-full">
-          {isLoading ? "Signing in..." : "Login"}
-        </Button>
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[linear-gradient(100deg,#A9834B_0%,#8F6A37_55%,#6E5029_100%)] text-sm font-semibold tracking-wide text-white shadow-lg shadow-blue/20 transition-all hover:shadow-xl hover:shadow-blue/25 hover:brightness-[1.06] active:scale-[0.995] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:brightness-100"
+        >
+          {isLoading && (
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+          )}
+          {isLoading ? "Signing in..." : "Sign in"}
+        </button>
 
         <GoogleSignInButton
           redirectUrl={redirectUrl}
           googleLoading={googleLoading}
           setGoogleLoading={setGoogleLoading}
         />
-      </motion.form>
+      </form>
     );
-  }
+  },
 );
 
 LoginForm.displayName = "LoginForm";

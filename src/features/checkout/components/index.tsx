@@ -29,9 +29,7 @@ import { inputClasses, textareaClasses } from "@/components/common/form";
 
 const CHECKOUT_DRAFT_KEY = "metro_checkout_draft_v1";
 
-
 /* ------------------------------ form atoms ------------------------------ */
-
 
 /** One labelled text input. Extracted because checkout repeats it 16 times. */
 function Field({
@@ -258,7 +256,7 @@ const Checkout = () => {
     cartItems.reduce(
       (sum: number, item: { discountedPrice: number; quantity: number }) =>
         sum + item.discountedPrice * item.quantity,
-      0
+      0,
     );
 
   const calculateTotal = () => calculateSubtotal();
@@ -276,12 +274,12 @@ const Checkout = () => {
       (item: any) =>
         item.status === "INACTIVE" ||
         item.status === "OUT_OF_STOCK" ||
-        (typeof item.stock === "number" && item.stock === 0)
+        (typeof item.stock === "number" && item.stock === 0),
     );
 
     if (unavailableItems.length > 0) {
       toast.error(
-        "Your cart contains unavailable items. Please remove them before checking out."
+        "Your cart contains unavailable items. Please remove them before checking out.",
       );
       return;
     }
@@ -314,6 +312,9 @@ const Checkout = () => {
           productId: item.productId ?? item.id, // Use productId if available, fallback to id
           quantity: item.quantity,
           price: item.discountedPrice,
+          // Frozen onto the order line so the picking slip still names the
+          // colourway after the product's colour list is edited.
+          color: item.color || undefined,
         })),
         // Shipping fee/method temporarily disabled in checkout UI.
         shippingFee,
@@ -374,7 +375,10 @@ const Checkout = () => {
               icon={<ShoppingCart className="h-7 w-7" />}
               title="Your cart is empty"
               description="Add a frame to your cart before checking out."
-              action={{ label: "Continue shopping", href: "/shop-with-sidebar" }}
+              action={{
+                label: "Continue shopping",
+                href: "/shop-with-sidebar",
+              }}
             />
           </SiteContainer>
         </section>
@@ -386,7 +390,7 @@ const Checkout = () => {
   const addressFields = (
     prefix: "billing" | "shipping",
     details: Details,
-    setDetails: React.Dispatch<React.SetStateAction<Details>>
+    setDetails: React.Dispatch<React.SetStateAction<Details>>,
   ) => {
     const set = (key: keyof Details) => (value: string) =>
       setDetails((prev) => ({ ...prev, [key]: value }));
@@ -509,7 +513,7 @@ const Checkout = () => {
                     {addressFields(
                       "shipping",
                       shippingDetails,
-                      setShippingDetails
+                      setShippingDetails,
                     )}
                   </Panel>
                 )}
@@ -524,7 +528,7 @@ const Checkout = () => {
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     rows={5}
-                    placeholder="e.g. My prescription is from January 2026 — I'll email a photo. Please call before delivery."
+                    placeholder="e.g. My prescription is from January 2026  I'll email a photo. Please call before delivery."
                     className={textareaClasses}
                   />
                 </Panel>
@@ -545,7 +549,7 @@ const Checkout = () => {
                   <ul className="divide-y divide-gray-3 px-5 sm:px-6">
                     {cartItems.map((item: any) => {
                       const previewImages = normalizeImageArray(
-                        item.imgs?.previews ?? []
+                        item.imgs?.previews ?? [],
                       );
                       const displayImage =
                         previewImages[0] || "/images/placeholder-product.svg";
@@ -571,12 +575,19 @@ const Checkout = () => {
                             </span>
                           </div>
 
-                          <Link
-                            href={productUrl}
-                            className="line-clamp-2 min-w-0 flex-1 text-[13px] font-medium capitalize text-dark transition-colors hover:text-blue"
-                          >
-                            {item.title}
-                          </Link>
+                          <div className="min-w-0 flex-1">
+                            <Link
+                              href={productUrl}
+                              className="line-clamp-2 text-[13px] font-medium capitalize text-dark transition-colors hover:text-blue"
+                            >
+                              {item.title}
+                            </Link>
+                            {item.color && (
+                              <p className="mt-0.5 text-[12px] text-dark-4">
+                                Colour: {item.color}
+                              </p>
+                            )}
+                          </div>
 
                           <span className="shrink-0 text-[13.5px] font-semibold text-dark">
                             {formatPrice(item.discountedPrice * item.quantity)}
@@ -645,7 +656,7 @@ const Checkout = () => {
                             </span>
                           </label>
                         );
-                      }
+                      },
                     )}
                   </div>
                 </Panel>

@@ -1,5 +1,5 @@
 /*
- * Toast styles — Metro Opticals black & gold theme.
+ * Toast styles  Metro Opticals black & gold theme.
  *
  * The app is dark at all times, so these are the single source of truth.
  * There is deliberately NO `prefers-color-scheme` block: a previous version
@@ -8,15 +8,16 @@
  */
 
 .Toastify__toast {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   border-radius: 10px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
   padding: 16px;
   min-height: 64px;
   /* Default (neutral) toast: dark card with a gold hairline. */
-  background: #17171A;
+  background: #17171a;
   color: #f5f1e8;
-  border: 1px solid #2E2E33;
+  border: 1px solid #2e2e33;
 }
 
 /* Status toasts: dark tinted fills with a coloured accent border. */

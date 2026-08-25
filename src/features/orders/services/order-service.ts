@@ -20,7 +20,6 @@ import type {
 import {
   sendWhatsAppMessage,
   formatOrderPlacedCustomerWhatsAppMessage,
-  formatOrderPlacedAdminWhatsAppMessage,
   formatOrderStatusWhatsAppMessage,
 } from "@/lib/whatsapp";
 import { logger, serializeError } from "@/lib/logger";
@@ -38,9 +37,8 @@ function formatOrderNumber(orderId: number, createdAt: Date): string {
 }
 
 /**
- * WhatsApp notifier for ORDER PLACED (customer first, then admin).
- * - No manual sleep here.
- * - If admin hits rate-limit, sendWhatsAppMessage() handles 429 retry/wait internally.
+ * WhatsApp notifier for ORDER PLACED (customer confirmation).
+ * No manual sleep here: sendWhatsAppMessage() handles 429 retry/wait internally.
  */
 async function notifyOrderPlacedWhatsApp(params: {
   order: OrderWithItemsAndUser;
@@ -48,8 +46,13 @@ async function notifyOrderPlacedWhatsApp(params: {
 }) {
   const { order, orderData } = params;
 
+  // The colour rides along in the title: the WhatsApp formatter takes a plain
+  // product name, and a message that omits the colourway is one the customer
+  // has to ask about.
   const items = order.items.map((i) => ({
-    product: { title: i.product.title },
+    product: {
+      title: i.color ? `${i.product.title} (${i.color})` : i.product.title,
+    },
     quantity: i.quantity,
     price: i.price,
   }));
@@ -60,7 +63,7 @@ async function notifyOrderPlacedWhatsApp(params: {
     order.user?.phone?.trim() ||
     undefined;
 
-  // 1) Customer confirmation (priority)
+  // Customer confirmation
   if (customerPhone) {
     const customerMsg = formatOrderPlacedCustomerWhatsAppMessage({
       orderNumber: order.orderNumber,
@@ -82,37 +85,6 @@ async function notifyOrderPlacedWhatsApp(params: {
   } else {
     logger.warn("⚠️ No customer phone, skipping customer WhatsApp");
   }
-
-  // 2) Admin notification
-  // const adminPhone = process.env.ADMIN_PHONE?.trim();
-  // if (adminPhone) {
-  //   const adminMsg = formatOrderPlacedAdminWhatsAppMessage({
-  //     orderNumber: order.orderNumber,
-  //     orderId: order.id,
-  //     billingName: orderData.billingName,
-  //     billingEmail: orderData.billingEmail,
-  //     customerPhone,
-  //     totalAmount: order.totalAmount,
-  //     items,
-  //     shippingAddress: orderData.shippingAddress,
-  //     shippingCity: orderData.shippingCity,
-  //     shippingCountry: orderData.shippingCountry,
-  //     notes: orderData.notes ?? undefined,
-  //   });
-
-  //   const r = await sendWhatsAppMessage(adminPhone, adminMsg, {
-  //     maxRetries: 2,
-  //     retryDelayMs: 61_000,
-  //   });
-
-  //   if (!r.success && r.isInvalidNumber) {
-  //     console.warn(`⚠️ Admin phone not on WhatsApp: ${adminPhone}`);
-  //   } else if (!r.success) {
-  //     console.warn("⚠️ Admin WhatsApp failed:", r.error);
-  //   }
-  // } else {
-  //   console.warn("⚠️ ADMIN_PHONE not configured, skipping admin WhatsApp");
-  // }
 }
 
 export async function getOrders(
@@ -197,6 +169,7 @@ export async function createOrder(userId: number, data: CreateOrderInput) {
     quantity: number;
     price: number;
     discountedPrice: number | null;
+    color: string | null;
     currentStock: number;
   }> = [];
 
@@ -221,11 +194,24 @@ export async function createOrder(userId: number, data: CreateOrderInput) {
     const netPrice = discountedPrice ?? originalPrice;
     subtotal += netPrice * item.quantity;
 
+    // The colour is trusted only as far as the product's own list  a request
+    // built by hand must not be able to write anything onto a picking slip.
+    const requestedColor = item.color?.trim();
+    const color =
+      requestedColor &&
+      product.frameColors.some(
+        (option) =>
+          option.trim().toLowerCase() === requestedColor.toLowerCase(),
+      )
+        ? requestedColor
+        : null;
+
     validatedItems.push({
       productId: item.productId,
       quantity: item.quantity,
       price: originalPrice,
       discountedPrice,
+      color,
       currentStock: product.stock,
     });
   }
@@ -245,11 +231,12 @@ export async function createOrder(userId: number, data: CreateOrderInput) {
         ...orderData,
         items: {
           create: validatedItems.map(
-            ({ productId, quantity, price, discountedPrice }) => ({
+            ({ productId, quantity, price, discountedPrice, color }) => ({
               productId,
               quantity,
               price,
               ...(discountedPrice !== null ? { discountedPrice } : {}),
+              ...(color ? { color } : {}),
             }),
           ),
         },
@@ -299,6 +286,7 @@ export async function createOrder(userId: number, data: CreateOrderInput) {
       const emailItems = order.items.map((item) => ({
         quantity: item.quantity,
         price: item.price,
+        color: item.color,
         product: {
           title: item.product.title,
           images: item.product.images,
@@ -334,6 +322,7 @@ export async function createOrder(userId: number, data: CreateOrderInput) {
       const emailItems = order.items.map((item) => ({
         quantity: item.quantity,
         price: item.price,
+        color: item.color,
         product: {
           title: item.product.title,
           images: item.product.images,

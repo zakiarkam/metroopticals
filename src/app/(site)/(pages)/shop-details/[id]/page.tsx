@@ -171,7 +171,11 @@ const ShopDetailsPage = async ({ params }: ShopDetailsPageProps) => {
       <script
         type="application/ld+json"
         // Structured data for product SEO (JSON-LD).
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        // JSON.stringify doesn't escape "<", so a "</script>" inside a product
+        // field could otherwise break out of this tag.
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
+        }}
       />
     </>
   );

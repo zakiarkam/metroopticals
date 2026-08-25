@@ -31,7 +31,7 @@ const config: Config = {
       },
     },
     /**
-     * Metro Opticals — ivory & gold theme.
+     * Metro Opticals  ivory & gold theme.
      *
      * Light surfaces, espresso text, gold accents. The token NAMES are used
      * across ~250 files, so the palette is expressed by remapping their VALUES
@@ -43,14 +43,14 @@ const config: Config = {
      * Contrast rule: anything that carries text meets WCAG AA (4.5:1) against
      * the surface it sits on. That is why the accent is a deep antique gold
      * (#8F6A37, 4.9:1 on white) rather than the logo's literal #C09C6C, which
-     * only reaches 2.2:1 — the logo tone lives on as `blue-light` for fills,
+     * only reaches 2.2:1  the logo tone lives on as `blue-light` for fills,
      * borders and decoration, where contrast is not a legibility concern.
      */
     colors: {
       current: "currentColor",
       transparent: "transparent",
       white: "#FFFFFF",
-      /** Default body copy — warm near-black, softened for long reading. */
+      /** Default body copy  warm near-black, softened for long reading. */
       body: "#554C40",
       meta: {
         "2": "#4A4238",
@@ -63,8 +63,8 @@ const config: Config = {
       dark: {
         "2": "#2E2822",
         "3": "#4A4238",
-        "4": "#6F6555", // muted label text — 5.3:1 on white
-        "5": "#948977", // subtle meta / placeholder — small print only
+        "4": "#6F6555", // muted label text  5.3:1 on white
+        "5": "#948977", // subtle meta / placeholder  small print only
         DEFAULT: "#1B1713",
       },
       /** Surfaces and borders. */
@@ -75,9 +75,9 @@ const config: Config = {
          * comes from `boxShadow` below.
          *   gray-1 page (ivory)  →  gray-2 card (white)  →  gray-8 hover
          */
-        "1": "#FAF8F4", // page background — warm ivory
+        "1": "#FAF8F4", // page background  warm ivory
         "2": "#FFFFFF", // card / section surface
-        "3": "#E7E0D4", // borders, dividers — warm hairline
+        "3": "#E7E0D4", // borders, dividers  warm hairline
         "4": "#D3C9B8", // stronger borders, disabled fills
         "5": "#948977", // muted text
         "6": "#6F6555", // secondary text
@@ -88,7 +88,7 @@ const config: Config = {
          * Components also use Tailwind's default numeric gray scale
          * (bg-gray-200, border-gray-200, text-gray-400, …). A custom
          * `colors.gray` replaces the default entirely, so those keys are
-         * redefined here — warm-tinted, and in the conventional direction
+         * redefined here  warm-tinted, and in the conventional direction
          * (low = light surface, high = dark text).
          */
         "50": "#FAF8F4",
@@ -102,15 +102,15 @@ const config: Config = {
         "800": "#2E2822",
         "900": "#1B1713",
       },
-      /** Gold accent — deepened from the logo tone so it can carry text. */
+      /** Gold accent  deepened from the logo tone so it can carry text. */
       blue: {
-        DEFAULT: "#8F6A37", // primary actions and links — 4.9:1 on white
+        DEFAULT: "#8F6A37", // primary actions and links  4.9:1 on white
         dark: "#6E5029", // hover / pressed
-        light: "#C09C6C", // the logo gold — decoration, borders, fills
+        light: "#C09C6C", // the logo gold  decoration, borders, fills
         "light-2": "#D6BC96",
         "light-3": "#E9DAC0",
         "light-4": "#F3E9D6",
-        "light-5": "#FAF5EC", // softest tint — hover backgrounds
+        "light-5": "#FAF5EC", // softest tint  hover backgrounds
         // numeric scale: low = pale tint, high = deep gold
         "50": "#FAF5EC",
         "100": "#F3E9D6",
@@ -169,7 +169,7 @@ const config: Config = {
         "900": "#0F3421",
       },
       yellow: {
-        DEFAULT: "#916312", // 5.2:1 on white — low-stock and caution text
+        DEFAULT: "#916312", // 5.2:1 on white  low-stock and caution text
         dark: "#875D12",
         "dark-2": "#966816",
         light: "#E8B450", // amber fill, not for text
@@ -367,21 +367,22 @@ const config: Config = {
        * Every shadow is a warm brown-black (39 30 20) rather than neutral
        * black, so cards sit on the ivory page without the grey cast a pure
        * black shadow leaves. Each level layers a tight contact shadow under a
-       * wider ambient one — that pairing is what reads as height on light UI.
+       * wider ambient one  that pairing is what reads as height on light UI.
        */
       boxShadow: {
-        // level 1 — subtle lift (list rows, inputs)
+        // level 1  subtle lift (list rows, inputs)
         "1": "0 1px 2px 0 rgba(39,30,20,0.06)",
-        // level 2 — standard card
+        // level 2  standard card
         "2": "0 1px 2px 0 rgba(39,30,20,0.05), 0 4px 12px -2px rgba(39,30,20,0.07)",
-        // level 3 — raised panel / popover
+        // level 3  raised panel / popover
         "3": "0 2px 4px -1px rgba(39,30,20,0.06), 0 12px 28px -6px rgba(39,30,20,0.12)",
-        // level 4 — modals and dialogs
+        // level 4  modals and dialogs
         "4": "0 4px 8px -2px rgba(39,30,20,0.08), 0 24px 56px -12px rgba(39,30,20,0.20)",
         // gold-tinted glow for hover / focus emphasis
         gold: "0 8px 24px -6px rgba(143,106,55,0.20), 0 0 0 1px rgba(143,106,55,0.22)",
         "gold-sm": "0 0 0 1px rgba(143,106,55,0.28)",
-        testimonial: "0 1px 2px 0 rgba(39,30,20,0.05), 0 4px 12px -2px rgba(39,30,20,0.07)",
+        testimonial:
+          "0 1px 2px 0 rgba(39,30,20,0.05), 0 4px 12px -2px rgba(39,30,20,0.07)",
         breadcrumb: "0 1px 0 0 #E7E0D4, 0 -1px 0 0 #E7E0D4",
         range: "0 1px 3px 0 rgba(39,30,20,0.14)",
         filter: "0 1px 0 0 #E7E0D4",
@@ -394,11 +395,13 @@ const config: Config = {
          * keeps those consistent with the numbered levels above.
          */
         sm: "0 1px 2px 0 rgba(39,30,20,0.05)",
-        DEFAULT: "0 1px 3px 0 rgba(39,30,20,0.08), 0 1px 2px -1px rgba(39,30,20,0.06)",
+        DEFAULT:
+          "0 1px 3px 0 rgba(39,30,20,0.08), 0 1px 2px -1px rgba(39,30,20,0.06)",
         md: "0 2px 4px -1px rgba(39,30,20,0.06), 0 6px 14px -3px rgba(39,30,20,0.09)",
         lg: "0 2px 4px -1px rgba(39,30,20,0.06), 0 12px 26px -6px rgba(39,30,20,0.12)",
         xl: "0 4px 8px -2px rgba(39,30,20,0.07), 0 20px 44px -10px rgba(39,30,20,0.16)",
-        "2xl": "0 6px 12px -3px rgba(39,30,20,0.08), 0 32px 64px -16px rgba(39,30,20,0.22)",
+        "2xl":
+          "0 6px 12px -3px rgba(39,30,20,0.08), 0 32px 64px -16px rgba(39,30,20,0.22)",
         inner: "inset 0 2px 4px 0 rgba(39,30,20,0.06)",
         none: "none",
       },

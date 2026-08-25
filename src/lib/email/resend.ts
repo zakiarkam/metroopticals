@@ -33,6 +33,7 @@ const resend = {
 type OrderItem = {
   quantity: number;
   price: number; // unit price
+  color?: string | null; // the colourway as sold
   product?: {
     title?: string;
     imageUrl?: string; // single image URL (legacy support)
@@ -812,11 +813,12 @@ function renderAdminOrderEmail({
   const discount = Number(order.discountAmount || 0);
   const total = Math.max(0, subtotal + shipping - discount);
 
-  const placeholderImg = ensureAbsoluteUrl("/images/placeholder.png", baseUrl);
+  const placeholderImg = ensureAbsoluteUrl("/images/placeholder.jpg", baseUrl);
 
   const itemsHtml = order.items
     .map((it) => {
       const title = escapeHtml(it.product?.title || "Product");
+      const color = it.color ? escapeHtml(it.color) : "";
       const qty = Math.max(1, Number(it.quantity || 1));
       const unit = Number(it.price || 0);
       const line = unit * qty;
@@ -843,7 +845,7 @@ function renderAdminOrderEmail({
                     ${title}
                   </div>
                   <div style="font-size:12px;color:#6b7280;margin-top:4px;">
-                    Qty: ${qty} • ${formatMoney(unit, currency)} each
+                    ${color ? `Colour: ${color} • ` : ""}Qty: ${qty} • ${formatMoney(unit, currency)} each
                   </div>
                 </td>
                 <td align="right" valign="middle" style="font-family:Poppins,Arial,Helvetica,sans-serif;white-space:nowrap;">

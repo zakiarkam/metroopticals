@@ -11,7 +11,7 @@ import type { AdvertisementPlacement } from "@/features/advertisements/types/adv
  *
  *  - `banner` placements are plain artwork. The admin uploads a photo, gives it
  *    an optional caption and link, and that is the whole ad. Linking a product
- *    is allowed but never required — which is why `productId` is optional on
+ *    is allowed but never required  which is why `productId` is optional on
  *    the create/update schemas.
  *
  * Every zone renders dummy artwork when nothing is configured, so the layout
@@ -29,7 +29,7 @@ export interface AdPlacementMeta {
   /** Slots decide left-to-right order within a zone. */
   slots: number[];
   kind: AdPlacementKind;
-  /** `width / height` — drives the reserved box so nothing shifts on load. */
+  /** `width / height`  drives the reserved box so nothing shifts on load. */
   aspect: string;
   /** Pixel guidance shown next to the upload field. */
   recommended: string;
@@ -40,7 +40,7 @@ export interface AdPlacementMeta {
 export const AD_PLACEMENTS: Record<AdvertisementPlacement, AdPlacementMeta> = {
   promobanner: {
     id: "promobanner",
-    label: "Home — Promo panel",
+    label: "Home  Promo panel",
     group: "Home",
     description:
       "Feature panel plus a pair of smaller cards, shown between home sections.",
@@ -52,7 +52,7 @@ export const AD_PLACEMENTS: Record<AdvertisementPlacement, AdPlacementMeta> = {
   },
   "home-billboard": {
     id: "home-billboard",
-    label: "Home — Wide billboard",
+    label: "Home  Wide billboard",
     group: "Home",
     description:
       "Full-width photo banner below the category rail. The most prominent image-only slot on the site.",
@@ -64,10 +64,9 @@ export const AD_PLACEMENTS: Record<AdvertisementPlacement, AdPlacementMeta> = {
   },
   "shop-top": {
     id: "shop-top",
-    label: "Shop — Top strip",
+    label: "Shop  Top strip",
     group: "Shop",
-    description:
-      "Slim banner above the product grid on both shop layouts.",
+    description: "Slim banner above the product grid on both shop layouts.",
     slots: [1],
     kind: "banner",
     aspect: "1200 / 220",
@@ -76,7 +75,7 @@ export const AD_PLACEMENTS: Record<AdvertisementPlacement, AdPlacementMeta> = {
   },
   "shop-sidebar": {
     id: "shop-sidebar",
-    label: "Shop — Sidebar tower",
+    label: "Shop  Sidebar tower",
     group: "Shop",
     description:
       "Tall banner under the shop filters. Stacks vertically when two are active.",
@@ -88,7 +87,7 @@ export const AD_PLACEMENTS: Record<AdvertisementPlacement, AdPlacementMeta> = {
   },
   "product-detail": {
     id: "product-detail",
-    label: "Product page — Under details",
+    label: "Product page  Under details",
     group: "Product",
     description:
       "Banner beneath the product information block, above related products.",
@@ -100,7 +99,7 @@ export const AD_PLACEMENTS: Record<AdvertisementPlacement, AdPlacementMeta> = {
   },
   "cart-banner": {
     id: "cart-banner",
-    label: "Cart — Promo strip",
+    label: "Cart  Promo strip",
     group: "Cart",
     description:
       "Last-chance banner under the cart summary. Good for free-delivery or bundle offers.",
@@ -113,21 +112,21 @@ export const AD_PLACEMENTS: Record<AdvertisementPlacement, AdPlacementMeta> = {
 };
 
 export const AD_PLACEMENT_IDS = Object.keys(
-  AD_PLACEMENTS
+  AD_PLACEMENTS,
 ) as AdvertisementPlacement[];
 
 /** Placements whose creative is a plain uploaded photo. */
 export const BANNER_PLACEMENT_IDS = AD_PLACEMENT_IDS.filter(
-  (id) => AD_PLACEMENTS[id].kind === "banner"
+  (id) => AD_PLACEMENTS[id].kind === "banner",
 );
 
 /** Placements driven by a linked catalogue product. */
 export const PRODUCT_PLACEMENT_IDS = AD_PLACEMENT_IDS.filter(
-  (id) => AD_PLACEMENTS[id].kind === "product"
+  (id) => AD_PLACEMENTS[id].kind === "product",
 );
 
 export const getPlacementMeta = (
-  placement: string | null | undefined
+  placement: string | null | undefined,
 ): AdPlacementMeta | null =>
   placement && placement in AD_PLACEMENTS
     ? AD_PLACEMENTS[placement as AdvertisementPlacement]
@@ -145,7 +144,7 @@ export const placementSlotOptions = AD_PLACEMENT_IDS.reduce(
     acc[id] = AD_PLACEMENTS[id].slots;
     return acc;
   },
-  {} as Record<AdvertisementPlacement, number[]>
+  {} as Record<AdvertisementPlacement, number[]>,
 );
 
 /** Admin grouping order. */
