@@ -15,7 +15,7 @@ import { getBrandLogoUrl } from "@/lib/storageUtils";
 /**
  * The small-screen navigation drawer.
  *
- * It expands the same panels the desktop mega menu draws — the old drawer
+ * It expands the same panels the desktop mega menu draws  the old drawer
  * showed top-level labels only, so brands, shapes and lens types were
  * unreachable on a phone. Sections are accordions because the full link set
  * is far taller than a phone viewport.
@@ -95,7 +95,7 @@ export default function MobileNav({
                         </p>
                       )}
 
-                      {/* Brands read as logos on a phone too — the same tiles
+                      {/* Brands read as logos on a phone too  the same tiles
                           the desktop panel draws, two to a row. */}
                       {column.source === "brands" ? (
                         <ul className="grid grid-cols-2 gap-2.5">

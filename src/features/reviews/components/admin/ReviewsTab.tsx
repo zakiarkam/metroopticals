@@ -17,7 +17,7 @@ import { Toast } from "@/lib/utils/toast";
 /**
  * Review moderation.
  *
- * Staff approve, reject or delete — they never author. Pending is the default
+ * Staff approve, reject or delete  they never author. Pending is the default
  * filter because that is the only state that needs anyone's attention; the
  * others are there for going back over a decision.
  */
@@ -75,7 +75,7 @@ export default function ReviewsTab() {
     try {
       await setAdminReviewStatus(review.id, status);
       Toast.success(
-        status === "PUBLISHED" ? "Review published." : "Review rejected."
+        status === "PUBLISHED" ? "Review published." : "Review rejected.",
       );
       await load();
     } catch {
@@ -107,8 +107,8 @@ export default function ReviewsTab() {
           Reviews
         </h2>
         <p className="mt-1 max-w-2xl text-[13.5px] leading-relaxed text-dark-4">
-          Customer-written reviews awaiting a decision. Publishing one adds it to
-          the product page and updates that product&apos;s star rating.
+          Customer-written reviews awaiting a decision. Publishing one adds it
+          to the product page and updates that product&apos;s star rating.
         </p>
       </div>
 
@@ -190,7 +190,9 @@ export default function ReviewsTab() {
                         </span>
                         <span className="block text-[12px] text-dark-4">
                           {review.user?.name || "Customer"} ·{" "}
-                          {new Date(review.createdAt).toLocaleDateString("en-LK")}
+                          {new Date(review.createdAt).toLocaleDateString(
+                            "en-LK",
+                          )}
                         </span>
                       </span>
                     </Link>

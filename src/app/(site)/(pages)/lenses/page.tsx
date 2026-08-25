@@ -19,12 +19,12 @@ import { buildSiteUrl } from "@/lib/seo";
 export const metadata: Metadata = {
   title: "Lens Types",
   description:
-    "Every lens type we fit at Metro Opticals — uncoated, blue cut, blue filter, photochromic, polarized, bifocal, progressive, Neo Vision and Omega. What each one does, who it suits, and what it will not do.",
+    "Every lens type we fit at Metro Opticals  uncoated, blue cut, blue filter, photochromic, polarized, bifocal, progressive, Neo Vision and Omega. What each one does, who it suits, and what it will not do.",
   alternates: { canonical: buildSiteUrl("/lenses") },
   openGraph: {
     title: "Lens Types | Metro Opticals",
     description:
-      "A plain-English guide to every spectacle lens we fit — what each type does, who it suits, and its honest limitations.",
+      "A plain-English guide to every spectacle lens we fit  what each type does, who it suits, and its honest limitations.",
     url: buildSiteUrl("/lenses"),
     images: [{ url: buildSiteUrl("/images/lenses/guide.jpg") }],
   },
@@ -70,7 +70,7 @@ const CHOOSING_STEPS = [
   },
 ];
 
-/** The comparison grid. Kept narrow on purpose — four honest columns beat ten. */
+/** The comparison grid. Kept narrow on purpose  four honest columns beat ten. */
 const COMPARE_COLUMNS = [
   { key: "screens", label: "Screens" },
   { key: "sun", label: "Bright sun" },
@@ -95,8 +95,9 @@ export default function LensesPage() {
   const tiles = LAYOUT.map((entry) => ({
     ...entry,
     lens: getLensType(entry.slug),
-  })).filter((entry): entry is typeof entry & { lens: NonNullable<typeof entry.lens> } =>
-    Boolean(entry.lens)
+  })).filter(
+    (entry): entry is typeof entry & { lens: NonNullable<typeof entry.lens> } =>
+      Boolean(entry.lens),
   );
 
   const compared = lensTypes.filter((lens) => COMPARE[lens.slug]);
@@ -106,7 +107,7 @@ export default function LensesPage() {
       <PageHero
         eyebrow="Lens guide"
         title="Lens types we fit"
-        description="Nine lens types, what each one actually does, who it suits — and, just as usefully, what it will not do."
+        description="Nine lens types, what each one actually does, who it suits  and, just as usefully, what it will not do."
         crumbs={[{ label: "Lenses" }]}
       />
 
@@ -150,8 +151,8 @@ export default function LensesPage() {
               </h2>
             </div>
             <p className="max-w-sm text-[14px] leading-relaxed text-body">
-              Grouped by what they are for — clear and coated, screen and
-              indoor, sun and outdoor, multifocal, and our two premium ranges.
+              Grouped by what they are for clear and coated, screen and indoor,
+              sun and outdoor, multifocal, and our two premium ranges.
             </p>
           </div>
 
@@ -191,7 +192,7 @@ export default function LensesPage() {
               Which lens for which problem
             </h2>
             <p className="mt-3 text-[15px] leading-relaxed text-body">
-              A tick means the lens is a genuinely good answer to that problem —
+              A tick means the lens is a genuinely good answer to that problem
               not merely that it can be worn while doing it. Our two premium
               ranges are left out because they are materials and coatings rather
               than a lens function.
@@ -273,7 +274,7 @@ export default function LensesPage() {
         eyebrow="Not sure?"
         title="Tell us how you"
         titleAccent="spend your day."
-        body="Send us your prescription and a sentence about how you live, and we will tell you what we would fit — including when the cheaper lens is the right one. Or come in and let us measure properly."
+        body="Send us your prescription and a sentence about how you live, and we will tell you what we would fit  including when the cheaper lens is the right one. Or come in and let us measure properly."
         image="/images/store/consult.jpg"
         imageAlt="An optician fitting a pair of spectacles onto a smiling customer in the store"
         primary={{ href: "/contact", label: "Book an eye test" }}

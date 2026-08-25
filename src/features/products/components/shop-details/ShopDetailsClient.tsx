@@ -25,12 +25,13 @@ import {
 import { useCart } from "@/features/cart/hooks/use-cart";
 import { useWishlist } from "@/features/wishlist/hooks/use-wishlist";
 import { useDiscountVisibility } from "@/features/cart/hooks/use-discount";
-import { formatPrice, getUnitLabel, resolveDisplayPrice } from "@/lib/utils/price";
-import { Product } from "@/features/products/types/product";
 import {
-  AVAILABILITY_PILL_CLASSES,
-  getAvailability,
-} from "@/features/products/utils/availability";
+  formatPrice,
+  getUnitLabel,
+  resolveDisplayPrice,
+} from "@/lib/utils/price";
+import { Product } from "@/features/products/types/product";
+import { getAvailability } from "@/features/products/utils/availability";
 import { normalizeColorOptions } from "@/features/products/utils/colors";
 import ColorPicker from "./ColorPicker";
 import FrameMeasurements from "./FrameMeasurements";
@@ -47,8 +48,7 @@ type ShopDetailsClientProps = {
   initialProduct?: Product | null;
 };
 
-
-/** Reassurance rows under the buy box — the questions asked at the till. */
+/** Reassurance rows under the buy box  the questions asked at the till. */
 const ASSURANCES = [
   {
     icon: Truck,
@@ -117,12 +117,12 @@ const ShopDetailsClient = ({
 
   const images = useMemo(
     () => normalizeImageArray(product?.images) ?? [],
-    [product?.images]
+    [product?.images],
   );
 
   const colorOptions = useMemo(
     () => normalizeColorOptions(product?.frameColors),
-    [product?.frameColors]
+    [product?.frameColors],
   );
 
   // Pre-select the first colourway rather than opening on "nothing chosen":
@@ -130,7 +130,9 @@ const ShopDetailsClient = ({
   // only ever be a step to clear on the way to the same outcome.
   useEffect(() => {
     setSelectedColor((current) =>
-      current && colorOptions.includes(current) ? current : colorOptions[0] ?? ""
+      current && colorOptions.includes(current)
+        ? current
+        : (colorOptions[0] ?? ""),
     );
   }, [colorOptions]);
 
@@ -140,7 +142,7 @@ const ShopDetailsClient = ({
     resolveDisplayPrice(
       product?.price ?? 0,
       product?.discountedPrice ?? null,
-      canViewDiscount
+      canViewDiscount,
     );
   const unitLabel = getUnitLabel(product?.unitType);
   const availability = getAvailability(product?.status, product?.stock);
@@ -154,7 +156,7 @@ const ShopDetailsClient = ({
    * Clamp rather than refuse.
    *
    * The old handler fired a red toast on every keystroke past the limit and
-   * then left the input showing the rejected number — typing "12" into a
+   * then left the input showing the rejected number  typing "12" into a
    * 9-stock field produced two toasts and a value the buy button disagreed
    * with. It now settles on the highest quantity that can actually be bought.
    */
@@ -164,7 +166,7 @@ const ShopDetailsClient = ({
       const value = Number.isFinite(next) ? next : quantity;
       setQuantity(Math.min(maxStock, Math.max(1, value)));
     },
-    [product?.stock, quantity]
+    [product?.stock, quantity],
   );
 
   const handleAddToCart = useCallback(async () => {
@@ -182,7 +184,7 @@ const ShopDetailsClient = ({
         frameColors: colorOptions,
       } as never,
       quantity,
-      selectedColor || undefined
+      selectedColor || undefined,
     );
     setIsAdding(false);
   }, [
@@ -325,17 +327,23 @@ const ShopDetailsClient = ({
               badges={
                 <>
                   {hasDiscount && discountPercent !== null && (
-                    <span className="absolute left-5 top-5 z-20 rounded-full bg-blue px-3.5 py-1.5 text-[12px] font-bold text-white">
+                    <span className="absolute left-5 top-5 z-20 rounded-full bg-blue px-3.5 py-1.5 text-[12px] font-bold text-white shadow-1">
                       Save {discountPercent}%
                     </span>
                   )}
-                  <span
-                    className={`absolute right-5 top-5 z-20 rounded-full border px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.1em] ${
-                      AVAILABILITY_PILL_CLASSES[availability.tone]
-                    }`}
-                  >
-                    {availability.label}
-                  </span>
+                  {/* Only the exceptions are announced  "in stock" is the
+                      default state and saying it earned nothing. */}
+                  {availability.tone !== "in" && (
+                    <span
+                      className={`absolute right-5 top-5 z-20 rounded-full px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.1em] shadow-1 backdrop-blur-sm ${
+                        availability.tone === "low"
+                          ? "bg-gray-2/95 text-dark"
+                          : "bg-dark/85 text-white"
+                      }`}
+                    >
+                      {availability.label}
+                    </span>
+                  )}
                 </>
               }
             />
@@ -426,7 +434,7 @@ const ShopDetailsClient = ({
                     what the quantity field is capped at, so it is stated. */}
                 {availability.tone === "low" ? (
                   <span className="text-[12.5px] font-semibold text-yellow-dark">
-                    {availability.label} — order soon
+                    {availability.label} order soon
                   </span>
                 ) : availability.canBuy && product.stock ? (
                   <span className="text-[12.5px] text-dark-4">
@@ -463,7 +471,9 @@ const ShopDetailsClient = ({
                   disabled={isSaving || saved}
                   className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-gray-3 px-6 text-[14px] font-semibold text-dark transition-colors hover:border-blue hover:text-blue disabled:cursor-not-allowed disabled:border-blue/40 disabled:text-blue"
                 >
-                  <Heart className={`h-[18px] w-[18px] ${saved ? "fill-blue" : ""}`} />
+                  <Heart
+                    className={`h-[18px] w-[18px] ${saved ? "fill-blue" : ""}`}
+                  />
                   {saved ? "Saved" : "Save"}
                 </button>
               </div>
@@ -486,7 +496,9 @@ const ShopDetailsClient = ({
               {ASSURANCES.map(({ icon: Icon, title, copy }) => (
                 <li key={title} className="bg-gray-2 p-5">
                   <Icon className="h-5 w-5 text-blue" />
-                  <p className="mt-3 text-[13px] font-bold text-dark">{title}</p>
+                  <p className="mt-3 text-[13px] font-bold text-dark">
+                    {title}
+                  </p>
                   <p className="mt-1 text-[12px] leading-relaxed text-dark-5">
                     {copy}
                   </p>
@@ -516,7 +528,7 @@ const ShopDetailsClient = ({
                 </h2>
               </div>
               <p className="max-w-md text-[13.5px] leading-relaxed text-body">
-                Check these against a pair you already wear — the numbers are
+                Check these against a pair you already wear the numbers are
                 printed on the inside of the temple arm.
               </p>
             </div>

@@ -10,7 +10,7 @@ const isProduction = process.env.NODE_ENV === "production";
  * File logging is opt-in.
  *
  * On Railway the container filesystem is ephemeral and is thrown away on every
- * deploy, so log files there are write-only — nobody ever reads them back.
+ * deploy, so log files there are write-only  nobody ever reads them back.
  * Railway collects stdout/stderr instead, which is what the console transport
  * feeds. Locally, files are still handy for grepping a long dev session, so
  * they stay on by default outside production.
@@ -37,7 +37,7 @@ if (logToFile) {
 const baseFormat = winston.format.combine(
   winston.format.timestamp({ format: "YYYY-MM-DDTHH:mm:ss.SSSZ" }),
   winston.format.errors({ stack: true }),
-  winston.format.json()
+  winston.format.json(),
 );
 
 const consoleTransport = new winston.transports.Console({
@@ -55,7 +55,7 @@ if (hasLogDir) {
       level: "error",
       maxsize: 5242880,
       maxFiles: 5,
-    })
+    }),
   );
   appTransports.push(
     new winston.transports.File({
@@ -63,7 +63,7 @@ if (hasLogDir) {
       level: "info",
       maxsize: 5242880,
       maxFiles: 5,
-    })
+    }),
   );
 
   auditTransports.push(
@@ -71,7 +71,7 @@ if (hasLogDir) {
       filename: path.join(logDir, "audit.log"),
       maxsize: 5242880,
       maxFiles: 10,
-    })
+    }),
   );
 
   performanceTransports.push(
@@ -79,7 +79,7 @@ if (hasLogDir) {
       filename: path.join(logDir, "performance.log"),
       maxsize: 5242880,
       maxFiles: 5,
-    })
+    }),
   );
 }
 
@@ -110,7 +110,11 @@ export function serializeError(error: unknown) {
   }
 
   if (error && typeof error === "object") {
-    const maybeError = error as { name?: string; message?: string; stack?: string };
+    const maybeError = error as {
+      name?: string;
+      message?: string;
+      stack?: string;
+    };
     return {
       name: maybeError.name,
       message: maybeError.message,

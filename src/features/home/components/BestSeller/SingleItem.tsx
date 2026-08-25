@@ -6,7 +6,7 @@ import type { TopProduct } from "@/features/dashboard/types/dashboard";
 
 /**
  * Best-seller records come from the dashboard aggregate (`name` instead of
- * `title`, category as a plain string), so this only normalises the shape —
+ * `title`, category as a plain string), so this only normalises the shape
  * the card itself is shared with the rest of the storefront.
  */
 

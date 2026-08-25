@@ -21,7 +21,7 @@ import type { BlockData } from "@/features/site-content/types/site-content";
  * Storefront content editor.
  *
  * A block list on the left, the selected block's generated form on the right.
- * Nothing here is hand-written per block — the form comes from the registry, so
+ * Nothing here is hand-written per block  the form comes from the registry, so
  * a new block appears in this screen the moment it is added to `BLOCKS`.
  */
 export default function StorefrontEditor() {
@@ -74,7 +74,7 @@ export default function StorefrontEditor() {
       const block = await saveSiteContentBlock(definition.key, draft);
       setBlocks((prev) => ({ ...prev, [block.key]: block }));
       Toast.update(toastId, {
-        render: "Published — the change is live.",
+        render: "Published  the change is live.",
         type: "success",
         isLoading: false,
         autoClose: 3000,
@@ -98,7 +98,7 @@ export default function StorefrontEditor() {
     if (!definition) return;
     if (
       !window.confirm(
-        `Restore "${definition.label}" to the sample content? Your edits to this block will be lost.`
+        `Restore "${definition.label}" to the sample content? Your edits to this block will be lost.`,
       )
     ) {
       return;
@@ -134,9 +134,10 @@ export default function StorefrontEditor() {
           Storefront content
         </h2>
         <p className="mt-1 max-w-2xl text-[13.5px] leading-relaxed text-dark-4">
-          Every headline, menu, banner and link on the public site. Blocks marked
+          Every headline, menu, banner and link on the public site. Blocks
+          marked
           <span className="mx-1 font-semibold text-blue">Sample</span>
-          are still showing the shipped placeholder content — edit and publish to
+          are still showing the shipped placeholder content edit and publish to
           make them yours.
         </p>
       </div>

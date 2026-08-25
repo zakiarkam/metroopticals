@@ -3,7 +3,7 @@
  *
  * Every lens type the store fits has one entry here, and that entry is the only
  * source for the header menu, the /lenses index and the /lenses/[slug] detail
- * page. Adding a lens type is a single object — no new route file, no second
+ * page. Adding a lens type is a single object  no new route file, no second
  * copy of the copy in the mega-menu block.
  *
  * The optical copy is written from published sources rather than from supplier
@@ -23,7 +23,7 @@ export type LensGroup =
 /** A colour or sub-option offered within one lens type. */
 export type LensVariant = {
   name: string;
-  /** Swatch fill — drawn as the lens tint, so keep it the tint, not the frame. */
+  /** Swatch fill  drawn as the lens tint, so keep it the tint, not the frame. */
   hex: string;
   summary: string;
 };
@@ -37,7 +37,7 @@ export type LensType = {
   group: LensGroup;
   /** One line under the title and on the card. */
   tagline: string;
-  /** lucide-react icon name — see `LENS_ICONS` in the lens components. */
+  /** lucide-react icon name  see `LENS_ICONS` in the lens components. */
   icon: string;
   image: string;
   imageAlt: string;
@@ -78,7 +78,7 @@ export const lensTypes: LensType[] = [
     shortName: "Uncoated (U/C)",
     group: "Clear & coated",
     tagline:
-      "The plain, untreated prescription lens — the most affordable way to get your power made up.",
+      "The plain, untreated prescription lens  the most affordable way to get your power made up.",
     icon: "circle",
     image: `${IMG}/uncoated.jpg`,
     imageAlt:
@@ -87,12 +87,12 @@ export const lensTypes: LensType[] = [
     imageInUseAlt:
       "A customer trying on a pair of clear everyday spectacles at the dispensing counter",
     intro: [
-      "U/C stands for uncoated: a prescription lens finished with nothing added to its surface — no anti-reflective layer, no blue filter, no tint. It is the lens in its simplest form, and it is where most price lists start.",
+      "U/C stands for uncoated: a prescription lens finished with nothing added to its surface  no anti-reflective layer, no blue filter, no tint. It is the lens in its simplest form, and it is where most price lists start.",
       "An uncoated lens corrects your prescription exactly as well as a coated one. The difference is not in the power, it is in what happens at the surface of the lens when light hits it.",
     ],
     howItWorks: [
       "Every time light crosses from air into a lens, a small percentage of it bounces off instead of passing through. On an untreated lens that adds up: an uncoated lens transmits roughly 92% of the light reaching it, while the same lens with an anti-reflective coating transmits 98–99%.",
-      "The light that does not pass through has to go somewhere, and it comes back at you as surface reflections — the halos around headlights at night, the bright wash across your lenses in a photograph, and the ghost image of a screen sitting over what you are actually reading.",
+      "The light that does not pass through has to go somewhere, and it comes back at you as surface reflections  the halos around headlights at night, the bright wash across your lenses in a photograph, and the ghost image of a screen sitting over what you are actually reading.",
       "That is the whole trade. You save the cost of the coating, and you accept the reflections that the coating would have removed.",
     ],
     benefits: [
@@ -121,9 +121,9 @@ export const lensTypes: LensType[] = [
       "Work where colour has to be judged with nothing in the way",
     ],
     goodToKnow: [
-      "Night driving is where uncoated lenses are felt most — oncoming headlights throw noticeable halos and reflections that an anti-reflective coating largely removes.",
+      "Night driving is where uncoated lenses are felt most  oncoming headlights throw noticeable halos and reflections that an anti-reflective coating largely removes.",
       "On video calls and in photographs, your lenses will show a bright reflection and your eyes will be harder to see.",
-      "Uncoated does not mean unprotected from UV. UV blocking comes from the lens material and any UV treatment, not from the coating — ask us to confirm the UV rating on the material you choose.",
+      "Uncoated does not mean unprotected from UV. UV blocking comes from the lens material and any UV treatment, not from the coating  ask us to confirm the UV rating on the material you choose.",
       "If you spend hours in front of a screen, the reflections are the thing that will tire you, and an anti-reflective or blue filter lens is the honest recommendation.",
     ],
     specs: [
@@ -138,20 +138,20 @@ export const lensTypes: LensType[] = [
         question: "Will uncoated lenses give me weaker vision?",
         answer: [
           "No. The prescription is ground into the lens itself, so an uncoated lens corrects your sight exactly as accurately as a coated one.",
-          "What you notice instead is contrast in difficult light — night driving, a bright screen in a dim room, headlights in the rain — where surface reflections sit over the image.",
+          "What you notice instead is contrast in difficult light  night driving, a bright screen in a dim room, headlights in the rain  where surface reflections sit over the image.",
         ],
       },
       {
         question: "Can a coating be added to my lenses later?",
         answer: [
           "Not practically. Anti-reflective and blue filter layers are applied to the lens during manufacture in a vacuum coating chamber, not afterwards at the counter.",
-          "If you decide you want a coating, a new pair of lenses is made and fitted into your existing frame — which we are happy to do.",
+          "If you decide you want a coating, a new pair of lenses is made and fitted into your existing frame  which we are happy to do.",
         ],
       },
       {
         question: "How do I look after them?",
         answer: [
-          "Rinse dust off under running water before you wipe, use a lens spray and a clean microfibre cloth, and never use a shirt, tissue or kitchen paper — those are what put the fine scratches into a lens.",
+          "Rinse dust off under running water before you wipe, use a lens spray and a clean microfibre cloth, and never use a shirt, tissue or kitchen paper  those are what put the fine scratches into a lens.",
           "Store them in a case face-up, never lens-down on a table.",
         ],
       },
@@ -175,7 +175,7 @@ export const lensTypes: LensType[] = [
     imageInUseAlt:
       "A woman working late at a laptop, her clear lenses catching the light of the screen",
     intro: [
-      "A blue cut lens is a clear prescription lens with a filter that removes a share of the short-wavelength violet-blue light — roughly the 400–450 nm band — that comes off phone, laptop and LED screens.",
+      "A blue cut lens is a clear prescription lens with a filter that removes a share of the short-wavelength violet-blue light  roughly the 400–450 nm band  that comes off phone, laptop and LED screens.",
       "It is the most-asked-for lens in the shop, and it is worth understanding exactly what it does and what it does not do before you buy it.",
     ],
     howItWorks: [
@@ -186,7 +186,7 @@ export const lensTypes: LensType[] = [
     benefits: [
       {
         title: "The strongest blue filtering we stock",
-        body: "If you want the highest blue-violet attenuation available in a clear lens, this is it — noticeably more than a blue filter or blue control lens.",
+        body: "If you want the highest blue-violet attenuation available in a clear lens, this is it  noticeably more than a blue filter or blue control lens.",
       },
       {
         title: "Anti-reflective as standard",
@@ -202,16 +202,16 @@ export const lensTypes: LensType[] = [
       },
     ],
     bestFor: [
-      "Eight-hour screen days — developers, accountants, call centres, editors",
+      "Eight-hour screen days  developers, accountants, call centres, editors",
       "Students working late on laptops and phones",
       "Anyone who already finds LED lighting harsh",
       "People upgrading from an uncoated lens who want everything in one go",
     ],
     goodToKnow: [
       "The evidence is not on the marketing's side. A 2023 Cochrane review of 17 randomised trials concluded that blue-light filtering spectacle lenses probably make no difference to eye strain from computer use or to sleep quality, and found no evidence that they protect the retina.",
-      "Much of the comfort wearers genuinely report comes from the anti-reflective coating that ships with the lens, not from the blue filter itself — which is a real benefit, just not the one on the label.",
+      "Much of the comfort wearers genuinely report comes from the anti-reflective coating that ships with the lens, not from the blue filter itself  which is a real benefit, just not the one on the label.",
       "The faint yellow cast is visible in white backgrounds and skin tones. If you match colour for a living, choose a blue filter lens or a plain AR lens instead.",
-      "It is not a substitute for taking breaks. The 20-20-20 habit — every 20 minutes, look at something 20 feet away for 20 seconds — does more for tired eyes than any lens.",
+      "It is not a substitute for taking breaks. The 20-20-20 habit  every 20 minutes, look at something 20 feet away for 20 seconds  does more for tired eyes than any lens.",
     ],
     specs: [
       { label: "Filtering", value: "≈30–40%+ across 400–450 nm" },
@@ -222,17 +222,17 @@ export const lensTypes: LensType[] = [
     ],
     faqs: [
       {
-        question: "Blue cut or blue filter — what is the real difference?",
+        question: "Blue cut or blue filter  what is the real difference?",
         answer: [
           "Blue cut filters harder: 30–40% or more of the 400–450 nm band, with a faint yellow cast to show for it.",
-          "Blue filter (also sold as blue control) is gentler — around 20–30% of the most energetic blue-violet — and lets the beneficial blue-turquoise through, so colours stay closer to natural.",
+          "Blue filter (also sold as blue control) is gentler  around 20–30% of the most energetic blue-violet  and lets the beneficial blue-turquoise through, so colours stay closer to natural.",
           "Heavy screen users who want maximum filtering choose blue cut. People who want the comfort without the colour shift choose blue filter.",
         ],
       },
       {
         question: "Do I need a prescription for blue cut lenses?",
         answer: [
-          "No. Blue cut can be made in plano — zero power — so you can have the filter and the anti-reflective coating without any correction.",
+          "No. Blue cut can be made in plano  zero power  so you can have the filter and the anti-reflective coating without any correction.",
           "If you do have a prescription, the filter is simply made into your power at no change to the fitting.",
         ],
       },
@@ -254,7 +254,7 @@ export const lensTypes: LensType[] = [
     shortName: "Photochromic",
     group: "Sun & outdoor",
     tagline:
-      "Clear indoors, dark in the sun — one pair of glasses that handles both, in six tint colours.",
+      "Clear indoors, dark in the sun  one pair of glasses that handles both, in six tint colours.",
     icon: "sun",
     image: `${IMG}/photochromic.jpg`,
     imageAlt:
@@ -264,12 +264,12 @@ export const lensTypes: LensType[] = [
       "A woman stepping out of shade into bright sunlight, her lenses visibly darkened",
     intro: [
       "Photochromic lenses darken automatically in sunlight and fade back to clear indoors. You wear one pair, walk out of the office into Colombo sun, and the lens handles it without you swapping glasses or hunting for clip-ons.",
-      "We supply them in six tints — grey, green, blue, yellow, purple and pink — so the darkened state can be chosen for how you want to see, and for how you want to look.",
+      "We supply them in six tints  grey, green, blue, yellow, purple and pink  so the darkened state can be chosen for how you want to see, and for how you want to look.",
     ],
     howItWorks: [
       "The lens carries photochromic molecules that change shape when they absorb ultraviolet radiation. In plastic lenses these are carbon-based photochromic dyes; in glass lenses they are silver halide crystals, usually silver chloride, which gain an electron under UV and become metallic silver that absorbs light.",
       "Either way the reaction is the same to wear: step into sunlight and the lens begins darkening within seconds, reaching full tint in roughly 30 to 90 seconds. Step back into shade and the molecules relax to their original state and the lens clears again.",
-      "The cycle is fully reversible and repeats thousands of times over the life of the lens. Nothing wears out from using it — the tint gradually becomes less deep only over years of service.",
+      "The cycle is fully reversible and repeats thousands of times over the life of the lens. Nothing wears out from using it  the tint gradually becomes less deep only over years of service.",
     ],
     benefits: [
       {
@@ -278,7 +278,7 @@ export const lensTypes: LensType[] = [
       },
       {
         title: "Full UV block, all day",
-        body: "Photochromic lenses block UV in both states — clear indoors and dark outside — so your eyes are covered even before the tint has finished arriving.",
+        body: "Photochromic lenses block UV in both states  clear indoors and dark outside  so your eyes are covered even before the tint has finished arriving.",
       },
       {
         title: "It adjusts faster than you do",
@@ -286,7 +286,7 @@ export const lensTypes: LensType[] = [
       },
       {
         title: "Six tints to choose from",
-        body: "Grey for true colour, green for contrast, and four fashion tints — the darkened state is a style decision as much as an optical one.",
+        body: "Grey for true colour, green for contrast, and four fashion tints  the darkened state is a style decision as much as an optical one.",
       },
     ],
     bestFor: [
@@ -294,12 +294,12 @@ export const lensTypes: LensType[] = [
       "People who dislike carrying and swapping a second pair",
       "Light-sensitive eyes that find bright days uncomfortable",
       "Children and teenagers who will not remember sunglasses",
-      "Sri Lanka's glare — an everyday lens rather than a holiday one",
+      "Sri Lanka's glare  an everyday lens rather than a holiday one",
     ],
     goodToKnow: [
       "They will not darken properly inside a car. Modern windscreens block 98–99% of UV, and UV is what triggers the reaction. If you want tint behind the wheel, ask us about an extra-active photochromic that also responds to visible light, or fit polarised sunglasses for driving.",
       "Temperature changes the behaviour. The lens darkens deeper and faster in cool conditions and fades back to clear faster in heat, so a hot Colombo afternoon gives a slightly lighter tint than a cool morning.",
-      "Fading back to clear takes longer than darkening — expect a few minutes indoors before the last of the tint has gone.",
+      "Fading back to clear takes longer than darkening  expect a few minutes indoors before the last of the tint has gone.",
       "A photochromic lens at full tint is not as dark as a dedicated pair of sunglasses. For a full day at the beach or on the water, polarised sunglasses are still the better tool.",
     ],
     variants: {
@@ -317,7 +317,7 @@ export const lensTypes: LensType[] = [
           name: "Green",
           hex: "#4A6B4C",
           summary:
-            "Lifts contrast while staying close to natural colour. Good in variable light — dappled shade, overcast bright days — and easy on the eyes over long outdoor stretches.",
+            "Lifts contrast while staying close to natural colour. Good in variable light  dappled shade, overcast bright days  and easy on the eyes over long outdoor stretches.",
         },
         {
           name: "Blue",
@@ -341,13 +341,16 @@ export const lensTypes: LensType[] = [
           name: "Pink",
           hex: "#B5738A",
           summary:
-            "The softest of the six. A gentle, flattering tint with a light reduction in brightness — a style choice more than a glare solution.",
+            "The softest of the six. A gentle, flattering tint with a light reduction in brightness  a style choice more than a glare solution.",
         },
       ],
     },
     specs: [
       { label: "Activation", value: "Ultraviolet light" },
-      { label: "Darkening time", value: "Seconds to start, 30–90s to full tint" },
+      {
+        label: "Darkening time",
+        value: "Seconds to start, 30–90s to full tint",
+      },
       { label: "Clear state", value: "Near-clear indoors" },
       { label: "UV protection", value: "In both clear and dark states" },
       { label: "Tints", value: "Grey, green, blue, yellow, purple, pink" },
@@ -358,7 +361,7 @@ export const lensTypes: LensType[] = [
         question: "Why don't my photochromic lenses go dark in the car?",
         answer: [
           "Because the windscreen has already removed the ultraviolet light the lens needs. Modern laminated windscreens block 98–99% of UV.",
-          "The lens is working exactly as designed; there is simply nothing left to trigger it. Extra-active photochromics that also respond to visible light will tint somewhat behind glass — ask us about those if you drive a lot.",
+          "The lens is working exactly as designed; there is simply nothing left to trigger it. Extra-active photochromics that also respond to visible light will tint somewhat behind glass  ask us about those if you drive a lot.",
         ],
       },
       {
@@ -386,7 +389,7 @@ export const lensTypes: LensType[] = [
     shortName: "Blue Filter",
     group: "Screen & indoor",
     tagline:
-      "A gentler, colour-true blue filter — screen comfort without the yellow cast.",
+      "A gentler, colour-true blue filter  screen comfort without the yellow cast.",
     icon: "shield",
     image: `${IMG}/blue-filter.jpg`,
     imageAlt:
@@ -395,13 +398,13 @@ export const lensTypes: LensType[] = [
     imageInUseAlt:
       "A designer at a colour-calibrated monitor wearing clear spectacles, colour proofs on the desk",
     intro: [
-      "A blue filter lens — also sold as blue control — takes a lighter hand than blue cut. Instead of removing as much of the blue band as possible, it targets the most energetic blue-violet and lets the beneficial blue-turquoise through.",
+      "A blue filter lens  also sold as blue control  takes a lighter hand than blue cut. Instead of removing as much of the blue band as possible, it targets the most energetic blue-violet and lets the beneficial blue-turquoise through.",
       "The result is screen comfort with colours that still look right, which is why this is the lens we recommend to anyone who tried blue cut and disliked how warm everything went.",
     ],
     howItWorks: [
-      "Blue control lenses filter roughly 20–30% of the most energetic blue-violet light — the top of the harmful band — while deliberately passing the blue-turquoise wavelengths that are involved in colour perception and in keeping your body clock on schedule.",
+      "Blue control lenses filter roughly 20–30% of the most energetic blue-violet light  the top of the harmful band  while deliberately passing the blue-turquoise wavelengths that are involved in colour perception and in keeping your body clock on schedule.",
       "Because less of the spectrum is removed, the lens stays visually far closer to a plain clear lens. There is no strong yellow cast, and white backgrounds still read as white.",
-      "Blue filter lenses are supplied with a full anti-reflective and hard coating, and the protection is usually broader than blue cut alone — full UV blocking is part of the same package rather than an extra.",
+      "Blue filter lenses are supplied with a full anti-reflective and hard coating, and the protection is usually broader than blue cut alone  full UV blocking is part of the same package rather than an extra.",
     ],
     benefits: [
       {
@@ -418,33 +421,39 @@ export const lensTypes: LensType[] = [
       },
       {
         title: "Barely visible in the frame",
-        body: "Without the strong yellow cast, the lens looks like a normal clear lens from the outside — no tint showing in photographs or on video calls.",
+        body: "Without the strong yellow cast, the lens looks like a normal clear lens from the outside  no tint showing in photographs or on video calls.",
       },
     ],
     bestFor: [
       "Office workers and students on screens six to eight hours a day",
-      "Colour-critical work — design, photography, printing, retail merchandising",
+      "Colour-critical work  design, photography, printing, retail merchandising",
       "Anyone who found blue cut lenses too warm",
       "A first screen lens where you are not sure how strong a filter you want",
     ],
     goodToKnow: [
       "The same evidence caveat applies as to blue cut: the 2023 Cochrane review of 17 randomised trials found blue-light filtering lenses probably make no difference to computer eye strain or sleep quality, and no evidence of retinal protection.",
-      "We fit them because wearers consistently report the pair more comfortable than plain uncoated lenses — most of which is the anti-reflective coating doing its job. That is worth paying for; a medical claim is not.",
+      "We fit them because wearers consistently report the pair more comfortable than plain uncoated lenses  most of which is the anti-reflective coating doing its job. That is worth paying for; a medical claim is not.",
       "It filters less blue-violet than a blue cut lens. If maximum filtering is what you specifically want, blue cut is the stronger option.",
       "Screen habits still matter more than lenses. Screen brightness matched to the room, a break every 20 minutes, and blinking properly beat any coating.",
     ],
     specs: [
-      { label: "Filtering", value: "≈20–30% of blue-violet, blue-turquoise passed" },
+      {
+        label: "Filtering",
+        value: "≈20–30% of blue-violet, blue-turquoise passed",
+      },
       { label: "Appearance", value: "Clear, near-natural colour" },
       { label: "Coating", value: "Anti-reflective + hard coat + UV" },
-      { label: "Typical use", value: "Office, study, colour-critical screen work" },
+      {
+        label: "Typical use",
+        value: "Office, study, colour-critical screen work",
+      },
       { label: "Available as", value: "Single vision, bifocal, progressive" },
     ],
     faqs: [
       {
         question: "Is blue filter the same as anti-glare?",
         answer: [
-          "No, though they are almost always sold together. Anti-glare — the anti-reflective coating — removes reflections from the surfaces of the lens, which is what makes screens and night driving more comfortable.",
+          "No, though they are almost always sold together. Anti-glare  the anti-reflective coating  removes reflections from the surfaces of the lens, which is what makes screens and night driving more comfortable.",
           "The blue filter works on the wavelengths passing through the lens. A blue filter lens includes an anti-reflective coating; an anti-reflective lens does not necessarily include a blue filter.",
         ],
       },
@@ -456,11 +465,11 @@ export const lensTypes: LensType[] = [
         ],
       },
       {
-        question: "Which should I choose — blue cut or blue filter?",
+        question: "Which should I choose  blue cut or blue filter?",
         answer: [
           "Choose blue filter if colour accuracy matters to you or you want the least noticeable lens.",
           "Choose blue cut if you want the strongest available filtering and the faint warm cast does not bother you.",
-          "Bring both up when you come in — we will hold a sample of each against a screen so you can see the difference before deciding.",
+          "Bring both up when you come in  we will hold a sample of each against a screen so you can see the difference before deciding.",
         ],
       },
     ],
@@ -474,7 +483,7 @@ export const lensTypes: LensType[] = [
     shortName: "Polarized",
     group: "Sun & outdoor",
     tagline:
-      "Kills reflected glare off water, wet roads and glass — in black, brown or yellow.",
+      "Kills reflected glare off water, wet roads and glass  in black, brown or yellow.",
     icon: "waves",
     image: `${IMG}/polarized.jpg`,
     imageAlt:
@@ -484,17 +493,17 @@ export const lensTypes: LensType[] = [
       "A driver in bright late-afternoon sun wearing dark polarised sunglasses",
     intro: [
       "Polarised lenses do something a tint alone cannot: they remove reflected glare. A dark tint makes everything dimmer, including the glare. A polarised lens removes the glare specifically and leaves the rest of the scene bright and detailed.",
-      "It is the difference between squinting at a bright road and simply seeing it. We supply polarised lenses in three tints — black, brown and yellow — each suited to different light.",
+      "It is the difference between squinting at a bright road and simply seeing it. We supply polarised lenses in three tints  black, brown and yellow  each suited to different light.",
     ],
     howItWorks: [
-      "Light bouncing off a flat surface — water, a wet road, a car bonnet, a shop window, sand — comes back mostly polarised in one direction, horizontally. That concentrated horizontal light is what you experience as blinding glare.",
+      "Light bouncing off a flat surface  water, a wet road, a car bonnet, a shop window, sand  comes back mostly polarised in one direction, horizontally. That concentrated horizontal light is what you experience as blinding glare.",
       "A polarised lens has a filter laminated inside it, oriented vertically. It passes light vibrating vertically and blocks light vibrating horizontally, so the reflected glare is cut out while the useful light continues through.",
       "The effect is immediate and obvious: look at water through a polarised lens and you can see into it rather than at the reflection sitting on top of it.",
     ],
     benefits: [
       {
         title: "Reflected glare simply goes",
-        body: "Water, wet tarmac, windscreens, painted metal and sand stop throwing light back at you. This is not a subtle improvement — it is the first thing everyone notices.",
+        body: "Water, wet tarmac, windscreens, painted metal and sand stop throwing light back at you. This is not a subtle improvement  it is the first thing everyone notices.",
       },
       {
         title: "Safer driving in bright light",
@@ -506,7 +515,7 @@ export const lensTypes: LensType[] = [
       },
       {
         title: "Sharper contrast and colour",
-        body: "With the reflected wash taken off, colours look deeper and edges look better defined — noticeably so on water and greenery.",
+        body: "With the reflected wash taken off, colours look deeper and edges look better defined  noticeably so on water and greenery.",
       },
     ],
     bestFor: [
@@ -517,9 +526,9 @@ export const lensTypes: LensType[] = [
       "Prescription sunglasses that will be worn every day",
     ],
     goodToKnow: [
-      "LCD and LED screens can go dim or black through a polarised lens at certain angles — car dashboards, fuel pumps, ATMs and phone screens are the common ones. Tilting your head usually restores them.",
+      "LCD and LED screens can go dim or black through a polarised lens at certain angles  car dashboards, fuel pumps, ATMs and phone screens are the common ones. Tilting your head usually restores them.",
       "Pilots and some machine operators are advised against polarised lenses for exactly that reason. If you fly or operate equipment with polarised displays, tell us before you order.",
-      "Polarisation and UV protection are separate things. A polarised lens is not automatically 100% UV — check the specification, and we will confirm it on whatever you choose.",
+      "Polarisation and UV protection are separate things. A polarised lens is not automatically 100% UV  check the specification, and we will confirm it on whatever you choose.",
       "In snow, ice or very flat light polarisation can hide the surface reflections you actually want to see. Not a Sri Lankan problem, but worth knowing if you travel to ski.",
     ],
     variants: {
@@ -531,13 +540,13 @@ export const lensTypes: LensType[] = [
           name: "Black / Grey",
           hex: "#2B2B2B",
           summary:
-            "The true-colour choice. Cuts overall brightness evenly without distorting colours, which makes it the best general-purpose tint and the standard recommendation for driving — traffic lights and road markings stay exactly the colour they should be.",
+            "The true-colour choice. Cuts overall brightness evenly without distorting colours, which makes it the best general-purpose tint and the standard recommendation for driving  traffic lights and road markings stay exactly the colour they should be.",
         },
         {
           name: "Brown",
           hex: "#5C3A20",
           summary:
-            "The contrast and depth choice. Brown and amber lift contrast and improve depth perception, and handle changing light better than grey — the tint for fishing, cycling, hiking and long days where the sun keeps going in and out.",
+            "The contrast and depth choice. Brown and amber lift contrast and improve depth perception, and handle changing light better than grey  the tint for fishing, cycling, hiking and long days where the sun keeps going in and out.",
         },
         {
           name: "Yellow",
@@ -556,7 +565,8 @@ export const lensTypes: LensType[] = [
     ],
     faqs: [
       {
-        question: "What is the difference between polarised and just a dark tint?",
+        question:
+          "What is the difference between polarised and just a dark tint?",
         answer: [
           "A tint reduces how much light gets through, across the board. It makes the scene darker, glare included, but the glare is still there relative to everything else.",
           "A polarised lens targets reflected glare specifically and removes it, so the scene stays bright and detailed with the glare taken out. Once you have compared them side by side the difference is hard to unsee.",
@@ -573,7 +583,7 @@ export const lensTypes: LensType[] = [
       {
         question: "Can I get polarised lenses in my prescription?",
         answer: [
-          "Yes — polarised prescription sunglasses are one of the most common jobs we do, in single vision, bifocal and progressive.",
+          "Yes  polarised prescription sunglasses are one of the most common jobs we do, in single vision, bifocal and progressive.",
           "Bring your prescription and your chosen frame, or pick a frame with us. Wrap-around sports frames have curvature limits on prescription strength, so let us check the frame against your power before you commit.",
         ],
       },
@@ -588,7 +598,7 @@ export const lensTypes: LensType[] = [
     shortName: "Bifocal",
     group: "Multifocal",
     tagline:
-      "Distance on top, reading below, one clear line between — the fastest multifocal to get used to.",
+      "Distance on top, reading below, one clear line between  the fastest multifocal to get used to.",
     icon: "layers",
     image: `${IMG}/bifocal.jpg`,
     imageAlt:
@@ -598,7 +608,7 @@ export const lensTypes: LensType[] = [
       "An older man reading a newspaper by a window through bifocal spectacles",
     intro: [
       "A bifocal lens carries two separate powers in one lens: your distance prescription across the top, and your reading prescription in a segment at the bottom, with a visible line where they meet.",
-      "It is the oldest answer to presbyopia and still one of the best, because the two zones are wide, stable and completely unambiguous — you always know exactly where to look.",
+      "It is the oldest answer to presbyopia and still one of the best, because the two zones are wide, stable and completely unambiguous  you always know exactly where to look.",
     ],
     howItWorks: [
       "The reading power sits in a small half-moon shaped segment fused into the lower part of the lens. Everything above the line is your distance prescription; everything inside the segment is your reading prescription. There is nothing in between.",
@@ -608,11 +618,11 @@ export const lensTypes: LensType[] = [
     benefits: [
       {
         title: "A wide, stable reading zone",
-        body: "The reading segment is as wide as it looks — no narrowing corridor, no soft edges. For long stretches of reading it is genuinely more comfortable than a progressive.",
+        body: "The reading segment is as wide as it looks  no narrowing corridor, no soft edges. For long stretches of reading it is genuinely more comfortable than a progressive.",
       },
       {
         title: "Almost no adaptation",
-        body: "Most wearers are comfortable in three to seven days. The two zones are distinct, so your brain has very little to learn — you look down, you read.",
+        body: "Most wearers are comfortable in three to seven days. The two zones are distinct, so your brain has very little to learn  you look down, you read.",
       },
       {
         title: "Substantially cheaper",
@@ -625,19 +635,19 @@ export const lensTypes: LensType[] = [
     ],
     bestFor: [
       "First-time multifocal wearers who want certainty over cosmetics",
-      "Long reading sessions — books, ledgers, paperwork",
+      "Long reading sessions  books, ledgers, paperwork",
       "Strong reading additions",
       "A budget-conscious upgrade from carrying two pairs",
       "Anyone who has tried progressives and could not get on with them",
     ],
     goodToKnow: [
       "The line is visible, to you and to everyone else. For many wearers that is the deciding factor against bifocals.",
-      "There is no intermediate zone. Computer screens, car dashboards, music stands and supermarket shelves sit at a distance neither half of the lens corrects properly — this is the single biggest limitation.",
+      "There is no intermediate zone. Computer screens, car dashboards, music stands and supermarket shelves sit at a distance neither half of the lens corrects properly  this is the single biggest limitation.",
       "Objects appear to 'jump' as your eye crosses the segment edge. It is normal, it settles within days, but it is real and stairs deserve care in the first week.",
-      "If you spend your day at a screen, ask us about a progressive or a dedicated office lens instead — a bifocal will fight you at that distance.",
+      "If you spend your day at a screen, ask us about a progressive or a dedicated office lens instead  a bifocal will fight you at that distance.",
     ],
     specs: [
-      { label: "Zones", value: "Two — distance and near" },
+      { label: "Zones", value: "Two  distance and near" },
       { label: "Dividing line", value: "Visible" },
       { label: "Intermediate vision", value: "Not corrected" },
       { label: "Adaptation", value: "Typically 3–7 days" },
@@ -654,14 +664,14 @@ export const lensTypes: LensType[] = [
       {
         question: "Can I use bifocals at a computer?",
         answer: [
-          "Not comfortably. A screen sits at intermediate distance, and a bifocal corrects only distance and near — so you end up tilting your head back to catch the screen through the reading segment.",
+          "Not comfortably. A screen sits at intermediate distance, and a bifocal corrects only distance and near  so you end up tilting your head back to catch the screen through the reading segment.",
           "For screen work, a progressive lens or a dedicated office lens is the right answer. We can make one of each if you split your day between desk and out-and-about.",
         ],
       },
       {
         question: "Can the line be made less visible?",
         answer: [
-          "The segment shape and size can be chosen to be less obvious, and a smaller segment in a well-fitted frame is discreet. But a bifocal always has a line — that is what makes it a bifocal.",
+          "The segment shape and size can be chosen to be less obvious, and a smaller segment in a well-fitted frame is discreet. But a bifocal always has a line  that is what makes it a bifocal.",
           "If invisibility is the priority, a progressive lens is the only option that removes the line entirely.",
         ],
       },
@@ -686,7 +696,7 @@ export const lensTypes: LensType[] = [
       "A woman glancing between a laptop screen and a printed page through progressive lenses",
     intro: [
       "A progressive lens changes power gradually from top to bottom: distance at the top, intermediate through the middle, reading at the bottom, with no line and no jump between them.",
-      "It is the closest thing to how your eyes worked before presbyopia — one pair, every distance, and nobody can tell by looking at you.",
+      "It is the closest thing to how your eyes worked before presbyopia  one pair, every distance, and nobody can tell by looking at you.",
     ],
     howItWorks: [
       "Rather than fusing separate segments, the surface of a progressive lens is ground so the power increases smoothly down a corridor running through the middle of the lens. Look straight ahead for distance, drop slightly for a screen, drop further for a book.",
@@ -704,29 +714,29 @@ export const lensTypes: LensType[] = [
       },
       {
         title: "No image jump",
-        body: "Because the power changes smoothly, nothing shifts or jumps as your eye moves down the lens — stairs and kerbs behave the way they always did.",
+        body: "Because the power changes smoothly, nothing shifts or jumps as your eye moves down the lens  stairs and kerbs behave the way they always did.",
       },
       {
         title: "One pair for a whole day",
-        body: "Driving in, working at a screen, reading a menu at lunch, watching a match in the evening — all of it through the same glasses.",
+        body: "Driving in, working at a screen, reading a menu at lunch, watching a match in the evening  all of it through the same glasses.",
       },
     ],
     bestFor: [
       "Presbyopia with an active day that keeps switching distance",
-      "Desk and screen work — the intermediate zone is the reason",
+      "Desk and screen work  the intermediate zone is the reason",
       "Anyone who does not want a visible line",
       "Wearers moving up from two separate pairs",
       "Prescription sunglasses that also need a reading power",
     ],
     goodToKnow: [
-      "Adaptation takes longer than a bifocal — typically one to three weeks. Dizziness, mild headache and a swimming sensation in your peripheral vision are common in the first days and normally settle.",
-      "The peripheral areas either side of the corridor are soft by design. You learn to point your nose at what you want to look at instead of moving only your eyes — that habit is the single biggest hurdle.",
+      "Adaptation takes longer than a bifocal  typically one to three weeks. Dizziness, mild headache and a swimming sensation in your peripheral vision are common in the first days and normally settle.",
+      "The peripheral areas either side of the corridor are soft by design. You learn to point your nose at what you want to look at instead of moving only your eyes  that habit is the single biggest hurdle.",
       "Fitting accuracy is not optional. The lens must be made to your measurements in the frame you have chosen, so progressives cannot be ordered from a prescription over the phone.",
-      "They cost considerably more than bifocals. A wider, easier corridor is largely what the extra money buys — the premium free-form designs are noticeably easier to adapt to.",
+      "They cost considerably more than bifocals. A wider, easier corridor is largely what the extra money buys  the premium free-form designs are noticeably easier to adapt to.",
       "Very small or very deep frames restrict the corridor. We will tell you honestly if a frame you like is a poor host for your progressive.",
     ],
     specs: [
-      { label: "Zones", value: "Three — distance, intermediate, near" },
+      { label: "Zones", value: "Three  distance, intermediate, near" },
       { label: "Dividing line", value: "None" },
       { label: "Intermediate vision", value: "Corrected" },
       { label: "Adaptation", value: "Typically 1–3 weeks" },
@@ -737,7 +747,7 @@ export const lensTypes: LensType[] = [
         question: "Why do progressives make me feel dizzy at first?",
         answer: [
           "Your brain has spent a lifetime with one power across the whole lens. A progressive gives it a moving target, and the soft areas either side of the corridor make your peripheral vision seem to sway when you turn your head.",
-          "Wear them full time for the first two weeks rather than switching back to your old pair — swapping back and forth is what makes adaptation drag on. If it has not settled after three weeks, come in and we will recheck the fit.",
+          "Wear them full time for the first two weeks rather than switching back to your old pair  swapping back and forth is what makes adaptation drag on. If it has not settled after three weeks, come in and we will recheck the fit.",
         ],
       },
       {
@@ -751,7 +761,7 @@ export const lensTypes: LensType[] = [
         question: "Do I need to buy an expensive progressive?",
         answer: [
           "Not necessarily, but the design grade genuinely matters here more than on any other lens. Premium free-form designs give a wider corridor and softer peripheral distortion, which is exactly what makes the difference between adapting easily and giving up.",
-          "If it is your first progressive, we usually suggest not choosing the cheapest design available — the money saved is often the reason the lens ends up in a drawer.",
+          "If it is your first progressive, we usually suggest not choosing the cheapest design available  the money saved is often the reason the lens ends up in a drawer.",
         ],
       },
     ],
@@ -765,7 +775,7 @@ export const lensTypes: LensType[] = [
     shortName: "Neo Vision",
     group: "Premium ranges",
     tagline:
-      "A stocked premium lens range — ask our team for the current specification and pricing.",
+      "A stocked premium lens range  ask our team for the current specification and pricing.",
     icon: "sparkles",
     image: `${IMG}/neo-vision.jpg`,
     imageAlt:
@@ -780,13 +790,13 @@ export const lensTypes: LensType[] = [
     ],
     howItWorks: [
       "Premium lens ranges differ from entry-level lenses in three practical ways: the refractive index of the material, the quality and number of surface coating layers, and the accuracy of the surfacing itself.",
-      "A higher index bends light more strongly, so the same prescription can be made in a thinner, flatter, lighter lens — which matters most at higher powers, where a standard lens starts to look heavy at the edges.",
-      "A better coating package usually means a harder scratch-resistant layer, a more efficient anti-reflective stack, and a hydrophobic top layer that keeps water, oil and fingerprints from sticking — the difference you feel every time you clean them.",
+      "A higher index bends light more strongly, so the same prescription can be made in a thinner, flatter, lighter lens  which matters most at higher powers, where a standard lens starts to look heavy at the edges.",
+      "A better coating package usually means a harder scratch-resistant layer, a more efficient anti-reflective stack, and a hydrophobic top layer that keeps water, oil and fingerprints from sticking  the difference you feel every time you clean them.",
     ],
     benefits: [
       {
         title: "Thinner and lighter at higher powers",
-        body: "The stronger your prescription, the more a premium material shows — flatter lens faces, less edge thickness, and a pair that stops sliding down your nose.",
+        body: "The stronger your prescription, the more a premium material shows  flatter lens faces, less edge thickness, and a pair that stops sliding down your nose.",
       },
       {
         title: "A better coating package",
@@ -809,14 +819,20 @@ export const lensTypes: LensType[] = [
     ],
     goodToKnow: [
       "We have deliberately not published index figures, transmission percentages or price points for this range on the website, because supplier specifications change and a stale number is worse than none.",
-      "Call or message us with your prescription and we will tell you exactly what the current Neo Vision option is, what it costs, and whether it is genuinely worth it for your power — sometimes it is not.",
+      "Call or message us with your prescription and we will tell you exactly what the current Neo Vision option is, what it costs, and whether it is genuinely worth it for your power  sometimes it is not.",
       "If your prescription is low, a premium range may make very little visible difference to lens thickness. We will say so.",
     ],
     specs: [
       { label: "Range type", value: "Premium stocked lens range" },
-      { label: "Specification", value: "Confirmed in store — ask our team" },
-      { label: "Typical use", value: "Higher powers, rimless frames, best finish" },
-      { label: "Available as", value: "Ask about single vision, bifocal, progressive" },
+      { label: "Specification", value: "Confirmed in store  ask our team" },
+      {
+        label: "Typical use",
+        value: "Higher powers, rimless frames, best finish",
+      },
+      {
+        label: "Available as",
+        value: "Ask about single vision, bifocal, progressive",
+      },
     ],
     faqs: [
       {
@@ -844,7 +860,7 @@ export const lensTypes: LensType[] = [
     shortName: "Omega",
     group: "Premium ranges",
     tagline:
-      "A stocked premium lens range — ask our team for the current specification and pricing.",
+      "A stocked premium lens range  ask our team for the current specification and pricing.",
     icon: "gem",
     image: `${IMG}/omega.jpg`,
     imageAlt:
@@ -855,7 +871,7 @@ export const lensTypes: LensType[] = [
     supplierRange: true,
     intro: [
       "Omega is one of the supplier lens ranges stocked and fitted at Metro Opticals, offered as an upgrade over our standard clear lens on material, coating and finish.",
-      "As with any supplier range, the exact specification moves between production series. Rather than publish figures that will drift out of date, this page explains what a premium range buys you — and our team will confirm the current specification and price against your prescription.",
+      "As with any supplier range, the exact specification moves between production series. Rather than publish figures that will drift out of date, this page explains what a premium range buys you  and our team will confirm the current specification and price against your prescription.",
     ],
     howItWorks: [
       "A prescription lens is made of a material with a given refractive index, surfaced to your power, then coated. A premium range improves all three of those steps rather than any one of them.",
@@ -887,22 +903,28 @@ export const lensTypes: LensType[] = [
       "Daily-wear pairs that need to survive real use",
     ],
     goodToKnow: [
-      "No index, transmission or price figures are published here on purpose — supplier ranges are revised, and an out-of-date number on a website is worse than sending you to a person.",
+      "No index, transmission or price figures are published here on purpose  supplier ranges are revised, and an out-of-date number on a website is worse than sending you to a person.",
       "Bring or send your prescription and we will tell you what the current Omega option is and whether it makes a real difference at your power.",
-      "A premium lens does not change your prescription. If your vision has changed, the lens grade is the second conversation, not the first — book an eye test.",
+      "A premium lens does not change your prescription. If your vision has changed, the lens grade is the second conversation, not the first  book an eye test.",
     ],
     specs: [
       { label: "Range type", value: "Premium stocked lens range" },
-      { label: "Specification", value: "Confirmed in store — ask our team" },
-      { label: "Typical use", value: "Everyday premium wear, thin and rimless frames" },
-      { label: "Available as", value: "Ask about single vision, bifocal, progressive" },
+      { label: "Specification", value: "Confirmed in store  ask our team" },
+      {
+        label: "Typical use",
+        value: "Everyday premium wear, thin and rimless frames",
+      },
+      {
+        label: "Available as",
+        value: "Ask about single vision, bifocal, progressive",
+      },
     ],
     faqs: [
       {
         question: "How does Omega compare with Neo Vision?",
         answer: [
           "Both are premium ranges we stock, and which one suits you depends on your prescription, your frame and what is in stock when you order.",
-          "The most useful thing you can do is tell us your power and the frame you like — we will lay the current options side by side with prices rather than guess for you here.",
+          "The most useful thing you can do is tell us your power and the frame you like  we will lay the current options side by side with prices rather than guess for you here.",
         ],
       },
       {
@@ -917,7 +939,7 @@ export const lensTypes: LensType[] = [
   },
 ];
 
-/** Menu and index ordering — grouped, and the order the groups render in. */
+/** Menu and index ordering  grouped, and the order the groups render in. */
 export const LENS_GROUP_ORDER: LensGroup[] = [
   "Clear & coated",
   "Screen & indoor",

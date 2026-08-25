@@ -8,8 +8,8 @@ import SiteContainer from "@/components/common/SiteContainer";
 /**
  * Layout primitives for the lens guide.
  *
- * The first version of these pages was a stack of white rounded cards — benefit
- * cards, variant cards, list cards, a card rail — and every section read the
+ * The first version of these pages was a stack of white rounded cards  benefit
+ * cards, variant cards, list cards, a card rail  and every section read the
  * same weight, so nothing led. These pieces give the pages a rhythm instead:
  * a split editorial heading, hairline-ruled numbered columns, full-bleed photo
  * tiles and one dark band. Boxes are now the exception rather than the default.
@@ -18,7 +18,7 @@ import SiteContainer from "@/components/common/SiteContainer";
 /* --------------------------------------------------------------- buttons */
 
 /**
- * The primary call to action — a gold pill with a dark circular arrow badge.
+ * The primary call to action  a gold pill with a dark circular arrow badge.
  * `tone="light"` is the version for the dark band, where the pill is ivory.
  */
 export function PillLink({
@@ -30,7 +30,7 @@ export function PillLink({
   children: React.ReactNode;
   /**
    * `light` and `outline` are the pair for the dark band; `quiet` is the
-   * secondary action on a light section — an ivory pill on an ivory ground
+   * secondary action on a light section  an ivory pill on an ivory ground
    * reads as a floating arrow with no button behind it.
    */
   tone?: "accent" | "light" | "outline" | "quiet";
@@ -64,7 +64,7 @@ export function PillLink({
   );
 }
 
-/** Understated text link — uppercase, underlined, used on photo tiles. */
+/** Understated text link  uppercase, underlined, used on photo tiles. */
 export function QuietLink({
   href,
   children,
@@ -197,7 +197,7 @@ export function NumberedSteps({
  * The one dark section on each page.
  *
  * Two light pages in a row read as flat no matter how well the sections are
- * composed, so both lens pages break to warm near-black once — text and
+ * composed, so both lens pages break to warm near-black once  text and
  * actions on the left, a photograph on the right.
  */
 export function ConsultBand({
@@ -221,7 +221,7 @@ export function ConsultBand({
 }) {
   return (
     <section className="relative overflow-hidden bg-dark">
-      {/* Warm gold wash plus a faint dot grid — the flat fill alone looked
+      {/* Warm gold wash plus a faint dot grid  the flat fill alone looked
           like a missing image rather than a deliberate change of ground. */}
       <div
         aria-hidden

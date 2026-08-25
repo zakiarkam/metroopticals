@@ -66,7 +66,7 @@ const OrderReceipt = React.forwardRef<HTMLDivElement, OrderReceiptProps>(
       postal: string,
       country: string,
       phone: string,
-      email: string
+      email: string,
     ) => {
       return (
         <>
@@ -98,7 +98,7 @@ const OrderReceipt = React.forwardRef<HTMLDivElement, OrderReceiptProps>(
 
     const totalDiscount = order.items.reduce(
       (sum: number, item: any) => sum + calculateDiscount(item),
-      0
+      0,
     );
 
     // Paginate items
@@ -565,7 +565,7 @@ const OrderReceipt = React.forwardRef<HTMLDivElement, OrderReceiptProps>(
                           order.billingPostalCode,
                           order.billingCountry,
                           order.billingPhone,
-                          order.billingEmail
+                          order.billingEmail,
                         )}
                       </span>
                     </div>
@@ -579,7 +579,7 @@ const OrderReceipt = React.forwardRef<HTMLDivElement, OrderReceiptProps>(
                           order.shippingPostalCode,
                           order.shippingCountry,
                           order.shippingPhone,
-                          order.shippingEmail
+                          order.shippingEmail,
                         )}
                       </span>
                     </div>
@@ -637,7 +637,7 @@ const OrderReceipt = React.forwardRef<HTMLDivElement, OrderReceiptProps>(
                           <td>
                             <div className="product-title">
                               {item.product.title}
-                              {item.color ? ` — ${item.color}` : ""}
+                              {item.color ? `  ${item.color}` : ""}
                             </div>
                           </td>
                           <td className="category">
@@ -745,7 +745,7 @@ const OrderReceipt = React.forwardRef<HTMLDivElement, OrderReceiptProps>(
         </div>
       </>
     );
-  }
+  },
 );
 
 OrderReceipt.displayName = "OrderReceipt";

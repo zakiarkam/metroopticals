@@ -176,7 +176,7 @@ export function PromoBanners({ data }: { data: BlockData }) {
 /**
  * Home page social proof, drawn from published customer reviews.
  *
- * Nothing here is authored by the shop — if no review has been approved yet the
+ * Nothing here is authored by the shop  if no review has been approved yet the
  * section hides itself rather than showing invented testimonials.
  */
 export function LiveReviews({

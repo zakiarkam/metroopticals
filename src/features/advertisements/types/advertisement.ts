@@ -3,7 +3,7 @@ import type { Product } from "@/features/products/types/product";
 export type AdvertisementPlacement =
   // Product-driven home slot.
   | "promobanner"
-  // Photo banner zones — see AD_PLACEMENTS in constants/advertisement.ts.
+  // Photo banner zones  see AD_PLACEMENTS in constants/advertisement.ts.
   | "home-billboard"
   | "shop-top"
   | "shop-sidebar"
@@ -41,7 +41,7 @@ export interface AdvertisementsResponse {
 }
 
 export interface CreateAdvertisementInput {
-  /** Optional — falls back to the product name, then the zone label. */
+  /** Optional  falls back to the product name, then the zone label. */
   title?: string;
   /** Optional on product placements, which can borrow the product photo. */
   imageUrl?: string;

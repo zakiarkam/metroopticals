@@ -4,7 +4,7 @@ const Skeleton = ({ className = "" }: { className?: string }) => (
   <div className={`animate-pulse rounded-md bg-gray-8 ${className}`} />
 );
 
-/** Loading state for the auth screen — mirrors the split card in `index.tsx`. */
+/** Loading state for the auth screen  mirrors the split card in `index.tsx`. */
 export default function AuthPageSkeleton() {
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gray-1 px-4 py-10 sm:px-6">

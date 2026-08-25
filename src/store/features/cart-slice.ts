@@ -14,7 +14,7 @@ type CartItem = {
   price: number;
   discountedPrice: number;
   quantity: number;
-  /** The colourway this line is for — one line per colour. */
+  /** The colourway this line is for  one line per colour. */
   color?: string;
   /** Every colour the product is sold in, for the in-cart colour switcher. */
   colorOptions?: string[];
@@ -56,7 +56,7 @@ export const cart = createSlice({
       const existingItem = state.items.find(
         (item) =>
           (item.productId === productId || item.id === id) &&
-          (item.color ?? "") === (color ?? "")
+          (item.color ?? "") === (color ?? ""),
       );
 
       if (existingItem) {
@@ -94,7 +94,7 @@ export const cart = createSlice({
     },
     updateCartItemQuantity: (
       state,
-      action: PayloadAction<{ id: number; quantity: number }>
+      action: PayloadAction<{ id: number; quantity: number }>,
     ) => {
       const { id, quantity } = action.payload;
       const existingItem = state.items.find((item) => item.id === id);

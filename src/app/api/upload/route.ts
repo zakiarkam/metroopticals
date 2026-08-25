@@ -37,17 +37,17 @@ export async function POST(request: NextRequest) {
       if (!file.type.startsWith("image/")) {
         return NextResponse.json(
           { error: "Only image files are allowed" },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
-      // SVG is an active document, not just a picture — it can carry script
+      // SVG is an active document, not just a picture  it can carry script
       // and would be served from our own origin. Banner artwork is photographic
       // anyway, so raster formats only.
       if (file.type === "image/svg+xml") {
         return NextResponse.json(
           { error: "SVG uploads are not supported. Use JPG, PNG or WebP." },
-          { status: 400 }
+          { status: 400 },
         );
       }
     }
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
     if (folder === "product/catalogue" && file.type !== "application/pdf") {
       return NextResponse.json(
         { error: "Only PDF files are allowed for catalogues" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
           ? "Storage permission denied. Please check service account permissions."
           : "Failed to upload file",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -103,7 +103,7 @@ export async function DELETE(request: NextRequest) {
     if (!folder || !fileName) {
       return NextResponse.json(
         { error: "Folder and fileName are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -141,7 +141,7 @@ export async function DELETE(request: NextRequest) {
         error: "Failed to delete file",
         details: error?.message || "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -4,7 +4,7 @@ import SiteContainer from "@/components/common/SiteContainer";
  * Contact page placeholder.
  *
  * The previous version filled the blocks with `bg-gray-800`, which on this
- * ivory palette is near-black — the loading state read as five dark slabs.
+ * ivory palette is near-black  the loading state read as five dark slabs.
  * `gray-8` is the raised-surface tint the rest of the app skeletons use.
  */
 const Bar = ({ className = "" }: { className?: string }) => (

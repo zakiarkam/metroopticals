@@ -51,16 +51,18 @@ export async function getCartItem(userId: number, itemId: number) {
  */
 function resolveColor(
   requested: string | undefined,
-  frameColors: string[]
+  frameColors: string[],
 ): string {
-  const options = (frameColors ?? []).map((value) => value.trim()).filter(Boolean);
+  const options = (frameColors ?? [])
+    .map((value) => value.trim())
+    .filter(Boolean);
   if (!options.length) return "";
 
   const wanted = requested?.trim();
   if (!wanted) return options[0];
 
   const match = options.find(
-    (option) => option.toLowerCase() === wanted.toLowerCase()
+    (option) => option.toLowerCase() === wanted.toLowerCase(),
   );
 
   if (!match) {
@@ -134,7 +136,7 @@ export async function addToCart(userId: number, data: AddToCartInput) {
 export async function updateCartItem(
   userId: number,
   itemId: number,
-  data: UpdateCartItemInput
+  data: UpdateCartItemInput,
 ) {
   const cartItem = await prisma.cartItem.findUnique({
     where: { id: itemId },
@@ -146,7 +148,7 @@ export async function updateCartItem(
   }
 
   // Changing the colour of a line already in the cart can collide with a line
-  // that colour already has. Merging is the only sensible outcome — two rows
+  // that colour already has. Merging is the only sensible outcome  two rows
   // for "Tortoise" would break the unique index and confuse the shopper.
   if (data.color !== undefined) {
     const color = resolveColor(data.color, cartItem.product.frameColors);

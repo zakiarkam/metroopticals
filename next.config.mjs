@@ -62,7 +62,7 @@ const nextConfig = {
    * Security headers.
    *
    * These used to be set by nginx in front of the app. Railway's proxy does not
-   * add them, so the app has to — otherwise removing nginx would have quietly
+   * add them, so the app has to  otherwise removing nginx would have quietly
    * dropped HSTS and clickjacking protection.
    *
    * No Content-Security-Policy here on purpose: Chakra/Emotion inject inline
@@ -77,7 +77,7 @@ const nextConfig = {
         headers: [
           {
             // Railway serves every deployment over HTTPS, so this is safe to
-            // send unconditionally. No `preload` — that is a public-list
+            // send unconditionally. No `preload`  that is a public-list
             // commitment and should be a deliberate, separate decision.
             key: "Strict-Transport-Security",
             value: "max-age=31536000; includeSubDomains",

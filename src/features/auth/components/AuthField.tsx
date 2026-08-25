@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
  * One labelled field on the auth screens.
  *
  * The auth pages use a taller, ivory-filled input than the rest of the admin
- * UI — the form is the only thing on the screen, so the controls carry more
+ * UI  the form is the only thing on the screen, so the controls carry more
  * weight. Keeping that treatment in one component stops the login, signup and
  * reset forms from drifting apart.
  */
@@ -16,7 +16,7 @@ interface AuthFieldProps {
   label: string;
   icon: LucideIcon;
   error?: string;
-  /** Rendered inside the field, right-aligned — the password reveal toggle. */
+  /** Rendered inside the field, right-aligned  the password reveal toggle. */
   trailing?: React.ReactNode;
   className?: string;
   children?: React.ReactNode;

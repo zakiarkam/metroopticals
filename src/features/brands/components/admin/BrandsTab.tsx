@@ -38,7 +38,7 @@ import {
  * shop sidebar filters on them, and the storefront brand strip lists them. So
  * they are managed here like categories rather than typed into a content block.
  *
- * A brand with products cannot be deleted — the service blocks it — so the
+ * A brand with products cannot be deleted  the service blocks it  so the
  * delete action explains that instead of failing opaquely.
  */
 
@@ -82,12 +82,16 @@ function LogoUpload({
       const extension = file.name.split(".").pop()?.toLowerCase() || "png";
       const fileName = `${slug}-${Date.now()}.${extension}`;
 
-      const response = await uploadApi.uploadFile(file, "brand/image", fileName);
+      const response = await uploadApi.uploadFile(
+        file,
+        "brand/image",
+        fileName,
+      );
       onChange(response.fileName || fileName);
       Toast.success("Logo uploaded.");
     } catch (error: any) {
       Toast.error(
-        error?.response?.data?.error || error?.message || "Upload failed."
+        error?.response?.data?.error || error?.message || "Upload failed.",
       );
     } finally {
       setUploading(false);
@@ -210,7 +214,7 @@ export default function BrandsTab() {
     try {
       const payload = {
         name: form.name.trim(),
-        // Blank means "derive it from the name" — the service slugifies.
+        // Blank means "derive it from the name"  the service slugifies.
         slug: form.slug.trim() || undefined,
         logo: form.logo.trim() || null,
         status: form.status,
@@ -224,7 +228,7 @@ export default function BrandsTab() {
       await load();
     } catch (error: any) {
       Toast.error(
-        error?.response?.data?.message || error?.message || "Could not save."
+        error?.response?.data?.message || error?.message || "Could not save.",
       );
     } finally {
       setSaving(false);
@@ -234,7 +238,7 @@ export default function BrandsTab() {
   const handleDelete = async (brand: Brand) => {
     if ((brand.productCount ?? 0) > 0) {
       Toast.error(
-        `${brand.name} still has ${brand.productCount} product(s). Move them to another brand first.`
+        `${brand.name} still has ${brand.productCount} product(s). Move them to another brand first.`,
       );
       return;
     }
@@ -380,12 +384,12 @@ export default function BrandsTab() {
                   }`}
                 >
                   {!active
-                    ? "Hidden — set it Live to show it in the Brands menu."
+                    ? "Hidden  set it Live to show it in the Brands menu."
                     : (brand.productCount ?? 0) === 0
-                      ? "Not in the Brands menu yet — assign at least one product to this brand."
+                      ? "Not in the Brands menu yet  assign at least one product to this brand."
                       : logo
                         ? "Showing in the Brands menu and on the home page."
-                        : "In the Brands menu as text — upload a logo to show its mark."}
+                        : "In the Brands menu as text  upload a logo to show its mark."}
                 </p>
 
                 <div className="mt-4 flex items-center gap-2">

@@ -32,8 +32,7 @@ type Slot = {
 };
 
 /** Zones whose slots sit side by side rather than stacked. */
-const COLUMNS: Partial<Record<AdPlacementMeta["id"], string>> = {
-};
+const COLUMNS: Partial<Record<AdPlacementMeta["id"], string>> = {};
 
 const buildSlots = (meta: AdPlacementMeta, ads: Advertisement[]): Slot[] =>
   meta.slots.map((slotNumber, index) => {
@@ -46,8 +45,8 @@ const buildSlots = (meta: AdPlacementMeta, ads: Advertisement[]): Slot[] =>
     // Artwork is optional: an ad with a linked product but no upload runs on
     // the product's own photo rather than falling through to dummy artwork.
     const image = ad
-      ? getAdvertisementImageUrl(ad.imageUrl) ??
-        getProductImageUrl(ad.product?.images?.[0])
+      ? (getAdvertisementImageUrl(ad.imageUrl) ??
+        getProductImageUrl(ad.product?.images?.[0]))
       : null;
 
     if (ad && image) {
@@ -55,7 +54,8 @@ const buildSlots = (meta: AdPlacementMeta, ads: Advertisement[]): Slot[] =>
         key: `ad-${ad.id}`,
         image,
         alt: ad.title || meta.label,
-        href: ad.link || (ad.productId ? `/shop-details/${ad.productId}` : null),
+        href:
+          ad.link || (ad.productId ? `/shop-details/${ad.productId}` : null),
         isPlaceholder: false,
       };
     }
@@ -65,7 +65,7 @@ const buildSlots = (meta: AdPlacementMeta, ads: Advertisement[]): Slot[] =>
       image:
         meta.placeholders[index % meta.placeholders.length] ??
         meta.placeholders[0],
-      alt: `${meta.label} — sample artwork`,
+      alt: `${meta.label}  sample artwork`,
       href: null,
       isPlaceholder: true,
     };
@@ -139,7 +139,7 @@ export default function AdZoneView({
               sizes={sizes}
               priority={priority && index === 0}
             />
-            {/* Hairline inner edge — keeps light artwork from bleeding into
+            {/* Hairline inner edge  keeps light artwork from bleeding into
                 the ivory page background without adding a heavy border. */}
             <span
               aria-hidden

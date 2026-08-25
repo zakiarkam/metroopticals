@@ -23,7 +23,7 @@ type Category = {
  * carousel cannot: the first category gets the room, and nothing is off-screen.
  *
  * The tiles are photographs with the name over them, so the fallback art below
- * is photographic too — the old line-art SVGs were drawn to sit on ivory and
+ * is photographic too  the old line-art SVGs were drawn to sit on ivory and
  * disappeared entirely under the scrim.
  */
 
@@ -38,9 +38,15 @@ const CATEGORY_ART: { match: RegExp; src: string }[] = [
   { match: /sun/, src: "/images/categories/sunglasses.jpg" },
   { match: /contact/, src: "/images/categories/contact-lenses.jpg" },
   { match: /read/, src: "/images/categories/reading-glasses.jpg" },
-  { match: /accessor|case|clean|solution|kit/, src: "/images/categories/accessories.jpg" },
+  {
+    match: /accessor|case|clean|solution|kit/,
+    src: "/images/categories/accessories.jpg",
+  },
   { match: /kid|child|junior/, src: "/images/categories/kids.jpg" },
-  { match: /eyeglass|frame|optical|spectacle/, src: "/images/categories/eyeglasses.jpg" },
+  {
+    match: /eyeglass|frame|optical|spectacle/,
+    src: "/images/categories/eyeglasses.jpg",
+  },
 ];
 
 const fallbackArt = (slug: string, name: string) => {
@@ -63,7 +69,7 @@ type Placement = { span: string; size: PhotoTileSize };
  * grid empty beside it.
  *
  * Leftovers past the first four are packed three to a row, and a short final
- * row widens to fill — five categories used to leave two thirds of the last
+ * row widens to fill  five categories used to leave two thirds of the last
  * row as blank ivory, which read as a loading failure rather than a layout.
  */
 const OPENING: Record<number, Placement[]> = {
@@ -113,7 +119,7 @@ const pieces = (count?: number) =>
 const Categories = React.memo(() => {
   const { categories, loading, error } = useCategories();
   const parentCategories = ((categories || []) as Category[]).filter(
-    (category: any) => !category.parentId
+    (category: any) => !category.parentId,
   );
 
   if (loading) {
@@ -144,7 +150,7 @@ const Categories = React.memo(() => {
       />
 
       {/* `auto-rows-fr` is what makes the tall tile line up with the two
-          stacked beside it — without it the row heights follow content and the
+          stacked beside it  without it the row heights follow content and the
           feature tile ends up shorter than the pair it is supposed to span. */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:auto-rows-fr lg:grid-cols-12">
         {parentCategories.map((item, index) => {

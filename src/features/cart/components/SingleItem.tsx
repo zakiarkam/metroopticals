@@ -32,13 +32,12 @@ type CartItem = {
   };
 };
 
-
 /**
  * The colour on a cart line.
  *
  * A frame with more than one colourway gets a select so the choice can be
  * corrected in place; one with a single colour is just stated. Either way the
- * colour is always visible — a cart that hides it leaves the shopper checking
+ * colour is always visible  a cart that hides it leaves the shopper checking
  * out on an assumption.
  *
  * A line saved before colours existed carries none. Rather than say nothing,
@@ -106,7 +105,7 @@ const ColorControl = ({
   );
 };
 
-/** One row in the cart. Shows the line total as well as the unit price — the old row only showed the unit price, which did not add up to the summary. */
+/** One row in the cart. Shows the line total as well as the unit price  the old row only showed the unit price, which did not add up to the summary. */
 const SingleItem = ({ item }: { item: CartItem }) => {
   const { updateQuantity, removeFromCart } = useCart();
   const [isUpdating, setIsUpdating] = useState(false);
@@ -147,8 +146,7 @@ const SingleItem = ({ item }: { item: CartItem }) => {
   };
 
   const resolvedImages = normalizeImageArray(item.imgs?.previews ?? []);
-  const displayImage =
-    resolvedImages[0] ?? "/images/placeholder-product.svg";
+  const displayImage = resolvedImages[0] ?? "/images/placeholder-product.svg";
   const productUrl = `/shop-details/${item.productId || item.id}`;
 
   const hasReachedStock =

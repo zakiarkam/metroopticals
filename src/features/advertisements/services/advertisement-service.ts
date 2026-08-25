@@ -10,9 +10,7 @@ import type {
   Advertisement,
   AdvertisementPlacement,
 } from "@/features/advertisements/types/advertisement";
-import {
-  AD_PLACEMENTS,
-} from "@/features/advertisements/constants/advertisement";
+import { AD_PLACEMENTS } from "@/features/advertisements/constants/advertisement";
 
 const advertisementProductSelect = {
   id: true,
@@ -96,14 +94,14 @@ export async function getAdvertisementById(id: number) {
 /**
  * The name shown in the admin list and used as the image's alt text.
  *
- * Titles are optional — a banner is often just artwork — so a blank one falls
+ * Titles are optional  a banner is often just artwork  so a blank one falls
  * back to the linked product's name and then to the zone label. The list can
  * then never show a nameless row, and the alt text is never empty.
  */
 async function resolveAdvertisementTitle(
   title: string | null | undefined,
   placement: AdvertisementPlacement,
-  productId?: number | null
+  productId?: number | null,
 ) {
   const trimmed = title?.trim();
   if (trimmed) return trimmed;
@@ -123,7 +121,7 @@ export async function createAdvertisement(data: CreateAdvertisementInput) {
   const title = await resolveAdvertisementTitle(
     data.title,
     data.placement,
-    data.productId
+    data.productId,
   );
 
   return prisma.advertisement.create({
@@ -155,7 +153,7 @@ export async function createAdvertisement(data: CreateAdvertisementInput) {
 
 export async function updateAdvertisement(
   id: number,
-  data: UpdateAdvertisementInput
+  data: UpdateAdvertisementInput,
 ) {
   const advertisement = await getAdvertisementById(id);
 
@@ -166,9 +164,8 @@ export async function updateAdvertisement(
       ? undefined
       : await resolveAdvertisementTitle(
           data.title,
-          (data.placement ??
-            advertisement.placement) as AdvertisementPlacement,
-          data.productId ?? advertisement.productId
+          (data.placement ?? advertisement.placement) as AdvertisementPlacement,
+          data.productId ?? advertisement.productId,
         );
 
   return prisma.advertisement.update({
@@ -176,7 +173,7 @@ export async function updateAdvertisement(
     data: {
       ...(title !== undefined && { title }),
       // An empty string means "remove the artwork", which a product placement
-      // is allowed to do — it then runs on the product's own photo.
+      // is allowed to do  it then runs on the product's own photo.
       ...(data.imageUrl !== undefined && {
         imageUrl: data.imageUrl?.trim() || null,
       }),
@@ -210,7 +207,7 @@ export async function updateAdvertisement(
 
 export async function updateAdvertisementStatus(
   id: number,
-  status: "active" | "inactive"
+  status: "active" | "inactive",
 ) {
   const advertisement = await getAdvertisementById(id);
 
@@ -261,7 +258,7 @@ export async function incrementAdvertisementClick(id: number) {
 }
 
 const buildActiveAdvertisementWhere = (
-  placement?: AdvertisementPlacement
+  placement?: AdvertisementPlacement,
 ): Prisma.AdvertisementWhereInput => {
   const now = new Date();
   const where: any = {
@@ -285,7 +282,7 @@ const buildActiveAdvertisementWhere = (
 
 export async function getActiveAdvertisementsByPlacement(
   placement: AdvertisementPlacement,
-  limit?: number
+  limit?: number,
 ): Promise<Advertisement[]> {
   const ads = await prisma.advertisement.findMany({
     where: buildActiveAdvertisementWhere(placement),
@@ -359,7 +356,7 @@ export const getProductDetailsUrl = (productId: number) => {
  * ties when two campaigns claim the same slot, newest winning last.
  */
 export async function getBannerAdvertisements(
-  placement: AdvertisementPlacement
+  placement: AdvertisementPlacement,
 ): Promise<Advertisement[]> {
   const meta = AD_PLACEMENTS[placement];
   const ads = await prisma.advertisement.findMany({
@@ -392,6 +389,6 @@ export async function getAdvertisementPlacementCounts() {
       else bucket.inactive += row._count._all;
       return acc;
     },
-    {}
+    {},
   );
 }

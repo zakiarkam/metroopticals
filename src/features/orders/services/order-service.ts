@@ -227,13 +227,14 @@ export async function createOrder(userId: number, data: CreateOrderInput) {
     const netPrice = discountedPrice ?? originalPrice;
     subtotal += netPrice * item.quantity;
 
-    // The colour is trusted only as far as the product's own list — a request
+    // The colour is trusted only as far as the product's own list  a request
     // built by hand must not be able to write anything onto a picking slip.
     const requestedColor = item.color?.trim();
     const color =
       requestedColor &&
       product.frameColors.some(
-        (option) => option.trim().toLowerCase() === requestedColor.toLowerCase()
+        (option) =>
+          option.trim().toLowerCase() === requestedColor.toLowerCase(),
       )
         ? requestedColor
         : null;

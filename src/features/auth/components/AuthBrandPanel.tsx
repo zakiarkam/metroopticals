@@ -9,7 +9,7 @@ import { siteConfig } from "@/config/site";
  *
  * On large screens this panel slides between the two halves of the card (see
  * `components/index.tsx`) and its copy swaps to invite the visitor to the
- * *other* form — sign-in offers "create an account", sign-up offers "sign in".
+ * *other* form  sign-in offers "create an account", sign-up offers "sign in".
  * It is the only surface on the auth screens that carries colour, which keeps
  * the form side plain white and easy to read.
  */
@@ -30,13 +30,13 @@ const COPY = {
   signup: {
     kicker: "One of us already?",
     heading: "Welcome back.",
-    body: "Sign in to pick up where you left off — your cart, orders and saved frames are waiting.",
+    body: "Sign in to pick up where you left off  your cart, orders and saved frames are waiting.",
     cta: "Sign in",
   },
 } as const;
 
 interface AuthBrandPanelProps {
-  /** Which form is currently on screen — the panel invites you to the other. */
+  /** Which form is currently on screen  the panel invites you to the other. */
   mode: "login" | "signup";
   onSwitch: () => void;
 }
@@ -46,7 +46,7 @@ const AuthBrandPanel = ({ mode, onSwitch }: AuthBrandPanelProps) => {
 
   return (
     <div className="relative flex h-full flex-col justify-between overflow-hidden bg-[linear-gradient(155deg,#3E2C15_0%,#6E5029_45%,#A9834B_100%)] p-9 xl:p-11">
-      {/* Photograph under a gold scrim — texture and depth without losing the
+      {/* Photograph under a gold scrim  texture and depth without losing the
           contrast the white copy needs. */}
       <Image
         src="/images/auth/eyewear-still-life.jpg"
@@ -91,7 +91,7 @@ const AuthBrandPanel = ({ mode, onSwitch }: AuthBrandPanelProps) => {
       </div>
 
       {/* `key` remounts the block on a mode change, which replays the CSS
-          entrance — a plain animation that cannot get stuck part-way. */}
+          entrance  a plain animation that cannot get stuck part-way. */}
       <div
         key={mode}
         className="relative my-10 space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300 ease-out"

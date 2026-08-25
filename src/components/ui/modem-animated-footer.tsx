@@ -16,7 +16,7 @@ interface SocialLink {
 }
 
 /**
- * A contact row (address / phone / email). Optional — omit it and the footer
+ * A contact row (address / phone / email). Optional  omit it and the footer
  * renders exactly as the base component does.
  */
 interface ContactItem {
@@ -31,7 +31,7 @@ interface FooterProps {
   /**
    * Text for the oversized background wordmark. Defaults to `brandName`.
    * It is rendered on a single line, so a multi-word brand should pass a
-   * shorter string here — otherwise it wraps and overlaps the nav links.
+   * shorter string here  otherwise it wraps and overlaps the nav links.
    */
   backgroundText?: string;
   brandDescription?: string;

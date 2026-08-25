@@ -19,7 +19,6 @@ type PromoCard = {
   hasDiscount: boolean;
 };
 
-
 const buildCard = (ad: Advertisement, canViewDiscount: boolean): PromoCard => {
   const product = ad.product;
   const image =
@@ -34,7 +33,7 @@ const buildCard = (ad: Advertisement, canViewDiscount: boolean): PromoCard => {
   const priceData = resolveDisplayPrice(
     product?.price ?? 0,
     product?.discountedPrice ?? null,
-    canViewDiscount
+    canViewDiscount,
   );
   const label =
     priceData.hasDiscount && priceData.discountPercent !== null
@@ -59,7 +58,7 @@ const buildCard = (ad: Advertisement, canViewDiscount: boolean): PromoCard => {
  * Advertisement slot rendered between home sections.
  *
  * The first ad becomes a wide feature panel; up to two more render as a pair
- * beneath it. Prices are LKR — the previous version printed `$`.
+ * beneath it. Prices are LKR  the previous version printed `$`.
  */
 const PromoBanner = React.memo(({ ads }: { ads: Advertisement[] }) => {
   if (!ads || ads.length === 0) return null;

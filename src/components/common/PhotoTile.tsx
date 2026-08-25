@@ -7,7 +7,7 @@ import { ArrowUpRight, ChevronRight } from "lucide-react";
  *
  * The single overlay definition for the site. The lens guide and the home
  * category bento both draw these, and when the scrim lived in two components
- * the two grids drifted apart within a week — one warm, one neutral grey.
+ * the two grids drifted apart within a week  one warm, one neutral grey.
  *
  * Sizes are about how much the tile has to say, not just how big it is: `lg`
  * and `md` carry a description and an explore link, `sm` is a name and a count.
@@ -52,7 +52,7 @@ export default function PhotoTile({
   href: string;
   image: string;
   imageAlt: string;
-  /** Small label above the title — the group or category kicker. */
+  /** Small label above the title  the group or category kicker. */
   eyebrow?: string;
   title: string;
   /** The line under the title: a count, a piece total, a short qualifier. */

@@ -11,7 +11,7 @@ import type { Product } from "@/features/products/types/product";
  * "You may also like" rail on the product page.
  *
  * Pulls from the same category when the product has one, otherwise falls back
- * to the newest stock — so the block never renders empty on an uncategorised
+ * to the newest stock  so the block never renders empty on an uncategorised
  * product. Renders nothing at all if fewer than one sibling comes back.
  */
 export default function RelatedProducts({
@@ -37,7 +37,10 @@ export default function RelatedProducts({
   if (loading) {
     return (
       <section className="mt-14 lg:mt-20">
-        <SectionHeading title="You may also like" />
+        <SectionHeading
+          title="You may also like"
+          titleAccent="More from the shelf."
+        />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <ProductCardSkeleton key={i} />
@@ -54,6 +57,7 @@ export default function RelatedProducts({
       <SectionHeading
         eyebrow="Keep looking"
         title="You may also like"
+        titleAccent="More from the shelf."
         href="/shop-with-sidebar"
         hrefLabel="All frames"
       />

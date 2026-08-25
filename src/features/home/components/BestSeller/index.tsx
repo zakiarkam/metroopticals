@@ -4,10 +4,9 @@ import { useEffect, useState } from "react";
 import { Flame } from "lucide-react";
 
 import type { TopProduct } from "@/features/dashboard/types/dashboard";
-import SingleItem from "./SingleItem";
+import BestSellerRail from "./BestSellerRail";
 import { getBestSellersCached } from "@/features/products/api/best-seller-api";
 import { Section, SectionHeading } from "@/components/common/Section";
-import ProductCardSkeleton from "@/components/common/Loaders/ProductCardSkeleton";
 import EmptyState from "@/components/common/EmptyState";
 
 const BestSeller = () => {
@@ -44,7 +43,8 @@ const BestSeller = () => {
       <SectionHeading
         eyebrow="This month"
         title="Best sellers"
-        description="The frames our customers keep coming back for — and the ones we restock most often."
+        titleAccent="The ones we restock most."
+        description="The frames our customers keep coming back for."
         href="/shop-with-sidebar"
       />
 
@@ -55,19 +55,15 @@ const BestSeller = () => {
       )}
 
       {loading && (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <ProductCardSkeleton key={i} />
-          ))}
+        <div className="flex flex-col gap-4 lg:h-[420px] lg:flex-row">
+          <div className="h-64 animate-pulse rounded-3xl bg-gray-8 lg:h-auto lg:flex-[2.6]" />
+          <div className="h-24 animate-pulse rounded-3xl bg-gray-8 lg:h-auto lg:flex-1" />
+          <div className="h-24 animate-pulse rounded-3xl bg-gray-8 lg:h-auto lg:flex-1" />
         </div>
       )}
 
       {!loading && displayedProducts.length > 0 && (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
-          {displayedProducts.map((item) => (
-            <SingleItem item={item} key={item.id} />
-          ))}
-        </div>
+        <BestSellerRail items={displayedProducts.slice(0, 4)} />
       )}
 
       {!loading && !error && displayedProducts.length === 0 && (

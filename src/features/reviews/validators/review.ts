@@ -6,7 +6,7 @@ export const createReviewSchema = z.object({
   body: z
     .string()
     .trim()
-    .min(10, "Tell us a little more — at least 10 characters")
+    .min(10, "Tell us a little more  at least 10 characters")
     .max(2000),
 });
 

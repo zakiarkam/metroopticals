@@ -16,8 +16,8 @@ import AuthHeader from "./AuthHeader";
  * Sign-in / sign-up screen.
  *
  * One card, two halves: the form and a gold brand panel. Above `lg` the panel
- * SLIDES between the halves when you switch form — sign-in keeps the form on
- * the left, sign-up moves it to the right — which is what makes the switch
+ * SLIDES between the halves when you switch form  sign-in keeps the form on
+ * the left, sign-up moves it to the right  which is what makes the switch
  * read as one screen rather than two pages. Below `lg` there is no room for
  * that, so the panel collapses to a ribbon and the two forms swap under a pair
  * of pill tabs.
@@ -148,7 +148,7 @@ const AuthAdmin = () => {
         </Link>
 
         <div className="relative overflow-hidden rounded-[28px] border border-gray-3 bg-white shadow-[0_28px_70px_-30px_rgba(27,23,19,0.45)]">
-          {/* Compact brand ribbon — the panel's stand-in below `lg`. */}
+          {/* Compact brand ribbon  the panel's stand-in below `lg`. */}
           <div className="relative flex items-center gap-3 overflow-hidden bg-[linear-gradient(120deg,#3E2C15_0%,#6E5029_55%,#A9834B_100%)] px-6 py-5 lg:hidden">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-dark p-2 ring-1 ring-blue-light/30">
               <Image
@@ -175,7 +175,7 @@ const AuthAdmin = () => {
              * sliding panel never jumps. The taller sign-up form scrolls
              * inside this column instead. `m-auto` on the inner block centres
              * a short form but collapses to zero once the content overflows,
-             * which `justify-center` would not do — it would clip the top.
+             * which `justify-center` would not do  it would clip the top.
              */}
             <div
               className={cn(

@@ -4,7 +4,7 @@ import { handleError, createSuccessResponse } from "@/lib/errors";
 import { reviewQuerySchema } from "@/features/reviews/validators/review";
 import { getReviews } from "@/features/reviews/services/review-service";
 
-/** Moderation queue — admin only, since it exposes pending and rejected text. */
+/** Moderation queue  admin only, since it exposes pending and rejected text. */
 export async function GET(request: NextRequest) {
   try {
     await requireAdmin();

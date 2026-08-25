@@ -4,8 +4,8 @@ import React from "react";
  * Form primitives shared by checkout, contact and the account editor.
  *
  * The same 130-character input class string was pasted eleven times across
- * those three files, in three slightly different versions — one had a
- * placeholder colour, one had a disabled state, one had neither — so the same
+ * those three files, in three slightly different versions  one had a
+ * placeholder colour, one had a disabled state, one had neither  so the same
  * field looked different depending on which page you were filling in.
  *
  * Neither class sets `outline-none`. The global `:focus-visible` ring in
@@ -71,7 +71,10 @@ export function Field({
         : children}
 
       {error ? (
-        <p id={`${htmlFor}-error`} className="mt-1.5 text-[12px] font-medium text-red">
+        <p
+          id={`${htmlFor}-error`}
+          className="mt-1.5 text-[12px] font-medium text-red"
+        >
           {error}
         </p>
       ) : hint ? (

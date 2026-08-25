@@ -2,7 +2,7 @@
  * Turning a colourway name into something you can see.
  *
  * Colours are typed free-hand by the admin ("Tortoise", "Matte Black",
- * "Rose Gold"), so there is no colour code to read — the swatch is derived from
+ * "Rose Gold"), so there is no colour code to read  the swatch is derived from
  * the words instead. Matching is done on whole words against a table of the
  * finishes eyewear is actually sold in, longest phrase first so "Rose Gold"
  * wins over "Gold" and "Matte Black" over "Black".
@@ -13,7 +13,7 @@
  */
 
 export type ColorSwatch = {
-  /** CSS background for the dot — flat, or a gradient for two-tone finishes. */
+  /** CSS background for the dot  flat, or a gradient for two-tone finishes. */
   background: string;
   /** Set on very light finishes so the dot keeps a visible edge. */
   needsBorder: boolean;
@@ -89,15 +89,17 @@ export const getColorSwatch = (name: string): ColorSwatch | null => {
   const normalized = name.trim().toLowerCase();
   if (!normalized) return null;
 
-  const entry = ORDERED.find((candidate) => normalized.includes(candidate.match));
+  const entry = ORDERED.find((candidate) =>
+    normalized.includes(candidate.match),
+  );
   if (!entry) return null;
 
   return { background: entry.background, needsBorder: Boolean(entry.light) };
 };
 
-/** Trimmed, de-duplicated colour names — the admin field is free text. */
+/** Trimmed, de-duplicated colour names  the admin field is free text. */
 export const normalizeColorOptions = (
-  values?: (string | null)[] | null
+  values?: (string | null)[] | null,
 ): string[] => {
   if (!values?.length) return [];
 

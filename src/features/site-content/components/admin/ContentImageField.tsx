@@ -38,7 +38,7 @@ export default function ContentImageField({
       return;
     }
     if (file.size > MAX_BYTES) {
-      Toast.error("That image is over 5MB — compress it first.");
+      Toast.error("That image is over 5MB  compress it first.");
       return;
     }
 
@@ -52,7 +52,7 @@ export default function ContentImageField({
       const response = await uploadApi.uploadFile(
         file,
         "advertisement/image",
-        fileName
+        fileName,
       );
       onChange(response.fileName || fileName);
       Toast.update(toastId, {

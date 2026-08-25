@@ -26,7 +26,7 @@ const MyOrdersPage = () => {
   }, [router, signedOut]);
 
   const memberSince = useMemo(() => {
-    // No join date is better than today's date — the old fallback told a new
+    // No join date is better than today's date  the old fallback told a new
     // visitor they had been a member since this morning.
     const createdAt = (session?.user as any)?.createdAt;
     if (!createdAt) return undefined;

@@ -36,11 +36,17 @@ export async function getProducts(query: ProductQueryInput) {
   const andFilters: any[] = [];
 
   const categoryFilters =
-    categories && categories.length > 0 ? categories : category ? [category] : [];
+    categories && categories.length > 0
+      ? categories
+      : category
+        ? [category]
+        : [];
 
   if (categoryFilters.length) {
     const slugFilter =
-      categoryFilters.length === 1 ? categoryFilters[0] : { in: categoryFilters };
+      categoryFilters.length === 1
+        ? categoryFilters[0]
+        : { in: categoryFilters };
 
     // Match the category itself or any of its children.
     andFilters.push({
@@ -57,7 +63,7 @@ export async function getProducts(query: ProductQueryInput) {
 
   /*
    * "On sale" is a real comparison between two columns, not just "has a
-   * discounted price set" — plenty of rows carry a `discountedPrice` equal to
+   * discounted price set"  plenty of rows carry a `discountedPrice` equal to
    * the list price. Prisma field references express that without raw SQL.
    */
   if (onSale) {
@@ -155,7 +161,13 @@ export async function getProducts(query: ProductQueryInput) {
           },
         },
         brand: {
-          select: { id: true, name: true, slug: true, logo: true, status: true },
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            logo: true,
+            status: true,
+          },
         },
       },
       skip,
@@ -180,7 +192,7 @@ export async function getProducts(query: ProductQueryInput) {
  * Counts for each filter option in the sidebar.
  *
  * Counts are computed against the *category/search* scope only, not the
- * currently ticked filters — otherwise ticking "Men" would drop every other
+ * currently ticked filters  otherwise ticking "Men" would drop every other
  * gender to zero and make them un-tickable.
  */
 export async function getProductFacets(query: ProductQueryInput) {
@@ -190,11 +202,17 @@ export async function getProductFacets(query: ProductQueryInput) {
   const and: any[] = [];
 
   const categoryFilters =
-    categories && categories.length > 0 ? categories : category ? [category] : [];
+    categories && categories.length > 0
+      ? categories
+      : category
+        ? [category]
+        : [];
 
   if (categoryFilters.length) {
     const slugFilter =
-      categoryFilters.length === 1 ? categoryFilters[0] : { in: categoryFilters };
+      categoryFilters.length === 1
+        ? categoryFilters[0]
+        : { in: categoryFilters };
     and.push({
       OR: [
         { category: { slug: slugFilter } },
@@ -255,7 +273,7 @@ export async function getProductFacets(query: ProductQueryInput) {
   };
 
   const materialMap = groupText(
-    rows.map((r) => r.frameMaterial ?? "").filter(Boolean)
+    rows.map((r) => r.frameMaterial ?? "").filter(Boolean),
   );
   const colorMap = groupText(rows.flatMap((r) => r.frameColors ?? []));
 
@@ -322,7 +340,7 @@ export async function getStockedFrameShapes() {
 
   return rows
     .filter((row): row is typeof row & { frameShape: FrameShape } =>
-      Boolean(row.frameShape)
+      Boolean(row.frameShape),
     )
     .map((row) => ({ value: row.frameShape, count: row._count._all }));
 }
@@ -342,7 +360,9 @@ export async function getStockedGenders() {
   });
 
   return rows
-    .filter((row): row is typeof row & { gender: Gender } => Boolean(row.gender))
+    .filter((row): row is typeof row & { gender: Gender } =>
+      Boolean(row.gender),
+    )
     .map((row) => ({ value: row.gender, count: row._count._all }));
 }
 
@@ -467,14 +487,14 @@ export async function deleteProduct(id: number) {
   if (Array.isArray(product.images)) {
     await Promise.all(
       product.images.map((fileName: string) =>
-        deleteFile("product/image", fileName).catch(() => {})
-      )
+        deleteFile("product/image", fileName).catch(() => {}),
+      ),
     );
   }
   // Delete catalogue file from bucket
   if (product.catalogueFile) {
     await deleteFile("product/catalogue", product.catalogueFile).catch(
-      () => {}
+      () => {},
     );
   }
 
@@ -564,7 +584,7 @@ export async function decrementProductStock(id: number, count: number) {
 
 export async function updateProductStatus(
   id: number,
-  status: "ACTIVE" | "INACTIVE" | "OUT_OF_STOCK"
+  status: "ACTIVE" | "INACTIVE" | "OUT_OF_STOCK",
 ) {
   const product = await prisma.product.update({
     where: { id },

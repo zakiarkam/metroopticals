@@ -33,7 +33,7 @@ export function Section({
       } py-12 sm:py-14 lg:py-16 ${className}`}
     >
       <SiteContainer>
-        {/* One reveal per section rather than per card — staggering dozens of
+        {/* One reveal per section rather than per card  staggering dozens of
             product tiles reads as jitter, not polish. */}
         <Reveal>{children}</Reveal>
       </SiteContainer>
@@ -53,7 +53,7 @@ export function SectionHeading({
 }: {
   eyebrow?: string;
   title: string;
-  /** Optional second line, set in gold — the site's two-tone heading. */
+  /** Optional second line, set in gold  the site's two-tone heading. */
   titleAccent?: string;
   description?: string;
   href?: string;

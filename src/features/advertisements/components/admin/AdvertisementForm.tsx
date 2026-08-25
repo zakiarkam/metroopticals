@@ -58,7 +58,7 @@ export const emptyAdFormValues: AdFormValues = {
  * zone does not render.
  */
 export const advertisementFormDefaults = (
-  placement?: AdvertisementPlacement
+  placement?: AdvertisementPlacement,
 ): AdFormValues => {
   const target = placement ?? emptyAdFormValues.placement;
   return {
@@ -75,7 +75,7 @@ const toLocalInput = (value?: string | null) => {
   if (Number.isNaN(date.getTime())) return "";
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(
-    date.getDate()
+    date.getDate(),
   )}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 };
 
@@ -92,7 +92,7 @@ export const advertisementToFormValues = (ad: Advertisement): AdFormValues => ({
   productId: ad.productId ?? ad.product?.id ?? null,
 });
 
-/** Home product slots are addressed by priority — name them, don't number them. */
+/** Home product slots are addressed by priority  name them, don't number them. */
 const HOME_POSITIONS = [
   { value: 0, label: "After categories" },
   { value: 1, label: "After new arrivals" },
@@ -136,7 +136,7 @@ const Section = ({
 interface AdvertisementFormProps {
   values: AdFormValues;
   onChange: (next: AdFormValues) => void;
-  /** Locked on edit — moving an ad between zones changes what it needs. */
+  /** Locked on edit  moving an ad between zones changes what it needs. */
   disablePlacement?: boolean;
 }
 
@@ -192,7 +192,7 @@ const AdvertisementForm: React.FC<AdvertisementFormProps> = ({
 
   const selectedProduct = useMemo(
     () => products.find((item) => item.id === values.productId) ?? null,
-    [products, values.productId]
+    [products, values.productId],
   );
 
   const handlePlacementChange = (placement: AdvertisementPlacement) => {
@@ -204,7 +204,9 @@ const AdvertisementForm: React.FC<AdvertisementFormProps> = ({
       // Banner zones ignore priority ordering beyond tie-breaks; product zones
       // read it as the home position, so clamp it into range on the way in.
       priority:
-        next.kind === "product" ? Math.min(values.priority, 2) : values.priority,
+        next.kind === "product"
+          ? Math.min(values.priority, 2)
+          : values.priority,
       // A product carried into a banner zone would silently turn the artwork
       // into a product link, so drop it.
       productId: next.kind === "product" ? values.productId : null,
@@ -238,14 +240,14 @@ const AdvertisementForm: React.FC<AdvertisementFormProps> = ({
         title="Where does it appear?"
         description={
           disablePlacement
-            ? "Placement is fixed once an ad is created — delete and re-add to move it."
+            ? "Placement is fixed once an ad is created  delete and re-add to move it."
             : "Pick the zone on the site this creative fills."
         }
       >
         <div className="space-y-4">
           {AD_PLACEMENT_GROUPS.map((group) => {
             const ids = AD_PLACEMENT_IDS.filter(
-              (id) => AD_PLACEMENTS[id].group === group
+              (id) => AD_PLACEMENTS[id].group === group,
             );
             if (!ids.length) return null;
 
@@ -306,7 +308,7 @@ const AdvertisementForm: React.FC<AdvertisementFormProps> = ({
         title="Artwork"
         description={
           isProductAd
-            ? "Optional — leave empty and the linked product's photo is used."
+            ? "Optional  leave empty and the linked product's photo is used."
             : "The photo visitors will see. This is the whole ad, and the only thing this zone needs."
         }
       >
@@ -396,7 +398,7 @@ const AdvertisementForm: React.FC<AdvertisementFormProps> = ({
       <Section
         step={isProductAd ? 4 : 3}
         title="Details"
-        description="All optional — name the ad if it helps you find it later, and set where a click should land."
+        description="All optional  name the ad if it helps you find it later, and set where a click should land."
       >
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
@@ -410,7 +412,7 @@ const AdvertisementForm: React.FC<AdvertisementFormProps> = ({
               placeholder={
                 isProductAd
                   ? "Leave empty to use the product name"
-                  : "e.g. Sunglass season — 30% off"
+                  : "e.g. Sunglass season  30% off"
               }
               className={fieldClass}
               maxLength={200}
@@ -435,8 +437,8 @@ const AdvertisementForm: React.FC<AdvertisementFormProps> = ({
               />
             </div>
             <p className="mt-1.5 text-[12px] text-dark-4">
-              A path such as <code>/shop-with-sidebar</code>, or a full
-              https:// URL. Leave empty and the banner is not clickable.
+              A path such as <code>/shop-with-sidebar</code>, or a full https://
+              URL. Leave empty and the banner is not clickable.
             </p>
           </div>
         </div>
@@ -497,8 +499,7 @@ const AdvertisementForm: React.FC<AdvertisementFormProps> = ({
                   className={fieldClass}
                 />
                 <p className="mt-1.5 text-[12px] text-dark-4">
-                  Only breaks ties when two ads claim the same slot — higher
-                  wins.
+                  Only breaks ties when two ads claim the same slot higher wins.
                 </p>
               </>
             )}
@@ -559,8 +560,8 @@ export default AdvertisementForm;
  *
  * Only one thing is actually required: the zone must end up with something to
  * render. A banner needs its artwork; a product placement needs artwork or a
- * product to borrow a photo from. Everything else — the title, the link, the
- * schedule — is optional, and a blank title is filled in server-side from the
+ * product to borrow a photo from. Everything else  the title, the link, the
+ * schedule  is optional, and a blank title is filled in server-side from the
  * product name or the zone label. Mirrors the zod schema so the admin gets a
  * plain sentence at the point of failure rather than a round trip.
  */
@@ -573,7 +574,7 @@ export const buildAdvertisementPayload = (values: AdFormValues) => {
   if (meta.kind === "banner" && !imageUrl) {
     return {
       ok: false as const,
-      message: "Upload the banner artwork — that is the whole ad.",
+      message: "Upload the banner artwork  that is the whole ad.",
     };
   }
 

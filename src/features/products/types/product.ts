@@ -69,7 +69,7 @@ export type Product = {
   stock: number;
   unitType: ProductUnit;
   status: ProductStatus;
-  /** Denormalised from published reviews — see Review in the schema. */
+  /** Denormalised from published reviews  see Review in the schema. */
   rating: number | null;
   reviewCount: number;
   createdAt: string;

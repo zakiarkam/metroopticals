@@ -46,7 +46,7 @@ export const siteConfig = {
    * Logo variants.
    * - `logo`      full lockup for light backgrounds (dark "METRO" wordmark)
    * - `logoOnDark` full lockup for dark backgrounds (white "METRO" wordmark)
-   * - `logoMark`  glasses icon only, no wordmark — for tight/square spaces
+   * - `logoMark`  glasses icon only, no wordmark  for tight/square spaces
    */
   logo: "/images/logo/logo.png",
   logoOnDark: "/images/logo/logo-dark-bg.png",
@@ -57,7 +57,7 @@ export const siteConfig = {
 
   /** Brand colours, kept in sync with the manifest and theme-color meta. */
   themeColor: "#FAF8F4",
-  /** Gold accent — the deepened tone used for UI, see tailwind.config.ts. */
+  /** Gold accent  the deepened tone used for UI, see tailwind.config.ts. */
   accentColor: "#8F6A37",
 } as const;
 

@@ -19,8 +19,7 @@ import axiosInstance from "@/lib/axiosInstance";
 import { downloadOrderReceiptPdf } from "@/lib/utils/orderReceiptPdf";
 import { formatPrice } from "@/lib/utils/price";
 
-
-/** What happens next — the three things customers email to ask about. */
+/** What happens next  the three things customers email to ask about. */
 const NEXT_STEPS = [
   {
     icon: Mail,
@@ -105,12 +104,15 @@ const OrderConfirmationClient = () => {
             }
             description={
               loadFailed
-                ? "Your order was not affected — we just could not reach the server. Try again in a moment."
+                ? "Your order was not affected  we just could not reach the server. Try again in a moment."
                 : "We couldn't find that order. If you have just checked out, give it a moment and refresh."
             }
             action={
               loadFailed
-                ? { label: "Try again", onClick: () => window.location.reload() }
+                ? {
+                    label: "Try again",
+                    onClick: () => window.location.reload(),
+                  }
                 : { label: "Go to my orders", href: "/my-account/orders" }
             }
           />
@@ -144,7 +146,7 @@ const OrderConfirmationClient = () => {
                 Order placed
               </h1>
               <p className="mt-3 text-[14.5px] leading-relaxed text-body">
-                Thanks — we have it. Our team will be in touch about your
+                Thanks we have it. Our team will be in touch about your
                 prescription within one working day.
               </p>
 
@@ -173,7 +175,9 @@ const OrderConfirmationClient = () => {
                 </div>
 
                 <div className="flex items-baseline justify-between rounded-xl border border-blue/25 bg-blue/[0.08] px-4 py-4">
-                  <dt className="text-[15px] font-bold text-dark">Total paid</dt>
+                  <dt className="text-[15px] font-bold text-dark">
+                    Total paid
+                  </dt>
                   <dd className="text-xl font-bold text-blue">
                     {formatPrice(order.totalAmount ?? order.total)}
                   </dd>

@@ -19,7 +19,10 @@ import type { BlockData } from "@/features/site-content/types/site-content";
  * items the editor just deleted.
  */
 
-const mergeWithDefaults = (key: string, saved?: BlockData | null): BlockData => {
+const mergeWithDefaults = (
+  key: string,
+  saved?: BlockData | null,
+): BlockData => {
   const definition = getBlockDefinition(key);
   if (!definition) return saved ?? {};
   return { ...definition.defaults, ...(saved ?? {}) };
@@ -36,7 +39,7 @@ export const getSiteBlock = cache(async (key: string): Promise<BlockData> => {
     const row = await prisma.siteContent.findUnique({ where: { key } });
     return mergeWithDefaults(key, row?.data as BlockData | undefined);
   } catch {
-    // Content must never take a page down — fall back to the shipped defaults.
+    // Content must never take a page down  fall back to the shipped defaults.
     return mergeWithDefaults(key, null);
   }
 });
@@ -61,7 +64,7 @@ export const getSiteBlocks = cache(
       acc[key] = mergeWithDefaults(key, saved.get(key));
       return acc;
     }, {});
-  }
+  },
 );
 
 /** Every registered block, for the admin editor. */
@@ -75,9 +78,12 @@ export async function getAllSiteBlocks() {
     const row = saved.get(definition.key);
     return {
       key: definition.key,
-      data: mergeWithDefaults(definition.key, row?.data as BlockData | undefined),
+      data: mergeWithDefaults(
+        definition.key,
+        row?.data as BlockData | undefined,
+      ),
       updatedAt: row?.updatedAt?.toISOString() ?? null,
-      /** False until an admin saves it — the editor labels these as samples. */
+      /** False until an admin saves it  the editor labels these as samples. */
       customised: Boolean(row),
     };
   });

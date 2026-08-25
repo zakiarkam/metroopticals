@@ -20,65 +20,143 @@ import type { Product } from "@/features/products/types/product";
 
 const ProductRail = React.memo(({ products }: { products: Product[] }) => {
   const trackRef = useRef<HTMLDivElement | null>(null);
+  const [active, setActive] = useState(0);
   const [atStart, setAtStart] = useState(true);
   const [atEnd, setAtEnd] = useState(false);
+  const frame = useRef<number | null>(null);
 
-  const syncEdges = useCallback(() => {
+  /**
+   * Which card the rail is parked on.
+   *
+   * Measured from the DOM rather than tracked as an index we increment: the
+   * rail is also scrollable by touch and trackpad, and a counter desynced from
+   * the real scroll position the moment anyone swiped it.
+   */
+  const sync = useCallback(() => {
     const el = trackRef.current;
     if (!el) return;
+
     setAtStart(el.scrollLeft <= 4);
     setAtEnd(el.scrollLeft + el.clientWidth >= el.scrollWidth - 4);
+
+    let nearest = 0;
+    let best = Infinity;
+    Array.from(el.children).forEach((child, index) => {
+      const distance = Math.abs(
+        (child as HTMLElement).offsetLeft - el.scrollLeft,
+      );
+      if (distance < best) {
+        best = distance;
+        nearest = index;
+      }
+    });
+    setActive(nearest);
   }, []);
 
-  useEffect(() => {
-    syncEdges();
-    window.addEventListener("resize", syncEdges);
-    return () => window.removeEventListener("resize", syncEdges);
-  }, [syncEdges, products.length]);
+  const onScroll = useCallback(() => {
+    if (frame.current) return;
+    frame.current = window.requestAnimationFrame(() => {
+      frame.current = null;
+      sync();
+    });
+  }, [sync]);
 
-  const scrollByCard = (direction: -1 | 1) => {
+  useEffect(() => {
+    sync();
+    window.addEventListener("resize", sync);
+    return () => {
+      window.removeEventListener("resize", sync);
+      if (frame.current) cancelAnimationFrame(frame.current);
+    };
+  }, [sync, products.length]);
+
+  const scrollToCard = (index: number) => {
     const el = trackRef.current;
-    if (!el) return;
-    // One "page" is the visible width minus a card peek, so context is kept.
-    el.scrollBy({ left: direction * (el.clientWidth * 0.8), behavior: "smooth" });
+    const card = el?.children[index] as HTMLElement | undefined;
+    if (!el || !card) return;
+    el.scrollTo({ left: card.offsetLeft, behavior: "smooth" });
   };
 
-  return (
-    <div className="relative">
-      <div
-        ref={trackRef}
-        onScroll={syncEdges}
-        className="flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth pb-2 sm:gap-5"
-      >
-        {products.map((item) => (
-          <div
-            key={item.id}
-            className="w-[78%] shrink-0 snap-start sm:w-[46%] lg:w-[31.5%] xl:w-[23.6%]"
-          >
-            <ProductItem item={item as never} />
-          </div>
-        ))}
-      </div>
+  /*
+   * One card is shown at full size and the rest step back.
+   *
+   * It is the second card in view rather than the first: the leading card sits
+   * hard against the start of the rail, so emphasising it reads as a card that
+   * is half-arrived. The one behind it is clear of the edge and looks chosen.
+   * Clamped so the last card takes the emphasis at the end of the rail.
+   */
+  const focusIndex = Math.min(active + 1, products.length - 1);
 
-      <div className="mt-6 flex items-center justify-center gap-3">
+  const arrowClass =
+    "absolute top-1/2 z-20 hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-gray-2 text-dark shadow-3 ring-1 ring-gray-3 transition-colors hover:bg-blue hover:text-white disabled:cursor-not-allowed disabled:opacity-0 lg:inline-flex";
+
+  return (
+    <div>
+      {/*
+       * The arrows live in their own box with the rail so `top-1/2` centres on
+       * the cards. When the dots shared this wrapper the arrows were centred on
+       * the cards *plus* the dot row, and sat visibly low.
+       */}
+      <div className="relative">
         <button
           type="button"
-          onClick={() => scrollByCard(-1)}
+          onClick={() => scrollToCard(Math.max(0, active - 1))}
           disabled={atStart}
           aria-label="Previous products"
-          className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-3 bg-gray-2 text-dark transition-colors hover:border-blue hover:text-blue disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-gray-3 disabled:hover:text-dark"
+          className={`${arrowClass} -left-5`}
         >
-          <ChevronLeft className="h-[18px] w-[18px]" />
+          <ChevronLeft className="h-5 w-5" />
         </button>
         <button
           type="button"
-          onClick={() => scrollByCard(1)}
+          onClick={() =>
+            scrollToCard(Math.min(products.length - 1, active + 1))
+          }
           disabled={atEnd}
           aria-label="More products"
-          className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-3 bg-gray-2 text-dark transition-colors hover:border-blue hover:text-blue disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-gray-3 disabled:hover:text-dark"
+          className={`${arrowClass} -right-5`}
         >
-          <ChevronRight className="h-[18px] w-[18px]" />
+          <ChevronRight className="h-5 w-5" />
         </button>
+
+        <div
+          ref={trackRef}
+          onScroll={onScroll}
+          className="-mx-4 -my-8 flex snap-x snap-mandatory scroll-px-4 items-stretch gap-4 overflow-x-auto scroll-smooth px-4 py-8 [scrollbar-width:none] sm:gap-6 [&::-webkit-scrollbar]:hidden"
+        >
+          {products.map((item, index) => (
+            <div
+              key={item.id}
+              className={`w-[78%] shrink-0 snap-start transition-transform duration-500 ease-out sm:w-[46%] lg:w-[31.5%] xl:w-[23.6%] ${
+                index === focusIndex ? "z-10" : "lg:scale-[0.955]"
+              }`}
+            >
+              <ProductItem
+                item={item as never}
+                featured={index === focusIndex}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* One dot per product. A dot per "page" was accurate but useless: with
+          four cards visible out of eight it drew two dots for eight frames. */}
+      <div className="mt-8 flex items-center justify-center gap-2">
+        {products.map((item, index) => (
+          <button
+            key={item.id}
+            type="button"
+            onClick={() => scrollToCard(index)}
+            aria-label={`Go to ${item.title}`}
+            aria-current={index === active}
+            className={`h-2.5 rounded-full transition-all duration-300 ${
+              index === active
+                ? "w-7 bg-blue"
+                : "w-2.5 bg-gray-4 hover:bg-blue-light"
+            }`}
+          />
+        ))}
       </div>
     </div>
   );
@@ -125,7 +203,7 @@ const NewArrival = React.memo(() => {
         <EmptyState
           icon={<PackageSearch className="h-7 w-7" />}
           title="No new arrivals yet"
-          description="New frames are added every week — check back soon, or browse the full range."
+          description="New frames are added every week  check back soon, or browse the full range."
           action={{ label: "Browse all frames", href: "/shop-with-sidebar" }}
         />
       )}

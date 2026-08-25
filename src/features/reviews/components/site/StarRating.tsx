@@ -5,7 +5,7 @@ import { Star } from "lucide-react";
  * Star display, and the input used by the write form.
  *
  * Rendered as radio inputs when interactive so it is keyboard-operable and
- * announces as a single "Rating" group — a row of clickable icons is invisible
+ * announces as a single "Rating" group  a row of clickable icons is invisible
  * to a screen reader.
  */
 export function StarRating({

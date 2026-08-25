@@ -6,7 +6,7 @@ import {
 import type { AdvertisementPlacement } from "@/features/advertisements/types/advertisement";
 
 const placementEnum = z.enum(
-  AD_PLACEMENT_IDS as [AdvertisementPlacement, ...AdvertisementPlacement[]]
+  AD_PLACEMENT_IDS as [AdvertisementPlacement, ...AdvertisementPlacement[]],
 );
 
 /**
@@ -19,7 +19,7 @@ const imageRef = z
   .trim()
   .refine(
     (value) => /^https?:\/\//i.test(value) || value.startsWith("/"),
-    "Must be an uploaded image or a URL"
+    "Must be an uploaded image or a URL",
   );
 
 const linkRef = z
@@ -27,13 +27,13 @@ const linkRef = z
   .trim()
   .refine(
     (value) => /^https?:\/\//i.test(value) || value.startsWith("/"),
-    "Must be a full URL or a path starting with /"
+    "Must be a full URL or a path starting with /",
   );
 
 /**
  * Nothing here is individually mandatory.
  *
- * An ad is a picture, a linked product, or both — a banner campaign is often
+ * An ad is a picture, a linked product, or both  a banner campaign is often
  * artwork with no name worth typing, and a product placement can run entirely
  * on the catalogue photo. The cross-field rules below enforce the one thing
  * that actually matters: the zone must end up with something to render.
@@ -73,7 +73,7 @@ const applyPlacementRules = (
    * in place, so re-checking "does this zone have something to render" would
    * reject a perfectly valid rename.
    */
-  checkCreative = true
+  checkCreative = true,
 ) => {
   const meta = data.placement ? AD_PLACEMENTS[data.placement] : null;
   const hasImage = Boolean(data.imageUrl && data.imageUrl.trim());
@@ -82,11 +82,17 @@ const applyPlacementRules = (
     ctx.addIssue({
       code: "custom",
       path: ["imageUrl"],
-      message: `${meta.label} is a photo banner — upload the artwork.`,
+      message: `${meta.label} is a photo banner  upload the artwork.`,
     });
   }
 
-  if (checkCreative && meta && meta.kind === "product" && !hasImage && !data.productId) {
+  if (
+    checkCreative &&
+    meta &&
+    meta.kind === "product" &&
+    !hasImage &&
+    !data.productId
+  ) {
     ctx.addIssue({
       code: "custom",
       path: ["productId"],
@@ -120,7 +126,7 @@ export const updateAdvertisementSchema = baseAdvertisementSchema
   .partial()
   .superRefine((data, ctx) => {
     // On update the placement may be absent, in which case there is nothing to
-    // validate the product/slot against — the service keeps the stored values.
+    // validate the product/slot against  the service keeps the stored values.
     if (!data.placement) return;
     applyPlacementRules(data, ctx, data.imageUrl !== undefined);
   });

@@ -17,7 +17,7 @@ interface FrameMeasurementsProps {
  *
  * Deliberately omits lens height and total frame width: those are not
  * collected, and showing unlabelled dimensions invites questions we cannot
- * answer. The drawing is schematic — it is not to scale, so a 48mm and a
+ * answer. The drawing is schematic  it is not to scale, so a 48mm and a
  * 54mm lens render identically; the numbers carry the meaning.
  */
 export default function FrameMeasurements({
@@ -32,9 +32,7 @@ export default function FrameMeasurements({
 
   // With only one figure, a two-column grid would leave half the row empty.
   const columns =
-    hasFrontMeasurements && hasSideMeasurement
-      ? "sm:grid-cols-2"
-      : "max-w-md";
+    hasFrontMeasurements && hasSideMeasurement ? "sm:grid-cols-2" : "max-w-md";
 
   const stroke = "#C09C6C";
   const dim = "#8A8377";
@@ -134,11 +132,7 @@ export default function FrameMeasurements({
                     strokeWidth="1.5"
                     strokeDasharray="4 4"
                   />
-                  <path
-                    d="M182 30 L182 38"
-                    stroke={dim}
-                    strokeWidth="1.5"
-                  />
+                  <path d="M182 30 L182 38" stroke={dim} strokeWidth="1.5" />
                   <text
                     x="160"
                     y="130"

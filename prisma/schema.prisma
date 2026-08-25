@@ -156,7 +156,7 @@ model Product {
 model CartItem {
   quantity  Int      @default(1)
   // The colourway the shopper picked on the product page. Empty when the
-  // product lists no colours — an empty string rather than null so the unique
+  // product lists no colours  an empty string rather than null so the unique
   // index below still collapses repeat adds (Postgres treats NULLs as
   // distinct, which would let the same frame stack up as separate rows).
   color     String   @default("")
@@ -360,8 +360,8 @@ enum CustomerType {
 
 // Editable storefront content.
 //
-// Every non-catalogue block on the site — the announcement bar, the mega menu,
-// the home page sections, the footer — is stored here as one row of JSON keyed
+// Every non-catalogue block on the site  the announcement bar, the mega menu,
+// the home page sections, the footer  is stored here as one row of JSON keyed
 // by a stable string. The shape of each row is described in code by the block
 // registry (src/features/site-content/constants/blocks.ts), which also supplies
 // the defaults, so a missing row renders the shipped dummy content rather than
@@ -382,7 +382,7 @@ model SiteContent {
 // reject or delete one, but never write one. New reviews land as PENDING so a
 // human sees them before they reach the storefront.
 //
-// One review per customer per product (@@unique) — the write form switches to
+// One review per customer per product (@@unique)  the write form switches to
 // "edit your review" when a row already exists, rather than stacking duplicates.
 model Review {
   id        Int          @id @default(autoincrement())

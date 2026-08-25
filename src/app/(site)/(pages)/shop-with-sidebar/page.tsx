@@ -12,18 +12,18 @@ export const metadata: Metadata = {
 const ShopWithSidebar = dynamic(
   () =>
     import("@/features/products/components/ShopWithSidebar").then(
-      (mod) => mod.default
+      (mod) => mod.default,
     ),
   {
     loading: () => <Loading />,
-  }
+  },
 );
 
 export default function ShopWithSidebarPage() {
   return (
     <>
       {/* The shop seeds its filters from the URL, which opts the route out of
-          static prerendering — Suspense gives Next a shell to emit instead. */}
+          static prerendering  Suspense gives Next a shell to emit instead. */}
       <Suspense fallback={<Loading />}>
         <ShopWithSidebar />
       </Suspense>

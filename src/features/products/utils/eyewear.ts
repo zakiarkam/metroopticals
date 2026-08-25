@@ -68,7 +68,7 @@ export const getFrameSizeLabel = (lensWidth?: number | null) => {
   return "Large";
 };
 
-/** "Lightweight (11g)" — the qualifier only appears when it is genuinely light. */
+/** "Lightweight (11g)"  the qualifier only appears when it is genuinely light. */
 export const formatWeight = (weightGrams?: number | null) => {
   if (weightGrams == null) return null;
   const rounded = Number.isInteger(weightGrams)

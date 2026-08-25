@@ -137,12 +137,12 @@ export default function ShopFilters({
         : [...current, value];
       onChange({ ...selection, [key]: next });
     },
-    [onChange, selection]
+    [onChange, selection],
   );
 
   const activeCount = useMemo(
     () => Object.values(selection).reduce((n, list) => n + list.length, 0),
-    [selection]
+    [selection],
   );
 
   /** Facet rows mapped to display labels, in sidebar order. */
@@ -222,7 +222,7 @@ export default function ShopFilters({
 
   return (
     /*
-     * No heading of its own — the sidebar shell above already prints
+     * No heading of its own  the sidebar shell above already prints
      * "Filters" and a clear-all, so this panel used to sit under a second,
      * near-identical header saying "Refine" with a second reset link.
      */
@@ -283,7 +283,7 @@ export default function ShopFilters({
 
 /** Read the current selection out of URL search params. */
 export const selectionFromParams = (
-  params: URLSearchParams
+  params: URLSearchParams,
 ): FilterSelection => {
   const read = (key: FilterKey) => {
     const raw = params.getAll(key).flatMap((v) => v.split(","));

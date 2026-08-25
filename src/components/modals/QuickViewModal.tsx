@@ -32,10 +32,7 @@ import {
   Plus,
   ShoppingBag,
 } from "lucide-react";
-import {
-  AVAILABILITY_PILL_CLASSES,
-  getAvailability,
-} from "@/features/products/utils/availability";
+import { getAvailability } from "@/features/products/utils/availability";
 import { normalizeColorOptions } from "@/features/products/utils/colors";
 import ColorPicker from "@/features/products/components/shop-details/ColorPicker";
 
@@ -69,7 +66,7 @@ const QuickViewModal = () => {
 
   const colorOptions = useMemo(
     () => normalizeColorOptions(product?.frameColors),
-    [product?.frameColors]
+    [product?.frameColors],
   );
 
   // Follows whichever product the modal was opened on, and pre-selects the
@@ -93,7 +90,7 @@ const QuickViewModal = () => {
   const { displayPrice, hasDiscount, discountPercent } = resolveDisplayPrice(
     product.price || 0,
     product.discountedPrice ?? null,
-    canViewDiscount
+    canViewDiscount,
   );
   const unitLabel = getUnitLabel(product.unitType);
 
@@ -142,7 +139,7 @@ const QuickViewModal = () => {
         frameColors: colorOptions,
       },
       quantity,
-      selectedColor || undefined
+      selectedColor || undefined,
     );
 
     if (added) {
@@ -183,36 +180,38 @@ const QuickViewModal = () => {
         <div className="grid gap-0 lg:grid-cols-2">
           {/* ========================= gallery ========================= */}
           <div className="border-b border-gray-3 bg-gray-1 p-5 sm:p-7 lg:border-b-0 lg:border-r">
-            <div className="relative aspect-square overflow-hidden rounded-2xl border border-gray-3 bg-gray-2">
-              <div
-                aria-hidden
-                className="pointer-events-none absolute inset-0"
-                style={{
-                  background:
-                    "radial-gradient(55% 55% at 50% 48%, rgba(192,156,108,0.14) 0%, transparent 70%)",
-                }}
-              />
+            {/* The photograph fills the frame. It used to sit `contain`ed
+                inside 32px of padding with its own drop shadow, inside a
+                bordered box, on a tinted panel  four nested surfaces before
+                you reached the product. */}
+            <div className="relative aspect-square overflow-hidden rounded-2xl bg-gray-2">
               <Image
                 src={previewImage || "/images/placeholder-product.svg"}
                 alt={product.title || "Product"}
                 fill
                 sizes="(max-width: 1024px) 90vw, 460px"
-                className="relative object-contain p-8 drop-shadow-[0_14px_24px_rgba(39,30,20,0.14)]"
+                className="object-cover"
               />
 
               {hasDiscount && discountPercent !== null && (
-                <span className="absolute left-4 top-4 rounded-full bg-blue px-3 py-1 text-[11px] font-bold text-white">
+                <span className="absolute left-4 top-4 rounded-full bg-blue px-3 py-1 text-[11px] font-bold text-white shadow-1">
                   Save {discountPercent}%
                 </span>
               )}
 
-              <span
-                className={`absolute right-4 top-4 rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.1em] ${
-                  AVAILABILITY_PILL_CLASSES[availability.tone]
-                }`}
-              >
-                {availability.label}
-              </span>
+              {/* Same rule as the product card: "in stock" is the default and
+                  does not need announcing  only the exceptions do. */}
+              {availability.tone !== "in" && (
+                <span
+                  className={`absolute right-4 top-4 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.1em] shadow-1 backdrop-blur-sm ${
+                    availability.tone === "low"
+                      ? "bg-gray-2/95 text-dark"
+                      : "bg-dark/85 text-white"
+                  }`}
+                >
+                  {availability.label}
+                </span>
+              )}
             </div>
 
             {thumbnailImages.length > 1 && (
@@ -235,7 +234,7 @@ const QuickViewModal = () => {
                       alt=""
                       fill
                       sizes="72px"
-                      className="object-contain p-1.5"
+                      className="object-cover"
                     />
                   </button>
                 ))}
@@ -276,7 +275,10 @@ const QuickViewModal = () => {
                   const description =
                     product.description || "No description available";
                   const maxLength = 180;
-                  if (description.length <= maxLength || isDescriptionExpanded) {
+                  if (
+                    description.length <= maxLength ||
+                    isDescriptionExpanded
+                  ) {
                     return description;
                   }
                   return `${description.slice(0, maxLength)}…`;

@@ -3,7 +3,7 @@
  * that state?".
  *
  * The same INACTIVE / OUT_OF_STOCK / stock-count ladder was re-implemented in
- * every card, the details page, the cart row and the wishlist row — and they
+ * every card, the details page, the cart row and the wishlist row  and they
  * had already drifted (some treated `stock === 0` as out of stock, some didn't).
  */
 
@@ -23,7 +23,7 @@ export const LOW_STOCK_THRESHOLD = 5;
 
 export function getAvailability(
   status?: string | null,
-  stock?: number | null
+  stock?: number | null,
 ): Availability {
   const count = typeof stock === "number" ? stock : 0;
 

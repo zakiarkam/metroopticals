@@ -25,7 +25,7 @@ import { Toast } from "@/lib/utils/toast";
  * Reviews on the product page.
  *
  * Customer-generated throughout: the shop cannot write these, only moderate
- * them. A submitted review is held for approval, which the form says plainly —
+ * them. A submitted review is held for approval, which the form says plainly
  * otherwise the customer posts, sees nothing appear, and posts again.
  */
 
@@ -37,7 +37,7 @@ const formatDate = (value: string) =>
   });
 
 const STATUS_NOTE: Record<string, string> = {
-  PENDING: "Your review is awaiting approval — only you can see it here.",
+  PENDING: "Your review is awaiting approval  only you can see it here.",
   REJECTED: "Your review was not approved. Edit it to submit again.",
   PUBLISHED: "Your review is live.",
 };
@@ -47,13 +47,19 @@ const STATUS_NOTE: Record<string, string> = {
  *
  * Deliberately has no avatar and no company mark: the shop does not collect
  * either, and a row of generated initials was filler pretending to be identity.
- * What is real — the rating, whether they actually bought the frame, and when —
+ * What is real  the rating, whether they actually bought the frame, and when
  * carries the card instead.
  *
  * The headline is the reviewer's own title where they wrote one, so the large
  * type is always a customer's words rather than a truncation of their sentence.
  */
-function ReviewCard({ review, own = false }: { review: Review; own?: boolean }) {
+function ReviewCard({
+  review,
+  own = false,
+}: {
+  review: Review;
+  own?: boolean;
+}) {
   const headline = review.title?.trim() || review.body;
   const detail = review.title?.trim() ? review.body : null;
 
@@ -122,8 +128,8 @@ function ReviewsEmpty({ action }: { action: React.ReactNode }) {
         <span className="text-blue-light">Yours would be the first.</span>
       </p>
       <p className="mx-auto mt-3.5 max-w-md text-[14px] leading-relaxed text-body">
-        How does it sit on the nose? Is it lighter than it looks? The next person
-        deciding on this frame is reading for exactly that.
+        How does it sit on the nose? Is it lighter than it looks? The next
+        person deciding on this frame is reading for exactly that.
       </p>
       <div className="mt-7 flex justify-center">{action}</div>
     </div>
@@ -187,7 +193,7 @@ export default function ProductReviews({
       return;
     }
     if (body.trim().length < 10) {
-      Toast.error("Tell us a little more — at least 10 characters.");
+      Toast.error("Tell us a little more  at least 10 characters.");
       return;
     }
 
@@ -248,19 +254,20 @@ export default function ProductReviews({
 
   // The customer's own review leads the rail, then everyone else's. Filtering
   // by id rather than by author keeps a pending review from appearing twice.
-  const others = (data?.reviews ?? []).filter((review) => review.id !== mine?.id);
+  const others = (data?.reviews ?? []).filter(
+    (review) => review.id !== mine?.id,
+  );
   const visibleCount = others.length + (mine ? 1 : 0);
 
   return (
     <section className={className} id="reviews">
       <div className="border-t border-gray-3 pt-10 sm:pt-12">
-        {/* Heading left, controls right — the arrows only earn their place
+        {/* Heading left, controls right  the arrows only earn their place
             once there is more than one card to move between. */}
         <div className="flex flex-wrap items-end justify-between gap-5">
           <div>
             <h2 className="font-display text-[1.7rem] font-bold leading-[1.1] tracking-[-0.035em] text-dark sm:text-[2.1rem]">
-              Customer{" "}
-              <span className="text-blue-light">reviews</span>
+              Customer <span className="text-blue-light">reviews</span>
             </h2>
             <p className="mt-2 text-[14px] text-dark-4">
               Written by people who bought this frame.
@@ -373,7 +380,8 @@ export default function ProductReviews({
                 htmlFor="review-title"
                 className="mb-1.5 block text-[13px] font-semibold text-dark"
               >
-                Headline <span className="font-normal text-dark-4">(optional)</span>
+                Headline{" "}
+                <span className="font-normal text-dark-4">(optional)</span>
               </label>
               <input
                 id="review-title"

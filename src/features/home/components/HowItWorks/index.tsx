@@ -4,7 +4,7 @@ import { Section, SectionHeading } from "@/components/common/Section";
 /**
  * Four-step explainer for the order journey.
  *
- * Buying prescription eyewear online is unfamiliar to most customers — the
+ * Buying prescription eyewear online is unfamiliar to most customers  the
  * question "what actually happens after I pay?" is the main hesitation, so it
  * gets answered on the home page rather than buried in the FAQ.
  */
@@ -35,12 +35,12 @@ export default function HowItWorks() {
         eyebrow="How it works"
         title="From frame to fitting"
         titleAccent="in four steps."
-        description="No guesswork and no hidden lab fees — here is exactly what happens once you place an order."
+        description="No guesswork and no hidden lab fees  here is exactly what happens once you place an order."
       />
 
       {/*
        * Ghost numerals on a hairline rather than numbered pills inside a
-       * bordered grid — the same treatment the lens guides use, so the two
+       * bordered grid  the same treatment the lens guides use, so the two
        * "here is how it works" sections on the site read as one system.
        *
        * An earlier attempt at ghost numerals set them at 7% opacity on ivory

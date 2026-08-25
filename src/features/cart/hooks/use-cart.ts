@@ -46,7 +46,7 @@ export const useCart = () => {
       }
       return "ACTIVE";
     },
-    []
+    [],
   );
 
   const loadCart = useCallback(async () => {
@@ -146,10 +146,10 @@ export const useCart = () => {
       quantity: number = 1,
       /**
        * The colourway the shopper picked. Omitted from listing cards, where
-       * there is no choice on screen — the server then settles on the first
+       * there is no choice on screen  the server then settles on the first
        * colour the product lists so the line is never colour-less.
        */
-      color?: string
+      color?: string,
     ) => {
       if (status !== "authenticated") {
         toast.error("Please login to add items to cart");
@@ -183,7 +183,7 @@ export const useCart = () => {
             },
             stock: product.stock,
             status: resolveStatus(product.status, product.stock),
-          })
+          }),
         );
 
         toast.dismiss(loadingToast);
@@ -198,7 +198,7 @@ export const useCart = () => {
         return false;
       }
     },
-    [status, dispatch, loadCart, resolveStatus]
+    [status, dispatch, loadCart, resolveStatus],
   );
 
   const handleUpdateQuantity = useCallback(
@@ -238,7 +238,7 @@ export const useCart = () => {
         return false;
       }
     },
-    [dispatch, loadCart, cartItems]
+    [dispatch, loadCart, cartItems],
   );
 
   const handleRemoveFromCart = useCallback(
@@ -264,7 +264,7 @@ export const useCart = () => {
         return false;
       }
     },
-    [dispatch, loadCart]
+    [dispatch, loadCart],
   );
 
   const handleClearCart = useCallback(async () => {

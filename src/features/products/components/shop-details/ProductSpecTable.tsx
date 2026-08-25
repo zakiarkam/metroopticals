@@ -15,12 +15,12 @@ import {
  *
  * The product page used to split this across two places: a row of loose chips
  * for the frame measurements and a separate definition list underneath for
- * brand, category and reference — so brand appeared three times on the page
+ * brand, category and reference  so brand appeared three times on the page
  * (eyebrow, chips, list) and size appeared nowhere near material. One table,
  * grouped, is what a shopper comparing two frames actually needs.
  *
  * Rows whose value the catalogue does not hold are dropped rather than shown
- * as "—", so a sparsely filled product gets a short table instead of a long
+ * as "", so a sparsely filled product gets a short table instead of a long
  * list of blanks.
  */
 
@@ -73,7 +73,7 @@ export default function ProductSpecTable({
           value: product.brand.slug
             ? filterLink(
                 `brands=${encodeURIComponent(product.brand.slug)}`,
-                product.brand.name
+                product.brand.name,
               )
             : product.brand.name,
         },
@@ -82,7 +82,7 @@ export default function ProductSpecTable({
           value: product.category.slug
             ? filterLink(
                 `categories=${encodeURIComponent(product.category.slug)}`,
-                product.category.name
+                product.category.name,
               )
             : product.category.name,
         },
@@ -90,7 +90,7 @@ export default function ProductSpecTable({
           label: "Shape",
           value: filterLink(
             `shapes=${product.frameShape}`,
-            FRAME_SHAPE_LABELS[product.frameShape]
+            FRAME_SHAPE_LABELS[product.frameShape],
           ),
         },
         product.rimType && {
@@ -109,7 +109,7 @@ export default function ProductSpecTable({
           label: "Suits",
           value: filterLink(
             `genders=${product.gender}`,
-            GENDER_LABELS[product.gender]
+            GENDER_LABELS[product.gender],
           ),
         },
       ].filter(Boolean) as Row[],
@@ -148,7 +148,10 @@ export default function ProductSpecTable({
             </span>
           ),
         },
-        product.unitType && { label: "Sold by", value: unitLabel(product.unitType) },
+        product.unitType && {
+          label: "Sold by",
+          value: unitLabel(product.unitType),
+        },
         typeof product.stock === "number" && {
           label: "In stock",
           value: `${product.stock}`,

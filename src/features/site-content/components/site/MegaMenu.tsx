@@ -85,7 +85,7 @@ const SOURCE_PARAM: Record<Exclude<NavSource, "">, keyof NavCatalogue> = {
  *
  * A column either lists authored links or fills itself from the catalogue.
  * Catalogue columns only ever contain values that have stock behind them, so
- * the menu cannot offer a filter that lands on an empty grid — "Kids" and
+ * the menu cannot offer a filter that lands on an empty grid  "Kids" and
  * "Browline" both used to do exactly that.
  */
 function resolveColumns(item: NavItem, catalogue: NavCatalogue): NavColumn[] {
@@ -117,7 +117,7 @@ const hasPanel = (item: NavItem, catalogue: NavCatalogue) =>
  * The brands drop-down.
  *
  * Brands are recognised by their mark, not by their name in a list, so this
- * column draws every brand the admin has added as a logo tile — the same set
+ * column draws every brand the admin has added as a logo tile  the same set
  * the shop sidebar filters on, so a brand added in the admin appears here on
  * its next page load with no content edit. A brand with no logo uploaded falls
  * back to its name set as a wordmark, which keeps the grid even.
@@ -201,7 +201,7 @@ function BrandColumn({
  * A single drop-down.
  *
  * Columns are capped at 220px and the promo at a fixed 280px so a panel with
- * one column looks the same weight as a panel with three — the previous
+ * one column looks the same weight as a panel with three  the previous
  * `minmax(0,1fr)` filler stretched a lone column across the viewport.
  */
 function Panel({
@@ -250,7 +250,7 @@ function Panel({
                 ))}
               </ul>
             </div>
-          )
+          ),
         )}
       </div>
 
@@ -311,7 +311,7 @@ export default function MegaMenu({
 
   const close = () => setOpenIndex(null);
 
-  // Close on navigation — otherwise the panel hangs over the new page.
+  // Close on navigation  otherwise the panel hangs over the new page.
   useEffect(close, [pathname]);
 
   useEffect(() => {
@@ -326,7 +326,7 @@ export default function MegaMenu({
     () => () => {
       if (closeTimer.current) clearTimeout(closeTimer.current);
     },
-    []
+    [],
   );
 
   const cancelClose = () => {

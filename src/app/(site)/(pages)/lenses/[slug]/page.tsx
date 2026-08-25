@@ -21,8 +21,8 @@ type LensPageProps = { params: Promise<{ slug: string }> };
 /**
  * One lens type in full.
  *
- * Built as alternating full-width bands — intro, spec strip, how it works,
- * numbered benefits, tints, limitations, questions — rather than the sidebar
+ * Built as alternating full-width bands  intro, spec strip, how it works,
+ * numbered benefits, tints, limitations, questions  rather than the sidebar
  * of stacked panels this page started as. Two photographs carry the top half
  * and the dark band closes it, so nothing needs a card border to read as a
  * separate thought.
@@ -78,7 +78,7 @@ export default async function LensDetailPage({ params }: LensPageProps) {
     .filter((item): item is NonNullable<typeof item> => Boolean(item));
 
   // Rich result for the questions at the foot of the page. Only the FAQ block
-  // is marked up — the guide copy itself is prose, not a structured recipe.
+  // is marked up  the guide copy itself is prose, not a structured recipe.
   const faqJsonLd = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -100,7 +100,10 @@ export default async function LensDetailPage({ params }: LensPageProps) {
         eyebrow={lens.group}
         title={lens.name}
         description={lens.tagline}
-        crumbs={[{ label: "Lenses", href: "/lenses" }, { label: lens.shortName }]}
+        crumbs={[
+          { label: "Lenses", href: "/lenses" },
+          { label: lens.shortName },
+        ]}
       />
 
       {/* ------------------------- photograph + intro ------------------------- */}
@@ -145,7 +148,7 @@ export default async function LensDetailPage({ params }: LensPageProps) {
       <section className="border-y border-gray-3 bg-gray-1">
         <SiteContainer className="py-8">
           {/* Column count follows the number of specs so the strip is one full
-              row — a fixed five left a lone sixth entry stranded underneath. */}
+              row  a fixed five left a lone sixth entry stranded underneath. */}
           <dl
             className={`grid grid-cols-2 gap-x-8 gap-y-6 sm:grid-cols-3 lg:divide-x lg:divide-gray-3 ${
               SPEC_COLUMNS[lens.specs.length] ?? "lg:grid-cols-4"
@@ -168,7 +171,7 @@ export default async function LensDetailPage({ params }: LensPageProps) {
               <Info className="mr-2 inline-block h-4 w-4 -translate-y-px text-blue" />
               This is a stocked supplier range. We publish no index or price
               figures for it here because those change between production series
-              — ask us and you will get the current answer for your prescription.
+              ask us and you will get the current answer for your prescription.
             </p>
           )}
         </SiteContainer>
@@ -251,10 +254,7 @@ export default async function LensDetailPage({ params }: LensPageProps) {
 
             <ul className="mt-10 grid grid-cols-1 gap-x-10 gap-y-9 sm:grid-cols-2 lg:grid-cols-3">
               {lens.variants.items.map((variant) => (
-                <li
-                  key={variant.name}
-                  className="border-t border-gray-3 pt-6"
-                >
+                <li key={variant.name} className="border-t border-gray-3 pt-6">
                   {/* The disc is the tint itself, so an inset ring rather than
                       a border keeps a pale tint from vanishing on ivory. */}
                   <span
@@ -383,7 +383,7 @@ export default async function LensDetailPage({ params }: LensPageProps) {
         eyebrow="Before you buy"
         title="Send us your prescription."
         titleAccent="We will be straight with you."
-        body="We will tell you whether this lens is genuinely right for your eyes and your day — including the times the cheaper option is the better one. Or book an eye test and we will measure properly."
+        body="We will tell you whether this lens is genuinely right for your eyes and your day  including the times the cheaper option is the better one. Or book an eye test and we will measure properly."
         image="/images/store/consult.jpg"
         imageAlt="An optician fitting a pair of spectacles onto a smiling customer in the store"
         primary={{ href: "/contact", label: "Book an eye test" }}
