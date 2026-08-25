@@ -6,15 +6,10 @@ export const isResendConfigured = () =>
 
 let resendClient: Resend | null = null;
 
-/**
- * Build the Resend client lazily. Constructing it at module scope throws when
- * RESEND_API_KEY is unset, which breaks `next build` (route modules are loaded
- * during page-data collection) and any environment without email configured.
- */
 const getResend = (): Resend => {
   if (!process.env.RESEND_API_KEY) {
     throw new Error(
-      "Email is not configured. Set RESEND_API_KEY, or set USE_MOCK_EMAIL=true to log emails instead of sending them."
+      "Email is not configured. Set RESEND_API_KEY, or set USE_MOCK_EMAIL=true to log emails instead of sending them.",
     );
   }
   if (!resendClient) {
@@ -94,13 +89,13 @@ function getEmailBaseUrl() {
   return normalizeBaseUrl(
     (process.env.NEXT_PUBLIC_SITE_URL ||
       process.env.NEXTAUTH_URL ||
-      "https://metroopticals.lk") as string
+      "https://metroopticals.lk") as string,
   ).replace(/\/$/, "");
 }
 
 const R2_PUBLIC_URL = (process.env.NEXT_PUBLIC_R2_PUBLIC_URL || "").replace(
   /\/+$/,
-  ""
+  "",
 );
 
 /**
@@ -217,7 +212,7 @@ function renderEmailHeaderRow({
         <tr>
           <td align="left" valign="middle">
             <img src="${escapeHtml(logoUrl)}" width="160" alt="${escapeHtml(
-              BRAND.name
+              BRAND.name,
             )}"
               style="display:block;border:0;outline:0;width:160px;height:auto;max-width:100%;" />
           </td>
@@ -247,15 +242,15 @@ function renderEmailFooterRow() {
       </p>
       <p style="margin:0;font-size:13px;color:#B5AEA2;">
         Email: <a href="mailto:${escapeHtml(
-          BRAND.supportEmail
+          BRAND.supportEmail,
         )}" style="color:#B5AEA2;text-decoration:none;">${escapeHtml(
-          BRAND.supportEmail
+          BRAND.supportEmail,
         )}</a>
         &nbsp;|&nbsp;
         Phone: <a href="tel:${escapeHtml(
-          BRAND.supportPhone
+          BRAND.supportPhone,
         )}" style="color:#B5AEA2;text-decoration:none;">${escapeHtml(
-          BRAND.supportPhoneLabel
+          BRAND.supportPhoneLabel,
         )}</a>
       </p>
       <p style="margin:15px 0 0;font-size:12px;color:#6b7280;">
@@ -346,7 +341,7 @@ function renderCustomerOrderEmail({
   const safeBillingName = escapeHtml(order.billingName || "Customer");
 
   const orderUrl = `${baseUrl}/order-confirmation?orderId=${encodeURIComponent(
-    String(orderId)
+    String(orderId),
   )}`;
 
   const innerHtml = `
@@ -379,7 +374,7 @@ function renderCustomerOrderEmail({
           <p style="margin:0;font-size:14px;color:#666;">
             If you have any questions, please
             <a href="${escapeHtml(
-              `${baseUrl}/contact`
+              `${baseUrl}/contact`,
             )}" style="color:#A17C4C;text-decoration:none;">contact our support team</a>
             or reply to this email.
           </p>
@@ -476,7 +471,7 @@ function renderOrderStatusUpdateEmail({
           <p style="margin:0;font-size:14px;color:#666;">
             If you have any questions, please
             <a href="${escapeHtml(
-              contactUrl
+              contactUrl,
             )}" style="color:#A17C4C;text-decoration:none;">contact our support team</a>
             or reply to this email.
           </p>
@@ -542,7 +537,7 @@ export async function sendPasswordResetEmail(email: string, token: string) {
   const baseUrl = getEmailBaseUrl();
 
   const resetUrl = `${baseUrl}/reset-password?token=${encodeURIComponent(
-    token
+    token,
   )}`;
 
   const safeEmail = escapeHtml(email);
@@ -602,7 +597,7 @@ export async function sendPasswordResetEmail(email: string, token: string) {
                 <p style="margin:0;font-size:14px;color:#666;">
                   If you have any questions, please
                   <a href="${escapeHtml(
-                    `${baseUrl}/contact`
+                    `${baseUrl}/contact`,
                   )}" style="color:#A17C4C;text-decoration:none;">contact our support team</a>
                   or reply to this email.
                 </p>
@@ -904,7 +899,7 @@ function renderAdminOrderEmail({
                   </td>
                   <td align="right" valign="middle" style="font-family:Poppins,Arial,Helvetica,sans-serif;font-size:14px;">
                     <a href="${escapeHtml(
-                      adminPanelUrl
+                      adminPanelUrl,
                     )}" target="_blank" style="color:#1A1A1A;text-decoration:none;">Open Admin Orders</a>
                   </td>
                 </tr>
@@ -981,16 +976,16 @@ function renderAdminOrderEmail({
                       <div style="font-size:14px;line-height:1.7;">
                         <b>${escapeHtml(order.billingName)}</b><br/>
                         Email: <a href="mailto:${escapeHtml(
-                          order.billingEmail
+                          order.billingEmail,
                         )}" style="color:#A17C4C;font-weight:600;text-decoration:none;">${escapeHtml(
-                          order.billingEmail
+                          order.billingEmail,
                         )}</a><br/>
                         ${
                           order.billingPhone
                             ? `Phone: <a href="tel:${escapeHtml(
-                                order.billingPhone
+                                order.billingPhone,
                               )}" style="color:#A17C4C;font-weight:600;text-decoration:none;">${escapeHtml(
-                                order.billingPhone
+                                order.billingPhone,
                               )}</a><br/>`
                             : ""
                         }
@@ -1002,7 +997,7 @@ function renderAdminOrderEmail({
                           ? `<div style="margin-top:12px;background:#f8fafc;border-left:4px solid #A17C4C;border-radius:12px;padding:12px;">
                                <div style="font-weight:600;margin-bottom:6px;">Notes</div>
                                <div style="color:#53627a;line-height:1.6;">${escapeHtml(
-                                 order.notes
+                                 order.notes,
                                )}</div>
                              </div>`
                           : ""
@@ -1110,7 +1105,7 @@ export async function sendOrderConfirmationEmail(
   email: string,
   orderNumber: string,
   orderId: number | string,
-  orderDetails: OrderDetails
+  orderDetails: OrderDetails,
 ) {
   if (!isResendConfigured()) throw new Error("Resend API key not configured");
 
@@ -1140,7 +1135,7 @@ export async function sendOrderConfirmationEmail(
 export async function sendOrderNotificationToAdmin(
   adminEmail: string,
   orderNumber: string,
-  orderDetails: OrderDetails
+  orderDetails: OrderDetails,
 ) {
   if (!isResendConfigured()) throw new Error("Resend API key not configured");
 
@@ -1178,7 +1173,7 @@ export async function sendContactFormEmail(
     phone?: string;
     subject?: string;
     message: string;
-  }
+  },
 ) {
   if (!isResendConfigured()) throw new Error("Resend API key not configured");
 
@@ -1292,7 +1287,7 @@ export async function sendContactFormEmail(
                             <div style="font-size:12px;color:#6b7280;letter-spacing:0.04em;text-transform:uppercase;">Phone</div>
                             <div style="font-size:15px;font-weight:600;color:#1A1A1A;margin-top:4px;">
                               <a href="tel:${escapeHtml(
-                                contactData.phone
+                                contactData.phone,
                               )}" style="color:#A17C4C;text-decoration:none;font-weight:600;">${safePhone}</a>
                             </div>
                           </td>
@@ -1322,7 +1317,7 @@ export async function sendContactFormEmail(
                     <!-- Quick actions (email-safe buttons) -->
                     <div style="margin-top:14px;background:#ffffff;border-radius:12px;padding:14px;text-align:center;">
                       <a href="mailto:${safeEmail}?subject=${encodeURIComponent(
-                        contactData.subject || "Re: Your message"
+                        contactData.subject || "Re: Your message",
                       )}"
                         style="display:inline-block;background:#A17C4C;color:#ffffff;text-decoration:none;padding:12px 18px;border-radius:999px;font-family:Poppins,Arial,Helvetica,sans-serif;font-weight:600;font-size:14px;">
                         Reply via Email
