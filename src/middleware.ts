@@ -23,7 +23,7 @@ export async function middleware(request: NextRequest) {
       secureCookie: false,
     }));
 
-  // Handle admin routes
+  // Handle admin routess
   if (isAdminRoute) {
     if (!token) {
       const url = new URL("/log-in", request.url);
