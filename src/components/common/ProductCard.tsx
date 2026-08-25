@@ -68,14 +68,12 @@ export type ProductCardItem = {
 export default function ProductCard({
   item,
   layout = "grid",
-  showDescription = false,
   featured = false,
   onRemove,
   className = "",
 }: {
   item: ProductCardItem;
   layout?: "grid" | "list";
-  showDescription?: boolean;
   /**
    * The lifted card in a carousel  larger type and a full-width buy button
    * instead of the icon, so one card in view reads as the one being offered.
@@ -226,7 +224,6 @@ export default function ProductCard({
         <span className="text-[13px] font-bold text-dark">
           {item.rating.toFixed(1)}
         </span>
-        <span className="text-[12.5px] text-dark-4">({item.reviewCount})</span>
       </div>
     ) : null;
 
@@ -387,12 +384,6 @@ export default function ProductCard({
           {rating}
           {colors}
 
-          {item.description && (
-            <p className="line-clamp-2 text-[13.5px] leading-relaxed text-body">
-              {item.description}
-            </p>
-          )}
-
           <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-2">
             {price}
             <div className="flex flex-wrap items-center gap-2">
@@ -517,12 +508,6 @@ export default function ProductCard({
         >
           {title}
         </h3>
-
-        {showDescription && item.description ? (
-          <p className="line-clamp-2 text-[13px] leading-relaxed text-body">
-            {item.description}
-          </p>
-        ) : null}
 
         {rating}
         {colors}

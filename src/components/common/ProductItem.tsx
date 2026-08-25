@@ -53,7 +53,6 @@ const ProductItem = ({
   hoverActions?: boolean;
 }) => (
   <ProductCard
-    showDescription
     featured={featured}
     item={{
       id: item.id,
