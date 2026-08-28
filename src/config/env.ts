@@ -24,7 +24,15 @@ const envSchema = z.object({
     ? z.string().optional()
     : z.string().min(32, "NEXTAUTH_SECRET must be at least 32 characters"),
 
-  RESEND_API_KEY: z.string().optional(),
+  // Password resets and order confirmations go out by email, so a live site
+  // without a key would fail its customers silently. Required in production
+  // unless the mock is deliberately switched on.
+  RESEND_API_KEY:
+    process.env.NODE_ENV === "production" &&
+    process.env.USE_MOCK_EMAIL !== "true" &&
+    !isBuildPhase
+      ? z.string().min(1, "RESEND_API_KEY is required in production")
+      : z.string().optional(),
   EMAIL_FROM: z.string().optional(),
 
   ADMIN_EMAIL: z.string().optional(),
@@ -35,12 +43,22 @@ const envSchema = z.object({
   R2_ACCOUNT_ID: z.string().optional(),
   R2_ACCESS_KEY_ID: z.string().optional(),
   R2_SECRET_ACCESS_KEY: z.string().optional(),
-  NEXT_PUBLIC_R2_PUBLIC_URL: z.string().optional(),
+  // Every catalogue image URL is built from this; without it the storefront
+  // renders broken pictures with no error anywhere.
+  NEXT_PUBLIC_R2_PUBLIC_URL:
+    process.env.NODE_ENV === "production" && !isBuildPhase
+      ? z.string().url("NEXT_PUBLIC_R2_PUBLIC_URL is required in production")
+      : z.string().optional(),
 
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
 
   NEXT_PUBLIC_WHATSAPP_NUMBER: z.string().optional(),
+  WASENDER_API_KEY: z.string().optional(),
+  WASENDER_API_URL: z.string().optional(),
+  USE_MOCK_EMAIL: z.string().optional(),
+  ADMIN_BOOTSTRAP_EMAIL: z.string().optional(),
+  ADMIN_BOOTSTRAP_PASSWORD: z.string().optional(),
 
   LOG_LEVEL: z.string().optional(),
   REQUEST_TIMEOUT: z.string().optional(),

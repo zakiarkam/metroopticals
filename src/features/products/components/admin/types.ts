@@ -76,6 +76,10 @@ export type ProductFormData = EyewearFormFields & {
   categoryId: number | null;
   brandId?: number | null;
   stock: number;
+  /** The shop's own code, printed on the bill and searched at the counter. */
+  sku: string;
+  /** What a barcode scanner reads at the till. */
+  barcode: string;
   price: number;
   discountedPrice?: number;
   status: ProductStatus;

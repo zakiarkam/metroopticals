@@ -175,6 +175,10 @@ export const useWishlist = () => {
 
       if (status !== "authenticated") {
         toast.error("Please login to add items to wishlist");
+        if (typeof window !== "undefined") {
+          const back = window.location.pathname + window.location.search;
+          window.location.assign(`/log-in?redirect=${encodeURIComponent(back)}`);
+        }
         return false;
       }
 

@@ -2,7 +2,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import { setupListeners } from "@reduxjs/toolkit/query";
 
 import quickViewReducer from "./features/quickView-slice";
-import cartReducer, { syncCartItems } from "./features/cart-slice";
+import cartReducer, { hydrateCartItems } from "./features/cart-slice";
 import wishlistReducer, { syncWishlistItems } from "./features/wishlist-slice";
 import productDetailsReducer from "./features/product-details";
 import categoriesCacheReducer from "./features/categories-cache";
@@ -26,7 +26,7 @@ const readStorage = (key: string): { items?: unknown } | undefined => {
 export const hydrateFromStorage = () => {
   if (typeof window === "undefined") return;
   const cart = readStorage(CART_STORAGE_KEY);
-  if (Array.isArray(cart?.items)) store.dispatch(syncCartItems(cart.items));
+  if (Array.isArray(cart?.items)) store.dispatch(hydrateCartItems(cart.items));
   const wishlist = readStorage(WISHLIST_STORAGE_KEY);
   if (Array.isArray(wishlist?.items)) {
     store.dispatch(syncWishlistItems(wishlist.items));

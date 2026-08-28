@@ -88,6 +88,9 @@ export const createProductSchema = z.object({
   categoryId: z.coerce.number().int().positive().optional(),
   brandId: z.coerce.number().int().positive().optional().nullable(),
   stock: z.number().int().min(0, "Stock must be non-negative"),
+  /** The shop's own code, and what a scanner reads at the counter. */
+  sku: z.string().trim().max(60).optional().nullable(),
+  barcode: z.string().trim().max(60).optional().nullable(),
   unitType: z.enum(["METER", "PIECES", "BOX", "DRUM"]).default("PIECES"),
   status: z.enum(["ACTIVE", "INACTIVE", "OUT_OF_STOCK"]).default("ACTIVE"),
 }).refine(
@@ -107,6 +110,8 @@ export const updateProductSchema = z.object({
   categoryId: z.coerce.number().int().positive().optional().nullable(),
   brandId: z.coerce.number().int().positive().optional().nullable(),
   stock: z.number().int().min(0).optional(),
+  sku: z.string().trim().max(60).optional().nullable(),
+  barcode: z.string().trim().max(60).optional().nullable(),
   unitType: z.enum(["METER", "PIECES", "BOX", "DRUM"]).optional(),
   status: z.enum(["ACTIVE", "INACTIVE", "OUT_OF_STOCK"]).optional(),
 });

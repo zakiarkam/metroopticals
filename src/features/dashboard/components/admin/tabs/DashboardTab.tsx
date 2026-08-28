@@ -4,16 +4,15 @@ import React, { useEffect, useMemo, useCallback, useState } from "react";
 import { getMonthlyReportSummary } from "@/features/dashboard/api/dashboard-api";
 import { Toast } from "@/lib/utils/toast";
 import type { ReportExportPayload } from "@/features/reports/types/report";
-import {
-  exportReportExcel,
-  exportReportPdf,
-} from "@/lib/utils/reportExport";
 import RecentOrdersCard from "../dashboard/RecentOrdersCard";
 import TopProductsCard from "../dashboard/TopProductsCard";
 import OutOfStockCard from "../dashboard/OutOfStockCard";
 import { Button } from "@/components/ui/button";
 import { Download, RefreshCw, FileText } from "lucide-react";
 import { useGetDashboardQuery } from "@/store/services/api";
+import Link from "next/link";
+import CounterTodayCard from "../dashboard/CounterTodayCard";
+import RevenueTrendCard from "../dashboard/RevenueTrendCard";
 
 type DashboardTabProps = {
   dateRange: string;
@@ -145,30 +144,20 @@ const DashboardTab: React.FC<DashboardTabProps> = ({ dateRange }) => {
         return;
       }
 
-      toastId = Toast.loading(`Generating ${format.toUpperCase()} report...`);
+      // The report is rendered on the server (`report-render.ts`), which is
+      // where the logo, the daily chart and every sale live. Building it in
+      // the browser from the JSON summary would give a thinner document with
+      // a different look, so the button simply asks the server for the file.
+      const params = new URLSearchParams({ format });
+      if (appliedReport.mode === "range") {
+        params.set("startDate", appliedReport.startDate!);
+        params.set("endDate", appliedReport.endDate!);
+      } else {
+        params.set("month", appliedReport.month!);
+      }
+      window.location.assign(`/api/dashboard/reports/monthly?${params.toString()}`);
 
-      const blob =
-        format === "pdf"
-          ? await exportReportPdf(reportData)
-          : await exportReportExcel(reportData);
-
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      const fileLabel =
-        appliedReport.mode === "range"
-          ? `${appliedReport.startDate}_to_${appliedReport.endDate}`
-          : appliedReport.month;
-      link.download = `${
-        appliedReport.mode === "range" ? "report" : "monthly-report"
-      }-${fileLabel}.${format === "excel" ? "xlsx" : "pdf"}`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-
-      Toast.dismiss(toastId);
-      Toast.success(`${format.toUpperCase()} report downloaded successfully!`);
+      Toast.success(`${format.toUpperCase()} report is downloading.`);
     } catch (err: any) {
       if (toastId !== null) Toast.dismiss(toastId);
       console.error("Failed to download report:", err);
@@ -198,25 +187,25 @@ const DashboardTab: React.FC<DashboardTabProps> = ({ dateRange }) => {
         caption: "vs previous period",
       },
       {
-        label: "Orders completed",
+        label: "Sales",
         value: dashboardData?.metrics.orders.total || 0,
         change: dashboardData?.metrics.orders.change,
         direction: dashboardData?.metrics.orders.direction,
-        caption: "this month",
+        caption: "counter and website together",
       },
       {
         label: "Total customers",
         value: dashboardData?.metrics.customers.total || 0,
         change: dashboardData?.metrics.customers.change,
         direction: dashboardData?.metrics.customers.direction,
-        caption: "registered users",
+        caption: "new website accounts",
       },
       {
-        label: "Total products",
+        label: "Stock health",
         value: dashboardData?.metrics.products.total || 0,
-        caption: `${
-          dashboardData?.metrics.products.lowStock || 0
-        } low stock items`,
+        caption: `${dashboardData?.metrics.products.lowStock || 0} running low · ${
+          dashboardData?.metrics.products.outOfStock || 0
+        } out of stock`,
       },
     ],
     [dashboardData]
@@ -238,20 +227,26 @@ const DashboardTab: React.FC<DashboardTabProps> = ({ dateRange }) => {
   }, [dateRange]);
 
   return (
-    <div className="space-y-4 w-full overflow-hidden">
+    <div className="w-full space-y-4 overflow-hidden">
+      <CounterTodayCard
+        counter={dashboardData?.counterToday}
+        outstanding={dashboardData?.outstanding}
+        isLoading={isLoading}
+      />
+
       {/* Metrics */}
-      <div className="grid gap-3 grid-cols-1 xs:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 xs:grid-cols-2 xl:grid-cols-4">
         {metrics.map((metric) => (
           <div
             key={metric.label}
-            className="rounded-xl border border-gray-3 bg-gray-2 shadow-sm px-3 py-2 md:px-4 md:py-3 min-w-0"
+            className="min-w-0 rounded-xl border border-gray-3 bg-gray-2 px-3 py-2.5 shadow-sm transition hover:border-blue/30 md:px-4"
           >
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0 flex-1">
-                <p className="text-[10px] sm:text-[11px] uppercase text-body tracking-wide truncate">
+                <p className="truncate text-[10px] uppercase tracking-wide text-body">
                   {metric.label}
                 </p>
-                <p className="mt-1 text-lg sm:text-xl md:text-2xl font-semibold text-dark leading-tight break-words">
+                <p className="mt-1 break-words text-lg font-semibold leading-tight text-dark md:text-xl">
                   {metric.value}
                 </p>
               </div>
@@ -291,12 +286,18 @@ const DashboardTab: React.FC<DashboardTabProps> = ({ dateRange }) => {
               )}
             </div>
 
-            <p className="mt-2 sm:mt-3 text-[10px] sm:text-[11px] text-body truncate">
-              {metric.caption} • {rangeLabel}
+            <p className="mt-1.5 truncate text-[11px] text-body" title={`${metric.caption} · ${rangeLabel}`}>
+              {metric.caption} · {rangeLabel}
             </p>
           </div>
         ))}
       </div>
+
+      <RevenueTrendCard
+        data={dashboardData?.dailyRevenue || []}
+        isLoading={isLoading}
+        rangeLabel={rangeLabel}
+      />
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <div className="space-y-4 min-w-0">

@@ -10,6 +10,10 @@ import {
   LayoutDashboard,
   Megaphone,
   Package,
+  Boxes,
+  Inbox,
+  ScanLine,
+  ReceiptText,
   PanelsTopLeft,
   Star,
   Tags,
@@ -36,7 +40,8 @@ type NavGroup = {
 
 const NAV_GROUPS: NavGroup[] = [
   {
-    title: "Overview",
+    // No heading  the dashboard stands on its own above the two worlds.
+    title: "",
     items: [
       {
         id: "dashboard",
@@ -48,7 +53,21 @@ const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    title: "Catalogue",
+    title: "Shop counter",
+    items: [
+      { id: "pos", label: "POS", href: "/admin/pos", icon: ScanLine },
+      {
+        id: "pos-sales",
+        label: "Counter sales",
+        href: "/admin/pos/sales",
+        icon: ReceiptText,
+      },
+      { id: "pos-stock", label: "Stock", href: "/admin/pos/stock", icon: Boxes },
+    ],
+  },
+  {
+    // Everything that shapes and serves the website, in one place.
+    title: "Website",
     items: [
       {
         id: "products",
@@ -63,10 +82,19 @@ const NAV_GROUPS: NavGroup[] = [
         icon: FolderTree,
       },
       { id: "brands", label: "Brands", href: "/admin/brands", icon: Tags },
+      {
+        id: "orders",
+        label: "Orders",
+        href: "/admin/orders",
+        icon: ScrollText,
+      },
+      { id: "users", label: "Users", href: "/admin/users", icon: Users },
     ],
   },
   {
-    title: "Storefront",
+    // What the shop says and hears: the site's words and artwork on one side,
+    // what customers write back on the other.
+    title: "Content",
     items: [
       {
         id: "storefront",
@@ -80,19 +108,8 @@ const NAV_GROUPS: NavGroup[] = [
         href: "/admin/advertisements",
         icon: Megaphone,
       },
-    ],
-  },
-  {
-    title: "Commerce",
-    items: [
-      {
-        id: "orders",
-        label: "Orders",
-        href: "/admin/orders",
-        icon: ScrollText,
-      },
+      { id: "messages", label: "Messages", href: "/admin/messages", icon: Inbox },
       { id: "reviews", label: "Reviews", href: "/admin/reviews", icon: Star },
-      { id: "users", label: "Users", href: "/admin/users", icon: Users },
     ],
   },
   {
@@ -134,21 +151,27 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
     <>
       <motion.aside
         initial={false}
-        animate={{ width: collapsed ? 84 : 272 }}
+        animate={{ width: collapsed ? 72 : 240 }}
         transition={{ duration: 0.25, ease: "easeInOut" }}
         className={`absolute left-0 top-0 z-50 flex h-screen flex-col border-r border-gray-3 bg-gray-2 lg:static lg:translate-x-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         } transition-transform duration-300 ease-linear`}
       >
         {/* ------------------------------ brand ------------------------------ */}
-        <div className="flex h-[72px] items-center gap-2 border-b border-gray-3 px-4">
+        <div
+          className={`flex h-[72px] items-center gap-2 border-b border-gray-3 ${
+            collapsed ? "justify-center px-2" : "px-3"
+          }`}
+        >
           <Link
-            href="/admin"
+            // Owners go to the dashboard; everyone else to the till, since
+            // /admin would only bounce them there anyway.
+            href={role === "SUPER_ADMIN" ? "/admin" : "/admin/pos"}
             className={`flex min-w-0 items-center gap-2.5 ${
               collapsed ? "justify-center" : ""
             }`}
           >
-            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-blue text-[13px] font-bold text-white">
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-blue text-[12px] font-bold text-white">
               MO
             </span>
             <AnimatePresence initial={false}>
@@ -160,10 +183,10 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
                   transition={{ duration: 0.16 }}
                   className="min-w-0"
                 >
-                  <span className="block truncate text-[14px] font-bold leading-tight text-dark">
+                  <span className="block truncate text-[13px] font-bold leading-tight text-dark">
                     Metro Opticals
                   </span>
-                  <span className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-dark-5">
+                  <span className="block text-[10px] font-semibold uppercase tracking-[0.14em] text-dark-5">
                     Admin
                   </span>
                 </motion.span>
@@ -180,40 +203,45 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
             <X className="h-5 w-5" />
           </button>
 
-          <button
-            type="button"
-            onClick={() => setCollapsed(!collapsed)}
-            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            className={`hidden h-8 w-8 items-center justify-center rounded-lg text-dark-4 transition-colors hover:bg-blue-light-5 hover:text-blue lg:flex ${
-              collapsed ? "mx-auto" : "ml-auto"
-            }`}
-          >
-            <ChevronLeft
-              className={`h-4 w-4 transition-transform duration-300 ${
-                collapsed ? "rotate-180" : ""
-              }`}
-            />
-          </button>
+          {!collapsed && (
+            <button
+              type="button"
+              onClick={() => setCollapsed(true)}
+              aria-label="Collapse sidebar"
+              className="ml-auto hidden h-8 w-8 items-center justify-center rounded-lg text-dark-4 transition-colors hover:bg-blue-light-5 hover:text-blue lg:flex"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+          )}
         </div>
 
         {/* ------------------------------- nav ------------------------------- */}
-        <nav className="flex-1 overflow-y-auto px-3 py-4">
+        <nav
+          className={`flex-1 overflow-y-auto py-3 ${collapsed ? "px-2" : "px-2.5"}`}
+        >
           {groups.map((group) => (
-            <div key={group.title} className="mb-5 last:mb-0">
+            <div
+              key={group.title}
+              className={`last:mb-0 last:border-0 last:pb-0 ${
+                collapsed
+                  ? "mb-2.5 border-b border-gray-3 pb-2.5"
+                  : "mb-3"
+              }`}
+            >
               <AnimatePresence initial={false}>
-                {!collapsed && (
+                {!collapsed && group.title && (
                   <motion.p
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="mb-1.5 px-3 text-[10.5px] font-bold uppercase tracking-[0.16em] text-dark-5"
+                    className="mb-1 px-2.5 text-[9.5px] font-bold uppercase tracking-[0.16em] text-dark-5"
                   >
                     {group.title}
                   </motion.p>
                 )}
               </AnimatePresence>
 
-              <div className="flex flex-col gap-0.5">
+              <div className={`flex flex-col ${collapsed ? "gap-1.5" : "gap-px"}`}>
                 {group.items.map((item) => {
                   const Icon = item.icon;
                   // `/admin` would otherwise light up on every child route.
@@ -228,13 +256,21 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
                       href={item.href}
                       title={collapsed ? item.label : undefined}
                       onClick={() => setSidebarOpen(false)}
-                      className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13.5px] font-semibold transition-colors ${
+                      className={`group relative flex items-center rounded-lg font-semibold transition-colors ${
                         active
-                          ? "bg-blue text-white"
+                          ? "bg-blue text-white shadow-1"
                           : "text-dark-3 hover:bg-blue-light-5 hover:text-blue"
-                      } ${collapsed ? "justify-center px-0" : ""}`}
+                      } ${
+                        collapsed
+                          ? "mx-auto h-10 w-10 justify-center"
+                          : "gap-2.5 px-2.5 py-[7px] text-[12.5px]"
+                      }`}
                     >
-                      <Icon className="h-[18px] w-[18px] shrink-0" />
+                      <Icon
+                        className={`shrink-0 ${collapsed ? "h-[19px] w-[19px]" : "h-4 w-4"} ${
+                          active ? "" : "text-dark-5 group-hover:text-blue"
+                        }`}
+                      />
                       <AnimatePresence initial={false}>
                         {!collapsed && (
                           <motion.span
@@ -255,6 +291,21 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
             </div>
           ))}
         </nav>
+
+        {/* The expand control sits at the foot of the collapsed rail, where it
+            has room to be a proper target. */}
+        {collapsed && (
+          <div className="hidden border-t border-gray-3 p-2 lg:block">
+            <button
+              type="button"
+              onClick={() => setCollapsed(false)}
+              aria-label="Expand sidebar"
+              className="mx-auto flex h-9 w-9 items-center justify-center rounded-lg text-dark-4 transition-colors hover:bg-blue-light-5 hover:text-blue"
+            >
+              <ChevronLeft className="h-4 w-4 rotate-180" />
+            </button>
+          </div>
+        )}
       </motion.aside>
 
       {sidebarOpen && (

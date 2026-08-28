@@ -331,7 +331,7 @@ export default function ProductCard({
           href={detailsHref}
           onClick={rememberForDetails}
           aria-label={item.title}
-          className="relative aspect-[4/3] w-full shrink-0 overflow-hidden rounded-xl bg-gray-1 sm:w-[200px] md:w-[240px]"
+          className="relative aspect-square w-full shrink-0 overflow-hidden rounded-xl bg-gray-1 sm:w-[200px] md:w-[240px]"
         >
           <Image
             src={activeImage}
@@ -403,7 +403,7 @@ export default function ProductCard({
     <article
       className={`group relative flex h-full flex-col overflow-hidden rounded-2xl bg-gray-2 shadow-2 ring-1 ring-gray-3 transition-all duration-300 hover:-translate-y-1 hover:shadow-gold ${className}`}
     >
-      <div className="relative aspect-[5/4] w-full overflow-hidden bg-gray-1">
+      <div className="relative aspect-square w-full overflow-hidden bg-gray-1">
         {/* Gold pool sits behind the placeholder so the line art has a ground;
             a real photograph covers it entirely. */}
         {!hasPhoto && (

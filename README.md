@@ -52,7 +52,7 @@ clear error and emails are logged to the console while `USE_MOCK_EMAIL=true`.
 ```bash
 npm run db:migrate:deploy  # apply prisma/migrations to create the tables
 npm run db:generate        # generate the Prisma client
-npm run db:seed            # optional: sample categories, products and users
+npm run db:bootstrap       # create the first SUPER_ADMIN from ADMIN_BOOTSTRAP_*
 ```
 
 ### 4. Run
@@ -141,7 +141,6 @@ read from it.
 | `npm run db:bootstrap`      | Create or promote the admin from `ADMIN_BOOTSTRAP_*`            |
 | `npm run db:push`           | Push the schema with no migration **local experiments only**    |
 | `npm run db:studio`         | Open Prisma Studio                                              |
-| `npm run db:seed`           | Seed sample data (local only)                                   |
 | `npm run db:generate`       | Regenerate the Prisma client                                    |
 | `npm run clean`             | Remove `.next` and the module cache                             |
 

@@ -1,7 +1,7 @@
 "use client";
 
-import React from "react";
-import { signIn } from "next-auth/react";
+import React, { useEffect, useState } from "react";
+import { getProviders, signIn } from "next-auth/react";
 import { safeRedirectPath } from "@/lib/safe-redirect";
 import { Toast } from "@/lib/utils/toast";
 
@@ -17,6 +17,21 @@ const GoogleSignInButton = React.memo(
     googleLoading,
     setGoogleLoading,
   }: GoogleSignInButtonProps) => {
+    // The provider only exists when the server has Google credentials; without
+    // them signIn("google") bounces to an error page with no explanation.
+    const [available, setAvailable] = useState(false);
+    useEffect(() => {
+      let active = true;
+      getProviders()
+        .then((providers) => {
+          if (active) setAvailable(Boolean(providers?.google));
+        })
+        .catch(() => {});
+      return () => {
+        active = false;
+      };
+    }, []);
+
     const handleGoogleSignIn = async () => {
       setGoogleLoading(true);
       try {
@@ -29,6 +44,8 @@ const GoogleSignInButton = React.memo(
         setGoogleLoading(false);
       }
     };
+
+    if (!available) return null;
 
     return (
       <>

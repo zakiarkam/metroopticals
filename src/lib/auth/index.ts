@@ -123,10 +123,23 @@ export const authOptions: NextAuthOptions = {
             city: true,
             country: true,
             postalCode: true,
+            passwordChangedAt: true,
           },
         });
         if (!dbUser) {
           // Account removed: drop identity so the session is unusable.
+          return { refreshedAt: Date.now() } as unknown as JWT;
+        }
+
+        // A session issued before the password last changed is the one that
+        // must not survive the change.
+        const issuedAt = typeof token.iat === "number" ? token.iat * 1000 : 0;
+        if (dbUser.passwordChangedAt && issuedAt < dbUser.passwordChangedAt.getTime()) {
+          return { refreshedAt: Date.now() } as unknown as JWT;
+        }
+
+        // Staff sessions on a shared shop computer should not outlive the day.
+        if (dbUser.role !== "CUSTOMER" && issuedAt && Date.now() - issuedAt > 12 * 60 * 60 * 1000) {
           return { refreshedAt: Date.now() } as unknown as JWT;
         }
         token.email = dbUser.email;

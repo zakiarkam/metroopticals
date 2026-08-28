@@ -4,6 +4,7 @@ import { getOrders, createOrder } from "@/features/orders/services/order-service
 import { requireAuth } from "@/lib/middleware/auth";
 import { handleError, createSuccessResponse } from "@/lib/errors";
 import { logApiAction, logApiError } from "@/lib/audit";
+import { rateLimit } from "@/lib/rate-limit";
 
 export async function GET(request: NextRequest) {
   const start = Date.now();
@@ -17,6 +18,7 @@ export async function GET(request: NextRequest) {
       limit: searchParams.get("limit") || "10",
       status: searchParams.get("status") || undefined,
       search: searchParams.get("search") || undefined,
+      channel: searchParams.get("channel") || undefined,
       ownOnly: searchParams.get("ownOnly") || undefined,
     };
 
@@ -46,6 +48,8 @@ export async function POST(request: NextRequest) {
   const start = Date.now();
   try {
     const session = await requireAuth();
+    rateLimit(`order:${session.user.id}`, 5, 15 * 60 * 1000);
+
     const body = await request.json();
     const data = createOrderSchema.parse(body);
 

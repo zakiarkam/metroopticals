@@ -86,7 +86,15 @@ export const uploadFile = async ({
         Key: filePath,
         Body: buffer,
         ContentType: file.type,
-        CacheControl: "public, max-age=31536000",
+        // Images may be cached for a year. A PDF is offered as a download so
+        // the browser never runs it in the bucket's origin, and cached for a
+        // day so a replaced catalogue does not linger for a year.
+        ...(file.type === "application/pdf"
+          ? {
+              ContentDisposition: `attachment; filename="${fileName}"`,
+              CacheControl: "public, max-age=86400",
+            }
+          : { CacheControl: "public, max-age=31536000" }),
       })
     );
 
@@ -111,6 +119,3 @@ export const deleteFile = async (
     })
   );
 };
-
-export const getPublicUrl = (folder: UploadFolder, fileName: string): string =>
-  `${PUBLIC_BASE_URL}/${folder}/${fileName}`;

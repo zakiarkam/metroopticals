@@ -1,3 +1,4 @@
+import { parseIdParam } from "@/lib/utils/params";
 import { NextRequest } from "next/server";
 import { requireAdmin } from "@/lib/middleware/auth";
 import { adminUpdateUserSchema } from "@/features/users/validators/user";
@@ -14,7 +15,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id: rawId } = await params;
-  const id = Number(rawId);
+  const id = parseIdParam(rawId);
   try {
     await requireAdmin();
     const user = await getUserById(id);
@@ -29,7 +30,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id: rawId } = await params;
-  const id = Number(rawId);
+  const id = parseIdParam(rawId);
   const start = Date.now();
   try {
     const session = await requireAdmin();
@@ -70,7 +71,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id: rawId } = await params;
-  const id = Number(rawId);
+  const id = parseIdParam(rawId);
   const start = Date.now();
   try {
     const session = await requireAdmin();

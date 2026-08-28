@@ -7,6 +7,8 @@ export async function GET() {
     // Optimized query: get top 6 products by sales
     const topProductsGrouped = await prisma.orderItem.groupBy({
       by: ["productId"],
+      // Counter service lines carry no product and cannot be a best seller.
+      where: { productId: { not: null } },
       _count: {
         id: true,
       },
@@ -18,7 +20,9 @@ export async function GET() {
       take: 6,
     });
 
-    const productIds = topProductsGrouped.map((item) => item.productId);
+    const productIds = topProductsGrouped
+      .map((item) => item.productId)
+      .filter((id): id is number => id != null);
 
     const products = await prisma.product.findMany({
       where: {
@@ -38,7 +42,8 @@ export async function GET() {
 
     const topProducts = topProductsGrouped
       .map((item) => {
-        const product = productMap.get(item.productId);
+        const product =
+          item.productId == null ? undefined : productMap.get(item.productId);
         return product
           ? {
               id: product.id,

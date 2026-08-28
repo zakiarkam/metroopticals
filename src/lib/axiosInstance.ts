@@ -36,7 +36,7 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response: AxiosResponse) => {
     // Check if response is HTML instead of JSON
-    const contentType = response.headers["content-type"] || "";
+    const contentType = String(response.headers["content-type"] ?? "");
     const isHTML = contentType.includes("text/html");
     const isString = typeof response.data === "string";
 

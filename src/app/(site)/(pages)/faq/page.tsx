@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { headers } from "next/headers";
 import Image from "next/image";
 import { ChevronDown } from "lucide-react";
 
@@ -19,7 +20,8 @@ export const metadata: Metadata = {
   alternates: { canonical: buildSiteUrl("/faq") },
 };
 
-export default function FAQPage() {
+export default async function FAQPage() {
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
   const faqJsonLd = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -34,6 +36,7 @@ export default function FAQPage() {
     <>
       <script
         type="application/ld+json"
+        nonce={nonce}
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
 

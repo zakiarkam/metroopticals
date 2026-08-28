@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { Check, ChevronDown, Info } from "lucide-react";
 
@@ -13,12 +14,10 @@ import {
   PillLink,
   SectionIntro,
 } from "@/components/common/editorial";
-import { getLensType, lensTypes } from "@/config/lenses";
+import { getLensType } from "@/config/lenses";
 import { buildSiteUrl } from "@/lib/seo";
 
 type LensPageProps = { params: Promise<{ slug: string }> };
-
-export const dynamicParams = false;
 
 /** Spec-strip column counts, written out so Tailwind keeps the classes. */
 const SPEC_COLUMNS: Record<number, string> = {
@@ -27,10 +26,6 @@ const SPEC_COLUMNS: Record<number, string> = {
   5: "lg:grid-cols-5",
   6: "lg:grid-cols-6",
 };
-
-export function generateStaticParams() {
-  return lensTypes.map((lens) => ({ slug: lens.slug }));
-}
 
 export async function generateMetadata({
   params,
@@ -59,6 +54,7 @@ export default async function LensDetailPage({ params }: LensPageProps) {
   const { slug } = await params;
   const lens = getLensType(slug);
   if (!lens) notFound();
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
 
   const related = lens.compareWith
     .map((relatedSlug) => getLensType(relatedSlug))
@@ -80,6 +76,7 @@ export default async function LensDetailPage({ params }: LensPageProps) {
     <>
       <script
         type="application/ld+json"
+        nonce={nonce}
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
 

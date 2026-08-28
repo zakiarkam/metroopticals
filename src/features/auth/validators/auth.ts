@@ -6,18 +6,21 @@ export const signupSchema = z.object({
   password: z
     .string()
     .min(8, "Password must be at least 8 characters")
+    .max(128, "Password is too long")
     .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
     .regex(/[0-9]/, "Password must contain at least one number"),
-  phone: z.string().min(1, "Phone number is required"),
-  address: z.string().min(1, "Address is required"),
-  city: z.string().min(1, "City is required"),
-  country: z.string().min(1, "Country is required"),
-  postalCode: z.string().min(1, "Postal code is required"),
+  // A phone number is how the shop reaches a customer about an order; the
+  // address is collected at checkout, when it is actually needed.
+  phone: z.string().trim().min(6, "Phone number is required").max(30),
+  address: z.string().trim().max(300).optional().or(z.literal("")),
+  city: z.string().trim().max(120).optional().or(z.literal("")),
+  country: z.string().trim().max(120).optional().or(z.literal("")),
+  postalCode: z.string().trim().max(20).optional().or(z.literal("")),
 });
 
 export const loginSchema = z.object({
   email: z.string().trim().toLowerCase().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  password: z.string().min(6, "Password must be at least 6 characters").max(128),
 });
 
 export const forgotPasswordSchema = z.object({
@@ -29,6 +32,7 @@ export const resetPasswordSchema = z.object({
   password: z
     .string()
     .min(8, "Password must be at least 8 characters")
+    .max(128, "Password is too long")
     .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
     .regex(/[0-9]/, "Password must contain at least one number"),
 });
@@ -38,6 +42,7 @@ export const changePasswordSchema = z.object({
   newPassword: z
     .string()
     .min(8, "Password must be at least 8 characters")
+    .max(128, "Password is too long")
     .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
     .regex(/[0-9]/, "Password must contain at least one number"),
 });

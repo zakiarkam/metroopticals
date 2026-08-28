@@ -21,25 +21,6 @@ export async function getCartItems(userId: number) {
   });
 }
 
-export async function getCartItem(userId: number, itemId: number) {
-  const cartItem = await prisma.cartItem.findUnique({
-    where: { id: itemId },
-    include: {
-      product: {
-        include: {
-          category: true,
-        },
-      },
-    },
-  });
-
-  if (!cartItem || cartItem.userId !== userId) {
-    throw new NotFoundError("Cart item not found");
-  }
-
-  return cartItem;
-}
-
 function resolveColor(
   requested: string | undefined,
   frameColors: string[],
@@ -134,11 +115,18 @@ export async function updateCartItem(
 ) {
   const cartItem = await prisma.cartItem.findUnique({
     where: { id: itemId },
-    include: { product: { select: { frameColors: true } } },
+    include: { product: { select: { frameColors: true, stock: true } } },
   });
 
   if (!cartItem || cartItem.userId !== userId) {
     throw new NotFoundError("Cart item not found");
+  }
+
+  // The same ceiling `addToCart` enforces. Without it the quantity stepper is
+  // a way round the stock check: a line can be raised to twenty of something
+  // there are two of, and the shortage is only discovered at checkout.
+  if (data.quantity > cartItem.product.stock) {
+    throw new ValidationError(`Only ${cartItem.product.stock} in stock`);
   }
 
   if (data.color !== undefined) {
@@ -156,6 +144,11 @@ export async function updateCartItem(
       });
 
       if (clash) {
+        // Two lines becoming one: the merged quantity is what will be picked,
+        // so it is the number the shelf has to cover.
+        if (clash.quantity + data.quantity > cartItem.product.stock) {
+          throw new ValidationError(`Only ${cartItem.product.stock} in stock`);
+        }
         await prisma.cartItem.delete({ where: { id: itemId } });
         return prisma.cartItem.update({
           where: { id: clash.id },

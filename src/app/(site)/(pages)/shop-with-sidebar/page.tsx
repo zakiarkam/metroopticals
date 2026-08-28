@@ -2,11 +2,15 @@ import { Suspense } from "react";
 import dynamic from "next/dynamic";
 import Loading from "./loading";
 import type { Metadata } from "next";
+import { buildSiteUrl } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Shop",
   description:
     "Browse our range of eyeglasses, sunglasses and contact lenses at Metro Opticals.",
+  // Filters live in the query string; every combination is the same page to
+  // a search engine.
+  alternates: { canonical: buildSiteUrl("/shop-with-sidebar") },
 };
 
 const ShopWithSidebar = dynamic(

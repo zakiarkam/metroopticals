@@ -9,7 +9,7 @@ const placementEnum = z.enum(
   AD_PLACEMENT_IDS as [AdvertisementPlacement, ...AdvertisementPlacement[]],
 );
 
-const R2_FILE_NAME = /^[A-Za-z0-9][A-Za-z0-9._-]*\.(jpe?g|png|webp|avif|gif|svg)$/i;
+const R2_FILE_NAME = /^[A-Za-z0-9][A-Za-z0-9._-]*\.(jpe?g|png|webp|avif|gif)$/i;
 
 const imageRef = z
   .string()
@@ -37,7 +37,7 @@ const baseAdvertisementSchema = z.object({
   placement: placementEnum,
   status: z.enum(["active", "inactive"]).default("active"),
   priority: z.number().int().min(0).default(0),
-  slot: z.number().int().min(1).max(3).default(1),
+  slot: z.number().int().min(1).max(6).default(1),
   startDate: z.string().datetime().optional().nullable(),
   endDate: z.string().datetime().optional().nullable(),
   productId: z.coerce.number().int().positive().optional().nullable(),

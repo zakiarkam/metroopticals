@@ -1,13 +1,13 @@
-import nextDynamic from "next/dynamic";
-import Loading from "./loading";
 import { Metadata } from "next";
 import Home from "@/features/home/components";
 import { siteConfig } from "@/config/site";
+import { buildSiteUrl } from "@/lib/seo";
 
 export const metadata: Metadata = {
   // `absolute` opts out of the root layout's "%s | Metro Opticals" template.
   title: { absolute: `${siteConfig.name} - ${siteConfig.tagline}` },
   description: siteConfig.description,
+  alternates: { canonical: buildSiteUrl("/") },
   keywords: [
     "opticals",
     "eyeglasses",
@@ -21,6 +21,7 @@ export const metadata: Metadata = {
     title: `${siteConfig.name} - ${siteConfig.tagline}`,
     description: siteConfig.description,
     type: "website",
+    url: buildSiteUrl("/"),
   },
 };
 

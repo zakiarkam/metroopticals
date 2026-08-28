@@ -104,11 +104,12 @@ export function getRequestMeta(request: {
   method?: string;
   nextUrl?: { pathname?: string };
 }) {
+  // The proxy appends the real client last; the first entry is whatever the
+  // client chose to send, so logs would otherwise record an attacker's alias.
   const forwardedFor = request.headers?.get("x-forwarded-for") || "";
+  const parts = forwardedFor.split(",").map((part) => part.trim()).filter(Boolean);
   const ip =
-    forwardedFor.split(",")[0]?.trim() ||
-    request.headers?.get("x-real-ip") ||
-    undefined;
+    parts[parts.length - 1] || request.headers?.get("x-real-ip") || undefined;
 
   return {
     ip,

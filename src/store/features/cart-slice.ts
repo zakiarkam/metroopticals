@@ -87,6 +87,19 @@ export const cart = createSlice({
       state.synced = true;
       state.lastFetched = Date.now();
     },
+    /**
+     * The cart as it was left in this browser, restored on load.
+     *
+     * Deliberately not `syncCartItems`: those lines came from localStorage,
+     * not from the server, and their prices, stock and status may be days
+     * old. Leaving the cart unsynced with no fetch time is what tells the
+     * cart hook to go and get the real one straight away.
+     */
+    hydrateCartItems: (state, action: PayloadAction<CartItem[]>) => {
+      state.items = action.payload;
+      state.synced = false;
+      state.lastFetched = null;
+    },
     removeItemFromCart: (state, action: PayloadAction<number>) => {
       const itemId = action.payload;
       state.items = state.items.filter((item) => item.id !== itemId);
@@ -123,6 +136,7 @@ export const selectTotalPrice = createSelector([selectCartItems], (items) => {
 export const {
   addItemToCart,
   syncCartItems,
+  hydrateCartItems,
   removeItemFromCart,
   updateCartItemQuantity,
   removeAllItemsFromCart,

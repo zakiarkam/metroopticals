@@ -18,6 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { updateOrderStatus } from "@/features/orders/api/orders-api";
 import { OrderStatus } from "@/features/orders/types/order";
+import { ORDER_STATUS_TRANSITIONS } from "@/features/orders/constants/status";
 import { Toast } from "@/lib/utils/toast";
 
 interface OrderStatusDialogProps {
@@ -99,15 +100,26 @@ const OrderStatusDialog: React.FC<OrderStatusDialogProps> = ({
     return colors[status];
   };
 
-  const statusOptions: { value: OrderStatus; label: string; color: string }[] =
-    [
-      { value: "PENDING", label: "Pending", color: "bg-yellow-dark" },
-      { value: "CONFIRMED", label: "Confirmed", color: "bg-blue" },
-      { value: "PROCESSING", label: "Processing", color: "bg-blue" },
-      { value: "SHIPPED", label: "Shipped", color: "bg-purple" },
-      { value: "DELIVERED", label: "Delivered", color: "bg-green" },
-      { value: "CANCELLED", label: "Cancelled", color: "bg-red" },
-    ];
+  const allStatusOptions: {
+    value: OrderStatus;
+    label: string;
+    color: string;
+  }[] = [
+    { value: "PENDING", label: "Pending", color: "bg-yellow-dark" },
+    { value: "CONFIRMED", label: "Confirmed", color: "bg-blue" },
+    { value: "PROCESSING", label: "Processing", color: "bg-blue" },
+    { value: "SHIPPED", label: "Shipped", color: "bg-purple" },
+    { value: "DELIVERED", label: "Delivered", color: "bg-green" },
+    { value: "CANCELLED", label: "Cancelled", color: "bg-red" },
+  ];
+
+  // Only the steps the order can actually take from here, plus where it
+  // already is. Offering the rest only invites the server's rejection.
+  const allowedNext = ORDER_STATUS_TRANSITIONS[currentStatus] ?? [];
+  const statusOptions = allStatusOptions.filter(
+    (option) =>
+      option.value === currentStatus || allowedNext.includes(option.value),
+  );
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>

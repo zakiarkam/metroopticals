@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
-import { requireAdmin } from "@/lib/middleware/auth";
-import { handleError, createSuccessResponse } from "@/lib/errors";
+import { requireAdmin, requireAuth } from "@/lib/middleware/auth";
+import { handleError, createSuccessResponse, ValidationError } from "@/lib/errors";
 import {
   getSiteBlock,
   resetSiteBlock,
@@ -11,7 +11,9 @@ import { logApiAction, logApiError } from "@/lib/audit";
 
 type Params = { params: Promise<{ key: string }> };
 
-// Blocks that hold internal business data and must never be read anonymously.
+// Blocks that must never be read anonymously. Business details carry the
+// bank account a customer pays into, so a signed-in customer may read them
+// (their invoice needs them); a stranger crawling the API may not.
 const PRIVATE_BLOCKS = new Set(["business.details"]);
 
 export async function GET(_request: NextRequest, { params }: Params) {
@@ -21,7 +23,7 @@ export async function GET(_request: NextRequest, { params }: Params) {
       return createSuccessResponse({ block: null }, 404);
     }
     if (PRIVATE_BLOCKS.has(key)) {
-      await requireAdmin();
+      await requireAuth();
     }
     return createSuccessResponse({ block: await getSiteBlock(key) });
   } catch (error) {
@@ -48,6 +50,33 @@ export async function PUT(request: NextRequest, { params }: Params) {
     const data = Object.fromEntries(
       Object.entries(body?.data ?? {}).filter(([name]) => allowed.has(name)),
     );
+
+    // Every link an admin types is rendered straight into an href on the
+    // storefront. Only a web address or a path on this site is allowed 
+    // `javascript:` and friends are refused here rather than trusted to the
+    // browser.
+    const isSafeHref = (value: unknown) =>
+      typeof value !== "string" ||
+      value.trim() === "" ||
+      /^https?:\/\//i.test(value.trim()) ||
+      (value.trim().startsWith("/") && !value.trim().startsWith("//"));
+    const checkLinks = (value: unknown, path: string): void => {
+      if (Array.isArray(value)) {
+        value.forEach((item, index) => checkLinks(item, `${path}[${index}]`));
+        return;
+      }
+      if (value && typeof value === "object") {
+        for (const [name, inner] of Object.entries(value as Record<string, unknown>)) {
+          if (/href|link|url/i.test(name) && !isSafeHref(inner)) {
+            throw new ValidationError(
+              `${path ? `${path}.` : ""}${name} must start with https://, http:// or /`,
+            );
+          }
+          checkLinks(inner, path ? `${path}.${name}` : name);
+        }
+      }
+    };
+    checkLinks(data, "");
 
     const block = await saveSiteBlock(key, data);
 

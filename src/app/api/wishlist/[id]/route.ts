@@ -1,3 +1,4 @@
+import { parseIdParam } from "@/lib/utils/params";
 import { NextRequest } from "next/server";
 import { removeFromWishlist } from "@/features/wishlist/services/wishlist-service";
 import { requireAuth } from "@/lib/middleware/auth";
@@ -12,7 +13,7 @@ export async function DELETE(
   try {
     const session = await requireAuth();
     const { id: rawId } = await params;
-    const id = Number(rawId);
+    const id = parseIdParam(rawId);
     await removeFromWishlist(session.user.id, id);
 
     await logApiAction({

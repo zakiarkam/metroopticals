@@ -1,3 +1,4 @@
+import { parseIdParam } from "@/lib/utils/params";
 import { NextRequest } from "next/server";
 import { updateOrderStatusSchema } from "@/features/orders/validators/order";
 import { getOrderById, updateOrderStatus } from "@/features/orders/services/order-service";
@@ -12,7 +13,7 @@ export async function GET(
   try {
     const session = await requireAuth();
     const { id: rawId } = await params;
-    const id = Number(rawId);
+    const id = parseIdParam(rawId);
     const isAdmin =
       session.user.role === "ADMIN" || session.user.role === "SUPER_ADMIN";
 
@@ -32,7 +33,7 @@ export async function PATCH(
   try {
     await requireAdmin();
     const { id: rawId } = await params;
-    const id = Number(rawId);
+    const id = parseIdParam(rawId);
     const body = await request.json();
     const data = updateOrderStatusSchema.parse(body);
 

@@ -8,7 +8,10 @@ export type AdvertisementPlacement =
   | "shop-top"
   | "shop-sidebar"
   | "product-detail"
-  | "cart-banner";
+  | "cart-banner"
+  // The image card inside a category's drop-down menu  slot N pairs with
+  // the Nth category in the header.
+  | "menu-panel";
 
 export interface Advertisement {
   id: number;

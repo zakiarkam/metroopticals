@@ -53,7 +53,10 @@ export async function createUser(data: SignupInput) {
   });
 
   try {
-    await sendWelcomeEmail(user.email, user.name);
+    // Fire and forget: a slow mail server must not slow down signing up.
+    void sendWelcomeEmail(user.email, user.name).catch((error) =>
+      logger.error("Welcome email failed", serializeError(error)),
+    );
   } catch (error) {
     logger.error("Failed to send welcome email", serializeError(error));
   }
@@ -81,11 +84,13 @@ export async function requestPasswordReset(data: ForgotPasswordInput) {
     where: { userId: user.id },
   });
 
-  // Create new reset token
+  // Only a hash is stored: the raw token lives in the email alone, so a copy
+  // of the database (a backup, a leaked connection string) cannot be used to
+  // reset anyone's password.
   await prisma.passwordResetToken.create({
     data: {
       userId: user.id,
-      token,
+      token: hashResetToken(token),
       expires,
     },
   });
@@ -99,10 +104,13 @@ export async function requestPasswordReset(data: ForgotPasswordInput) {
   return { message: "A reset link has been sent" };
 }
 
+const hashResetToken = (token: string) =>
+  crypto.createHash("sha256").update(token).digest("hex");
+
 export async function resetPassword(data: ResetPasswordInput) {
   // Find reset token
   const resetToken = await prisma.passwordResetToken.findUnique({
-    where: { token: data.token },
+    where: { token: hashResetToken(data.token) },
     include: { user: true },
   });
 
@@ -124,7 +132,7 @@ export async function resetPassword(data: ResetPasswordInput) {
   // Update user password
   await prisma.user.update({
     where: { id: resetToken.userId },
-    data: { password: hashedPassword },
+    data: { password: hashedPassword, passwordChangedAt: new Date() },
   });
 
   // Delete reset token

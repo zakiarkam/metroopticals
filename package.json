@@ -22,7 +22,6 @@
     "db:migrate:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
     "db:generate": "prisma generate",
-    "db:seed": "prisma db seed",
     "db:reset": "prisma migrate reset",
     "db:update": "prisma db push && prisma generate",
     "clean": "rm -rf .next node_modules/.cache",
@@ -48,8 +47,8 @@
     "clsx": "^2.1.1",
     "exceljs": "^4.4.0",
     "framer-motion": "^12.23.24",
-    "jspdf": "^3.0.4",
-    "jspdf-autotable": "^5.0.2",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.8",
     "lucide-react": "^0.553.0",
     "next": "^15.5.9",
     "next-auth": "^4.24.13",
@@ -63,7 +62,7 @@
     "react-redux": "^9.2.0",
     "react-toastify": "^11.0.5",
     "resend": "^4.8.0",
-    "swiper": "^10.2.0",
+    "swiper": "^14.2.0",
     "tailwind-merge": "^3.4.0",
     "tailwindcss": "3.3.3",
     "tailwindcss-animate": "^1.0.7",
@@ -78,8 +77,5 @@
     "eslint-config-next": "15.2.3",
     "ts-node": "^10.9.2",
     "typescript": "5.2.2"
-  },
-  "prisma": {
-    "seed": "node --loader ts-node/esm prisma/seed.ts"
   }
 }

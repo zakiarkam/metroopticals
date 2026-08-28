@@ -6,6 +6,8 @@ export const getOrders = async (params?: {
   limit?: number;
   search?: string;
   status?: string;
+  /** Website checkouts, counter bills, or both. */
+  channel?: "ONLINE" | "POS" | "ALL";
   ownOnly?: boolean;
 }): Promise<OrdersResponse> => {
   try {
@@ -14,6 +16,7 @@ export const getOrders = async (params?: {
     if (params?.limit) queryParams.append("limit", params.limit.toString());
     if (params?.status) queryParams.append("status", params.status);
     if (params?.search) queryParams.append("search", params.search);
+    if (params?.channel) queryParams.append("channel", params.channel);
     if (params?.ownOnly) queryParams.append("ownOnly", "true");
 
     const response = await axiosInstance.get(

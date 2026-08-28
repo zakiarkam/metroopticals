@@ -1,3 +1,4 @@
+import { parseIdParam } from "@/lib/utils/params";
 import { NextRequest } from "next/server";
 import { updateCategorySchema } from "@/features/categories/validators/category";
 import { getCategoryById, updateCategory, deleteCategory } from "@/features/categories/services/category-service";
@@ -10,7 +11,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id: rawId } = await params;
-  const id = Number(rawId);
+  const id = parseIdParam(rawId);
   try {
     const category = await getCategoryById(id);
     return createSuccessResponse({ category });
@@ -24,7 +25,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id: rawId } = await params;
-  const id = Number(rawId);
+  const id = parseIdParam(rawId);
   const start = Date.now();
   try {
     await requireAdmin();
@@ -54,7 +55,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id: rawId } = await params;
-  const id = Number(rawId);
+  const id = parseIdParam(rawId);
   const start = Date.now();
   try {
     await requireAdmin();

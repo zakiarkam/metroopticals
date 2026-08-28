@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { useRouter } from "next/navigation";
 import Pagination from "@/components/ui/pagination";
 import { getOrderById } from "@/features/orders/api/orders-api";
 import { Order, OrderStatus } from "@/features/orders/types/order";
@@ -17,6 +18,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import {
+  orderCustomerEmail,
+  orderCustomerName,
+} from "@/features/orders/utils/order-display";
 
 type OrdersTabProps = {
   searchTerm: string;
@@ -38,6 +43,10 @@ const OrdersTab: React.FC<OrdersTabProps> = ({
   const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isGeneratingReceipt, setIsGeneratingReceipt] = useState(false);
+  const [channelFilter, setChannelFilter] = useState<"ALL" | "ONLINE" | "POS">(
+    "ALL",
+  );
+  const router = useRouter();
   const loadingToastIdRef = useRef<string | number | null>(null);
 
   const queryParams = useMemo(
@@ -46,8 +55,9 @@ const OrdersTab: React.FC<OrdersTabProps> = ({
       page: currentPage,
       limit,
       status: statusFilter === "all" ? undefined : statusFilter,
+      channel: channelFilter,
     }),
-    [searchTerm, currentPage, limit, statusFilter]
+    [searchTerm, currentPage, limit, statusFilter, channelFilter]
   );
 
   const {
@@ -182,6 +192,15 @@ const OrdersTab: React.FC<OrdersTabProps> = ({
   const handlePrintOrder = async (orderId: number) => {
     try {
       if (isGeneratingReceipt) return;
+
+      // A counter bill has payments and possibly a balance, which the website
+      // invoice has no place for  it prints from the POS receipt instead.
+      const order = orders.find((row) => row.id === orderId);
+      if (order?.channel === "POS") {
+        router.push(`/admin/pos/receipt/${orderId}`);
+        return;
+      }
+
       setIsGeneratingReceipt(true);
       loadingToastIdRef.current = Toast.loading("Generating receipt...");
 
@@ -212,20 +231,10 @@ const OrdersTab: React.FC<OrdersTabProps> = ({
     }
   };
 
-  // Filter orders for rendering
-  const filtered = useMemo(() => {
-    const normalized = searchTerm.trim().toLowerCase();
-    return orders.filter((order) => {
-      const matchesStatus =
-        statusFilter === "all" ? true : order.status === statusFilter;
-      const matchesSearch =
-        normalized.length === 0 ||
-        order.orderNumber.toLowerCase().includes(normalized) ||
-        order.user.name.toLowerCase().includes(normalized) ||
-        order.user.email.toLowerCase().includes(normalized);
-      return matchesStatus && matchesSearch;
-    });
-  }, [orders, statusFilter, searchTerm]);
+  // The search and the status filter are both part of the query, so the rows
+  // that came back are already the rows to show. Filtering them again here
+  // would only search the page in front of us and quietly drop matches that
+  // are sitting on page two.
 
   return (
     <div className="space-y-7.5">
@@ -264,6 +273,32 @@ const OrdersTab: React.FC<OrdersTabProps> = ({
                     d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                   />
                 </svg>
+              </div>
+
+              {/* Where the sale came from: the website, or the shop counter. */}
+              <div className="flex h-8 items-center rounded-full border border-gray-3 bg-gray-1 p-1">
+                {(
+                  [
+                    ["ALL", "All sales"],
+                    ["ONLINE", "Website"],
+                    ["POS", "Walk-in"],
+                  ] as const
+                ).map(([value, label]) => (
+                  <button
+                    key={value}
+                    onClick={() => {
+                      setChannelFilter(value);
+                      setCurrentPage(1);
+                    }}
+                    className={`h-7 rounded-full px-3 text-custom-xs font-medium transition ${
+                      channelFilter === value
+                        ? "bg-gray-2 text-blue shadow-1"
+                        : "text-body hover:text-dark"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
               </div>
 
               {/* Status Filter - Desktop (Toggle Buttons) */}
@@ -338,12 +373,12 @@ const OrdersTab: React.FC<OrdersTabProps> = ({
                 <div className="px-4 sm:px-5 py-10 text-center text-custom-sm text-body">
                   Loading orders...
                 </div>
-              ) : filtered.length === 0 ? (
+              ) : orders.length === 0 ? (
                 <div className="px-4 sm:px-5 py-10 text-center text-custom-sm text-body">
                   No orders found.
                 </div>
               ) : (
-                filtered.map((order) => (
+                orders.map((order) => (
                   <div
                     key={order.id}
                     className="grid grid-cols-[150px_200px_1fr_150px_120px_120px_100px] gap-4 px-4 sm:px-5 py-4 text-custom-sm border-b border-gray-2 last:border-0 hover:bg-gray-1 transition items-center"
@@ -352,15 +387,24 @@ const OrdersTab: React.FC<OrdersTabProps> = ({
                       <p className="font-mono text-custom-xs text-blue truncate">
                         {order.orderNumber}
                       </p>
+                      <span
+                        className={`mt-1 inline-flex rounded-full border px-2 py-0.5 text-[10px] font-medium ${
+                          order.channel === "POS"
+                            ? "border-blue/20 bg-blue-light-5 text-blue"
+                            : "border-gray-3 bg-gray-1 text-body"
+                        }`}
+                      >
+                        {order.channel === "POS" ? "Walk-in" : "Website"}
+                      </span>
                     </div>
                     <div className="min-w-0">
                       <p className="font-medium text-dark truncate">
-                        {order.user.name}
+                        {orderCustomerName(order)}
                       </p>
                       <p className="text-custom-xs text-body truncate">
-                        {order.user.email}
+                        {orderCustomerEmail(order) || order.billingPhone}
                       </p>
-                      {order.user.customerType && (
+                      {order.user?.customerType && (
                         <p className="text-[10px] text-blue font-medium truncate mt-0.5">
                           {CUSTOMER_TYPE_LABELS[order.user.customerType as CustomerType] || order.user.customerType}
                         </p>
@@ -482,7 +526,7 @@ const OrdersTab: React.FC<OrdersTabProps> = ({
           </div>
 
           {/* Pagination */}
-          {!isLoading && filtered.length > 0 && (
+          {!isLoading && orders.length > 0 && (
             <Pagination
               currentPage={currentPage}
               totalPages={totalPages}

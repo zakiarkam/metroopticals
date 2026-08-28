@@ -230,10 +230,6 @@ const AuthAdmin = () => {
                 </p>
               </div>
 
-              <div
-                aria-hidden
-                className="pointer-events-none sticky bottom-[-2.5rem] -mt-16 hidden h-16 shrink-0 bg-gradient-to-t from-white via-white/85 to-transparent lg:block"
-              />
             </div>
           </div>
 

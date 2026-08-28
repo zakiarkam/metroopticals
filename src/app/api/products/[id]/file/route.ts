@@ -1,6 +1,7 @@
+import { parseIdParam } from "@/lib/utils/params";
 import { NextRequest } from "next/server";
 import { requireAdmin } from "@/lib/middleware/auth";
-import { handleError, createSuccessResponse } from "@/lib/errors";
+import { handleError, createSuccessResponse, ValidationError } from "@/lib/errors";
 import { prisma } from "@/lib/db/prisma";
 import { deleteFile } from "@/lib/storage/r2";
 import { logApiAction, logApiError } from "@/lib/audit";
@@ -15,21 +16,21 @@ export async function DELETE(
   const resolvedParams = params ? await params : undefined;
   const idParam = resolvedParams?.id;
   const rawId = Array.isArray(idParam) ? idParam[0] : idParam;
-  const id = rawId ? Number(rawId) : NaN;
+  const id = parseIdParam(rawId, "product id");
   if (!rawId || Number.isNaN(id)) {
-    return handleError({ message: "Product id is required" });
+    return handleError(new ValidationError("Product id is required"));
   }
   try {
     await requireAdmin();
     const { type, fileName } = await request.json();
     if (!type || !fileName) {
-      return handleError({ message: "type and fileName are required" });
+      return handleError(new ValidationError("type and fileName are required"));
     }
 
     // Fetch product
     const product = await prisma.product.findUnique({ where: { id } });
     if (!product) {
-      return handleError({ message: "Product not found" });
+      return handleError(new ValidationError("Product not found"));
     }
 
     if (type === "image") {
@@ -52,9 +53,7 @@ export async function DELETE(
       // Remove from bucket
       await deleteFile("product/catalogue", fileName);
     } else {
-      return handleError({
-        message: "Invalid type. Must be 'image' or 'catalogue'",
-      });
+      return handleError(new ValidationError("Invalid type. Must be 'image' or 'catalogue'"));
     }
 
     await logApiAction({

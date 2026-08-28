@@ -20,6 +20,12 @@ export const viewport: Viewport = {
   themeColor: siteConfig.themeColor,
 };
 
+// Every page is rendered per request so Next can stamp this request's CSP
+// nonce onto its script tags. A page pre-rendered at build time carries no
+// nonce, and under `'strict-dynamic'` the browser would refuse its scripts.
+// The shop is small and mostly dynamic already; the cost is negligible.
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
@@ -38,9 +44,6 @@ export const metadata: Metadata = {
   ],
   applicationName: siteConfig.name,
   manifest: "/site.webmanifest",
-  alternates: {
-    canonical: "/",
-  },
   robots: {
     index: true,
     follow: true,

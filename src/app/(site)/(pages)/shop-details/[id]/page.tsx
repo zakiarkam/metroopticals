@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { cache } from "react";
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import ShopDetailsClient from "@/features/products/components/shop-details/ShopDetailsClient";
 import { getProductById } from "@/features/products/services/product-service";
@@ -107,8 +108,11 @@ const ShopDetailsPage = async ({ params }: ShopDetailsPageProps) => {
   }
 
   const product = await getProduct(productId).catch(() => null);
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
 
-  if (!product) {
+  // A product taken off sale is gone as far as a visitor is concerned; admins
+  // preview it from the catalogue screen, not from its old public address.
+  if (!product || product.status === "INACTIVE") {
     notFound();
   }
 
@@ -145,7 +149,7 @@ const ShopDetailsPage = async ({ params }: ShopDetailsPageProps) => {
     sku: product.slug || undefined,
     brand: {
       "@type": "Brand",
-      name: "Metro Opticals",
+      name: product.brand?.name || "Metro Opticals",
     },
     offers: {
       "@type": "Offer",
@@ -170,6 +174,7 @@ const ShopDetailsPage = async ({ params }: ShopDetailsPageProps) => {
       <ShopDetailsClient productId={productId} initialProduct={initialProduct} />
       <script
         type="application/ld+json"
+        nonce={nonce}
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
         }}

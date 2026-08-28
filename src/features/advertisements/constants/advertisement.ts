@@ -6,7 +6,7 @@ export interface AdPlacementMeta {
   id: AdvertisementPlacement;
   label: string;
   /** Grouping used by the admin UI. */
-  group: "Home" | "Shop" | "Product" | "Cart";
+  group: "Home" | "Shop" | "Product" | "Cart" | "Menu";
   description: string;
   /** Slots decide left-to-right order within a zone. */
   slots: number[];
@@ -91,6 +91,18 @@ export const AD_PLACEMENTS: Record<AdvertisementPlacement, AdPlacementMeta> = {
     recommended: "1200 × 260px",
     placeholders: ["/images/ads/cart-1.svg"],
   },
+  "menu-panel": {
+    id: "menu-panel",
+    label: "Menu  Category panel card",
+    group: "Menu",
+    description:
+      "The picture card inside a category's drop-down in the header. Slot 1 shows in the first category's menu, slot 2 in the second, and so on (left to right). A category with no ad simply shows its links without a card.",
+    slots: [1, 2, 3, 4, 5, 6],
+    kind: "product",
+    aspect: "16 / 9",
+    recommended: "640 × 360px",
+    placeholders: [],
+  },
 };
 
 export const AD_PLACEMENT_IDS = Object.keys(
@@ -131,4 +143,5 @@ export const AD_PLACEMENT_GROUPS: AdPlacementMeta["group"][] = [
   "Shop",
   "Product",
   "Cart",
+  "Menu",
 ];

@@ -1,3 +1,4 @@
+import { parseIdParam } from "@/lib/utils/params";
 import { NextRequest } from "next/server";
 import { updateCartItem, removeFromCart } from "@/features/cart/services/cart-service";
 import { requireAuth } from "@/lib/middleware/auth";
@@ -13,7 +14,7 @@ export async function PUT(
   try {
     const session = await requireAuth();
     const { id: rawId } = await params;
-    const id = Number(rawId);
+    const id = parseIdParam(rawId);
     const body = await request.json();
     const data = updateCartItemSchema.parse(body);
 
@@ -42,7 +43,7 @@ export async function DELETE(
   try {
     const session = await requireAuth();
     const { id: rawId } = await params;
-    const id = Number(rawId);
+    const id = parseIdParam(rawId);
     await removeFromCart(session.user.id, id);
 
     await logApiAction({

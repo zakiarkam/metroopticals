@@ -52,7 +52,7 @@ const Home = async () => {
   // Ads, editable content, brands and published reviews are independent
   // sources, so all four load together rather than in series.
   const [promoAds, content, brands, reviews] = await Promise.all([
-    getHomePromoAdvertisements(),
+    getHomePromoAdvertisements().catch(() => []),
     getSiteBlocks(CONTENT_KEYS),
     getBrands().catch(() => []),
     getFeaturedReviews(3).catch(() => []),

@@ -22,6 +22,12 @@ import { Toast } from "@/lib/utils/toast";
 import { getProductImageUrl } from "@/lib/storageUtils";
 import { Printer, X } from "lucide-react";
 import { downloadOrderReceiptPdf } from "@/lib/utils/orderReceiptPdf";
+import {
+  orderCustomerEmail,
+  orderCustomerName,
+  orderLineName,
+} from "@/features/orders/utils/order-display";
+import { savedLineTotal } from "@/features/pos/utils/bill";
 
 interface OrderDetailDialogProps {
   isOpen: boolean;
@@ -117,6 +123,13 @@ const OrderDetailDialog: React.FC<OrderDetailDialogProps> = ({
 
   const handlePrintClick = () => {
     if (!order) return;
+
+    // A counter bill has payments and possibly a balance, which the website
+    // invoice has nowhere to put.
+    if (order.channel === "POS") {
+      window.open(`/admin/pos/receipt/${order.id}`, "_blank", "noopener");
+      return;
+    }
 
     setIsGeneratingReceipt(true);
     loadingToastIdRef.current = Toast.loading("Generating receipt...");
@@ -266,8 +279,11 @@ const OrderDetailDialog: React.FC<OrderDetailDialogProps> = ({
               <div className="grid gap-4 md:grid-cols-2">
                 <Section title="Customer">
                   <div className="grid gap-3">
-                    <Field label="Name" value={order.user.name} />
-                    <Field label="Email" value={order.user.email} />
+                    <Field label="Name" value={orderCustomerName(order)} />
+                    <Field
+                      label="Email"
+                      value={orderCustomerEmail(order) || "—"}
+                    />
                   </div>
                 </Section>
 
@@ -312,8 +328,14 @@ const OrderDetailDialog: React.FC<OrderDetailDialogProps> = ({
                 <div className="space-y-3">
                   {order.items.map((item) => {
                     const imageSrc = resolveImage(item.product?.images);
-                    const lineTotal =
-                      (item.discountedPrice || item.price) * item.quantity;
+                    // A counter line can carry its own discount, which the
+                    // stored unit price deliberately does not include.
+                    const lineTotal = savedLineTotal({
+                      quantity: item.quantity,
+                      price: item.price,
+                      discountedPrice: item.discountedPrice,
+                      lineDiscount: item.lineDiscount,
+                    });
 
                     return (
                       <div
@@ -325,7 +347,7 @@ const OrderDetailDialog: React.FC<OrderDetailDialogProps> = ({
                             {imageSrc ? (
                               <Image
                                 src={imageSrc}
-                                alt={item.product.title}
+                                alt={orderLineName(item)}
                                 width={80}
                                 height={80}
                                 className="h-full w-full object-cover"
@@ -355,10 +377,10 @@ const OrderDetailDialog: React.FC<OrderDetailDialogProps> = ({
                               <div className="flex items-start justify-between gap-3">
                                 <div className="min-w-0 flex-1">
                                   <h5 className="text-sm md:text-base font-semibold text-dark leading-tight">
-                                    {item.product.title}
+                                    {orderLineName(item)}
                                   </h5>
                                   <p className="text-xs md:text-sm text-body mt-1">
-                                    {item.product.category.name}
+                                    {item.product?.category?.name ?? "Service"}
                                     {item.color ? ` · ${item.color}` : ""}
                                   </p>
                                 </div>
@@ -406,6 +428,26 @@ const OrderDetailDialog: React.FC<OrderDetailDialogProps> = ({
                       {formatPrice(order.subtotal)}
                     </span>
                   </div>
+                  {(order.discountAmount ?? 0) > 0 && (
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-xs md:text-sm text-body">
+                        Discount
+                      </span>
+                      <span className="text-xs md:text-sm font-semibold text-dark">
+                        − {formatPrice(order.discountAmount ?? 0)}
+                      </span>
+                    </div>
+                  )}
+                  {order.shippingFee > 0 && (
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-xs md:text-sm text-body">
+                        Delivery
+                      </span>
+                      <span className="text-xs md:text-sm font-semibold text-dark">
+                        {formatPrice(order.shippingFee)}
+                      </span>
+                    </div>
+                  )}
                   <div className="h-px bg-gray-2 my-2" />
                   <div className="flex items-center justify-between gap-3">
                     <span className="text-sm md:text-base font-semibold text-dark">
@@ -415,6 +457,72 @@ const OrderDetailDialog: React.FC<OrderDetailDialogProps> = ({
                       {formatPrice(order.totalAmount)}
                     </span>
                   </div>
+
+                  {/* A counter bill can be part paid  an advance now, the rest
+                      on collection  so what has been collected and what is
+                      still owed belong here, not only on the POS screen. */}
+                  {order.channel === "POS" && (
+                    <>
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-xs md:text-sm text-body">Paid</span>
+                        <span className="text-xs md:text-sm font-semibold text-dark">
+                          {formatPrice(order.amountPaid ?? 0)}
+                        </span>
+                      </div>
+                      {order.totalAmount - (order.amountPaid ?? 0) > 0.01 ? (
+                        <div className="flex items-center justify-between gap-3 rounded-lg border border-red/20 bg-red-light-6 px-3 py-2">
+                          <span className="text-xs md:text-sm font-semibold text-red">
+                            Balance due
+                            {order.balanceDueDate
+                              ? ` by ${new Date(order.balanceDueDate).toLocaleDateString("en-GB", {
+                                  day: "2-digit",
+                                  month: "short",
+                                })}`
+                              : ""}
+                          </span>
+                          <span className="text-xs md:text-sm font-bold text-red">
+                            {formatPrice(
+                              order.totalAmount - (order.amountPaid ?? 0),
+                            )}
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-xs md:text-sm text-body">Balance</span>
+                          <span className="inline-flex rounded-full border border-green/20 bg-green-light-6 px-2.5 py-0.5 text-xs font-medium text-green">
+                            Settled
+                          </span>
+                        </div>
+                      )}
+                      {order.payments && order.payments.length > 0 && (
+                        <ul className="mt-2 space-y-1 border-t border-gray-2 pt-2">
+                          {order.payments.map((payment) => (
+                            <li
+                              key={payment.id}
+                              className="flex items-center justify-between gap-3 text-xs text-body"
+                            >
+                              <span>
+                                {payment.amount < 0 ? "Refund" : "Payment"} ·{" "}
+                                {payment.method.replace("_", " ").toLowerCase()}
+                                {" · "}
+                                {new Date(payment.createdAt).toLocaleDateString("en-GB", {
+                                  day: "2-digit",
+                                  month: "short",
+                                })}
+                              </span>
+                              <span
+                                className={`font-medium tabular-nums ${
+                                  payment.amount < 0 ? "text-red" : "text-dark"
+                                }`}
+                              >
+                                {formatPrice(payment.amount)}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </>
+                  )}
                 </div>
               </Section>
 

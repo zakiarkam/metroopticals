@@ -1,3 +1,4 @@
+import { parseIdParam } from "@/lib/utils/params";
 import { NextRequest } from "next/server";
 import { updateProductSchema } from "@/features/products/validators/product";
 import {
@@ -14,7 +15,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id: rawId } = await params;
-  const id = Number(rawId);
+  const id = parseIdParam(rawId);
 
   try {
     const product = await getProductById(id);
@@ -34,7 +35,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id: rawId } = await params;
-  const id = Number(rawId);
+  const id = parseIdParam(rawId);
   const start = Date.now();
 
   try {
@@ -65,7 +66,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id: rawId } = await params;
-  const id = Number(rawId);
+  const id = parseIdParam(rawId);
   const start = Date.now();
 
   try {

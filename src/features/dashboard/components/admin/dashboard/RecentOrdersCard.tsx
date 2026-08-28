@@ -123,7 +123,8 @@ const RecentOrdersCard: React.FC<RecentOrdersCardProps> = ({
                           {order.orderNumber}
                         </p>
                         <p className="text-[11px] text-body mt-0.5">
-                          {formatDate(order.date)}
+                          {formatDate(order.date)} ·{" "}
+                          {order.channel === "POS" ? "Walk-in" : "Website"}
                         </p>
                       </div>
                       <p className="font-semibold text-dark whitespace-nowrap shrink-0 text-sm">
@@ -180,6 +181,15 @@ const RecentOrdersCard: React.FC<RecentOrdersCardProps> = ({
                       <p className="text-custom-xs text-body mt-1">
                         {formatDate(order.date)}
                       </p>
+                      <span
+                        className={`mt-1 inline-flex rounded-full border px-2 py-0.5 text-[10px] font-medium ${
+                          order.channel === "POS"
+                            ? "border-blue/20 bg-blue-light-5 text-blue"
+                            : "border-gray-3 bg-gray-1 text-body"
+                        }`}
+                      >
+                        {order.channel === "POS" ? "Walk-in" : "Website"}
+                      </span>
                     </div>
 
                     <p className="truncate pr-2">{order.customer}</p>

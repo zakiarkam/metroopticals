@@ -11,6 +11,11 @@ export async function GET(request: NextRequest) {
       Object.fromEntries(request.nextUrl.searchParams)
     );
 
+    // Only an admin may ask for inactive categories; the storefront and any
+    // stranger see the active tree whatever they put in the query string.
+    const isAdmin = await requireAdmin().then(() => true, () => false);
+    if (!isAdmin) query.status = "active";
+
     const result = await getCategories(query);
 
     return createSuccessResponse(result);

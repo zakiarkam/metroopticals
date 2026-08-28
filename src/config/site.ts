@@ -21,11 +21,16 @@ export const siteConfig = {
     address: "No 98, Super Commercial Complex, Nawalapitiya, Sri Lanka.",
   },
 
+  /**
+   * Bank-transfer details printed on order invoices. Every line is optional:
+   * empty strings are skipped by the receipt renderer, so nothing prints
+   * until the real account details are filled in here.
+   */
   banking: {
-    accountName: "Metro Opticals",
-    accountNumber: "0000000000",
-    bank: "Bank Name",
-    branch: "Branch Name",
+    accountName: "",
+    accountNumber: "",
+    bank: "",
+    branch: "",
   },
 
   social: {

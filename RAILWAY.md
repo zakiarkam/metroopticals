@@ -211,13 +211,11 @@ railway run --environment production npx prisma migrate resolve \
 reset flag. Without that flag the bootstrap never overwrites an existing
 password so a routine deploy can't clobber a working login.
 
-**Sample catalogue data.** `prisma/seed.ts` contains demo brands, categories and
-products, plus placeholder logins. It is **not** wired into the deploy on
-purpose it is for local development only:
-
-```bash
-npm run db:seed        # local only
-```
+**Catalogue data.** There is no seed script: brands, categories and products
+are entered through the admin, so the live database only ever holds real
+stock. To start a database over without losing logins, use
+`prisma/clear-data.mjs` (it refuses to run without `CONFIRM_CLEAR=yes` and
+`prisma/backup-data.mjs` takes a JSON snapshot first).
 
 **Connecting from your machine.** `postgres.railway.internal` resolves only
 inside Railway. To reach a deployed database locally, use the **public** proxy

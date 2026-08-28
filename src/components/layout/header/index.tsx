@@ -158,10 +158,11 @@ export default function Header({
       megaNav.length
         ? megaNav
         : [
-            { label: "Eyeglasses", href: "/shop-with-sidebar" },
-            { label: "Sunglasses", href: "/shop-with-sidebar" },
-            { label: "Brands", href: "/shop-with-sidebar", source: "brands" },
-            { label: "Eye test", href: "/contact" },
+            // A fresh install with no categories and no saved menu yet.
+            { label: "Shop", href: "/shop-with-sidebar" },
+            { label: "Lenses", href: "/lenses" },
+            { label: "Offers", href: "/shop-with-sidebar?onSale=true", accent: true },
+            { label: "Eye test", href: "/contact", badge: "Book" },
           ],
     [megaNav]
   );

@@ -1,3 +1,4 @@
+import { parseIdParam } from "@/lib/utils/params";
 import { NextRequest } from "next/server";
 import { requireAdmin } from "@/lib/middleware/auth";
 import { handleError, createSuccessResponse } from "@/lib/errors";
@@ -14,7 +15,7 @@ export async function PATCH(
     await requireAdmin();
 
     const { id: rawId } = await params;
-    const id = Number(rawId);
+    const id = parseIdParam(rawId);
     const body = await request.json();
     const { status } = updateCategoryStatusSchema.parse(body);
 

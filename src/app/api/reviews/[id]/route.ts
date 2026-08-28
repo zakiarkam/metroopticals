@@ -1,3 +1,4 @@
+import { parseIdParam } from "@/lib/utils/params";
 import { NextRequest } from "next/server";
 import { requireAdmin } from "@/lib/middleware/auth";
 import { handleError, createSuccessResponse } from "@/lib/errors";
@@ -12,7 +13,7 @@ export async function DELETE(request: NextRequest, { params }: Params) {
     await requireAdmin();
 
     const { id } = await params;
-    await deleteReview(Number(id));
+    await deleteReview(parseIdParam(id, "review id"));
 
     await logApiAction({
       request,

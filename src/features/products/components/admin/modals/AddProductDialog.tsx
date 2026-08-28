@@ -83,6 +83,8 @@ const AddProductDialog: React.FC<AddProductDialogProps> = ({
       categoryId: null,
       brandId: null,
       stock: undefined,
+      sku: "",
+      barcode: "",
       price: undefined,
       discountedPrice: undefined,
       status: "ACTIVE",
@@ -229,6 +231,8 @@ const AddProductDialog: React.FC<AddProductDialogProps> = ({
         categoryId: data.categoryId ?? undefined,
         brandId: data.brandId ?? undefined,
         stock: data.stock,
+        sku: data.sku?.trim() || null,
+        barcode: data.barcode?.trim() || null,
         status: data.status,
         unitType: data.unitType,
         ...toEyewearPayload(data),
@@ -556,6 +560,45 @@ const AddProductDialog: React.FC<AddProductDialogProps> = ({
                                 e.target.select();
                               }
                             }}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {/* Shop code and barcode  used by the counter, not the website */}
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <FormField
+                    control={form.control}
+                    name="sku"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Shop code (SKU)</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="MO-RB2140-BLK"
+                            {...field}
+                            value={field.value ?? ""}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="barcode"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Barcode</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Scan or type the barcode"
+                            {...field}
+                            value={field.value ?? ""}
                           />
                         </FormControl>
                         <FormMessage />

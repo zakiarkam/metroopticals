@@ -54,7 +54,9 @@ export type Product = {
   id: number;
   title: string;
   slug: string;
-  sku?: string;
+  sku?: string | null;
+  /** What a barcode scanner reads at the counter. */
+  barcode?: string | null;
   description: string;
   price: number;
   discountedPrice: number | null;
@@ -85,6 +87,8 @@ export type CreateProductInput = {
   categoryId?: number;
   brandId?: number;
   stock: number;
+  sku?: string | null;
+  barcode?: string | null;
   unitType: ProductUnit;
   status: ProductStatus;
 } & EyewearSpec;

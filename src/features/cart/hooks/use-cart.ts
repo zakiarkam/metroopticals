@@ -147,7 +147,11 @@ export const useCart = () => {
       color?: string,
     ) => {
       if (status !== "authenticated") {
-        toast.error("Please login to add items to cart");
+        toast.error("Sign in to add items to your cart");
+        if (typeof window !== "undefined") {
+          const back = window.location.pathname + window.location.search;
+          window.location.assign(`/log-in?redirect=${encodeURIComponent(back)}`);
+        }
         return false;
       }
 

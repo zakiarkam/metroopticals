@@ -12,7 +12,7 @@ export const createOrderSchema = z.object({
       })
     )
     .min(1),
-  paymentMethod: z.enum(["cod"]),
+  paymentMethod: z.enum(["cod", "bank_transfer"]),
   shippingMethod: z.enum(["standard"]),
   notes: z.string().trim().max(1000).optional(),
   billingName: z.string().min(1),
@@ -40,7 +40,6 @@ export const updateOrderStatusSchema = z.object({
     "DELIVERED",
     "CANCELLED",
   ]),
-  paymentStatus: z.enum(["PENDING", "PAID", "FAILED", "REFUNDED"]).optional(),
 });
 
 export const orderQuerySchema = z.object({
@@ -57,6 +56,8 @@ export const orderQuerySchema = z.object({
     ])
     .optional(),
   search: z.string().optional(),
+  /** Website checkouts, counter bills, or both. */
+  channel: z.enum(["ONLINE", "POS", "ALL"]).default("ALL"),
   ownOnly: z
     .preprocess((value) => {
       if (value === "true") return true;

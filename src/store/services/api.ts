@@ -528,6 +528,7 @@ export const api = createApi({
         limit?: number;
         search?: string;
         status?: string;
+        channel?: "ONLINE" | "POS" | "ALL";
         ownOnly?: boolean;
       } | void
     >({

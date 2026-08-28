@@ -268,17 +268,26 @@ const Checkout = () => {
       return;
     }
 
-    // Check for unavailable items
+    // Check for unavailable items. A line asking for more than is left is as
+    // unbuyable as one that is out of stock  the order would only fail on the
+    // stock check at the far end, after the address form had been filled in.
     const unavailableItems = cartItems.filter(
       (item: any) =>
         item.status === "INACTIVE" ||
         item.status === "OUT_OF_STOCK" ||
-        (typeof item.stock === "number" && item.stock === 0),
+        (typeof item.stock === "number" &&
+          (item.stock === 0 || item.quantity > item.stock)),
     );
 
     if (unavailableItems.length > 0) {
+      const names = unavailableItems
+        .map((item: any) => item.title)
+        .filter(Boolean)
+        .join(", ");
       toast.error(
-        "Your cart contains unavailable items. Please remove them before checking out.",
+        names
+          ? `Not available in the quantity ordered: ${names}. Adjust or remove these before checking out.`
+          : "Your cart contains unavailable items. Please remove them before checking out.",
       );
       return;
     }

@@ -126,6 +126,8 @@ export async function updateUserByAdmin(
   let updateData: any = { ...data }
   if (data.password) {
     updateData.password = await bcrypt.hash(data.password, 12)
+    // Stamps the reset so every JWT issued before now stops validating.
+    updateData.passwordChangedAt = new Date()
   }
 
   const user = await prisma.user.update({

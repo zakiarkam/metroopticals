@@ -11,6 +11,8 @@ export interface RecentOrder {
   status: string;
   total: number;
   date: string;
+  /** Where the sale happened, so the two channels are told apart at a glance. */
+  channel?: "ONLINE" | "POS";
 }
 
 export interface TopProduct {
@@ -41,6 +43,44 @@ export interface OutOfStockProduct {
   lastUpdated: string;
 }
 
+/** Where the money in a period came from. */
+export interface ChannelSplit {
+  channel: "ONLINE" | "POS";
+  orders: number;
+  revenue: number;
+}
+
+/** One shop day of takings, for the trend line. */
+export interface DailyRevenue {
+  date: string;
+  online: number;
+  counter: number;
+  total: number;
+  orders: number;
+}
+
+/** Counter bills still owing money  the shop's credit book, in summary. */
+export interface OutstandingSummary {
+  count: number;
+  total: number;
+  overdueCount: number;
+  overdueTotal: number;
+  dueToday: number;
+}
+
+/** The shop counter, today. */
+export interface CounterToday {
+  date: string;
+  bills: number;
+  billed: number;
+  collected: number;
+  cashCollected: number;
+  itemsSold: number;
+  /** Every counter bill still owing money, not only today's. */
+  balanceDue: number;
+  unpaidBills: number;
+}
+
 export interface DashboardData {
   metrics: {
     revenue: MetricValue;
@@ -56,4 +96,8 @@ export interface DashboardData {
   topProducts: TopProduct[];
   statusBreakdown: StatusBreakdown[];
   outOfStockProducts: OutOfStockProduct[];
+  channelSplit: ChannelSplit[];
+  counterToday: CounterToday;
+  dailyRevenue: DailyRevenue[];
+  outstanding: OutstandingSummary;
 }

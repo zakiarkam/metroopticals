@@ -1,3 +1,4 @@
+import { parseIdParam } from "@/lib/utils/params";
 import { NextRequest } from "next/server";
 import { requireAdmin } from "@/lib/middleware/auth";
 import { handleError, createSuccessResponse } from "@/lib/errors";
@@ -11,14 +12,14 @@ export async function PATCH(
 ) {
   const start = Date.now();
   try {
-    await requireAdmin();
+    const session = await requireAdmin();
 
     const { id: rawId } = await params;
-    const id = Number(rawId);
+    const id = parseIdParam(rawId);
     const body = await request.json();
     const { count } = incrementProductStockSchema.parse(body);
 
-    const product = await decrementProductStock(id, count);
+    const product = await decrementProductStock(id, count, session.user.id);
 
     await logApiAction({
       request,

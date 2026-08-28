@@ -1,13 +1,18 @@
 import { prisma } from "@/lib/db/prisma";
-import ExcelJS from "exceljs";
-import { siteConfig } from "@/config/site";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+import { shopDateKey } from "@/features/pos/utils/shop-time";
 import type { ReportQueryInput } from "@/features/reports/validators/reports";
 import type { ReportExportPayload } from "@/features/reports/types/report";
-import fs from "node:fs/promises";
-import path from "node:path";
-import type { OrderStatus } from "@prisma/client";
+import type {
+  OrderChannel,
+  OrderStatus,
+  PaymentMethod,
+  PaymentStatus,
+} from "@prisma/client";
+import {
+  orderCustomerEmail,
+  orderCustomerName,
+} from "@/features/orders/utils/order-display";
+import { renderExcelReport, renderPdfReport } from "@/features/reports/services/report-render";
 
 type ReportRange = {
   startDate: Date;
@@ -16,20 +21,35 @@ type ReportRange = {
   isCustomRange: boolean;
 };
 
-type ReportDataset = {
+export type ReportDataset = {
   orders: Array<{
     id: number;
     orderNumber: string;
     status: OrderStatus;
     totalAmount: number;
+    subtotal: number;
+    discountAmount: number;
+    billingPhone: string;
     createdAt: Date;
     items: Array<{
       quantity: number;
+      returnedQty: number;
       price: number;
       discountedPrice: number | null;
-      product: { title: string; slug: string | null } | null;
+      lineDiscount: number;
+      title: string | null;
+      color: string | null;
+      product: { title: string; slug: string | null; sku: string | null } | null;
     }>;
-    user: { name: string | null; email: string };
+    user: { name: string | null; email: string } | null;
+    billingName: string;
+    billingEmail: string | null;
+    channel: OrderChannel;
+    paymentStatus: PaymentStatus;
+    amountPaid: number;
+    paymentMethod: string | null;
+    customer: { name: string; email: string | null } | null;
+    createdBy: { name: string | null } | null;
   }>;
   products: Array<{
     id: number;
@@ -52,6 +72,90 @@ type ReportDataset = {
     number,
     { id: number; title: string; slug: string; category: { name: string } | null }
   >;
+  /** Money actually collected in the period, however the sale was made. */
+  payments: Array<{
+    method: PaymentMethod;
+    amount: number;
+    createdAt: Date;
+    order: { channel: OrderChannel } | null;
+    createdBy: { id: number; name: string | null } | null;
+  }>;
+};
+
+export type ReportRangeInfo = ReportRange;
+export type ChannelSummary = ReturnType<typeof summariseChannels>;
+
+/**
+ * Website against counter, and how the counter's money came in.
+ *
+ * Revenue is counted from the bills (what was sold), collections from the
+ * payments (what reached the till) — on a bill paid off in instalments those
+ * are two different numbers, and cashing up needs the second one.
+ */
+export const summariseChannels = (dataset: ReportDataset) => {
+  const live = dataset.orders.filter((order) => order.status !== "CANCELLED");
+
+  const byChannel = (["ONLINE", "POS"] as const).map((channel) => {
+    const rows = live.filter((order) => order.channel === channel);
+    return {
+      channel,
+      orders: rows.length,
+      revenue: rows.reduce((sum, order) => sum + order.totalAmount, 0),
+      collected: rows.reduce((sum, order) => sum + order.amountPaid, 0),
+    };
+  });
+
+  const methods = new Map<string, { collected: number; refunded: number }>();
+  for (const payment of dataset.payments) {
+    const entry = methods.get(payment.method) ?? { collected: 0, refunded: 0 };
+    if (payment.amount >= 0) entry.collected += payment.amount;
+    else entry.refunded += Math.abs(payment.amount);
+    methods.set(payment.method, entry);
+  }
+
+  const cashiers = new Map<
+    string,
+    { name: string; bills: number; billed: number; collected: number }
+  >();
+  for (const order of live) {
+    if (order.channel !== "POS") continue;
+    const name = order.createdBy?.name || "Unknown";
+    const entry = cashiers.get(name) ?? {
+      name,
+      bills: 0,
+      billed: 0,
+      collected: 0,
+    };
+    entry.bills += 1;
+    entry.billed += order.totalAmount;
+    entry.collected += order.amountPaid;
+    cashiers.set(name, entry);
+  }
+
+  const counterBills = live.filter((order) => order.channel === "POS");
+
+  return {
+    byChannel,
+    byMethod: Array.from(methods.entries()).map(([method, value]) => ({
+      method,
+      collected: value.collected,
+      refunded: value.refunded,
+      net: value.collected - value.refunded,
+    })),
+    byCashier: Array.from(cashiers.values()).sort((a, b) => b.billed - a.billed),
+    counter: {
+      bills: counterBills.length,
+      cancelled: dataset.orders.filter(
+        (order) => order.channel === "POS" && order.status === "CANCELLED",
+      ).length,
+      billed: counterBills.reduce((sum, order) => sum + order.totalAmount, 0),
+      collected: counterBills.reduce((sum, order) => sum + order.amountPaid, 0),
+      outstanding: counterBills.reduce(
+        (sum, order) => sum + Math.max(0, order.totalAmount - order.amountPaid),
+        0,
+      ),
+    },
+  };
 };
 
 const sumRevenue = (orders: Array<{ status: OrderStatus; totalAmount: number }>) =>
@@ -59,33 +163,6 @@ const sumRevenue = (orders: Array<{ status: OrderStatus; totalAmount: number }>)
     (sum, order) => (order.status === "CANCELLED" ? sum : sum + order.totalAmount),
     0
   );
-
-const formatNumber = (value: number) =>
-  new Intl.NumberFormat("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value);
-
-const formatDateDMY = (date: Date) =>
-  date.toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
-
-const formatDateTimeDMY = (date: Date) =>
-  date.toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-
-const formatFileDate = (date: Date) =>
-  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
-    date.getDate()
-  ).padStart(2, "0")}`;
 
 // Report boundaries are taken in the store's local time zone (Sri Lanka).
 const TZ_OFFSET = "+05:30";
@@ -121,18 +198,12 @@ export const resolveReportRange = (query: ReportQueryInput): ReportRange => {
   return buildMonthlyRange(normalizedMonth);
 };
 
-export async function generateMonthlyExcelReport(
-  month: string
-): Promise<Buffer> {
-  return generateExcelReportForRange(buildMonthlyRange(month));
-}
-
 export const fetchReportDataset = async (
   range: ReportRange
 ): Promise<ReportDataset> => {
   const { startDate, endDate } = range;
 
-  const [orders, products, customers, statusBreakdown, soldItems] =
+  const [orders, products, customers, statusBreakdown, soldItems, payments] =
     await Promise.all([
       prisma.order.findMany({
         where: {
@@ -143,6 +214,8 @@ export const fetchReportDataset = async (
             include: { product: true },
           },
           user: true,
+          customer: true,
+          createdBy: { select: { name: true } },
         },
         orderBy: { createdAt: "desc" },
       }),
@@ -173,15 +246,35 @@ export const fetchReportDataset = async (
             status: { not: "CANCELLED" },
           },
         },
-        select: { productId: true, quantity: true, price: true, discountedPrice: true },
+        select: {
+          productId: true,
+          quantity: true,
+          price: true,
+          discountedPrice: true,
+          lineDiscount: true,
+        },
+      }),
+      prisma.payment.findMany({
+        where: { createdAt: { gte: startDate, lte: endDate } },
+        select: {
+          method: true,
+          amount: true,
+          createdAt: true,
+          order: { select: { channel: true } },
+          createdBy: { select: { id: true, name: true } },
+        },
       }),
     ]);
 
   const sales = new Map<number, { sold: number; revenue: number }>();
   for (const item of soldItems) {
+    // Service lines and lines whose product was deleted cannot be ranked.
+    if (item.productId == null) continue;
     const entry = sales.get(item.productId) ?? { sold: 0, revenue: 0 };
     entry.sold += item.quantity;
-    entry.revenue += (item.discountedPrice ?? item.price) * item.quantity;
+    entry.revenue +=
+      (item.discountedPrice ?? item.price) * item.quantity -
+      (item.lineDiscount || 0);
     sales.set(item.productId, entry);
   }
   const topProductsGrouped = Array.from(sales.entries())
@@ -209,6 +302,7 @@ export const fetchReportDataset = async (
     statusBreakdown,
     topProductsGrouped,
     topProductDetails,
+    payments,
   };
 };
 
@@ -216,8 +310,11 @@ export const buildMonthlySummaryFromDataset = (
   range: ReportRange,
   dataset: ReportDataset
 ): MonthlyReportData => {
+  // A cancelled bill brought in nothing, so it belongs in neither the count
+  // nor the average  counting it would quietly drag the average sale down.
+  const liveOrders = dataset.orders.filter((order) => order.status !== "CANCELLED");
   const totalRevenue = sumRevenue(dataset.orders);
-  const totalOrders = dataset.orders.length;
+  const totalOrders = liveOrders.length;
   const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
   return {
@@ -238,522 +335,16 @@ export async function generateExcelReportForRange(
   range: ReportRange,
   dataset?: ReportDataset
 ): Promise<Buffer> {
-  const { startDate, endDate, isCustomRange } = range;
   const data = dataset ?? (await fetchReportDataset(range));
-  const { orders, products, customers, statusBreakdown } = data;
-
-  const totalRevenue = sumRevenue(orders);
-  const totalOrders = orders.length;
-  const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
-
-  // Create workbook
-  const workbook = new ExcelJS.Workbook();
-  workbook.creator = "Metro Opticals";
-  workbook.created = new Date();
-  workbook.company = "Metro Opticals";
-
-  // --- Summary Sheet ---
-  const summarySheet = workbook.addWorksheet("Summary", {
-    properties: { tabColor: { argb: "FF4F46E5" } },
-  });
-
-  // Title
-  summarySheet.mergeCells("A1:D1");
-  summarySheet.getCell("A1").value = isCustomRange
-    ? "SALES REPORT"
-    : "MONTHLY SALES REPORT";
-  summarySheet.getCell("A1").font = {
-    size: 20,
-    bold: true,
-    color: { argb: "FF4F46E5" },
-  };
-  summarySheet.getCell("A1").alignment = {
-    vertical: "middle",
-    horizontal: "center",
-  };
-  summarySheet.getRow(1).height = 35;
-
-  // Period
-  summarySheet.mergeCells("A2:D2");
-  summarySheet.getCell("A2").value =
-    `Period: ${formatDateDMY(startDate)} - ${formatDateDMY(endDate)}`;
-  summarySheet.getCell("A2").font = { size: 11, italic: true };
-  summarySheet.getCell("A2").alignment = { horizontal: "center" };
-  summarySheet.getRow(2).height = 20;
-
-  summarySheet.addRow([]);
-
-  // Key Metrics
-  summarySheet.columns = [
-    { header: "Metric", key: "metric", width: 30 },
-    { header: "Value", key: "value", width: 20 },
-    { header: "", key: "spacer", width: 5 },
-    { header: "Status", key: "status", width: 20 },
-    { header: "Count", key: "count", width: 15 },
-  ];
-
-  const metricsStartRow = 4;
-  summarySheet.getRow(metricsStartRow).font = { bold: true, size: 11 };
-  summarySheet.getRow(metricsStartRow).fill = {
-    type: "pattern",
-    pattern: "solid",
-    fgColor: { argb: "FF4F46E5" },
-  };
-  summarySheet.getRow(metricsStartRow).font = {
-    bold: true,
-    color: { argb: "FFFFFFFF" },
-  };
-
-  summarySheet.addRows([
-    [
-      "Total Revenue",
-      formatNumber(totalRevenue),
-      "",
-      statusBreakdown[0]?.status || "N/A",
-      statusBreakdown[0]?._count || 0,
-    ],
-    [
-      "Total Orders",
-      totalOrders,
-      "",
-      statusBreakdown[1]?.status || "N/A",
-      statusBreakdown[1]?._count || 0,
-    ],
-    [
-      "Average Order Value",
-      formatNumber(avgOrderValue),
-      "",
-      statusBreakdown[2]?.status || "N/A",
-      statusBreakdown[2]?._count || 0,
-    ],
-    [
-      "New Customers",
-      customers,
-      "",
-      statusBreakdown[3]?.status || "N/A",
-      statusBreakdown[3]?._count || 0,
-    ],
-    [
-      "Total Products",
-      products.length,
-      "",
-      statusBreakdown[4]?.status || "N/A",
-      statusBreakdown[4]?._count || 0,
-    ],
-  ]);
-
-  // Add borders to metrics table
-  for (let i = metricsStartRow; i <= metricsStartRow + 5; i++) {
-    ["A", "B", "D", "E"].forEach((col) => {
-      const cell = summarySheet.getCell(`${col}${i}`);
-      cell.border = {
-        top: { style: "thin" },
-        left: { style: "thin" },
-        bottom: { style: "thin" },
-        right: { style: "thin" },
-      };
-    });
-  }
-
-  // --- Orders Sheet ---
-  const ordersSheet = workbook.addWorksheet("Orders", {
-    properties: { tabColor: { argb: "FF10B981" } },
-  });
-
-  ordersSheet.columns = [
-    { header: "#", key: "no", width: 8 },
-    { header: "Order Number", key: "orderNumber", width: 25 },
-    { header: "Customer", key: "customer", width: 25 },
-    { header: "Email", key: "email", width: 30 },
-    { header: "Status", key: "status", width: 15 },
-    { header: "Items", key: "items", width: 10 },
-    { header: "Total", key: "total", width: 15 },
-    { header: "Date", key: "date", width: 20 },
-  ];
-
-  ordersSheet.getRow(1).font = { bold: true, size: 11 };
-  ordersSheet.getRow(1).fill = {
-    type: "pattern",
-    pattern: "solid",
-    fgColor: { argb: "FF4F46E5" },
-  };
-  ordersSheet.getRow(1).font = {
-    bold: true,
-    color: { argb: "FFFFFFFF" },
-  };
-
-  orders.forEach((order, index) => {
-    ordersSheet.addRow({
-      no: index + 1,
-      orderNumber: order.orderNumber,
-      customer: order.user.name,
-      email: order.user.email,
-      status: order.status,
-      items: order.items.length,
-      total: formatNumber(order.totalAmount),
-      date: formatDateTimeDMY(order.createdAt),
-    });
-  });
-
-  // Add zebra striping
-  for (let i = 2; i <= ordersSheet.rowCount; i++) {
-    if (i % 2 === 0) {
-      ordersSheet.getRow(i).fill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: "FFF9FAFB" },
-      };
-    }
-  }
-
-  // --- Products Sheet ---
-  const productsSheet = workbook.addWorksheet("Products", {
-    properties: { tabColor: { argb: "FFF59E0B" } },
-  });
-
-  productsSheet.columns = [
-    { header: "#", key: "no", width: 8 },
-    { header: "Product Name", key: "name", width: 35 },
-    { header: "SKU", key: "sku", width: 15 },
-    { header: "Category", key: "category", width: 20 },
-    { header: "Price", key: "price", width: 15 },
-    { header: "Stock", key: "stock", width: 10 },
-    { header: "Status", key: "status", width: 15 },
-    { header: "Orders", key: "orders", width: 10 },
-  ];
-
-  productsSheet.getRow(1).font = { bold: true, size: 11 };
-  productsSheet.getRow(1).fill = {
-    type: "pattern",
-    pattern: "solid",
-    fgColor: { argb: "FF4F46E5" },
-  };
-  productsSheet.getRow(1).font = {
-    bold: true,
-    color: { argb: "FFFFFFFF" },
-  };
-
-  products.forEach((product, index) => {
-    productsSheet.addRow({
-      no: index + 1,
-      name: product.title,
-      sku: product.slug,
-      category: product.category?.name || "Uncategorized",
-      price: formatNumber(product.price),
-      stock: product.stock,
-      status: product.status,
-      orders: product._count.orderItems,
-    });
-  });
-
-  // Add zebra striping
-  for (let i = 2; i <= productsSheet.rowCount; i++) {
-    if (i % 2 === 0) {
-      productsSheet.getRow(i).fill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: "FFF9FAFB" },
-      };
-    }
-  }
-
-  // Generate buffer
-  const buffer = await workbook.xlsx.writeBuffer();
-  return Buffer.from(buffer);
-}
-
-export async function generateMonthlyPDFReport(month: string): Promise<Buffer> {
-  return generatePDFReportForRange(buildMonthlyRange(month));
+  return renderExcelReport(range, data, summariseChannels(data));
 }
 
 export async function generatePDFReportForRange(
   range: ReportRange,
   dataset?: ReportDataset
 ): Promise<Buffer> {
-  const { startDate, endDate, isCustomRange } = range;
   const data = dataset ?? (await fetchReportDataset(range));
-  const orders = data.orders;
-  const ordersByStatus = data.statusBreakdown;
-  const topProducts = data.topProductsGrouped;
-  const productMap = data.topProductDetails;
-
-  const logoDataUrl = await (async () => {
-    try {
-      const logoPath = path.join(
-        process.cwd(),
-        "public",
-        "images",
-        "logo",
-        "logo.png"
-      );
-      const file = await fs.readFile(logoPath);
-      return `data:image/png;base64,${file.toString("base64")}`;
-    } catch {
-      return null;
-    }
-  })();
-
-  const totalRevenue = sumRevenue(orders);
-  const avgOrderValue = orders.length > 0 ? totalRevenue / orders.length : 0;
-
-  // Create PDF (A4, receipt-like styling)
-  const doc = new jsPDF({
-    format: "a4",
-    orientation: "portrait",
-    unit: "mm",
-  });
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const pageHeight = doc.internal.pageSize.getHeight();
-  const marginX = 14;
-  const lightGray: [number, number, number] = [245, 245, 245];
-  const midGray: [number, number, number] = [120, 120, 120];
-  const darkGray: [number, number, number] = [40, 40, 40];
-
-  const formatRangeLabel = () =>
-    `${formatDateDMY(startDate)} - ${formatDateDMY(endDate)}`;
-
-  // Helper function for consistent styling
-  const addHeader = () => {
-    if (logoDataUrl) {
-      doc.addImage(logoDataUrl, "PNG", marginX, 12, 24, 12, undefined, "FAST");
-    }
-
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(14);
-    doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
-    doc.text(
-      "Metro Opticals",
-      marginX + (logoDataUrl ? 28 : 0),
-      16
-    );
-
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(8);
-    doc.setTextColor(midGray[0], midGray[1], midGray[2]);
-    doc.text(
-      siteConfig.contact.address,
-      marginX + (logoDataUrl ? 28 : 0),
-      21
-    );
-    doc.text(
-      `${siteConfig.contact.phone} | ${siteConfig.contact.email}`,
-      marginX + (logoDataUrl ? 28 : 0),
-      25
-    );
-
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(13);
-    doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
-    doc.text(
-      isCustomRange ? "SALES REPORT" : "MONTHLY REPORT",
-      pageWidth - marginX,
-      16,
-      {
-        align: "right",
-      }
-    );
-
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(8);
-    doc.setTextColor(midGray[0], midGray[1], midGray[2]);
-    doc.text(`Report Period: ${formatRangeLabel()}`, pageWidth - marginX, 21, {
-      align: "right",
-    });
-
-    doc.setLineWidth(0.4);
-    doc.setDrawColor(70, 70, 70);
-    doc.line(marginX, 29, pageWidth - marginX, 29);
-  };
-
-  const addFooter = (pageNum: number, totalPages: number) => {
-    const footerTop = pageHeight - 14;
-    doc.setLineWidth(0.4);
-    doc.setDrawColor(70, 70, 70);
-    doc.line(marginX, footerTop - 2, pageWidth - marginX, footerTop - 2);
-
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(8.5);
-    doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
-    doc.text("Thank you for your business!", pageWidth / 2, footerTop + 2, {
-      align: "center",
-    });
-
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(7);
-    doc.setTextColor(midGray[0], midGray[1], midGray[2]);
-    doc.text(
-      `Questions? Contact ${siteConfig.contact.email} | ${siteConfig.contact.phone} | ${siteConfig.domain}`,
-      pageWidth / 2,
-      footerTop + 6,
-      { align: "center" }
-    );
-
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(6.5);
-    doc.setTextColor(midGray[0], midGray[1], midGray[2]);
-    doc.text(
-      `Page ${pageNum} of ${totalPages}`,
-      pageWidth / 2,
-      pageHeight - 4,
-      {
-        align: "center",
-      }
-    );
-  };
-
-  // === PAGE 1: SUMMARY ===
-  addHeader();
-
-  // Summary Metrics Box
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(11);
-  doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
-  doc.text("Key Performance Metrics", marginX, 40);
-
-  const summaryData = [
-    ["Total Revenue", formatNumber(totalRevenue)],
-    ["Total Orders", orders.length.toString()],
-    ["Average Order Value", formatNumber(avgOrderValue)],
-    [
-      "Total Items Sold",
-      orders.reduce((sum, o) => sum + o.items.length, 0).toString(),
-    ],
-  ];
-
-  autoTable(doc, {
-    startY: 44,
-    head: [["Metric", "Value"]],
-    body: summaryData,
-    theme: "plain",
-    styles: { fontSize: 8, cellPadding: 2, lineWidth: 0 },
-    headStyles: {
-      fillColor: lightGray,
-      textColor: darkGray,
-      fontStyle: "bold",
-    },
-    alternateRowStyles: { fillColor: [249, 250, 251] },
-    margin: { left: marginX, right: pageWidth / 2 + 4 },
-  });
-
-  // Order Status Breakdown
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(11);
-  doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
-  doc.text("Order Status Breakdown", pageWidth / 2 + 4, 40);
-
-  const statusData = ordersByStatus.map((status) => {
-    const percent =
-      orders.length > 0 ? (status._count / orders.length) * 100 : 0;
-    return [status.status, status._count.toString(), `${percent.toFixed(1)}%`];
-  });
-
-  autoTable(doc, {
-    startY: 44,
-    head: [["Status", "Count", "%"]],
-    body: statusData,
-    theme: "plain",
-    styles: { fontSize: 8, cellPadding: 2, lineWidth: 0 },
-    headStyles: {
-      fillColor: lightGray,
-      textColor: darkGray,
-      fontStyle: "bold",
-    },
-    alternateRowStyles: { fillColor: [249, 250, 251] },
-    margin: { left: pageWidth / 2 + 4, right: marginX },
-  });
-
-  // Top Products
-  const topProductsY =
-    Math.max(
-      (doc as any).lastAutoTable?.finalY || 0,
-      44 + summaryData.length * 7
-    ) + 12;
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(11);
-  doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
-  doc.text("Top 10 Products", marginX, topProductsY);
-
-  const topProductsData = topProducts.map((item, index) => {
-    const product = productMap.get(item.productId);
-    return [
-      (index + 1).toString(),
-      product?.title || "Unknown",
-      product?.slug || "N/A",
-      product?.category?.name || "N/A",
-      item.sold.toString(),
-      formatNumber(item.revenue),
-    ];
-  });
-
-  autoTable(doc, {
-    startY: topProductsY + 4,
-    head: [["#", "Product", "SKU", "Category", "Sold", "Revenue"]],
-    body: topProductsData,
-    theme: "plain",
-    styles: { fontSize: 8, cellPadding: 2, lineWidth: 0 },
-    headStyles: {
-      fillColor: lightGray,
-      textColor: darkGray,
-      fontStyle: "bold",
-    },
-    alternateRowStyles: { fillColor: [249, 250, 251] },
-    margin: { left: marginX, right: marginX },
-    columnStyles: {
-      0: { cellWidth: 10 },
-      4: { halign: "center" },
-      5: { halign: "right" },
-    },
-  });
-
-  // === PAGE 2: RECENT ORDERS ===
-  doc.addPage();
-  addHeader();
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(11);
-  doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
-  doc.text("Recent Orders", marginX, 40);
-
-  const ordersData = orders
-    .slice(0, 25)
-    .map((order, index) => [
-      (index + 1).toString(),
-      order.orderNumber,
-      order.user.name,
-      order.status,
-      order.items.length.toString(),
-      formatNumber(order.totalAmount),
-      formatDateDMY(new Date(order.createdAt)),
-    ]);
-
-  autoTable(doc, {
-    startY: 44,
-    head: [["#", "Order #", "Customer", "Status", "Items", "Total", "Date"]],
-    body: ordersData,
-    theme: "plain",
-    styles: { fontSize: 7.5, cellPadding: 1.8, lineWidth: 0 },
-    headStyles: {
-      fillColor: lightGray,
-      textColor: darkGray,
-      fontStyle: "bold",
-    },
-    alternateRowStyles: { fillColor: [249, 250, 251] },
-    margin: { left: marginX, right: marginX },
-    columnStyles: {
-      0: { cellWidth: 8 },
-      4: { halign: "center" },
-      5: { halign: "right" },
-    },
-  });
-
-  const totalPages = doc.getNumberOfPages();
-  for (let pageNumber = 1; pageNumber <= totalPages; pageNumber += 1) {
-    doc.setPage(pageNumber);
-    addFooter(pageNumber, totalPages);
-  }
-
-  return Buffer.from(doc.output("arraybuffer"));
+  return renderPdfReport(range, data, summariseChannels(data));
 }
 
 interface MonthlyReportData {
@@ -784,10 +375,16 @@ export const buildReportPayload = (
       id: order.id,
       orderNumber: order.orderNumber,
       status: order.status,
+      /** Walk-in at the counter, or the website. */
+      channel: order.channel,
+      channelLabel: order.channel === "POS" ? "Walk-in" : "Website",
+      paymentStatus: order.paymentStatus,
+      amountPaid: order.amountPaid,
+      balance: Math.max(0, order.totalAmount - order.amountPaid),
       totalAmount: order.totalAmount,
       itemsCount: order.items.length,
-      customerName: order.user.name,
-      customerEmail: order.user.email,
+      customerName: orderCustomerName(order),
+      customerEmail: orderCustomerEmail(order),
       createdAt: order.createdAt.toISOString(),
     })),
     products: dataset.products.map((product) => ({
@@ -811,6 +408,7 @@ export const buildReportPayload = (
         revenue: item.revenue,
       };
     }),
+    channels: summariseChannels(dataset),
     statusBreakdown: summary.statusBreakdown,
   };
 };
@@ -824,8 +422,7 @@ const normalizeMonth = (month?: string) => {
   if (month && /^\d{4}-\d{2}$/.test(month)) {
     return month;
   }
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  return shopDateKey().slice(0, 7);
 };
 
 export async function generateMonthlyReport(

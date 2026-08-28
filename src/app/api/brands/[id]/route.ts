@@ -7,16 +7,16 @@ import {
 } from "@/features/brands/services/brand-service";
 import { requireAdmin } from "@/lib/middleware/auth";
 import { handleError, createSuccessResponse } from "@/lib/errors";
+import { parseIdParam } from "@/lib/utils/params";
 import { logApiAction, logApiError } from "@/lib/audit";
 
-const parseId = (
+const parseId = async (
   params?: Promise<Record<string, string | string[] | undefined>>
-) =>
-  params.then((p) => {
-    const raw = Array.isArray(p?.id) ? p?.id[0] : p?.id;
-    const id = raw ? Number(raw) : NaN;
-    return Number.isNaN(id) ? null : id;
-  });
+) => {
+  const p = await params;
+  const raw = Array.isArray(p?.id) ? p?.id[0] : p?.id;
+  return parseIdParam(raw, "brand id");
+};
 
 type Ctx = {
   params?: Promise<Record<string, string | string[] | undefined>>;
@@ -24,8 +24,7 @@ type Ctx = {
 
 export async function GET(_request: NextRequest, { params }: Ctx) {
   try {
-    const id = params ? await parseId(params) : null;
-    if (id === null) return handleError({ message: "Brand id is required" });
+    const id = await parseId(params);
 
     const brand = await getBrandById(id);
     return createSuccessResponse({ brand });
@@ -39,8 +38,7 @@ export async function PUT(request: NextRequest, { params }: Ctx) {
   try {
     await requireAdmin();
 
-    const id = params ? await parseId(params) : null;
-    if (id === null) return handleError({ message: "Brand id is required" });
+    const id = await parseId(params);
 
     const body = await request.json();
     const data = updateBrandSchema.parse(body);
@@ -66,8 +64,7 @@ export async function DELETE(request: NextRequest, { params }: Ctx) {
   try {
     await requireAdmin();
 
-    const id = params ? await parseId(params) : null;
-    if (id === null) return handleError({ message: "Brand id is required" });
+    const id = await parseId(params);
 
     await deleteBrand(id);
 

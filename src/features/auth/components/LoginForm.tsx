@@ -77,7 +77,7 @@ const LoginForm = React.memo(
           if (session?.user?.role === "SUPER_ADMIN") {
             router.push("/admin");
           } else if (session?.user?.role === "ADMIN") {
-            router.push("/admin/users");
+            router.push("/admin/pos");
           } else {
             router.push(redirectUrl || "/");
           }
@@ -150,7 +150,7 @@ const LoginForm = React.memo(
         <button
           type="submit"
           disabled={isLoading}
-          className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[linear-gradient(100deg,#A9834B_0%,#8F6A37_55%,#6E5029_100%)] text-sm font-semibold tracking-wide text-white shadow-lg shadow-blue/20 transition-all hover:shadow-xl hover:shadow-blue/25 hover:brightness-[1.06] active:scale-[0.995] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:brightness-100"
+          className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-blue text-sm font-semibold tracking-wide text-white shadow-sm transition-colors hover:bg-blue-dark active:bg-blue-dark disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isLoading && (
             <Loader2 className="h-4 w-4 animate-spin" aria-hidden />

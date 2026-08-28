@@ -5,6 +5,15 @@ import Header from "@/components/layout/header";
 import AnnouncementBar from "@/components/layout/header/AnnouncementBar";
 import { getSiteBlocks } from "@/features/site-content/services/site-content-service";
 import { getBrands } from "@/features/brands/services/brand-service";
+import { getActiveAdvertisementsByPlacement } from "@/features/advertisements/services/advertisement-service";
+import {
+  getNavCategories,
+  getStockedGendersByCategory,
+} from "@/features/categories/services/category-service";
+import {
+  buildCategoryNavItems,
+  withoutCategoryDuplicates,
+} from "@/features/categories/utils/category-nav";
 import {
   getStockedFrameShapes,
   getStockedGenders,
@@ -33,14 +42,33 @@ export default async function SiteLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [content, brands, shapes, genders] = await Promise.all([
+  const [
+    content,
+    brands,
+    shapes,
+    genders,
+    navCategories,
+    menuAds,
+    categoryGenders,
+  ] = await Promise.all([
     getSiteBlocks(["announcement.bar", "header.nav"]),
     getBrands().catch(() => []),
     getStockedFrameShapes().catch(() => []),
     getStockedGenders().catch(() => []),
+    getNavCategories().catch(() => []),
+    getActiveAdvertisementsByPlacement("menu-panel").catch(() => []),
+    getStockedGendersByCategory().catch(() => new Map<number, Set<string>>()),
   ]);
 
-  const megaNav = (content["header.nav"]?.items ?? []) as NavItem[];
+  // The shop's own categories lead the menu and keep themselves in step with
+  // the admin; the saved items (Lenses, Brands, Offers, Eye test) follow.
+  // A saved item that merely repeats a category's name gives way to the real,
+  // linked one.
+  const savedNav = (content["header.nav"]?.items ?? []) as NavItem[];
+  const megaNav = [
+    ...buildCategoryNavItems(navCategories, menuAds, categoryGenders),
+    ...withoutCategoryDuplicates(savedNav, navCategories),
+  ];
   const catalogue: NavCatalogue = {
     brands: brands
       // The logo travels with the row so the brands panel can draw the mark

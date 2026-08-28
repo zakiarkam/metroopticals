@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
+  ChevronDown,
   Globe,
   Hash,
   Loader2,
@@ -20,28 +21,15 @@ import { Toast } from "@/lib/utils/toast";
 import { authApi } from "@/features/auth/api/auth-api";
 import dynamic from "next/dynamic";
 import AuthField, { authInputClasses, PasswordToggle } from "./AuthField";
+import { signupSchema as serverSignupSchema } from "@/features/auth/validators/auth";
 
 const PasswordStrengthMeter = dynamic(() => import("./PasswordStrengthMeter"), {
   ssr: false,
 });
 
-const signupSchema = z
-  .object({
-    name: z.string().min(2, "Name must be at least 2 characters"),
-    email: z.string().email("Invalid email address"),
-    phone: z.string().min(1, "Phone number is required"),
-    address: z.string().min(1, "Address is required"),
-    city: z.string().min(1, "City is required"),
-    country: z.string().min(1, "Country is required"),
-    postalCode: z.string().min(1, "Postal code is required"),
-    password: z
-      .string()
-      .min(8, "Password must be at least 8 characters")
-      .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
-      .regex(/[a-z]/, "Password must contain at least one lowercase letter")
-      .regex(/[0-9]/, "Password must contain at least one number"),
-    confirmPassword: z.string(),
-  })
+// Same rules the API enforces, plus the confirm field only the form has.
+const signupSchema = serverSignupSchema
+  .extend({ confirmPassword: z.string() })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
     path: ["confirmPassword"],
@@ -94,10 +82,10 @@ const SignupForm = React.memo(({ onSuccess }: SignupFormProps) => {
         email: data.email,
         password: data.password,
         phone: data.phone,
-        address: data.address,
-        city: data.city,
-        country: data.country,
-        postalCode: data.postalCode,
+        address: data.address?.trim() || undefined,
+        city: data.city?.trim() || undefined,
+        country: data.country?.trim() || undefined,
+        postalCode: data.postalCode?.trim() || undefined,
       });
 
       if (response.user) {
@@ -175,71 +163,90 @@ const SignupForm = React.memo(({ onSuccess }: SignupFormProps) => {
         />
       </AuthField>
 
-      <AuthField
-        id="signup-address"
-        label="Street address"
-        icon={MapPin}
-        error={errors.address?.message}
-      >
-        <Input
-          id="signup-address"
-          {...signupForm.register("address")}
-          type="text"
-          autoComplete="street-address"
-          placeholder="123 Main Street"
-          className={authInputClasses}
-        />
-      </AuthField>
+      {/* Delivery details are checkout's job; here they are a courtesy. */}
+      <details className="group rounded-xl border border-gray-3 bg-gray-1/60 px-4 py-3.5 transition-colors open:bg-gray-1 hover:border-blue-light-2">
+        <summary className="flex cursor-pointer select-none list-none items-center gap-2">
+          <MapPin className="h-4 w-4 shrink-0 text-blue" aria-hidden />
+          <span className="text-[13.5px] font-semibold text-dark">
+            Delivery address
+            <span className="ml-1.5 font-normal text-dark-5">(optional)</span>
+          </span>
+          <span className="ml-auto flex items-center gap-1.5 text-[12px] text-dark-4">
+            <span className="hidden sm:inline">You can add it at checkout</span>
+            <ChevronDown
+              className="h-4 w-4 shrink-0 transition-transform group-open:rotate-180"
+              aria-hidden
+            />
+          </span>
+        </summary>
+        <div className="mt-4 space-y-4">
+            <AuthField
+              id="signup-address"
+              label="Street address"
+              icon={MapPin}
+              error={errors.address?.message}
+            >
+              <Input
+                id="signup-address"
+                {...signupForm.register("address")}
+                type="text"
+                autoComplete="street-address"
+                placeholder="123 Main Street"
+                className={authInputClasses}
+              />
+            </AuthField>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <AuthField
-          id="signup-city"
-          label="City"
-          icon={MapPin}
-          error={errors.city?.message}
-        >
-          <Input
-            id="signup-city"
-            {...signupForm.register("city")}
-            type="text"
-            autoComplete="address-level2"
-            placeholder="Colombo"
-            className={authInputClasses}
-          />
-        </AuthField>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <AuthField
+                id="signup-city"
+                label="City"
+                icon={MapPin}
+                error={errors.city?.message}
+              >
+                <Input
+                  id="signup-city"
+                  {...signupForm.register("city")}
+                  type="text"
+                  autoComplete="address-level2"
+                  placeholder="Colombo"
+                  className={authInputClasses}
+                />
+              </AuthField>
 
-        <AuthField
-          id="signup-postal"
-          label="Postal code"
-          icon={Hash}
-          error={errors.postalCode?.message}
-        >
-          <Input
-            id="signup-postal"
-            {...signupForm.register("postalCode")}
-            type="text"
-            autoComplete="postal-code"
-            placeholder="00100"
-            className={authInputClasses}
-          />
-        </AuthField>
-      </div>
+              <AuthField
+                id="signup-postal"
+                label="Postal code"
+                icon={Hash}
+                error={errors.postalCode?.message}
+              >
+                <Input
+                  id="signup-postal"
+                  {...signupForm.register("postalCode")}
+                  type="text"
+                  autoComplete="postal-code"
+                  placeholder="00100"
+                  className={authInputClasses}
+                />
+              </AuthField>
+            </div>
 
-      <AuthField
-        id="signup-country"
-        label="Country"
-        icon={Globe}
-        error={errors.country?.message}
-      >
-        <Input
-          id="signup-country"
-          {...signupForm.register("country")}
-          type="text"
-          autoComplete="country-name"
-          placeholder="Sri Lanka"
-          className={authInputClasses}
-        />
-      </AuthField>
+            <AuthField
+              id="signup-country"
+              label="Country"
+              icon={Globe}
+              error={errors.country?.message}
+            >
+              <Input
+                id="signup-country"
+                {...signupForm.register("country")}
+                type="text"
+                autoComplete="country-name"
+                placeholder="Sri Lanka"
+                className={authInputClasses}
+              />
+            </AuthField>
+        </div>
+      </details>
 
       <AuthField
         id="signup-password"
@@ -294,7 +301,7 @@ const SignupForm = React.memo(({ onSuccess }: SignupFormProps) => {
       <button
         type="submit"
         disabled={isLoading}
-        className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[linear-gradient(100deg,#A9834B_0%,#8F6A37_55%,#6E5029_100%)] text-sm font-semibold tracking-wide text-white shadow-lg shadow-blue/20 transition-all hover:shadow-xl hover:shadow-blue/25 hover:brightness-[1.06] active:scale-[0.995] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:brightness-100"
+        className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-blue text-sm font-semibold tracking-wide text-white shadow-sm transition-colors hover:bg-blue-dark active:bg-blue-dark disabled:cursor-not-allowed disabled:opacity-60"
       >
         {isLoading && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
         {isLoading ? "Creating account..." : "Create account"}

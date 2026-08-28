@@ -261,6 +261,12 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
               {maxFiles - images.length} more file
               {maxFiles - images.length !== 1 ? "s" : ""} allowed
             </p>
+            {/* One shape everywhere: the shop, the product page, the till and
+                the cart all crop to a square, so shoot square. */}
+            <p className="text-xs text-gray-400 mt-0.5">
+              Square photos work best (1:1, e.g. 1200 × 1200px) — every page
+              shows them square.
+            </p>
           </label>
         </div>
       )}

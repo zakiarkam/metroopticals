@@ -2,20 +2,11 @@ import { NextRequest } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { handleError, createSuccessResponse, UnauthorizedError, ValidationError } from '@/lib/errors'
-import { z } from 'zod'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/db/prisma'
 import { logApiAction, logApiError } from '@/lib/audit'
 import { rateLimit } from '@/lib/rate-limit'
-
-const changePasswordSchema = z.object({
-  currentPassword: z.string().min(1, 'Current password is required'),
-  newPassword: z
-    .string()
-    .min(8, 'Password must be at least 8 characters')
-    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
-    .regex(/[0-9]/, 'Password must contain at least one number'),
-})
+import { changePasswordSchema } from '@/features/auth/validators/auth'
 
 export async function PATCH(request: NextRequest) {
   const start = Date.now()
@@ -54,7 +45,7 @@ export async function PATCH(request: NextRequest) {
     // Update password
     await prisma.user.update({
       where: { id: user.id },
-      data: { password: hashedPassword },
+      data: { password: hashedPassword, passwordChangedAt: new Date() },
     })
 
     await logApiAction({

@@ -4,7 +4,7 @@ import { logger, getRequestMeta } from "@/lib/logger";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
 const MAX_MESSAGE_CHARS = 1024;
-const MAX_CONTEXT_CHARS = 8 * 1024;
+const MAX_CONTEXT_CHARS = 2 * 1024;
 
 // Oversized entries are truncated rather than rejected: a client error report
 // that is dropped for being too long is exactly the one you wanted to see.
@@ -30,7 +30,15 @@ const payloadSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    rateLimit(`logs:${getClientIp(request)}`, 120, 60 * 1000);
+    // Only this site's own pages may report here. sendBeacon is CORS-simple,
+    // so without this any page on the internet could fill the error log.
+    const origin = request.headers.get("origin") || request.headers.get("referer") || "";
+    const self = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_SITE_URL || "";
+    if (self && (!origin || !origin.startsWith(self))) {
+      return NextResponse.json({ success: false }, { status: 403 });
+    }
+
+    rateLimit(`logs:${getClientIp(request)}`, 30, 60 * 1000);
 
     const payload = payloadSchema.parse(await request.json());
     const meta = getRequestMeta(request);
@@ -43,12 +51,14 @@ export async function POST(request: NextRequest) {
       ...(payload.context ? { context: payload.context } : {}),
     };
 
-    if (payload.level === "error") {
-      logger.error(payload.message, entry);
-    } else if (payload.level === "warn") {
-      logger.warn(payload.message, entry);
+    // Browser reports are marked as such and never rise above `warn`: they
+    // are useful, but a stranger's browser must not be able to page the
+    // owner. Line breaks are stripped so a report cannot forge a log line.
+    const message = `[client] ${payload.message.replace(/[\r\n]+/g, " ")}`;
+    if (payload.level === "info") {
+      logger.info(message, entry);
     } else {
-      logger.info(payload.message, entry);
+      logger.warn(message, entry);
     }
 
     return NextResponse.json({ success: true });

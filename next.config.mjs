@@ -1,6 +1,16 @@
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
+// The bucket host comes from the same variable the storefront builds image
+// URLs from, so a bucket change cannot silently break next/image.
+const r2Host = (() => {
+  try {
+    return new URL(process.env.NEXT_PUBLIC_R2_PUBLIC_URL || "").hostname;
+  } catch {
+    return "pub-04bc2daeed7142b7b30174b3890fc622.r2.dev";
+  }
+})();
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   outputFileTracingRoot: dirname(fileURLToPath(import.meta.url)),
@@ -12,7 +22,7 @@ const nextConfig = {
       // Cloudflare R2 public bucket (r2.dev subdomain).
       {
         protocol: "https",
-        hostname: "pub-04bc2daeed7142b7b30174b3890fc622.r2.dev",
+        hostname: r2Host,
         pathname: "/**",
       },
       // Custom domain for R2, once DNS is pointed at the bucket.
@@ -53,11 +63,6 @@ const nextConfig = {
           {
             key: "Permissions-Policy",
             value: "camera=(), microphone=(), geolocation=()",
-          },
-          {
-            key: "Content-Security-Policy-Report-Only",
-            value:
-              "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self'",
           },
         ],
       },

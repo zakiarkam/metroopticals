@@ -46,6 +46,11 @@ export const getProducts = async (
   if (params?.minPrice !== undefined) queryParams.minPrice = params.minPrice;
   if (params?.maxPrice !== undefined) queryParams.maxPrice = params.maxPrice;
 
+  // The Offers entry point: only products whose discounted price undercuts
+  // the list price. Declared on the type all along, but never forwarded  so
+  // the shop quietly showed everything.
+  if (params?.onSale) queryParams.onSale = "true";
+
   if (params?.sortBy) queryParams.sortBy = params.sortBy;
   if (params?.sortOrder) queryParams.sortOrder = params.sortOrder;
 

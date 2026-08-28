@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
+import { logger, serializeError } from "@/lib/logger";
 
 export class AppError extends Error {
   constructor(
@@ -41,11 +42,10 @@ export class ValidationError extends AppError {
 }
 
 export function handleError(error: unknown): NextResponse {
-  console.error("Error:", error);
+  logger.error("Request failed", serializeError(error));
 
   // Zod validation errors
   if (error instanceof ZodError) {
-    const issues = (error as any).errors ?? error.issues ?? [];
     return NextResponse.json(
       {
         error: true,
@@ -97,22 +97,6 @@ export function handleError(error: unknown): NextResponse {
         { status: 404 }
       );
     }
-  }
-
-  if (
-    error &&
-    typeof error === "object" &&
-    !(error instanceof Error) &&
-    typeof (error as { message?: unknown }).message === "string"
-  ) {
-    return NextResponse.json(
-      {
-        error: true,
-        message: (error as { message: string }).message,
-        code: "VALIDATION_ERROR",
-      },
-      { status: 400 }
-    );
   }
 
   // Unknown errors

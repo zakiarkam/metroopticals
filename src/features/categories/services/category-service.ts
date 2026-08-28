@@ -16,6 +16,57 @@ interface GetCategoriesParams {
 const CATEGORY_SUPPORTS_STATUS =
   "status" in (Prisma.CategoryScalarFieldEnum as Record<string, string>);
 
+/**
+ * Active categories with their active children, for the storefront header.
+ *
+ * Unpaginated and lean on purpose: the menu needs every top-level category in
+ * display order and nothing else, on every page render.
+ */
+export async function getNavCategories() {
+  return prisma.category.findMany({
+    where: { parentId: null, status: "active" },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      status: true,
+      children: {
+        where: { status: "active" },
+        select: { id: true, name: true, slug: true, status: true },
+        orderBy: { name: "asc" },
+      },
+    },
+    orderBy: { createdAt: "asc" },
+  });
+}
+
+/**
+ * Which wearers ("Suits" on the product page  Men, Women, Unisex, Kids)
+ * actually appear among a category's sellable products.
+ *
+ * Grouped per category so a menu can offer "Men" under Eyeglasses only when
+ * there are men's eyeglasses to land on  a link to an empty shop page
+ * teaches people not to use the menu.
+ */
+export async function getStockedGendersByCategory() {
+  const rows = await prisma.product.groupBy({
+    by: ["categoryId", "gender"],
+    where: {
+      status: "ACTIVE",
+      gender: { not: null },
+      categoryId: { not: null },
+    },
+  });
+
+  const byCategory = new Map<number, Set<string>>();
+  for (const row of rows) {
+    if (row.categoryId == null || row.gender == null) continue;
+    if (!byCategory.has(row.categoryId)) byCategory.set(row.categoryId, new Set());
+    byCategory.get(row.categoryId)!.add(row.gender);
+  }
+  return byCategory;
+}
+
 export async function getCategories(params?: GetCategoriesParams) {
   const { page = 1, limit = 50, search = "", status } = params || {};
   const skip = (page - 1) * limit;

@@ -60,7 +60,13 @@ export async function sendWhatsAppMessage(
       /^\+/,
       ""
     )}?text=${encodeURIComponent(message)}`;
-    return { success: true, messageId: whatsappUrl };
+    // Nothing was sent. Say so, and hand back the link a person could open
+    // to send it by hand.
+    return {
+      success: false,
+      error: "WhatsApp sending is not configured (WASENDER_API_KEY)",
+      messageId: whatsappUrl,
+    };
   }
 
   const apiUrl =
@@ -223,10 +229,31 @@ export function formatOrderPlacedCustomerWhatsAppMessage(params: {
 export function formatOrderStatusWhatsAppMessage(params: {
   orderNumber: string;
   orderId: number | string;
-  status: "SHIPPED" | "CANCELLED";
+  status: "CONFIRMED" | "SHIPPED" | "DELIVERED" | "CANCELLED";
   totalAmount: number;
 }) {
   const { orderNumber, orderId, status, totalAmount } = params;
+
+  if (status === "CONFIRMED" || status === "DELIVERED") {
+    const confirmed = status === "CONFIRMED";
+    return [
+      `*METRO OPTICALS*`,
+      ``,
+      confirmed ? `✅ *ORDER CONFIRMED*` : `🎉 *ORDER DELIVERED*`,
+      `━━━━━━━━━━━━━━━━━━━━`,
+      ``,
+      confirmed
+        ? `Your order has been checked and confirmed. If it includes prescription lenses, they are being made up now.`
+        : `Your order has been delivered. If anything is not right, come in or message us and we will sort it out.`,
+      ``,
+      `📋 *Order #:* ${orderNumber}`,
+      `🔗 *View:* ${orderLink(orderId)}`,
+      `💰 *Amount:* ${money(totalAmount)}`,
+      ``,
+      `━━━━━━━━━━━━━━━━━━━━`,
+      supportLine(),
+    ].join("\n");
+  }
 
   if (status === "SHIPPED") {
     return [

@@ -193,7 +193,13 @@ const AdCard = ({
   );
 };
 
-/** An unfilled slot  shows the dummy artwork the site is currently using. */
+/**
+ * An unfilled slot.
+ *
+ * Zones with placeholder artwork show the dummy the site is currently using;
+ * zones without any (the menu card) simply show nothing on the storefront, and
+ * the card says so instead of pretending sample art is up.
+ */
 const EmptySlotCard = ({
   meta,
   slotIndex,
@@ -202,40 +208,54 @@ const EmptySlotCard = ({
   meta: AdPlacementMeta;
   slotIndex: number;
   onAdd: () => void;
-}) => (
-  <button
-    type="button"
-    onClick={onAdd}
-    className="group overflow-hidden rounded-2xl border-2 border-dashed border-gray-3 bg-gray-1 text-left transition-colors hover:border-blue"
-  >
-    <div
-      className="relative w-full overflow-hidden opacity-55 transition-opacity group-hover:opacity-80"
-      style={{ aspectRatio: meta.aspect }}
+}) => {
+  const placeholder = meta.placeholders.length
+    ? meta.placeholders[slotIndex % meta.placeholders.length]
+    : null;
+
+  return (
+    <button
+      type="button"
+      onClick={onAdd}
+      className="group overflow-hidden rounded-2xl border-2 border-dashed border-gray-3 bg-gray-1 text-left transition-colors hover:border-blue"
     >
-      <Image
-        src={meta.placeholders[slotIndex % meta.placeholders.length]}
-        alt=""
-        fill
-        sizes="(max-width: 768px) 100vw, 420px"
-        unoptimized
-        className="object-cover"
-      />
-    </div>
-    <div className="flex items-center gap-2 p-4">
-      <span className="grid h-8 w-8 place-items-center rounded-lg bg-blue-light-5 text-blue">
-        <Plus className="h-4 w-4" />
-      </span>
-      <span>
-        <span className="block text-[13.5px] font-semibold text-dark">
-          Slot {meta.slots[slotIndex]} is empty
+      <div
+        className="relative w-full overflow-hidden opacity-55 transition-opacity group-hover:opacity-80"
+        style={{ aspectRatio: meta.aspect }}
+      >
+        {placeholder ? (
+          <Image
+            src={placeholder}
+            alt=""
+            fill
+            sizes="(max-width: 768px) 100vw, 420px"
+            unoptimized
+            className="object-cover"
+          />
+        ) : (
+          <span className="absolute inset-0 grid place-items-center">
+            <ImageOff className="h-8 w-8 text-gray-4" />
+          </span>
+        )}
+      </div>
+      <div className="flex items-center gap-2 p-4">
+        <span className="grid h-8 w-8 place-items-center rounded-lg bg-blue-light-5 text-blue">
+          <Plus className="h-4 w-4" />
         </span>
-        <span className="block text-[12px] text-dark-4">
-          Sample artwork is showing upload a photo to replace it.
+        <span>
+          <span className="block text-[13.5px] font-semibold text-dark">
+            Slot {meta.slots[slotIndex]} is empty
+          </span>
+          <span className="block text-[12px] text-dark-4">
+            {placeholder
+              ? "Sample artwork is showing  upload a photo to replace it."
+              : "Nothing shows here until you add an advertisement."}
+          </span>
         </span>
-      </span>
-    </div>
-  </button>
-);
+      </div>
+    </button>
+  );
+};
 
 type AdvertisementsTabProps = {
   dateRange?: string;
@@ -463,7 +483,7 @@ const AdvertisementsTab: React.FC<AdvertisementsTabProps> = () => {
               <div key={group} className="space-y-5">
                 <div className="flex items-center gap-3">
                   <h3 className="text-[16px] font-bold text-dark">
-                    {group} page
+                    {group === "Menu" ? "Header menu" : `${group} page`}
                   </h3>
                   <span className="h-px flex-1 bg-gray-3" />
                 </div>

@@ -145,7 +145,7 @@ export const BLOCKS: BlockDefinition[] = [
     label: "Main navigation",
     group: "Navigation",
     description:
-      "The menu bar and its drop-down panels. Each item can list its own link columns, or pull a column straight from the catalogue  pick 'Every active brand' or 'Every frame shape' and the panel stays in step with the shop on its own.",
+      "The static tail of the menu bar  Lenses, Brands, Offers, Eye test. Your shop categories appear in front of these automatically, already linked and with their own drop-downs (new arrivals, budget picks, offers), so a category never needs to be typed here. An item here whose name matches a category gives way to the automatic one.",
     fields: [
       {
         name: "items",
@@ -227,81 +227,6 @@ export const BLOCKS: BlockDefinition[] = [
     ],
     defaults: {
       items: [
-        {
-          label: "Eyeglasses",
-          href: shop(),
-          accent: false,
-          badge: "",
-          columns: [
-            { title: "Shop by wearer", source: "genders", links: [] },
-            { title: "Frame shape", source: "shapes", links: [] },
-            {
-              title: "Popular",
-              source: "",
-              links: [
-                {
-                  label: "New arrivals",
-                  href: shop("sortBy=createdAt&sortOrder=desc"),
-                  accent: false,
-                },
-                {
-                  label: "Under Rs 2,900",
-                  href: shop("maxPrice=2900"),
-                  accent: false,
-                },
-                {
-                  label: "Under Rs 4,900",
-                  href: shop("maxPrice=4900"),
-                  accent: false,
-                },
-                { label: "On sale", href: shop("onSale=true"), accent: true },
-              ],
-            },
-          ],
-          promoImage: `${D}/promo/affordable.svg`,
-          promoTitle: "Two pairs, one price",
-          promoCopy: "Buy a frame and take the second at 65% off.",
-          promoCtaLabel: "See the offer",
-          promoCtaHref: shop("onSale=true"),
-        },
-        {
-          label: "Sunglasses",
-          href: shop("categories=sunglasses"),
-          accent: false,
-          badge: "",
-          columns: [
-            { title: "Shop by wearer", source: "genders", links: [] },
-            { title: "Frame shape", source: "shapes", links: [] },
-            {
-              title: "Browse",
-              source: "",
-              links: [
-                {
-                  label: "All sunglasses",
-                  href: shop("categories=sunglasses"),
-                  accent: false,
-                },
-                {
-                  label: "Cheapest first",
-                  href: shop(
-                    "categories=sunglasses&sortBy=price&sortOrder=asc",
-                  ),
-                  accent: false,
-                },
-                {
-                  label: "On sale",
-                  href: shop("categories=sunglasses&onSale=true"),
-                  accent: true,
-                },
-              ],
-            },
-          ],
-          promoImage: `${D}/promo/onsale.svg`,
-          promoTitle: "Sun season",
-          promoCopy: "Polarised lenses on every style in the edit.",
-          promoCtaLabel: "Shop sunglasses",
-          promoCtaHref: shop("categories=sunglasses"),
-        },
         {
           label: "Lenses",
           href: "/lenses",
@@ -537,7 +462,7 @@ export const BLOCKS: BlockDefinition[] = [
         {
           image: `${D}/promo/wide-lenses.svg`,
           eyebrow: "Lens event",
-          title: "55% off every lens upgrade",
+          title: "Upgrade your lenses",
           ctaLabel: "Shop lenses",
           href: shop(),
         },
@@ -653,8 +578,9 @@ export const BLOCKS: BlockDefinition[] = [
           links: [
             { label: "About us", href: "/contact" },
             { label: "Visit our store", href: "/contact" },
-            { label: "Privacy policy", href: "/faq" },
-            { label: "Terms & conditions", href: "/faq" },
+            { label: "Privacy policy", href: "/privacy" },
+            { label: "Terms & conditions", href: "/terms" },
+            { label: "Returns & warranty", href: "/returns" },
           ],
         },
       ],

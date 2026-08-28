@@ -59,3 +59,6 @@ docs/
 
 # Generated ad artwork awaiting upload via the admin panel
 /ad-creatives/
+
+# Database snapshots taken before destructive scripts  never commit data.
+/backups/

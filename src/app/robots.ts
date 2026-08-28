@@ -10,7 +10,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: [
           "/admin",
           "/log-in",
-          "/admin-login",
           "/reset-password",
           "/my-account",
           "/cart",
@@ -23,6 +22,5 @@ export default function robots(): MetadataRoute.Robots {
       },
     ],
     sitemap: buildSiteUrl("/sitemap.xml"),
-    host: buildSiteUrl("/"),
   };
 }

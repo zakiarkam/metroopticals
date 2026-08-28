@@ -74,6 +74,21 @@ export async function GET() {
       priority: 0.5,
     },
     {
+      url: buildSiteUrl("/privacy"),
+      changeFrequency: "yearly",
+      priority: 0.3,
+    },
+    {
+      url: buildSiteUrl("/terms"),
+      changeFrequency: "yearly",
+      priority: 0.3,
+    },
+    {
+      url: buildSiteUrl("/returns"),
+      changeFrequency: "yearly",
+      priority: 0.4,
+    },
+    {
       url: buildSiteUrl("/shop-with-sidebar"),
       changeFrequency: "daily",
       priority: 0.8,
@@ -96,6 +111,7 @@ export async function GET() {
 
   try {
     const products = await prisma.product.findMany({
+      where: { status: { not: "INACTIVE" } },
       select: {
         id: true,
         updatedAt: true,

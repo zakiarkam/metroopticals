@@ -2,6 +2,7 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import type { Order } from "@/features/orders/types/order";
 import { siteConfig } from "@/config/site";
+import { orderLineName } from "@/features/orders/utils/order-display";
 
 type BusinessDetails = {
   legalName: string;
@@ -70,6 +71,16 @@ const longDate = (value: string) =>
 
 const clean = (value?: string | null) =>
   (value ?? "").replace(/\s+/g, " ").trim();
+
+/** "Nawalapitiya 20650, Sri Lanka", skipping whichever parts are missing. */
+const cityLine = (
+  city?: string | null,
+  postalCode?: string | null,
+  country?: string | null,
+) => {
+  const locality = [clean(city), clean(postalCode)].filter(Boolean).join(" ");
+  return [locality, clean(country)].filter(Boolean).join(", ");
+};
 
 const loadImage = async (
   path: string,
@@ -161,20 +172,30 @@ export const downloadOrderReceiptPdf = async (order: Order) => {
       lines: [
         order.billingName,
         order.billingAddress,
-        `${order.billingCity}${order.billingPostalCode ? ` ${order.billingPostalCode}` : ""}, ${order.billingCountry}`,
+        cityLine(order.billingCity, order.billingPostalCode, order.billingCountry),
         order.billingPhone,
         order.billingEmail,
       ].map(clean).filter(Boolean),
     },
-    {
-      title: "Ship to",
-      lines: [
-        order.shippingName,
-        order.shippingAddress,
-        `${order.shippingCity}${order.shippingPostalCode ? ` ${order.shippingPostalCode}` : ""}, ${order.shippingCountry}`,
-        order.shippingPhone,
-      ].map(clean).filter(Boolean),
-    },
+    // A counter sale ships nowhere, so the column is left off entirely rather
+    // than printed empty.
+    ...(clean(order.shippingName) || clean(order.shippingAddress)
+      ? [
+          {
+            title: "Ship to",
+            lines: [
+              order.shippingName,
+              order.shippingAddress,
+              cityLine(
+                order.shippingCity,
+                order.shippingPostalCode,
+                order.shippingCountry,
+              ),
+              order.shippingPhone,
+            ].map(clean).filter(Boolean),
+          },
+        ]
+      : []),
   ];
 
   let partiesBottom = y;
@@ -212,8 +233,8 @@ export const downloadOrderReceiptPdf = async (order: Order) => {
   const rows = order.items.map((item, index) => {
     const net = item.discountedPrice ?? item.price;
     const label = item.color
-      ? `${clean(item.product.title)}\n${item.color}`
-      : clean(item.product.title);
+      ? `${clean(orderLineName(item))}\n${item.color}`
+      : clean(orderLineName(item));
     const base = [String(index + 1), label, String(item.quantity), money(item.price)];
     return hasDiscounts
       ? [...base, money(net), money(net * item.quantity)]

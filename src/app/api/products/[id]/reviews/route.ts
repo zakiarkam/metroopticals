@@ -1,3 +1,4 @@
+import { parseIdParam } from "@/lib/utils/params";
 import { NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -17,7 +18,7 @@ type Params = { params: Promise<{ id: string }> };
 export async function GET(request: NextRequest, { params }: Params) {
   try {
     const { id } = await params;
-    const productId = Number(id);
+    const productId = parseIdParam(id, "product id");
     if (!Number.isFinite(productId)) {
       return createSuccessResponse({ error: "Invalid product" }, 400);
     }
@@ -50,7 +51,7 @@ export async function POST(request: NextRequest, { params }: Params) {
     rateLimit(`review:${userId}`, 10, 60 * 60 * 1000);
 
     const { id } = await params;
-    const productId = Number(id);
+    const productId = parseIdParam(id, "product id");
     if (!Number.isFinite(productId)) {
       return createSuccessResponse({ error: "Invalid product" }, 400);
     }
@@ -83,7 +84,7 @@ export async function DELETE(request: NextRequest, { params }: Params) {
     const userId = Number((session.user as any).id);
 
     const { id } = await params;
-    const productId = Number(id);
+    const productId = parseIdParam(id, "product id");
 
     await deleteOwnReview(userId, productId);
 

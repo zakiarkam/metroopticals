@@ -13,6 +13,10 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const data = signupSchema.parse(body);
 
+    // Per address as well as per IP, so the "already exists" answer cannot be
+    // used to test a list of emails from many connections.
+    rateLimit(`signup-email:${data.email.toLowerCase()}`, 3, 60 * 60 * 1000);
+
     const user = await createUser(data);
 
     await logApiAction({

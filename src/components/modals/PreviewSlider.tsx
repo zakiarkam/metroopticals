@@ -4,6 +4,7 @@ import { useCallback, useRef } from "react";
 import "swiper/css/navigation";
 import "swiper/css";
 import Image from "next/image";
+import { normalizeImageArray } from "@/lib/storageUtils";
 
 import { usePreviewSlider } from "@/app/context/PreviewSliderContext";
 import { useAppSelector } from "@/store/store";
@@ -13,6 +14,7 @@ const PreviewSliderModal = () => {
 
   const data = useAppSelector((state) => state.productDetailsReducer.value);
 
+  const images = normalizeImageArray(data?.images);
   const sliderRef = useRef(null);
 
   const handlePrev = useCallback(() => {
@@ -57,6 +59,8 @@ const PreviewSliderModal = () => {
         <button
           className="rotate-180 absolute left-2 sm:left-10 lg:left-100 p-5 cursor-pointer z-10 "
           onClick={handlePrev}
+          type="button"
+          aria-label="Previous image"
         >
           <svg
             width="36"
@@ -77,6 +81,8 @@ const PreviewSliderModal = () => {
         <button
           className="absolute right-2 sm:right-10 lg:right-100 p-5 cursor-pointer z-10"
           onClick={handleNext}
+          type="button"
+          aria-label="Next image"
         >
           <svg
             width="36"
@@ -101,17 +107,19 @@ const PreviewSliderModal = () => {
         spaceBetween={20}
         className="w-full max-w-[450px] px-4"
       >
-        <SwiperSlide>
-          <div className="flex justify-center items-center">
-            <Image
-              src={"/images/placeholder.jpg"}
-              alt={"product image"}
-              width={450}
-              height={450}
-              className="h-auto max-w-full"
-            />
-          </div>
-        </SwiperSlide>
+        {(images.length ? images : ["/images/placeholder.jpg"]).map((src, index) => (
+          <SwiperSlide key={`${src}-${index}`}>
+            <div className="flex justify-center items-center">
+              <Image
+                src={src}
+                alt={data?.title ? `${data.title} - image ${index + 1}` : "Product image"}
+                width={450}
+                height={450}
+                className="h-auto max-w-full"
+              />
+            </div>
+          </SwiperSlide>
+        ))}
       </Swiper>
     </div>
   );

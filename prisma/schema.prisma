@@ -10,28 +10,36 @@ datasource db {
 }
 
 model User {
-  name          String?
-  email         String               @unique
-  emailVerified DateTime?
-  password      String?
-  image         String?
-  role          UserRole             @default(CUSTOMER)
-  customerType  CustomerType         @default(END_USER)
-  phone         String?
-  address       String?
-  city          String?
-  country       String?
-  postalCode    String?
-  createdAt     DateTime             @default(now())
-  updatedAt     DateTime             @updatedAt
-  id            Int                  @id @default(autoincrement())
-  accounts      Account[]
-  cartItems     CartItem[]
-  orders        Order[]
-  resetTokens   PasswordResetToken[]
-  reviews       Review[]
-  sessions      Session[]
-  wishlistItems WishlistItem[]
+  name              String?
+  email             String               @unique
+  emailVerified     DateTime?
+  password          String?
+  image             String?
+  role              UserRole             @default(CUSTOMER)
+  customerType      CustomerType         @default(END_USER)
+  phone             String?
+  address           String?
+  city              String?
+  country           String?
+  postalCode        String?
+  /// Set whenever the password is changed or reset. Any session issued before
+  /// this moment is refused, so a stolen login dies with the old password.
+  passwordChangedAt DateTime?
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+  id                Int                  @id @default(autoincrement())
+  accounts          Account[]
+  cartItems         CartItem[]
+  orders            Order[]              @relation("OrderCustomer")
+  resetTokens       PasswordResetToken[]
+  reviews           Review[]
+  sessions          Session[]
+  wishlistItems     WishlistItem[]
+
+  // Counter staff: the bills, payments and stock corrections this admin made.
+  billedOrders   Order[]         @relation("OrderCashier")
+  payments       Payment[]
+  stockMovements StockMovement[]
 
   @@map("users")
 }
@@ -112,6 +120,11 @@ model Product {
   catalogueFile   String?
   stock           Int         @default(0)
   status          String      @default("ACTIVE")
+  // Shop identifiers. `sku` is your own code; `barcode` is what a scanner
+  // reads at the counter  scanning types the digits into the POS search box,
+  // and an exact match adds the line straight to the bill.
+  sku             String?     @unique
+  barcode         String?     @unique
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
   unitType        ProductUnit @default(PIECES)
@@ -144,12 +157,14 @@ model Product {
   brand          Brand?          @relation(fields: [brandId], references: [id])
   category       Category?       @relation("ProductCategory", fields: [categoryId], references: [id])
   wishlistItems  WishlistItem[]
+  stockMovements StockMovement[]
 
   @@index([categoryId])
   @@index([brandId])
   @@index([gender])
   @@index([status])
   @@index([slug])
+  @@index([stock])
   @@map("products")
 }
 
@@ -187,35 +202,84 @@ model WishlistItem {
 }
 
 model Order {
-  orderNumber        String      @unique
-  status             OrderStatus @default(PENDING)
-  totalAmount        Float
-  shippingFee        Float       @default(0)
-  subtotal           Float
-  paymentMethod      String?
-  shippingMethod     String?
-  notes              String?
-  billingName        String
-  billingEmail       String
-  billingPhone       String
-  billingAddress     String
-  billingCity        String
-  billingCountry     String
-  billingPostalCode  String?
-  shippingName       String
-  shippingEmail      String
-  shippingPhone      String
-  shippingAddress    String
-  shippingCity       String
-  shippingCountry    String
-  shippingPostalCode String?
-  createdAt          DateTime    @default(now())
-  updatedAt          DateTime    @updatedAt
-  id                 Int         @id @default(autoincrement())
-  userId             Int
-  items              OrderItem[]
-  user               User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orderNumber    String      @unique
+  status         OrderStatus @default(PENDING)
+  totalAmount    Float
+  shippingFee    Float       @default(0)
+  subtotal       Float
+  paymentMethod  String?
+  shippingMethod String?
+  notes          String?
 
+  /// Where the sale happened. ONLINE is a storefront checkout; POS is a bill
+  /// written at the shop counter. Both live in this table on purpose, so the
+  /// dashboard, the monthly report and stock all count shop sales without a
+  /// second set of queries.
+  channel        OrderChannel  @default(ONLINE)
+  /// How much of the bill has actually been collected. A customer can pay an
+  /// advance and settle the rest on collection, so this is not derivable from
+  /// the status alone.
+  paymentStatus  PaymentStatus @default(PENDING)
+  /// Bill-level discount in rupees, on top of any per-line discount.
+  discountAmount Float         @default(0)
+  /// Sum of the payment rows, kept here so lists do not have to aggregate.
+  amountPaid     Float         @default(0)
+  /// When the rest of the money is expected, on a bill the customer is paying
+  /// off later. Null once nothing is owed. This is what turns "part paid" into
+  /// something the shop can actually chase.
+  balanceDueDate DateTime?
+  /// Set when a bill is cancelled after the fact; stock is returned and the
+  /// row is kept for the audit trail rather than deleted.
+  voidedAt       DateTime?
+  voidReason     String?
+
+  /// Who the bill is made out to. Always present  a walk-in customer with no
+  /// name recorded is billed as "Walk-in customer".
+  billingName        String
+  /// Everything below is optional since the counter started billing: someone
+  /// buying a frame over the counter gives a phone number at most, and nothing
+  /// is being shipped anywhere.
+  billingEmail       String?
+  billingPhone       String
+  billingAddress     String?
+  billingCity        String?
+  billingCountry     String?
+  billingPostalCode  String?
+  shippingName       String?
+  shippingEmail      String?
+  shippingPhone      String?
+  shippingAddress    String?
+  shippingCity       String?
+  shippingCountry    String?
+  shippingPostalCode String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  id                 Int      @id @default(autoincrement())
+
+  /// The storefront account that placed the order. Null for a counter sale by
+  /// someone who has no account  the bill still names them through
+  /// `customer` and the billing fields.
+  userId      Int?
+  /// The shop's own customer book entry, used by the counter.
+  customerId  Int?
+  /// The admin who wrote the bill. Null for storefront orders.
+  createdById Int?
+
+  items          OrderItem[]
+  payments       Payment[]
+  stockMovements StockMovement[]
+  user           User?           @relation("OrderCustomer", fields: [userId], references: [id], onDelete: SetNull)
+  customer       Customer?       @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  createdBy      User?           @relation("OrderCashier", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([channel, createdAt])
+  @@index([paymentStatus])
+  @@index([balanceDueDate])
+  @@index([customerId])
+  @@index([createdById])
+  @@index([createdAt])
+  @@index([userId, createdAt])
+  @@index([status])
   @@map("orders")
 }
 
@@ -223,16 +287,28 @@ model OrderItem {
   quantity        Int
   price           Float
   discountedPrice Float?
+  /// The product name as it was when sold. A counter line can also be a
+  /// service that is not in the catalogue at all (an eye test, a lens
+  /// fitting, a repair), in which case this is the only name the line has.
+  title           String?
+  /// Per-line discount in rupees, applied before the bill-level discount.
+  lineDiscount    Float    @default(0)
+  /// How many of this line have since been returned by the customer.
+  returnedQty     Int      @default(0)
   // Copied from the cart line at checkout so the picking slip still says
   // "Tortoise" after the product's colour list is edited.
   color           String?
   createdAt       DateTime @default(now())
   id              Int      @id @default(autoincrement())
   orderId         Int
-  productId       Int
+  /// Null for a service line, and null once a product is deleted  a sale
+  /// that has already happened must survive the catalogue being tidied up.
+  productId       Int?
   order           Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product         Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
 
+  @@index([orderId])
+  @@index([productId])
   @@map("order_items")
 }
 
@@ -385,16 +461,16 @@ model SiteContent {
 // One review per customer per product (@@unique)  the write form switches to
 // "edit your review" when a row already exists, rather than stacking duplicates.
 model Review {
-  id        Int          @id @default(autoincrement())
-  rating    Int // 1–5
-  title     String?
-  body      String
-  status    ReviewStatus @default(PENDING)
+  id               Int          @id @default(autoincrement())
+  rating           Int // 1–5
+  title            String?
+  body             String
+  status           ReviewStatus @default(PENDING)
   // Set at submission time by checking the customer's delivered orders, so the
   // badge stays true even if the product is later removed from their history.
-  verifiedPurchase Boolean @default(false)
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
+  verifiedPurchase Boolean      @default(false)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
 
   productId Int
   userId    Int
@@ -411,4 +487,116 @@ enum ReviewStatus {
   PENDING
   PUBLISHED
   REJECTED
+}
+
+/// The shop's own customer book, used by the counter.
+///
+/// Separate from `User`: a walk-in customer has no login, no password and no
+/// cart  only a phone number the cashier types to pull up their details and
+/// their past bills. Someone who later creates a storefront account keeps both
+/// records; the bill links to whichever one identified them.
+model Customer {
+  id             Int       @id @default(autoincrement())
+  name           String
+  /// The lookup key at the counter, so it has to be unique.
+  phone          String    @unique
+  email          String?
+  address        String?
+  city           String?
+  /// Free notes the counter keeps  frame preference, collection instructions.
+  notes          String?
+  /// The customer said yes to hearing about offers. Off until they do: a
+  /// phone number given to collect a bill is not permission to market to it.
+  marketingOptIn Boolean   @default(false)
+  /// When they last bought something, so the book can be read as a list of
+  /// who to call and who has drifted away.
+  lastVisitAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  orders Order[]
+
+  @@index([name])
+  @@index([marketingOptIn])
+  @@index([lastVisitAt])
+  @@map("customers")
+}
+
+/// One collection against a bill.
+///
+/// A bill can be settled in parts  half cash and half card, or an advance now
+/// and the balance on collection  so payments are rows rather than a single
+/// method column on the order.
+model Payment {
+  id        Int           @id @default(autoincrement())
+  orderId   Int
+  method    PaymentMethod
+  /// Positive for a collection, negative for a refund against a return.
+  amount    Float
+  /// Card slip number, bank transfer reference, or a note on a refund.
+  reference String?
+  createdAt DateTime      @default(now())
+
+  createdById Int?
+  order       Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  createdBy   User? @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
+  @@index([createdAt])
+  @@map("payments")
+}
+
+/// Every change to a product's stock, and why it happened.
+///
+/// `Product.stock` is the running count; this is the history behind it, so a
+/// count that looks wrong can be traced back to the sale, the return or the
+/// correction that moved it.
+model StockMovement {
+  id        Int         @id @default(autoincrement())
+  productId Int
+  /// Signed change: -2 sold, +10 received.
+  delta     Int
+  reason    StockReason
+  /// The bill this movement belongs to, when there is one.
+  orderId   Int?
+  note      String?
+  createdAt DateTime    @default(now())
+
+  createdById Int?
+  product     Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  order       Order?  @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  createdBy   User?   @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([productId, createdAt])
+  @@index([orderId])
+  @@index([reason])
+  @@map("stock_movements")
+}
+
+enum OrderChannel {
+  ONLINE
+  POS
+}
+
+enum PaymentStatus {
+  PENDING
+  PARTIAL
+  PAID
+  REFUNDED
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  BANK_TRANSFER
+  ONLINE
+}
+
+enum StockReason {
+  SALE
+  ONLINE_ORDER
+  RETURN
+  VOID
+  PURCHASE
+  ADJUSTMENT
 }

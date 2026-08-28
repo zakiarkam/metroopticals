@@ -26,6 +26,10 @@ const PAGE_TITLES: Record<string, { title: string; subtitle: string }> = {
     title: "Brands",
     subtitle: "Designer labels stocked in the catalogue",
   },
+  "/admin/messages": {
+    title: "Messages",
+    subtitle: "Enquiries from the contact form",
+  },
   "/admin/reviews": {
     title: "Reviews",
     subtitle: "Approve or reject customer reviews",
@@ -37,6 +41,22 @@ const PAGE_TITLES: Record<string, { title: string; subtitle: string }> = {
   "/admin/advertisements": {
     title: "Advertisements",
     subtitle: "Banner artwork and campaigns across the site",
+  },
+  "/admin/pos": {
+    title: "POS",
+    subtitle: "Bill a customer at the counter",
+  },
+  "/admin/pos/sales": {
+    title: "Counter sales",
+    subtitle: "Bills, payments and returns from the shop",
+  },
+  "/admin/pos/stock": {
+    title: "Stock",
+    subtitle: "Receive stock, correct counts, see every movement",
+  },
+  "/admin/pos/receipt": {
+    title: "Bill",
+    subtitle: "Print or send the customer's bill",
   },
   "/admin/orders": { title: "Orders", subtitle: "Fulfilment and order status" },
   "/admin/users": { title: "Users", subtitle: "Customer and staff accounts" },

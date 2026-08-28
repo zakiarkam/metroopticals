@@ -8,6 +8,37 @@ import type {
 import { deleteFile } from "@/lib/storage/r2";
 import { FRAME_SIZE_RANGES } from "@/features/products/types/product";
 import type { FrameShape, Gender } from "@/features/products/types/product";
+import type { Prisma, StockReason } from "@prisma/client";
+
+/**
+ * Record why a product's stock moved.
+ *
+ * `Product.stock` on its own can only say what the count is now. Every path
+ * that changes it  a website order, a counter bill, a delivery, a correction
+ *  writes a row here so a count that looks wrong can be traced.
+ */
+async function recordStockMovement(
+  tx: Prisma.TransactionClient,
+  input: {
+    productId: number;
+    delta: number;
+    reason: StockReason;
+    note?: string;
+    createdById?: number;
+  },
+) {
+  if (input.delta === 0) return;
+  await tx.stockMovement.create({
+    data: {
+      productId: input.productId,
+      delta: input.delta,
+      reason: input.reason,
+      note: input.note ?? null,
+      createdById: input.createdById ?? null,
+    },
+  });
+}
+
 
 export async function getProducts(query: ProductQueryInput) {
   const {
@@ -377,6 +408,11 @@ export async function createProduct(data: CreateProductInput) {
       unitType,
       images: data.images || [],
       catalogueFile: data.catalogueFile || null,
+      // Blank rather than empty string: both columns are unique, and Postgres
+      // would treat a second empty string as a duplicate while it lets any
+      // number of NULLs coexist.
+      sku: data.sku?.trim() || null,
+      barcode: data.barcode?.trim() || null,
     },
     include: {
       category: true,
@@ -414,6 +450,9 @@ export async function updateProduct(id: number, data: UpdateProductInput) {
   if (data.categoryId !== undefined) updateData.categoryId = data.categoryId;
   if (data.brandId !== undefined) updateData.brandId = data.brandId;
   if (data.unitType !== undefined) updateData.unitType = data.unitType;
+  if (data.sku !== undefined) updateData.sku = data.sku?.trim() || null;
+  if (data.barcode !== undefined)
+    updateData.barcode = data.barcode?.trim() || null;
   if (data.stock !== undefined) {
     updateData.stock = data.stock;
     if (data.stock === 0) {
@@ -461,6 +500,20 @@ export async function deleteProduct(id: number) {
   const product = await prisma.product.findUnique({ where: { id } });
   if (!product) return;
 
+  // A product that has ever been sold or counted is part of the history:
+  // deleting it would take its order lines and its stock ledger with it, so
+  // last month's report would no longer add up. Retiring it is the only
+  // honest way to take it off the shelf.
+  const [soldLines, movements] = await Promise.all([
+    prisma.orderItem.count({ where: { productId: id } }),
+    prisma.stockMovement.count({ where: { productId: id } }),
+  ]);
+  if (soldLines > 0 || movements > 0) {
+    throw new ValidationError(
+      "This product has sales history. Set it to Inactive instead of deleting it.",
+    );
+  }
+
   // Delete images from bucket
   if (Array.isArray(product.images)) {
     await Promise.all(
@@ -482,24 +535,11 @@ export async function deleteProduct(id: number) {
   });
 }
 
-export async function updateProductStock(id: number, stock: number) {
-  const updateData: Record<string, any> = { stock };
-  if (stock === 0) {
-    updateData.status = "OUT_OF_STOCK";
-  } else {
-    updateData.status = "ACTIVE";
-  }
-  const product = await prisma.product.update({
-    where: { id },
-    data: updateData,
-    include: {
-      category: true,
-    },
-  });
-  return product;
-}
-
-export async function incrementProductStock(id: number, count: number) {
+export async function incrementProductStock(
+  id: number,
+  count: number,
+  adminId?: number,
+) {
   return await prisma.$transaction(async (tx) => {
     const current = await tx.product.findUnique({
       where: { id },
@@ -508,56 +548,84 @@ export async function incrementProductStock(id: number, count: number) {
     if (!current) {
       throw new NotFoundError("Product not found");
     }
-    const newStock = current.stock + count;
-    const updateData: Record<string, any> = {
-      stock: { increment: count },
-    };
-    if (newStock === 0) {
-      updateData.status = "OUT_OF_STOCK";
-    } else if (newStock > 0) {
-      updateData.status = "ACTIVE";
-    }
-    const product = await tx.product.update({
+
+    await tx.product.update({
       where: { id },
-      data: updateData,
+      data: { stock: { increment: count } },
+    });
+
+    // Stock arriving only ever clears an out-of-stock badge. A product the
+    // shop deliberately retired stays retired: a delivery landing against it
+    // must not put it back on the storefront.
+    await tx.product.updateMany({
+      where: { id, stock: { gt: 0 }, status: "OUT_OF_STOCK" },
+      data: { status: "ACTIVE" },
+    });
+
+    await recordStockMovement(tx, {
+      productId: id,
+      delta: count,
+      reason: "PURCHASE",
+      createdById: adminId,
+    });
+
+    return tx.product.findUniqueOrThrow({
+      where: { id },
       include: {
         category: true,
       },
     });
-    return product;
-  });
+  }, { timeout: 20_000, maxWait: 10_000 });
 }
 
-export async function decrementProductStock(id: number, count: number) {
+export async function decrementProductStock(
+  id: number,
+  count: number,
+  adminId?: number,
+) {
   return await prisma.$transaction(async (tx) => {
     const current = await tx.product.findUnique({
       where: { id },
-      select: { stock: true },
+      select: { id: true },
     });
     if (!current) {
       throw new NotFoundError("Product not found");
     }
-    if (count > current.stock) {
+
+    // Compare and swap: the write only matches while there is still enough on
+    // the shelf, so two people taking the last two at the same moment cannot
+    // both succeed and leave the count at minus one.
+    const moved = await tx.product.updateMany({
+      where: { id, stock: { gte: count } },
+      data: { stock: { decrement: count } },
+    });
+    if (moved.count === 0) {
       throw new ValidationError("Insufficient stock to decrement", [
         { path: "count", message: "Count exceeds current stock" },
       ]);
     }
-    const newStock = current.stock - count;
-    const updateData: Record<string, any> = {
-      stock: { decrement: count },
-    };
-    if (newStock === 0) {
-      updateData.status = "OUT_OF_STOCK";
-    }
-    const product = await tx.product.update({
+
+    // The badge is set from the count the database now holds, not from
+    // arithmetic on a number read before the write.
+    await tx.product.updateMany({
+      where: { id, stock: 0 },
+      data: { status: "OUT_OF_STOCK" },
+    });
+
+    await recordStockMovement(tx, {
+      productId: id,
+      delta: -count,
+      reason: "ADJUSTMENT",
+      createdById: adminId,
+    });
+
+    return tx.product.findUniqueOrThrow({
       where: { id },
-      data: updateData,
       include: {
         category: true,
       },
     });
-    return product;
-  });
+  }, { timeout: 20_000, maxWait: 10_000 });
 }
 
 export async function updateProductStatus(

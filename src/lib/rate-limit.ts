@@ -18,6 +18,16 @@ const prune = (now: number) => {
   Array.from(buckets.entries()).forEach(([key, bucket]) => {
     if (bucket.resetAt <= now) buckets.delete(key);
   });
+  if (buckets.size < MAX_BUCKETS) return;
+  // Still full of live buckets: drop the ones closest to expiry so a flood of
+  // fresh keys cannot wedge the map and disable limiting for everyone.
+  const byExpiry = Array.from(buckets.entries()).sort(
+    (a, b) => a[1].resetAt - b[1].resetAt,
+  );
+  for (const [key] of byExpiry) {
+    if (buckets.size < MAX_BUCKETS) break;
+    buckets.delete(key);
+  }
 };
 
 export function rateLimit(key: string, limit: number, windowMs: number): void {

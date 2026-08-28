@@ -18,6 +18,11 @@ export type ReportExportPayload = {
     id: number;
     orderNumber: string;
     status: string;
+    channel: "ONLINE" | "POS";
+    channelLabel: string;
+    paymentStatus: string;
+    amountPaid: number;
+    balance: number;
     totalAmount: number;
     itemsCount: number;
     customerName: string;
@@ -42,5 +47,33 @@ export type ReportExportPayload = {
     sold: number;
     revenue: number;
   }>;
+  /** Website against counter, how the money came in, and who billed it. */
+  channels: {
+    byChannel: Array<{
+      channel: "ONLINE" | "POS";
+      orders: number;
+      revenue: number;
+      collected: number;
+    }>;
+    byMethod: Array<{
+      method: string;
+      collected: number;
+      refunded: number;
+      net: number;
+    }>;
+    byCashier: Array<{
+      name: string;
+      bills: number;
+      billed: number;
+      collected: number;
+    }>;
+    counter: {
+      bills: number;
+      cancelled: number;
+      billed: number;
+      collected: number;
+      outstanding: number;
+    };
+  };
   statusBreakdown: Array<{ status: string; count: number }>;
 };

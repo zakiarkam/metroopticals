@@ -1,3 +1,4 @@
+import { parseIdParam } from "@/lib/utils/params";
 import { NextRequest } from "next/server";
 import { requireAdmin } from "@/lib/middleware/auth";
 import { handleError, createSuccessResponse } from "@/lib/errors";
@@ -16,7 +17,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     const body = await request.json();
     const { status } = updateReviewStatusSchema.parse(body);
 
-    const review = await setReviewStatus(Number(id), status);
+    const review = await setReviewStatus(parseIdParam(id, "review id"), status);
 
     await logApiAction({
       request,

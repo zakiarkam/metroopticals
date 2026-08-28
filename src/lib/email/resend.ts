@@ -6,6 +6,28 @@ export const isResendConfigured = () =>
 
 let resendClient: Resend | null = null;
 
+/**
+ * With USE_MOCK_EMAIL=true (or no key outside production) nothing is sent:
+ * the message is written to the log instead, with its subject and recipient,
+ * so a developer can see what a customer would have received. In production
+ * a missing key is an error, never a silent drop.
+ */
+const isMockEmail = () =>
+  process.env.USE_MOCK_EMAIL === "true" ||
+  (!process.env.RESEND_API_KEY && process.env.NODE_ENV !== "production");
+
+const mockEmails = {
+  async send(payload: { to?: string | string[]; subject?: string; [key: string]: unknown }) {
+    // eslint-disable-next-line no-console
+    console.info(
+      `[mock email] to=${Array.isArray(payload.to) ? payload.to.join(",") : payload.to} subject="${payload.subject}"`,
+    );
+    return { data: { id: `mock-${Date.now()}` }, error: null } as unknown as ReturnType<
+      Resend["emails"]["send"]
+    >;
+  },
+};
+
 const getResend = (): Resend => {
   if (!process.env.RESEND_API_KEY) {
     throw new Error(
@@ -21,7 +43,7 @@ const getResend = (): Resend => {
 /** Proxy so existing `resend.emails.send(...)` call sites keep working. */
 const resend = {
   get emails() {
-    return getResend().emails;
+    return isMockEmail() ? (mockEmails as unknown as Resend["emails"]) : getResend().emails;
   },
 };
 
@@ -387,7 +409,7 @@ function renderOrderStatusUpdateEmail({
   baseUrl: string;
   name?: string;
   orderNumber: string;
-  status: "SHIPPED" | "CANCELLED";
+  status: "CONFIRMED" | "SHIPPED" | "DELIVERED" | "CANCELLED";
 }) {
   const displayName = escapeHtml(name || "Valued customer");
   const safeOrderNo = escapeHtml(orderNumber);
@@ -395,26 +417,61 @@ function renderOrderStatusUpdateEmail({
   const contactUrl = `${baseUrl}/contact`;
   const ordersUrl = `${baseUrl}/my-account/orders`;
 
-  const isShipped = status === "SHIPPED";
-
-  const statusTitle = isShipped ? "Order Shipped" : "Order Cancelled";
-  const statusColor = isShipped ? "#10b981" : "#ef4444";
-  const statusBg = isShipped ? "#d1fae5" : "#fee2e2";
-
-  const messageHtml = isShipped
-    ? `
+  // One entry per moment a customer wants to hear about. Confirmation is the
+  // one an optical shop most needs: it says the prescription was accepted and
+  // the lenses are being made.
+  const copy = {
+    CONFIRMED: {
+      title: "Order Confirmed",
+      color: "#8F6A37",
+      bg: "#F3E9D6",
+      body: `
+      <p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#333;">
+        Your order <strong>${safeOrderNo}</strong> has been checked and confirmed by our team. If it includes prescription lenses, they are now being made up.
+      </p>
+      <p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#333;">
+        We will let you know the moment it is on its way.
+      </p>`,
+    },
+    SHIPPED: {
+      title: "Order Shipped",
+      color: "#10b981",
+      bg: "#d1fae5",
+      body: `
       <p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#333;">
         Great news! Your order <strong>${safeOrderNo}</strong> has been shipped and is on its way to you.
+      </p>`,
+    },
+    DELIVERED: {
+      title: "Order Delivered",
+      color: "#10b981",
+      bg: "#d1fae5",
+      body: `
+      <p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#333;">
+        Your order <strong>${safeOrderNo}</strong> has been delivered. We hope you love it.
       </p>
-    `
-    : `
+      <p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#333;">
+        If anything is not right  the fit, the lenses, the frame  come in or write to us and we will sort it out. Free adjustments are part of the deal.
+      </p>`,
+    },
+    CANCELLED: {
+      title: "Order Cancelled",
+      color: "#ef4444",
+      bg: "#fee2e2",
+      body: `
       <p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#333;">
         We're sorry to let you know that your order <strong>${safeOrderNo}</strong> has been cancelled.
       </p>
       <p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#333;">
         If you believe this is a mistake or would like help placing the order again, please contact our support team.
-      </p>
-    `;
+      </p>`,
+    },
+  }[status];
+
+  const statusTitle = copy.title;
+  const statusColor = copy.color;
+  const statusBg = copy.bg;
+  const messageHtml = copy.body;
 
   const innerHtml = `
     <tr>
@@ -484,19 +541,21 @@ export async function sendOrderStatusUpdateEmail({
   email: string;
   name?: string;
   orderNumber: string;
-  status: "SHIPPED" | "CANCELLED";
+  status: "CONFIRMED" | "SHIPPED" | "DELIVERED" | "CANCELLED";
 }) {
-  if (!isResendConfigured()) throw new Error("Resend API key not configured");
+  if (!isResendConfigured() && !isMockEmail()) throw new Error("Resend API key not configured");
 
   const baseUrl = getEmailBaseUrl();
 
   const emailFrom =
     process.env.EMAIL_FROM || "Metro Opticals <noreply@metroopticals.lk>";
 
-  const subject =
-    status === "SHIPPED"
-      ? `Your order ${orderNumber} is on its way! - Metro Opticals`
-      : `Order ${orderNumber} cancelled - Metro Opticals`;
+  const subject = {
+    CONFIRMED: `Order ${orderNumber} confirmed - Metro Opticals`,
+    SHIPPED: `Your order ${orderNumber} is on its way! - Metro Opticals`,
+    DELIVERED: `Order ${orderNumber} delivered - Metro Opticals`,
+    CANCELLED: `Order ${orderNumber} cancelled - Metro Opticals`,
+  }[status];
 
   const html = renderOrderStatusUpdateEmail({
     baseUrl,
@@ -514,7 +573,7 @@ export async function sendOrderStatusUpdateEmail({
 }
 
 export async function sendPasswordResetEmail(email: string, token: string) {
-  if (!isResendConfigured()) throw new Error("Resend API key not configured");
+  if (!isResendConfigured() && !isMockEmail()) throw new Error("Resend API key not configured");
 
   const emailFrom =
     process.env.EMAIL_FROM || "Metro Opticals <noreply@metroopticals.lk>";
@@ -752,7 +811,7 @@ function renderWelcomeEmail({
 }
 
 export async function sendWelcomeEmail(email: string, name?: string) {
-  if (!isResendConfigured()) throw new Error("Resend API key not configured");
+  if (!isResendConfigured() && !isMockEmail()) throw new Error("Resend API key not configured");
 
   const baseUrl = getEmailBaseUrl();
 
@@ -1089,7 +1148,7 @@ export async function sendOrderConfirmationEmail(
   orderId: number | string,
   orderDetails: OrderDetails,
 ) {
-  if (!isResendConfigured()) throw new Error("Resend API key not configured");
+  if (!isResendConfigured() && !isMockEmail()) throw new Error("Resend API key not configured");
 
   const baseUrl = getEmailBaseUrl();
 
@@ -1116,14 +1175,14 @@ export async function sendOrderNotificationToAdmin(
   orderNumber: string,
   orderDetails: OrderDetails,
 ) {
-  if (!isResendConfigured()) throw new Error("Resend API key not configured");
+  if (!isResendConfigured() && !isMockEmail()) throw new Error("Resend API key not configured");
 
   const baseUrl = getEmailBaseUrl();
 
   const emailFrom =
     process.env.EMAIL_FROM || "Metro Opticals <noreply@metroopticals.lk>";
 
-  const currency = process.env.EMAIL_CURRENCY || "USD";
+  const currency = "LKR";
 
   const html = renderAdminOrderEmail({
     baseUrl,
@@ -1151,7 +1210,7 @@ export async function sendContactFormEmail(
     message: string;
   },
 ) {
-  if (!isResendConfigured()) throw new Error("Resend API key not configured");
+  if (!isResendConfigured() && !isMockEmail()) throw new Error("Resend API key not configured");
 
   const baseUrl = getEmailBaseUrl();
 

@@ -17,7 +17,7 @@ type Category = {
 
 const CATEGORY_ART: { match: RegExp; src: string }[] = [
   { match: /sun/, src: "/images/categories/sunglasses.jpg" },
-  { match: /contact/, src: "/images/categories/contact-lenses.jpg" },
+  { match: /contact/, src: "/images/categories/shop.jpg" },
   { match: /read/, src: "/images/categories/reading-glasses.jpg" },
   {
     match: /accessor|case|clean|solution|kit/,

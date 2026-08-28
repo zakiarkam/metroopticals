@@ -8,6 +8,7 @@ import { Download, ImageOff, Loader2, Star } from "lucide-react";
 import { Order, OrderStatus } from "@/features/orders/types/order";
 import { getProductImageUrl } from "@/lib/storageUtils";
 import { formatPrice } from "@/lib/utils/price";
+import { orderLineName } from "@/features/orders/utils/order-display";
 
 type OrderRowProps = {
   order: Order;
@@ -188,10 +189,10 @@ const OrderRow: React.FC<OrderRowProps> = ({
           {reviewableExtras.map((item) => (
             <Link
               key={item.id}
-              href={`/shop-details/${item.product.id}#reviews`}
+              href={`/shop-details/${item.product?.id}#reviews`}
               className="text-[12.5px] font-semibold text-blue underline-offset-2 hover:underline"
             >
-              {item.product.title}
+              {orderLineName(item)}
             </Link>
           ))}
         </div>
