@@ -412,7 +412,7 @@ export default function BrandsTab() {
       )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="w-full max-w-lg rounded-2xl border border-gray-3 bg-gray-2 p-0">
+        <DialogContent className="w-full max-w-lg rounded-2xl border border-gray-3 bg-gray-2 p-0 sm:p-0">
           <DialogHeader className="border-b border-gray-3 px-6 py-5">
             <DialogTitle className="text-[18px] font-semibold text-dark">
               {editing ? "Edit brand" : "Add brand"}

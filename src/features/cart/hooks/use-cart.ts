@@ -20,6 +20,7 @@ import {
 } from "@/features/cart/api/cart-api";
 import { toast } from "react-hot-toast";
 import { normalizeImageArray } from "@/lib/storageUtils";
+import { getEffectiveStock } from "@/features/products/utils/availability";
 
 let cartPollIntervalId: number | null = null;
 let cartPollSubscribers = 0;
@@ -54,22 +55,32 @@ export const useCart = () => {
       if (cartPollInFlight) return;
       cartPollInFlight = true;
       const { cartItems: items } = await getCartItems();
-      const mappedItems = items.map((item) => ({
-        id: item.id,
-        productId: item.productId,
-        title: item.product.title,
-        price: item.product.price,
-        discountedPrice: item.product.discountedPrice || item.product.price,
-        quantity: item.quantity,
-        color: item.color || "",
-        colorOptions: item.product.frameColors ?? [],
-        stock: item.product.stock,
-        status: resolveStatus(item.product.status, item.product.stock),
-        imgs: {
-          previews: normalizeImageArray(item.product.images),
-          thumbnails: normalizeImageArray(item.product.images),
-        },
-      }));
+      const mappedItems = items.map((item) => {
+        // The line's ceiling is its own colourway's count, not the product
+        // total — a black frame in the cart is out of stock when black is,
+        // even while tortoise is still on the shelf.
+        const lineStock = getEffectiveStock(
+          item.product.stock,
+          item.product.colorStocks,
+          item.color || undefined,
+        );
+        return {
+          id: item.id,
+          productId: item.productId,
+          title: item.product.title,
+          price: item.product.price,
+          discountedPrice: item.product.discountedPrice || item.product.price,
+          quantity: item.quantity,
+          color: item.color || "",
+          colorOptions: item.product.frameColors ?? [],
+          stock: lineStock,
+          status: resolveStatus(item.product.status, lineStock),
+          imgs: {
+            previews: normalizeImageArray(item.product.images),
+            thumbnails: normalizeImageArray(item.product.images),
+          },
+        };
+      });
       dispatch(syncCartItems(mappedItems));
     } catch (error) {
       console.error("Failed to load cart:", error);

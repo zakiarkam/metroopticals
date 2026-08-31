@@ -23,6 +23,7 @@ export async function PATCH(
       id,
       validatedData.count,
       session.user.id,
+      validatedData.color,
     );
 
     await logApiAction({

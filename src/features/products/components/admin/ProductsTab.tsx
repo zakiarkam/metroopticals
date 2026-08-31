@@ -734,6 +734,8 @@ const ProductsTab: React.FC<ProductsTabProps> = ({
         productId={selectedProduct?.id || null}
         productName={selectedProduct?.title || ""}
         currentStock={selectedProduct?.stock || 0}
+        frameColors={selectedProduct?.frameColors ?? []}
+        colorStocks={selectedProduct?.colorStocks ?? []}
         type={stockDialogType}
       />
 

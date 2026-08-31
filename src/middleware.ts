@@ -13,17 +13,29 @@ import { safeRedirectPath } from "@/lib/safe-redirect";
  * that way. `'strict-dynamic'` lets nonce'd scripts load the chunks they
  * need without every hash being listed here.
  */
-const buildCsp = (nonce: string) => {
+const buildCsp = (nonce: string, path: string) => {
   const r2 = process.env.NEXT_PUBLIC_R2_PUBLIC_URL || "";
   const dev = process.env.NODE_ENV !== "production";
+
+  // The virtual try-on compiles WebAssembly (face tracking), spawns decoder
+  // workers from blob URLs and fetches its runtime and frame models from the
+  // bucket. None of that is needed anywhere else, so the wider policy is
+  // scoped to the pages that run it: the product page and the admin product
+  // editor, whose preview uses the same component. 'wasm-unsafe-eval' only
+  // permits WebAssembly compilation  it is much narrower than 'unsafe-eval',
+  // which must never be added here in production because it would override it.
+  const tryOn = isTryOnPage(path);
+  const tryOnOrigins = [r2, tryOnRuntimeOrigin()].filter(Boolean).join(" ");
+
   return [
     "default-src 'self'",
     // Next needs 'unsafe-eval' only for its dev-mode React refresh.
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${dev ? " 'unsafe-eval'" : ""}`,
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${tryOn ? " 'wasm-unsafe-eval'" : ""}${dev ? " 'unsafe-eval'" : ""}`,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' data: https://fonts.gstatic.com",
     `img-src 'self' data: blob: https:${r2 ? ` ${r2}` : ""}`,
-    "connect-src 'self'",
+    `connect-src 'self'${tryOn && tryOnOrigins ? ` ${tryOnOrigins}` : ""}`,
+    ...(tryOn ? ["worker-src 'self' blob:", "media-src 'self' blob:"] : []),
     "frame-src 'self'",
     "frame-ancestors 'self'",
     "base-uri 'self'",
@@ -33,8 +45,33 @@ const buildCsp = (nonce: string) => {
   ].join("; ");
 };
 
-const withCsp = (request: NextRequest, response: NextResponse, nonce: string) => {
-  response.headers.set("Content-Security-Policy", buildCsp(nonce));
+const isTryOnPage = (path: string) =>
+  path.startsWith("/shop-details") ||
+  path.startsWith("/admin/products") ||
+  path.startsWith("/admin/try-on-lab");
+
+/**
+ * Origin the try-on runtime (WebAssembly, landmark model, decoders) is served
+ * from when it lives outside the app  normally the bucket, which charges
+ * nothing for egress. Same-origin when unset, which needs no extra source.
+ */
+const tryOnRuntimeOrigin = () => {
+  const url = process.env.NEXT_PUBLIC_TRYON_RUNTIME_URL;
+  if (!url) return "";
+  try {
+    return new URL(url).origin;
+  } catch {
+    return "";
+  }
+};
+
+const withCsp = (
+  request: NextRequest,
+  response: NextResponse,
+  nonce: string,
+  path: string,
+) => {
+  response.headers.set("Content-Security-Policy", buildCsp(nonce, path));
   return response;
 };
 
@@ -46,10 +83,16 @@ export async function middleware(request: NextRequest) {
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-nonce", nonce);
-  requestHeaders.set("content-security-policy", buildCsp(nonce));
+  requestHeaders.set("content-security-policy", buildCsp(nonce, path));
   const next = () =>
-    withCsp(request, NextResponse.next({ request: { headers: requestHeaders } }), nonce);
-  const redirect = (url: URL) => withCsp(request, NextResponse.redirect(url), nonce);
+    withCsp(
+      request,
+      NextResponse.next({ request: { headers: requestHeaders } }),
+      nonce,
+      path,
+    );
+  const redirect = (url: URL) =>
+    withCsp(request, NextResponse.redirect(url), nonce, path);
 
   const isAdminRoute = path.startsWith("/admin");
   const isAuthAdminRoute = path === "/log-in";
@@ -61,20 +104,42 @@ export async function middleware(request: NextRequest) {
     return next();
   }
 
-  const token = await getToken({
+  const secureCookie = (process.env.NEXTAUTH_URL ?? "").startsWith("https://");
+  const rawToken = await getToken({
     req: request,
     secret: process.env.NEXTAUTH_SECRET,
     // The cookie name follows the scheme the app is actually served on;
     // probing both lets a session cookie be read under the wrong prefix.
-    secureCookie: (process.env.NEXTAUTH_URL ?? "").startsWith("https://"),
+    secureCookie,
   });
+
+  // The auth callbacks retire a session  account removed, password
+  // changed, a staff login older than a shift  by stripping its identity
+  // rather than deleting the cookie, so the cookie still decodes to a token
+  // with no id. Every API route already refuses such a token; treating it as
+  // signed in here sent /log-in back to the home page, where the first 401
+  // sent the browser to /log-in again, without end. A token with no usable
+  // id is no session, and its cookie is cleared on the way out.
+  const token =
+    rawToken && Number.isInteger(Number((rawToken as { id?: unknown }).id))
+      ? rawToken
+      : null;
+  const deadCookie = rawToken && !token;
+  const clearDeadCookie = (response: NextResponse) => {
+    if (deadCookie) {
+      response.cookies.delete(
+        secureCookie ? "__Secure-next-auth.session-token" : "next-auth.session-token",
+      );
+    }
+    return response;
+  };
 
   // Handle admin routess
   if (isAdminRoute) {
     if (!token) {
       const url = new URL("/log-in", request.url);
       url.searchParams.set("redirect", path);
-      return redirect(url);
+      return clearDeadCookie(redirect(url));
     }
 
     const role = (token as any).role;
@@ -112,10 +177,12 @@ export async function middleware(request: NextRequest) {
   if (isCustomerProtectedRoute && !token) {
     const url = new URL("/log-in", request.url);
     url.searchParams.set("redirect", path);
-    return redirect(url);
+    return clearDeadCookie(redirect(url));
   }
 
-  return next();
+  // The log-in page itself, reached with a retired cookie: show it, and
+  // take the cookie away so the client stops believing it is signed in.
+  return clearDeadCookie(next());
 }
 
 export const config = {

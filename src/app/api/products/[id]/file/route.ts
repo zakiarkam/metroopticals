@@ -13,17 +13,17 @@ export async function DELETE(
   { params }: { params?: Promise<Record<string, string | string[] | undefined>> }
 ) {
   const start = Date.now();
-  const resolvedParams = params ? await params : undefined;
-  const idParam = resolvedParams?.id;
-  const rawId = Array.isArray(idParam) ? idParam[0] : idParam;
-  const id = parseIdParam(rawId, "product id");
-  if (!rawId || Number.isNaN(id)) {
-    return handleError(new ValidationError("Product id is required"));
-  }
   try {
     await requireAdmin();
+
+    // Inside the try so a mistyped id is a clean 400, not an unhandled 500.
+    const resolvedParams = params ? await params : undefined;
+    const idParam = resolvedParams?.id;
+    const rawId = Array.isArray(idParam) ? idParam[0] : idParam;
+    const id = parseIdParam(rawId, "product id");
+
     const { type, fileName } = await request.json();
-    if (!type || !fileName) {
+    if (!type || typeof fileName !== "string" || !fileName) {
       return handleError(new ValidationError("type and fileName are required"));
     }
 
@@ -33,8 +33,14 @@ export async function DELETE(
       return handleError(new ValidationError("Product not found"));
     }
 
+    // The name must be one of THIS product's files. Without the check, any
+    // admin could delete any object in the bucket by naming it here.
     if (type === "image") {
-      // Remove image from DB
+      if (!(product.images || []).includes(fileName)) {
+        return handleError(
+          new ValidationError("That file is not one of this product's images"),
+        );
+      }
       const newImages = (product.images || []).filter(
         (img: string) => img !== fileName
       );
@@ -45,7 +51,11 @@ export async function DELETE(
       // Remove from bucket
       await deleteFile("product/image", fileName);
     } else if (type === "catalogue") {
-      // Remove catalogue from DB
+      if (product.catalogueFile !== fileName) {
+        return handleError(
+          new ValidationError("That file is not this product's catalogue"),
+        );
+      }
       await prisma.product.update({
         where: { id },
         data: { catalogueFile: null },

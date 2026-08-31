@@ -156,7 +156,7 @@ const PosProductPanel: React.FC<PosProductPanelProps> = ({
             autoFocus
             value={term}
             onChange={(event) => setTerm(event.target.value)}
-            placeholder="Search or scan  name, code, barcode, brand"
+            placeholder="Search or scan — name, code, barcode, brand"
             className="h-10 pl-10 pr-9 text-custom-sm"
             aria-label="Search or scan a product"
           />
@@ -326,14 +326,14 @@ const PosProductPanel: React.FC<PosProductPanelProps> = ({
   );
 };
 
-/** Which colourway is leaving the shop  it prints on the bill. */
+/** Which colourway is leaving the shop — it prints on the bill. */
 const ColourPicker: React.FC<{
   product: PosProduct;
   onClose: () => void;
   onChoose: (colour: string | null) => void;
 }> = ({ product, onClose, onChoose }) => (
   <Dialog open onOpenChange={(value) => !value && onClose()}>
-    <DialogContent className="flex max-w-md flex-col p-0">
+    <DialogContent hideClose className="flex max-w-md flex-col p-0 sm:p-0">
       <DialogHeader className="border-b border-gray-3 bg-gray-2 px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="min-w-0">
@@ -355,16 +355,45 @@ const ColourPicker: React.FC<{
 
       <div className="px-6 py-4">
         <div className="flex flex-wrap gap-2">
-          {product.frameColors.map((colour) => (
-            <button
-              key={colour}
-              type="button"
-              onClick={() => onChoose(colour)}
-              className="rounded-lg border border-gray-3 bg-gray-1 px-3 py-2 text-custom-sm font-medium text-dark transition hover:border-blue/40 hover:bg-blue-light-5 hover:text-blue"
-            >
-              {colour}
-            </button>
-          ))}
+          {product.frameColors.map((colour) => {
+            // The recorded count for this colourway, when it has one. Staff
+            // see the number — unlike the storefront, the counter runs on it.
+            // A counted colour at zero cannot be picked at all; if the shelf
+            // disagrees with the book, "Add without a colour" still works
+            // and the count is corrected from the products page.
+            const count =
+              product.colorStocks?.find(
+                (row) =>
+                  row.color.trim().toLowerCase() ===
+                  colour.trim().toLowerCase(),
+              )?.stock ?? null;
+            const soldOut = count != null && count <= 0;
+
+            return (
+              <button
+                key={colour}
+                type="button"
+                disabled={soldOut}
+                onClick={() => onChoose(colour)}
+                className={`rounded-lg border px-3 py-2 text-custom-sm font-medium transition ${
+                  soldOut
+                    ? "cursor-not-allowed border-red/30 bg-red/[0.04] text-dark-4 opacity-70"
+                    : "border-gray-3 bg-gray-1 text-dark hover:border-blue/40 hover:bg-blue-light-5 hover:text-blue"
+                }`}
+              >
+                {colour}
+                {count != null && (
+                  <span
+                    className={`ml-1.5 text-custom-xs font-semibold ${
+                      soldOut ? "text-red" : "text-dark-4"
+                    }`}
+                  >
+                    {soldOut ? "· out" : `· ${count} left`}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
 

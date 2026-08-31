@@ -12,6 +12,7 @@ import { useWishlist } from "@/features/wishlist/hooks/use-wishlist";
 import { useCart } from "@/features/cart/hooks/use-cart";
 import {
   getProductCatalogueUrl,
+  getProductImageUrl,
   normalizeImageArray,
 } from "@/lib/storageUtils";
 import { toast } from "react-hot-toast";
@@ -32,7 +33,12 @@ import {
   Plus,
   ShoppingBag,
 } from "lucide-react";
-import { getAvailability } from "@/features/products/utils/availability";
+import {
+  getAvailability,
+  getColorImage,
+  getEffectiveStock,
+  getSoldOutColors,
+} from "@/features/products/utils/availability";
 import { normalizeColorOptions } from "@/features/products/utils/colors";
 import ColorPicker from "@/features/products/components/shop-details/ColorPicker";
 
@@ -69,11 +75,20 @@ const QuickViewModal = () => {
     [product?.frameColors],
   );
 
+  const soldOutColors = useMemo(
+    () => getSoldOutColors(colorOptions, product?.colorStocks),
+    [colorOptions, product?.colorStocks],
+  );
+
   // Follows whichever product the modal was opened on, and pre-selects the
-  // first colourway the same way the product page does.
+  // first buyable colourway the same way the product page does.
   useEffect(() => {
-    setSelectedColor(colorOptions[0] ?? "");
-  }, [colorOptions]);
+    setSelectedColor(
+      colorOptions.find((color) => !soldOutColors.includes(color)) ??
+        colorOptions[0] ??
+        "",
+    );
+  }, [colorOptions, soldOutColors]);
 
   const productImages = normalizedImages;
   const thumbnailImages = normalizedImages;
@@ -86,6 +101,18 @@ const QuickViewModal = () => {
     }
   }, [normalizedImages.length, activePreview]);
 
+  // Picking a colour brings up its photo, when the admin has tagged one.
+  // Only the pick jumps the preview — browsing thumbnails is left alone.
+  const colorImage = getColorImage(product?.colorStocks, selectedColor);
+  useEffect(() => {
+    if (!colorImage) return;
+    const index = normalizedImages.indexOf(
+      getProductImageUrl(colorImage) ?? "",
+    );
+    if (index >= 0) setActivePreview(index);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [colorImage, selectedColor]);
+
   const canViewDiscount = useDiscountVisibility();
   const { displayPrice, hasDiscount, discountPercent } = resolveDisplayPrice(
     product.price || 0,
@@ -94,10 +121,17 @@ const QuickViewModal = () => {
   );
   const unitLabel = getUnitLabel(product.unitType);
 
-  // Stock availability, shared with the cards and the details page.
-  const availability = getAvailability(product.status, product.stock);
+  // Stock availability, shared with the cards and the details page. The
+  // badge speaks for the product; the buy button for the selected colourway.
+  const productAvailability = getAvailability(product.status, product.stock);
+  const selectedStock = getEffectiveStock(
+    product.stock,
+    product.colorStocks,
+    selectedColor,
+  );
+  const availability = getAvailability(product.status, selectedStock);
   const canPurchase = availability.canBuy;
-  const maxQuantity = product.stock || 1;
+  const maxQuantity = selectedStock || 1;
 
   useEffect(() => {
     // Reset state when modal closes
@@ -107,6 +141,14 @@ const QuickViewModal = () => {
       setIsDescriptionExpanded(false);
     }
   }, [isModalOpen]);
+
+  // Switching to a colour with fewer units must not leave a quantity the
+  // shelf cannot cover.
+  useEffect(() => {
+    setQuantity((current) =>
+      Math.min(Math.max(1, selectedStock), Math.max(1, current)),
+    );
+  }, [selectedStock]);
 
   // Don't render if no product data
   if (!product.id || !isModalOpen) {
@@ -135,7 +177,7 @@ const QuickViewModal = () => {
         price: product.price || 0,
         discountedPrice: product.discountedPrice || product.price || 0,
         images: imagesForCart,
-        stock: product.stock ?? 0,
+        stock: selectedStock,
         frameColors: colorOptions,
       },
       quantity,
@@ -176,7 +218,7 @@ const QuickViewModal = () => {
       open={isModalOpen && !!product.id}
       onOpenChange={(open) => !open && closeModal()}
     >
-      <DialogContent className="max-h-[92vh] max-w-[calc(100vw-2rem)] overflow-y-auto rounded-xl border-gray-3 bg-gray-2 p-0 sm:max-w-[calc(100vw-3rem)] lg:max-w-[980px]">
+      <DialogContent className="max-h-[92vh] max-w-[calc(100vw-2rem)] overflow-y-auto rounded-xl border-gray-3 bg-gray-2 p-0 sm:max-w-[calc(100vw-3rem)] lg:max-w-[980px] sm:p-0">
         <div className="grid gap-0 lg:grid-cols-2">
           {/* ========================= gallery ========================= */}
           <div className="border-b border-gray-3 bg-gray-1 p-5 sm:p-7 lg:border-b-0 lg:border-r">
@@ -196,16 +238,11 @@ const QuickViewModal = () => {
               )}
 
               {/* Same rule as the product card: "in stock" is the default and
-                  does not need announcing  only the exceptions do. */}
-              {availability.tone !== "in" && (
-                <span
-                  className={`absolute right-4 top-4 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.1em] shadow-1 backdrop-blur-sm ${
-                    availability.tone === "low"
-                      ? "bg-gray-2/95 text-dark"
-                      : "bg-dark/85 text-white"
-                  }`}
-                >
-                  {availability.label}
+                  does not need announcing  only the exceptions do. The badge
+                  speaks for the product, not one colourway. */}
+              {productAvailability.tone !== "in" && (
+                <span className="absolute right-4 top-4 rounded-full bg-dark/85 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.1em] text-white shadow-1 backdrop-blur-sm">
+                  {productAvailability.label}
                 </span>
               )}
             </div>
@@ -314,6 +351,7 @@ const QuickViewModal = () => {
                 colors={colorOptions}
                 value={selectedColor}
                 onChange={setSelectedColor}
+                soldOutColors={soldOutColors}
                 className="mt-6"
               />
             )}

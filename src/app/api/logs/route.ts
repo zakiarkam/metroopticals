@@ -32,9 +32,35 @@ export async function POST(request: NextRequest) {
   try {
     // Only this site's own pages may report here. sendBeacon is CORS-simple,
     // so without this any page on the internet could fill the error log.
-    const origin = request.headers.get("origin") || request.headers.get("referer") || "";
-    const self = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_SITE_URL || "";
-    if (self && (!origin || !origin.startsWith(self))) {
+    // Compared as exact origins — a prefix match would wave through
+    // "https://metroopticals.lk.evil.com".
+    const reportedHeader =
+      request.headers.get("origin") || request.headers.get("referer") || "";
+    const allowedOrigins = [
+      process.env.NEXTAUTH_URL,
+      process.env.NEXT_PUBLIC_SITE_URL,
+    ]
+      .filter((value): value is string => Boolean(value))
+      .map((value) => {
+        try {
+          return new URL(value).origin;
+        } catch {
+          return null;
+        }
+      })
+      .filter((value): value is string => Boolean(value));
+
+    let reportedOrigin: string | null = null;
+    try {
+      reportedOrigin = new URL(reportedHeader).origin;
+    } catch {
+      /* absent or malformed header — rejected below */
+    }
+
+    if (
+      allowedOrigins.length &&
+      (!reportedOrigin || !allowedOrigins.includes(reportedOrigin))
+    ) {
       return NextResponse.json({ success: false }, { status: 403 });
     }
 

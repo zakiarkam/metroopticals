@@ -27,7 +27,10 @@ import { normalizeImageArray } from "@/lib/storageUtils";
 import {
   AVAILABILITY_PILL_CLASSES,
   getAvailability,
+  getEffectiveStock,
+  getSoldOutColors,
 } from "@/features/products/utils/availability";
+import type { ProductColorStock } from "@/features/products/types/product";
 import {
   getColorSwatch,
   normalizeColorOptions,
@@ -51,6 +54,8 @@ export type ProductCardItem = {
   reviewCount?: number | null;
   /** Colourways this frame is sold in; drawn as swatches under the title. */
   frameColors?: string[] | null;
+  /** Per-colour counts, so sold-out colourways can be shown as such. */
+  colorStocks?: ProductColorStock[] | null;
   /** Raw record forwarded to quick view / details so nothing is lost. */
   raw?: unknown;
 };
@@ -87,6 +92,10 @@ export default function ProductCard({
     () => normalizeColorOptions(item.frameColors),
     [item.frameColors],
   );
+  const soldOutColors = useMemo(
+    () => getSoldOutColors(colorOptions, item.colorStocks),
+    [colorOptions, item.colorStocks],
+  );
   const [imageIndex, setImageIndex] = useState(0);
   const hasPhoto = images.length > 0;
   const activeImage = images[imageIndex] ?? images[0] ?? PRODUCT_FALLBACK_IMAGE;
@@ -112,8 +121,10 @@ export default function ProductCard({
       stock: item.stock ?? 0,
       status: item.status,
       // Quick view offers the same colour chooser as the product page, so the
-      // options have to survive the hop through the store.
+      // options — and which of them are sold out — have to survive the hop
+      // through the store.
       frameColors: colorOptions,
+      colorStocks: item.colorStocks ?? undefined,
     }),
     [colorOptions, images, item],
   );
@@ -128,6 +139,13 @@ export default function ProductCard({
     [dispatch, quickViewPayload],
   );
 
+  // Quick-add cannot ask which colour, so it takes the first one that is
+  // actually on the shelf — never a sold-out colourway.
+  const quickAddColor = useMemo(
+    () => colorOptions.find((color) => !soldOutColors.includes(color)),
+    [colorOptions, soldOutColors],
+  );
+
   const handleAddToCart = useCallback(async () => {
     if (isAddingToCart || !availability.canBuy) return;
     setIsAddingToCart(true);
@@ -138,10 +156,11 @@ export default function ProductCard({
         price: item.price,
         discountedPrice: item.discountedPrice ?? item.price,
         images,
-        stock: item.stock ?? 0,
+        stock: getEffectiveStock(item.stock, item.colorStocks, quickAddColor),
         frameColors: colorOptions,
       } as never,
       1,
+      quickAddColor,
     );
     setIsAddingToCart(false);
   }, [
@@ -151,6 +170,7 @@ export default function ProductCard({
     images,
     isAddingToCart,
     item,
+    quickAddColor,
   ]);
 
   const handleAddToWishlist = useCallback(async () => {
@@ -208,16 +228,21 @@ export default function ProductCard({
       <span className="flex items-center gap-1" aria-hidden>
         {colorOptions.slice(0, 5).map((color) => {
           const swatch = getColorSwatch(color);
+          const soldOut = soldOutColors.includes(color);
 
           return swatch ? (
             <span
               key={color}
-              title={color}
-              className={`h-3.5 w-3.5 rounded-full ${
+              title={soldOut ? `${color} — out of stock` : color}
+              className={`relative h-3.5 w-3.5 overflow-hidden rounded-full ${
                 swatch.needsBorder ? "ring-1 ring-inset ring-dark/20" : ""
-              }`}
+              } ${soldOut ? "opacity-40" : ""}`}
               style={{ background: swatch.background }}
-            />
+            >
+              {soldOut && (
+                <span className="absolute left-1/2 top-1/2 h-px w-[150%] -translate-x-1/2 -translate-y-1/2 rotate-45 bg-dark/70" />
+              )}
+            </span>
           ) : null;
         })}
       </span>
@@ -307,16 +332,13 @@ export default function ProductCard({
       </span>
     ) : null;
 
-  // Cards don't advertise how few are left  a low count reads as "In stock"
-  // here; the product page still shows the real figure.
-  const chipTone = availability.tone === "low" ? "in" : availability.tone;
   const availabilityChip = (
     <span
       className={`inline-block whitespace-nowrap rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.1em] ${
-        AVAILABILITY_PILL_CLASSES[chipTone]
+        AVAILABILITY_PILL_CLASSES[availability.tone]
       }`}
     >
-      {chipTone === "in" ? "In stock" : availability.label}
+      {availability.label}
     </span>
   );
 

@@ -32,6 +32,10 @@ import {
   EMPTY_EYEWEAR_FIELDS,
   type EyewearFormFields,
   toEyewearPayload,
+  toColorStocksPayload,
+  colorRowsHaveCounts,
+  colorRowsPartiallyCounted,
+  sumColorRows,
 } from "../types";
 import EyewearSpecFields from "../EyewearSpecFields";
 import { createProduct } from "@/features/products/api/product-api";
@@ -126,6 +130,19 @@ const AddProductDialog: React.FC<AddProductDialogProps> = ({
   const watchedSlug = form.watch("slug");
   const watchedStock = form.watch("stock");
   const watchedStatus = form.watch("status");
+  const watchedColorRows = form.watch("colorStocks");
+
+  // Once any colour carries a count, the total is their sum and the stock
+  // box stops being editable — two numbers disagreeing helps no one.
+  const stockFromColors = colorRowsHaveCounts(watchedColorRows);
+  const colorRowsTotal = sumColorRows(watchedColorRows);
+
+  useEffect(() => {
+    if (!stockFromColors) return;
+    if (form.getValues("stock") !== colorRowsTotal) {
+      form.setValue("stock", colorRowsTotal, { shouldDirty: true });
+    }
+  }, [form, stockFromColors, colorRowsTotal]);
 
   useEffect(() => {
     const isSlugDirty = !!form.formState.dirtyFields.slug;
@@ -152,7 +169,8 @@ const AddProductDialog: React.FC<AddProductDialogProps> = ({
         ...Object.fromEntries(
           Object.keys(EMPTY_EYEWEAR_FIELDS).map((key) => [
             key,
-            (prefillData as unknown as Record<string, unknown>)[key] ?? "",
+            (prefillData as unknown as Record<string, unknown>)[key] ??
+              EMPTY_EYEWEAR_FIELDS[key as keyof EyewearFormFields],
           ]),
         ),
         images: [],
@@ -207,6 +225,13 @@ const AddProductDialog: React.FC<AddProductDialogProps> = ({
       return;
     }
 
+    if (colorRowsPartiallyCounted(data.colorStocks)) {
+      Toast.error(
+        "Give every colour a quantity (0 for sold out), or leave them all blank",
+      );
+      return;
+    }
+
     if (!data.images || data.images.length === 0) {
       form.setError("images", {
         type: "manual",
@@ -236,6 +261,7 @@ const AddProductDialog: React.FC<AddProductDialogProps> = ({
         status: data.status,
         unitType: data.unitType,
         ...toEyewearPayload(data),
+        colorStocks: toColorStocksPayload(data.colorStocks),
       };
 
       await createProduct(productData);
@@ -346,7 +372,7 @@ const AddProductDialog: React.FC<AddProductDialogProps> = ({
                       </FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="e.g., AeroGlow Sneakers"
+                          placeholder="e.g., Ray-Ban Aviator Classic"
                           {...field}
                         />
                       </FormControl>
@@ -367,7 +393,7 @@ const AddProductDialog: React.FC<AddProductDialogProps> = ({
                       </FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="e.g., ags-123"
+                          placeholder="e.g., rb-aviator-classic"
                           {...field}
                           onChange={(event) => {
                             field.onChange(event);
@@ -490,7 +516,7 @@ const AddProductDialog: React.FC<AddProductDialogProps> = ({
                           <Input
                             type="number"
                             step="0.01"
-                            placeholder="199.99"
+                            placeholder="8500"
                             {...field}
                             value={field.value ?? ""}
                             onChange={(e) => {
@@ -537,7 +563,7 @@ const AddProductDialog: React.FC<AddProductDialogProps> = ({
                           <Input
                             type="number"
                             step="0.01"
-                            placeholder="149.99"
+                            placeholder="7250"
                             {...field}
                             value={
                               field.value !== undefined && field.value !== null
@@ -625,7 +651,12 @@ const AddProductDialog: React.FC<AddProductDialogProps> = ({
                           type="number"
                           placeholder="50"
                           {...field}
-                          value={field.value ?? ""}
+                          disabled={stockFromColors}
+                          value={
+                            stockFromColors
+                              ? colorRowsTotal
+                              : (field.value ?? "")
+                          }
                           onChange={(e) =>
                             field.onChange(parseInt(e.target.value) || 0)
                           }
@@ -636,6 +667,11 @@ const AddProductDialog: React.FC<AddProductDialogProps> = ({
                           }}
                         />
                       </FormControl>
+                      {stockFromColors && (
+                        <p className="text-custom-xs text-dark-5">
+                          Totalled from the colour counts below.
+                        </p>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}
@@ -698,8 +734,6 @@ const AddProductDialog: React.FC<AddProductDialogProps> = ({
                           <SelectItem value="OUT_OF_STOCK">
                             Out of Stock
                           </SelectItem>
-                          {/* <SelectItem value="DRAFT">Draft</SelectItem>
-                          <SelectItem value="SCHEDULED">Scheduled</SelectItem> */}
                         </SelectContent>
                       </Select>
                       <FormMessage />

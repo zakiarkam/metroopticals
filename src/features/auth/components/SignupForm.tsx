@@ -125,7 +125,7 @@ const SignupForm = React.memo(({ onSuccess }: SignupFormProps) => {
             {...signupForm.register("name")}
             type="text"
             autoComplete="name"
-            placeholder="John Doe"
+            placeholder="Nuwan Perera"
             className={authInputClasses}
           />
         </AuthField>
@@ -191,7 +191,7 @@ const SignupForm = React.memo(({ onSuccess }: SignupFormProps) => {
                 {...signupForm.register("address")}
                 type="text"
                 autoComplete="street-address"
-                placeholder="123 Main Street"
+                placeholder="45 Galle Road"
                 className={authInputClasses}
               />
             </AuthField>

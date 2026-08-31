@@ -14,36 +14,39 @@ const buckets = new Map<string, Bucket>();
 const MAX_BUCKETS = 10_000;
 
 const prune = (now: number) => {
-  if (buckets.size < MAX_BUCKETS) return;
-  Array.from(buckets.entries()).forEach(([key, bucket]) => {
+  for (const [key, bucket] of buckets) {
     if (bucket.resetAt <= now) buckets.delete(key);
-  });
-  if (buckets.size < MAX_BUCKETS) return;
-  // Still full of live buckets: drop the ones closest to expiry so a flood of
-  // fresh keys cannot wedge the map and disable limiting for everyone.
-  const byExpiry = Array.from(buckets.entries()).sort(
-    (a, b) => a[1].resetAt - b[1].resetAt,
-  );
-  for (const [key] of byExpiry) {
-    if (buckets.size < MAX_BUCKETS) break;
-    buckets.delete(key);
   }
 };
 
 export function rateLimit(key: string, limit: number, windowMs: number): void {
   const now = Date.now();
-  prune(now);
 
+  // A live bucket is never evicted, whatever the map's size: dropping the
+  // bucket that is mid-count is exactly what a brute force wants — flood the
+  // map with junk keys until the counter tracking you falls out.
   const bucket = buckets.get(key);
-  if (!bucket || bucket.resetAt <= now) {
-    buckets.set(key, { count: 1, resetAt: now + windowMs });
+  if (bucket && bucket.resetAt > now) {
+    bucket.count += 1;
+    if (bucket.count > limit) {
+      throw new RateLimitError();
+    }
     return;
   }
 
-  bucket.count += 1;
-  if (bucket.count > limit) {
-    throw new RateLimitError();
+  if (bucket) buckets.delete(key); // expired; its slot is reused below
+
+  if (buckets.size >= MAX_BUCKETS) {
+    prune(now);
+    // Saturated with live buckets — someone is minting keys as fast as they
+    // can. Fail closed on NEW keys only: established counters keep counting,
+    // and the flood rate-limits itself instead of everyone else.
+    if (buckets.size >= MAX_BUCKETS) {
+      throw new RateLimitError();
+    }
   }
+
+  buckets.set(key, { count: 1, resetAt: now + windowMs });
 }
 
 type HeaderSource =

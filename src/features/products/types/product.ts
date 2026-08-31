@@ -23,6 +23,17 @@ export type Brand = {
   status: string;
 };
 
+/**
+ * One colourway's row, serialised with the product. A null stock means the
+ * colour has not been counted (it falls back to the product total); `image`
+ * names the gallery photo shown when the colour is picked.
+ */
+export type ProductColorStock = {
+  color: string;
+  stock: number | null;
+  image?: string | null;
+};
+
 export type EyewearSpec = {
   /** mm, width of a single lens */
   lensWidth?: number | null;
@@ -65,6 +76,12 @@ export type Product = {
   categoryId: number | null;
   brandId?: number | null;
   stock: number;
+  /**
+   * How the total splits across `frameColors`. Absent on products recorded
+   * before per-colour counts existed — their colours are all treated as
+   * available while the total is above zero.
+   */
+  colorStocks?: ProductColorStock[];
   unitType: ProductUnit;
   status: ProductStatus;
   /** Denormalised from published reviews  see Review in the schema. */
@@ -87,6 +104,8 @@ export type CreateProductInput = {
   categoryId?: number;
   brandId?: number;
   stock: number;
+  /** Per-colour counts; when sent, the product's total becomes their sum. */
+  colorStocks?: ProductColorStock[];
   sku?: string | null;
   barcode?: string | null;
   unitType: ProductUnit;

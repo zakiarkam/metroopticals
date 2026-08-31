@@ -17,9 +17,14 @@ export async function PATCH(
     const { id: rawId } = await params;
     const id = parseIdParam(rawId);
     const body = await request.json();
-    const { count } = incrementProductStockSchema.parse(body);
+    const { count, color } = incrementProductStockSchema.parse(body);
 
-    const product = await decrementProductStock(id, count, session.user.id);
+    const product = await decrementProductStock(
+      id,
+      count,
+      session.user.id,
+      color,
+    );
 
     await logApiAction({
       request,

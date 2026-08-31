@@ -44,6 +44,8 @@ export interface PosProduct {
   images: string[];
   unitType?: string | null;
   frameColors: string[];
+  /** Per-colour rows; a null (or missing) stock means the colour is not counted. */
+  colorStocks?: { color: string; stock: number | null }[];
   category?: { id: number; name: string } | null;
   brand?: { id: number; name: string } | null;
 }

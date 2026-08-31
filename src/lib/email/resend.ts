@@ -862,7 +862,7 @@ function renderAdminOrderEmail({
       const unit = Number(it.price || 0);
       const line = unit * qty;
 
-      // ✅ Product image URL from GCS (fallback to placeholder)
+      // Product image URL from R2 (fallback to placeholder)
       let imgUrl = placeholderImg;
       if (it.product?.images && it.product.images.length > 0) {
         imgUrl = getProductImageUrl(it.product.images[0]) || placeholderImg;
@@ -1392,7 +1392,7 @@ export async function sendContactFormEmail(
                 Phone: <a href="tel:${escapeHtml(BRAND.supportPhone)}" style="color:#B5AEA2;text-decoration:none;">${escapeHtml(BRAND.supportPhoneLabel)}</a>
               </p>
               <p style="margin:15px 0 0;font-size:12px;color:#6b7280;">
-                c ${year} Metro Opticals. All rights reserved.
+                &copy; ${year} Metro Opticals. All rights reserved.
               </p>
             </td>
           </tr>

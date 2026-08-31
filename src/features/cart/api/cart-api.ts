@@ -18,6 +18,8 @@ export type CartItem = {
     stock: number;
     status: string;
     frameColors?: string[];
+    /** Per-colour rows; a null stock means the colour is not counted. */
+    colorStocks?: { color: string; stock: number | null }[];
   };
 };
 

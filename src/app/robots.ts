@@ -16,7 +16,6 @@ export default function robots(): MetadataRoute.Robots {
           "/checkout",
           "/wishlist",
           "/order-confirmation",
-          "/mail-success",
           "/api",
         ],
       },

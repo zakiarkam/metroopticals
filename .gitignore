@@ -62,3 +62,11 @@ docs/
 
 # Database snapshots taken before destructive scripts  never commit data.
 /backups/
+
+# Virtual try-on runtime (WebAssembly, landmark model, decoders) copied from
+# node_modules / downloaded by `npm run tryon:runtime`. Production serves it
+# from the bucket instead  see `npm run tryon:publish`.
+/public/tryon-runtime/
+
+# Generated sample frame photos for trying the virtual try-on  never commit
+/tryon-samples/

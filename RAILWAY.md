@@ -139,6 +139,8 @@ including after you attach a custom domain.
 | `ADMIN_PHONE`                 | Store contact number                                |
 | `NEXT_PUBLIC_SITE_URL`        | `https://metroopticals.lk` (prod) **build-time**    |
 | `NEXT_PUBLIC_WHATSAPP_NUMBER` | e.g. `94770000000` **build-time**                   |
+| `NEXT_PUBLIC_TRYON_RUNTIME_URL` | Printed by `npm run tryon:publish` **build-time** see § Virtual try-on |
+| `NEXT_PUBLIC_TRYON_ENABLED`   | `true`; `false` hides every Try On button **build-time** |
 | `LOG_LEVEL`                   | `info` (use `debug` temporarily when investigating) |
 | `NODE_ENV`                    | `production` in both environments                   |
 
@@ -224,7 +226,64 @@ inside Railway with `railway run`.
 
 ---
 
-## 6. Troubleshooting
+## 6. Virtual try-on
+
+The try-on runs in the customer's browser, so it adds nothing to the
+container's CPU or memory and no replica change is needed. Two things live
+outside the app and must be set up once.
+
+### 6.1 Publish the runtime to the bucket
+
+The face-tracking runtime is ~40 MB (WebAssembly, the landmark model and two
+decoders). Served from the container it is billed as egress on every first
+visit; served from R2 it is free. From a machine with the R2 variables in
+`.env`:
+
+```bash
+npm run tryon:publish
+```
+
+It uploads to `tryon-runtime/v<mediapipe version>/` and prints the
+`NEXT_PUBLIC_TRYON_RUNTIME_URL` to set on the service. It is a build-time
+value, so **redeploy** after setting it. Without it the build's `prebuild`
+step copies the runtime under `public/` instead, which works but costs
+egress and makes the container image larger.
+
+### 6.2 Allow the site to fetch from the bucket (CORS)
+
+Images load through `<img>`, which needs no CORS. The try-on loads models
+and its runtime with `fetch`, which does. In **Cloudflare → R2 → the bucket →
+Settings → CORS policy**, add:
+
+```json
+[
+  {
+    "AllowedOrigins": ["https://metroopticals.lk", "https://<dev-domain>.up.railway.app"],
+    "AllowedMethods": ["GET", "HEAD"],
+    "AllowedHeaders": ["*"],
+    "MaxAgeSeconds": 3600
+  }
+]
+```
+
+Without this the try-on opens, the camera starts, and the frame never
+appears the browser console shows a CORS error on the `.glb` or `.wasm`.
+
+### 6.3 Headers already in place
+
+`next.config.mjs` allows the camera only on `/shop-details/*` and
+`/admin/products/*`; everywhere else it stays off. `src/middleware.ts`
+widens the CSP on those same paths only (`'wasm-unsafe-eval'`, the bucket in
+`connect-src`, blob workers). Nothing to configure on Railway.
+
+### 6.4 Turning it off
+
+`NEXT_PUBLIC_TRYON_ENABLED=false` and redeploy hides every Try On button.
+For one product, untick **Show to customers** on its try-on tab no deploy.
+
+---
+
+## 7. Troubleshooting
 
 | Symptom                                     | Cause                                                                                                                            |
 | ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
@@ -235,6 +294,9 @@ inside Railway with `railway run`.
 | Deploy fails during pre-deploy              | Read the pre-deploy log. Either a migration failed, or `ADMIN_BOOTSTRAP_PASSWORD` was rejected (too short / known placeholder).  |
 | Schema changes not appearing                | The migration wasn't committed. `migrate deploy` only runs SQL from `prisma/migrations`.                                         |
 | Dev deploy changed production data          | The `development` environment's `DATABASE_URL` is pointing at the production Postgres. Fix the reference.                        |
+| Try-on: camera starts, frame never appears  | The bucket has no CORS rule for the site's origin (§ 6.2), or the `.glb` was stored as `application/octet-stream` by an old upload. |
+| Try-on: "could not be loaded"               | The runtime is unreachable: `NEXT_PUBLIC_TRYON_RUNTIME_URL` wrong or not redeployed after setting, or `prebuild` could not download the model. |
+| Try-on: no Try On button on a product       | The product has no colour with **Show to customers** on, or `NEXT_PUBLIC_TRYON_ENABLED=false`.                                   |
 
 Logs: Railway dashboard → service → **Deployments** → pick a deploy →
 **Build / Deploy / Pre-deploy** logs. Everything the app writes goes to stdout

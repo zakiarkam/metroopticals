@@ -20,13 +20,13 @@ export default function TermsPage() {
         {
           heading: "Orders and prices",
           paragraphs: [
-            "Prices are in Sri Lankan rupees and include any applicable taxes. An order placed on the website is confirmed once our team has checked it  including any prescription  and you will receive a confirmation message. Until then we may decline an order, for example if an item has just sold out, and nothing will be charged.",
+            "Prices are in Sri Lankan rupees and include any applicable taxes. An order placed on the website is confirmed once our team has checked it — including any prescription — and you will receive a confirmation message. Until then we may decline an order, for example if an item has just sold out, and nothing will be charged.",
           ],
         },
         {
           heading: "Prescriptions",
           paragraphs: [
-            "Lenses are made to the prescription you give us. Please make sure it is current  usually within two years  and complete. We are happy to check it in the shop before we make your lenses, and our free eye test is available if you are unsure.",
+            "Lenses are made to the prescription you give us. Please make sure it is current — usually within two years — and complete. We are happy to check it in the shop before we make your lenses, and our free eye test is available if you are unsure.",
           ],
         },
         {

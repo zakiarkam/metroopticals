@@ -216,7 +216,7 @@ const AddCategoryDialog: React.FC<AddCategoryDialogProps> = ({
                 <input
                   {...register("name")}
                   className="w-full rounded-lg border border-gray-3 bg-gray-1 px-4 py-2.5 text-custom-sm text-dark focus:border-blue focus:outline-none focus:ring-1 focus:ring-blue"
-                  placeholder="e.g., Fiber Optic Adapters"
+                  placeholder="e.g., Sunglasses"
                 />
                 {errors.name && (
                   <p className="mt-1 text-custom-xs text-red">

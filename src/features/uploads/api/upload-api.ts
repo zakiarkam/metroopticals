@@ -19,6 +19,8 @@ export interface DeleteFileResponse {
 export type UploadFolder =
   | "product/image"
   | "product/catalogue"
+  | "product/tryon-2d"
+  | "product/tryon-3d"
   | "category/image"
   | "advertisement/image"
   | "brand/image";

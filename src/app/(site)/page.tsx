@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import Home from "@/features/home/components";
+import SiteIntro from "@/components/common/SiteIntro";
 import { siteConfig } from "@/config/site";
 import { buildSiteUrl } from "@/lib/seo";
 
@@ -30,5 +31,11 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default function HomePage() {
-  return <Home />;
+  return (
+    <>
+      {/* Home page only, and only on a real page load — see SiteIntro. */}
+      <SiteIntro />
+      <Home />
+    </>
+  );
 }

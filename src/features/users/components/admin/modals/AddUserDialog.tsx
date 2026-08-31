@@ -134,7 +134,7 @@ const AddUserDialog: React.FC<AddUserDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0">
+      <DialogContent hideClose className="max-w-2xl max-h-[90vh] flex flex-col p-0 sm:p-0">
         <DialogHeader className="sticky top-0 z-10 bg-gray-2 border-b border-gray-3 px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
@@ -173,7 +173,7 @@ const AddUserDialog: React.FC<AddUserDialogProps> = ({
                 <Input
                   {...register("name")}
                   type="text"
-                  placeholder="John Doe"
+                  placeholder="Nuwan Perera"
                 />
                 {errors.name && (
                   <p className="mt-1 text-custom-xs text-red">
@@ -190,7 +190,7 @@ const AddUserDialog: React.FC<AddUserDialogProps> = ({
                 <Input
                   {...register("email")}
                   type="email"
-                  placeholder="user@example.com"
+                  placeholder="nuwan@example.com"
                 />
                 {errors.email && (
                   <p className="mt-1 text-custom-xs text-red">
@@ -258,7 +258,7 @@ const AddUserDialog: React.FC<AddUserDialogProps> = ({
                 <Input
                   {...register("phone")}
                   type="text"
-                  placeholder="+1234567890"
+                  placeholder="+94 77 123 4567"
                 />
               </div>
 
@@ -270,7 +270,7 @@ const AddUserDialog: React.FC<AddUserDialogProps> = ({
                 <Input
                   {...register("address")}
                   type="text"
-                  placeholder="123 Main St"
+                  placeholder="45 Galle Road"
                 />
               </div>
 
@@ -282,7 +282,7 @@ const AddUserDialog: React.FC<AddUserDialogProps> = ({
                 <Input
                   {...register("city")}
                   type="text"
-                  placeholder="New York"
+                  placeholder="Colombo"
                 />
               </div>
 
@@ -302,7 +302,7 @@ const AddUserDialog: React.FC<AddUserDialogProps> = ({
                 <Input
                   {...register("postalCode")}
                   type="text"
-                  placeholder="10001"
+                  placeholder="00300"
                 />
               </div>
             </div>

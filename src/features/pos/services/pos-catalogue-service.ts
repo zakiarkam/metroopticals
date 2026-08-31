@@ -25,6 +25,9 @@ const posProductSelect = {
   images: true,
   unitType: true,
   frameColors: true,
+  // Per-colour counts, so the colour dialog can tell the cashier which
+  // colourway is running out before they go looking for it.
+  colorStocks: { select: { color: true, stock: true } },
   category: { select: { id: true, name: true } },
   brand: { select: { id: true, name: true } },
 } satisfies Prisma.ProductSelect;

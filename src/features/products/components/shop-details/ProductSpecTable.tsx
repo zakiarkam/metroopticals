@@ -1,6 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import type { Product } from "@/features/products/types/product";
+import { getAvailability } from "@/features/products/utils/availability";
 import {
   FRAME_SHAPE_LABELS,
   GENDER_LABELS,
@@ -138,9 +139,11 @@ export default function ProductSpecTable({
           label: "Sold by",
           value: unitLabel(product.unitType),
         },
-        typeof product.stock === "number" && {
-          label: "In stock",
-          value: `${product.stock}`,
+        // Availability is stated, never counted — the shop does not advertise
+        // how many are left.
+        {
+          label: "Availability",
+          value: getAvailability(product.status, product.stock).label,
         },
       ].filter(Boolean) as Row[],
     },

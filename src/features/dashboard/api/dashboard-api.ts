@@ -32,20 +32,6 @@ export const getDashboardDataOnce = (params?: GetDashboardParams) => {
   return p;
 };
 
-export const getMonthlyReport = async (params: {
-  month?: string;
-  startDate?: string;
-  endDate?: string;
-  format: "excel" | "pdf";
-}): Promise<Blob> => {
-  const response = await axiosInstance.get("/dashboard/reports/monthly", {
-    params,
-    responseType: "blob",
-    timeout: 60000,
-  });
-  return response.data;
-};
-
 export const getMonthlyReportSummary = async (params: {
   month?: string;
   startDate?: string;

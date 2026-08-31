@@ -108,7 +108,7 @@ const Contact = () => {
       <PageHero
         eyebrow="We're here to help"
         title="Get in touch"
-        description="Questions about a prescription, a frame, or an order? Call the store, message us on WhatsApp, or send the form  whichever is easiest."
+        description="Questions about a prescription, a frame, or an order? Call the store, message us on WhatsApp, or send the form — whichever is easiest."
         crumbs={[{ label: "Contact" }]}
       />
 
@@ -118,7 +118,7 @@ const Contact = () => {
             eyebrow="Come and see us"
             title="Colombo shop,"
             titleAccent="open six days a week."
-            body="Walk in for a free fitting, a lens adjustment or an eye test  no appointment needed. If it is quicker to ask than to visit, the form below reaches the same people."
+            body="Walk in for a free fitting, a lens adjustment or an eye test — no appointment needed. If it is quicker to ask than to visit, the form below reaches the same people."
             action={<PillLink href="#contact-form">Send a message</PillLink>}
           />
 
@@ -338,7 +338,7 @@ const Contact = () => {
                     name="message"
                     id="message"
                     rows={6}
-                    placeholder="Tell us what you need  the more detail, the faster we can help."
+                    placeholder="Tell us what you need — the more detail, the faster we can help."
                     value={message}
                     onChange={(event) => setMessage(event.target.value)}
                     className={textareaClasses}

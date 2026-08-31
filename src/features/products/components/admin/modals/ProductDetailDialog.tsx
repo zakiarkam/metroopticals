@@ -123,7 +123,7 @@ const ProductDetailDialog: React.FC<ProductDetailDialogProps> = ({
         if (!open) onClose();
       }}
     >
-      <DialogContent className="max-w-5xl max-h-[90vh] flex flex-col p-0 overflow-hidden">
+      <DialogContent hideClose className="max-w-5xl max-h-[90vh] flex flex-col p-0 overflow-hidden sm:p-0">
         {/* Header (compact, sticky) */}
         <DialogHeader className="sticky top-0 z-10 bg-gray-2 border-b border-gray-3">
           <div className="flex items-start md:items-center justify-between gap-3 px-3 py-2 md:px-4 md:py-3">
@@ -324,6 +324,37 @@ const ProductDetailDialog: React.FC<ProductDetailDialogProps> = ({
                           {product.stock} units
                         </span>
                       </div>
+                      {/* How the total splits across the colourways, with
+                          sold-out colours called out for the admin. */}
+                      {(product.colorStocks?.length ?? 0) > 0 && (
+                        <>
+                          <div className="h-px bg-gray-2" />
+                          <div className="px-3 py-2 flex flex-wrap items-center justify-between gap-2">
+                            <span className="text-xs md:text-sm text-body font-medium">
+                              By colour
+                            </span>
+                            <span className="flex flex-wrap justify-end gap-1.5">
+                              {product.colorStocks!.map((row) => (
+                                <span
+                                  key={row.color}
+                                  className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${
+                                    row.stock != null && row.stock <= 0
+                                      ? "border-red/30 bg-red/10 text-red"
+                                      : "border-gray-3 bg-gray-1 text-dark"
+                                  }`}
+                                >
+                                  {row.color}:{" "}
+                                  {row.stock == null
+                                    ? "not counted"
+                                    : row.stock <= 0
+                                      ? "out"
+                                      : row.stock}
+                                </span>
+                              ))}
+                            </span>
+                          </div>
+                        </>
+                      )}
                       <div className="h-px bg-gray-2" />
                       <div className="px-3 py-2 flex items-center justify-between gap-3">
                         <span className="text-xs md:text-sm text-body font-medium">

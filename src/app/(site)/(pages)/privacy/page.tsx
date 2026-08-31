@@ -30,7 +30,7 @@ export default function PrivacyPage() {
             "Making and delivering what you ordered, and telling you when it is ready.",
             "Answering messages you send us.",
             "Warranty, adjustments and remakes on glasses you bought from us.",
-            "Offers and news  only if you told us at the counter or online that you would like them. You can say no at any time, and we will stop.",
+            "Offers and news — only if you told us at the counter or online that you would like them. You can say no at any time, and we will stop.",
           ],
           paragraphs: [],
         },
@@ -50,6 +50,14 @@ export default function PrivacyPage() {
           heading: "Cookies",
           paragraphs: [
             "The site uses a sign-in cookie so you stay logged in, and nothing else that follows you around. There are no advertising trackers on this site.",
+          ],
+        },
+        {
+          heading: "Virtual try-on",
+          paragraphs: [
+            "When you use Try on with your camera, the picture from your camera is handled on your own phone or computer, inside your browser. It is not uploaded, recorded or seen by us, and it is gone the moment you close the try-on. The same is true of a photo you choose instead of the camera.",
+            "The measurements it shows — your face width and the distance between your pupils — are worked out on your device and are not stored by us. If you save a picture, it goes to your own device or wherever you choose to share it, not to us.",
+            "We count how often the try-on is opened and on which frames, and nothing more.",
           ],
         },
         {

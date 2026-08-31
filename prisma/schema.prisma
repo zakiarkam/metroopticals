@@ -158,6 +158,8 @@ model Product {
   category       Category?       @relation("ProductCategory", fields: [categoryId], references: [id])
   wishlistItems  WishlistItem[]
   stockMovements StockMovement[]
+  tryOnAssets    ProductTryOnAsset[]
+  colorStocks    ProductColorStock[]
 
   @@index([categoryId])
   @@index([brandId])
@@ -166,6 +168,75 @@ model Product {
   @@index([slug])
   @@index([stock])
   @@map("products")
+}
+
+/// What one colourway carries: its shelf count and its photo.
+///
+/// `Product.stock` stays the authoritative total  the POS, the reports and
+/// the stock ledger all read it  and these rows split that total per colour
+/// so the storefront can grey out a sold-out colourway. A colour with a NULL
+/// count (and any colour with no row at all) is uncounted and falls back to
+/// the total, so nothing recorded before per-colour stock existed changes.
+model ProductColorStock {
+  id        Int    @id @default(autoincrement())
+  productId Int
+  /// Matches an entry in Product.frameColors.
+  color     String
+  /// NULL until the colour has been counted; 0 means sold out.
+  stock     Int?
+  /// One of Product.images  the photo the gallery jumps to when the
+  /// shopper picks this colour.
+  image     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, color])
+  @@index([productId])
+  @@map("product_color_stocks")
+}
+
+/// How a try-on asset was produced, so the page can label a template-built
+/// frame honestly and so those frames can be found and upgraded later.
+enum TryOnSource {
+  TEMPLATE // generated from a parametric shape template driven by the catalogue mm
+  SCAN // photogrammetry or a vendor 3D studio
+  VENDOR // licensed from a frame database
+  PHOTO // 2D cut-out only
+}
+
+/// What the virtual try-on draws for one colourway of a frame. Kept off
+/// `Product.images`  that array is the ordered gallery  and per colour,
+/// which the bare `frameColors` list cannot express.
+model ProductTryOnAsset {
+  id        Int    @id @default(autoincrement())
+  productId Int
+  /// Matches an entry in Product.frameColors.
+  colour    String
+
+  /// R2 filename of the transparent front-on cut-out (2D tier).
+  overlayImage String?
+  /// R2 filename of the real-scale GLB (3D tier).
+  modelGlb     String?
+  /// Caliper reading across the hinges. Authoritative: overrides the width
+  /// derived from lensWidth + bridgeWidth + rim thickness when present.
+  frameWidthMm Float?
+
+  source TryOnSource @default(PHOTO)
+  /// False until it passes the QA checklist. Also the per-product rollout
+  /// flag: a product with no active asset shows no Try On button.
+  isActive Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, colour])
+  @@index([productId])
+  @@map("product_tryon_assets")
 }
 
 model CartItem {

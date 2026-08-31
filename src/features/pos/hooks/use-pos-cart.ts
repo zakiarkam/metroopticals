@@ -167,6 +167,38 @@ export function usePosCart() {
         };
       }
 
+      // The colourway's own count is a second ceiling: a counted colour at
+      // zero must not go on the bill just because another colour is left.
+      // An uncounted colour (no row, or a null count) has only the total.
+      const colorCount = wanted
+        ? (product.colorStocks?.find(
+            (row) =>
+              row.color.trim().toLowerCase() === wanted.toLowerCase(),
+          )?.stock ?? null)
+        : null;
+
+      if (colorCount != null) {
+        const onBillColor = lines
+          .filter(
+            (line) =>
+              line.productId === product.id &&
+              (line.color || null) === wanted,
+          )
+          .reduce((sum, line) => sum + line.quantity, 0);
+
+        if (onBillColor + 1 > colorCount) {
+          return {
+            ok: false,
+            message:
+              colorCount === 0
+                ? `The ${wanted} colour of ${product.title} is out of stock`
+                : `Only ${colorCount} of the ${wanted} colour in stock, and ${onBillColor} ${
+                    onBillColor === 1 ? "is" : "are"
+                  } already on this bill`,
+          };
+        }
+      }
+
       setLines((current) => {
         // The same frame in the same colour stacks; a different colour is its
         // own line, because that is how it leaves the shop.
@@ -177,7 +209,16 @@ export function usePosCart() {
         if (existing) {
           return current.map((line) =>
             line.key === existing.key
-              ? { ...line, quantity: line.quantity + 1 }
+              ? {
+                  ...line,
+                  quantity: line.quantity + 1,
+                  // Refreshed on every add, so a held bill resumed tomorrow
+                  // still steps up against today's shelf, not yesterday's.
+                  availableStock:
+                    colorCount != null
+                      ? Math.min(colorCount, product.stock)
+                      : product.stock,
+                }
               : line,
           );
         }
@@ -193,7 +234,12 @@ export function usePosCart() {
           unitPrice,
           lineDiscount: 0,
           color: wanted,
-          availableStock: product.stock,
+          // The tighter of the two ceilings, so the quantity stepper on the
+          // bill can never promise more of a colour than the shop has.
+          availableStock:
+            colorCount != null
+              ? Math.min(colorCount, product.stock)
+              : product.stock,
         };
         return [...current, line];
       });

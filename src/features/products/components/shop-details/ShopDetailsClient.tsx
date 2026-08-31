@@ -20,6 +20,7 @@ import {
 import { getProductById } from "@/features/products/api/product-api";
 import {
   getProductCatalogueUrl,
+  getProductImageUrl,
   normalizeImageArray,
 } from "@/lib/storageUtils";
 import { useCart } from "@/features/cart/hooks/use-cart";
@@ -31,7 +32,12 @@ import {
   resolveDisplayPrice,
 } from "@/lib/utils/price";
 import { Product } from "@/features/products/types/product";
-import { getAvailability } from "@/features/products/utils/availability";
+import {
+  getAvailability,
+  getColorImage,
+  getEffectiveStock,
+  getSoldOutColors,
+} from "@/features/products/utils/availability";
 import { normalizeColorOptions } from "@/features/products/utils/colors";
 import ColorPicker from "./ColorPicker";
 import FrameMeasurements from "./FrameMeasurements";
@@ -40,6 +46,7 @@ import ProductSpecTable from "./ProductSpecTable";
 import RelatedProducts from "./RelatedProducts";
 import AdZoneClient from "@/features/advertisements/components/site/AdZoneClient";
 import ProductReviews from "@/features/reviews/components/site/ProductReviews";
+import TryOnButton from "@/features/try-on/components/TryOnButton";
 
 const fallbackImage = "/images/placeholder-product.svg";
 
@@ -80,7 +87,6 @@ const ShopDetailsClient = ({
   const [isAdding, setIsAdding] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [quantity, setQuantity] = useState(1);
-  const [selectedIndex, setSelectedIndex] = useState(0);
   const [selectedColor, setSelectedColor] = useState("");
   const [error, setError] = useState<string | null>(null);
 
@@ -95,7 +101,6 @@ const ShopDetailsClient = ({
         const result = await getProductById(productId);
         if (mounted) {
           setProduct(result);
-          setSelectedIndex(0);
         }
       } catch (err) {
         console.error("Failed to load product details:", err);
@@ -125,15 +130,32 @@ const ShopDetailsClient = ({
     [product?.frameColors],
   );
 
+  const soldOutColors = useMemo(
+    () => getSoldOutColors(colorOptions, product?.colorStocks),
+    [colorOptions, product?.colorStocks],
+  );
+
   useEffect(() => {
+    // Pre-select the first colour that can actually be bought; a page opened
+    // on an entirely sold-out frame still shows its first colour.
     setSelectedColor((current) =>
       current && colorOptions.includes(current)
         ? current
-        : (colorOptions[0] ?? ""),
+        : (colorOptions.find((color) => !soldOutColors.includes(color)) ??
+          colorOptions[0] ??
+          ""),
     );
-  }, [colorOptions]);
+  }, [colorOptions, soldOutColors]);
 
-  const featuredImage = images[selectedIndex] || images[0] || fallbackImage;
+  // The gallery position for the selected colour's tagged photo, handed to
+  // the gallery so picking a colour lands on its picture. Null when the
+  // colour has no tag (or the tagged photo left the gallery) — no jump then.
+  const colorImageIndex = useMemo(() => {
+    const tagged = getColorImage(product?.colorStocks, selectedColor);
+    if (!tagged) return null;
+    const index = images.indexOf(getProductImageUrl(tagged) ?? "");
+    return index >= 0 ? index : null;
+  }, [images, product?.colorStocks, selectedColor]);
 
   const { displayPrice, hasDiscount, discountPercent, originalPrice } =
     resolveDisplayPrice(
@@ -142,7 +164,25 @@ const ShopDetailsClient = ({
       canViewDiscount,
     );
   const unitLabel = getUnitLabel(product?.unitType);
-  const availability = getAvailability(product?.status, product?.stock);
+
+  // Two availabilities: the product's own (the gallery badge — the frame as
+  // a whole) and the selected colourway's (the buy box — what "Add to cart"
+  // would actually put in the parcel).
+  const productAvailability = getAvailability(product?.status, product?.stock);
+  const selectedStock = getEffectiveStock(
+    product?.stock,
+    product?.colorStocks,
+    selectedColor,
+  );
+  const availability = getAvailability(product?.status, selectedStock);
+
+  // Switching to a colour with fewer units must not leave a quantity the
+  // shelf cannot cover.
+  useEffect(() => {
+    setQuantity((current) =>
+      Math.min(Math.max(1, selectedStock), Math.max(1, current)),
+    );
+  }, [selectedStock]);
 
   const hasMeasurements =
     product?.lensWidth != null ||
@@ -151,11 +191,11 @@ const ShopDetailsClient = ({
 
   const handleQuantityChange = useCallback(
     (next: number) => {
-      const maxStock = Math.max(1, product?.stock ?? 1);
+      const maxStock = Math.max(1, selectedStock);
       const value = Number.isFinite(next) ? next : quantity;
       setQuantity(Math.min(maxStock, Math.max(1, value)));
     },
-    [product?.stock, quantity],
+    [selectedStock, quantity],
   );
 
   const handleAddToCart = useCallback(async () => {
@@ -169,7 +209,7 @@ const ShopDetailsClient = ({
         price: product.price,
         discountedPrice: product.discountedPrice ?? product.price,
         images: images.length ? images : [fallbackImage],
-        stock: product.stock,
+        stock: selectedStock,
         frameColors: colorOptions,
       } as never,
       quantity,
@@ -185,6 +225,7 @@ const ShopDetailsClient = ({
     product,
     quantity,
     selectedColor,
+    selectedStock,
   ]);
 
   const handleAddToWishlist = useCallback(async () => {
@@ -313,6 +354,8 @@ const ShopDetailsClient = ({
             <ProductGallery
               images={images}
               title={product.title}
+              jumpToIndex={colorImageIndex}
+              jumpKey={selectedColor}
               badges={
                 <>
                   {hasDiscount && discountPercent !== null && (
@@ -321,16 +364,11 @@ const ShopDetailsClient = ({
                     </span>
                   )}
                   {/* Only the exceptions are announced  "in stock" is the
-                      default state and saying it earned nothing. */}
-                  {availability.tone !== "in" && (
-                    <span
-                      className={`absolute right-5 top-5 z-20 rounded-full px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.1em] shadow-1 backdrop-blur-sm ${
-                        availability.tone === "low"
-                          ? "bg-gray-2/95 text-dark"
-                          : "bg-dark/85 text-white"
-                      }`}
-                    >
-                      {availability.label}
+                      default state and saying it earned nothing. The badge
+                      speaks for the frame as a whole, not one colourway. */}
+                  {productAvailability.tone !== "in" && (
+                    <span className="absolute right-5 top-5 z-20 rounded-full bg-dark/85 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.1em] text-white shadow-1 backdrop-blur-sm">
+                      {productAvailability.label}
                     </span>
                   )}
                 </>
@@ -380,9 +418,19 @@ const ShopDetailsClient = ({
                   colors={colorOptions}
                   value={selectedColor}
                   onChange={setSelectedColor}
+                  soldOutColors={soldOutColors}
                   className="mb-5 border-b border-gray-3 pb-5"
                 />
               )}
+
+              {/* Only rendered once the frame has a checked try-on asset. */}
+              <TryOnButton
+                product={product}
+                colour={selectedColor}
+                className="mb-5"
+                onAddToCart={availability.canBuy ? handleAddToCart : undefined}
+                priceLabel={formatPrice(displayPrice)}
+              />
 
               <div className="flex flex-wrap items-center gap-4">
                 <span className="text-[13px] font-semibold text-dark">
@@ -401,7 +449,7 @@ const ShopDetailsClient = ({
                   <input
                     type="number"
                     min={1}
-                    max={product.stock || undefined}
+                    max={selectedStock || undefined}
                     value={quantity}
                     onChange={(event) =>
                       handleQuantityChange(Number(event.target.value))
@@ -411,7 +459,7 @@ const ShopDetailsClient = ({
                   <button
                     type="button"
                     onClick={() => handleQuantityChange(quantity + 1)}
-                    disabled={!availability.canBuy}
+                    disabled={!availability.canBuy || quantity >= selectedStock}
                     aria-label="Increase quantity"
                     className="grid h-11 w-11 place-items-center text-dark transition-colors hover:text-blue disabled:cursor-not-allowed disabled:opacity-40"
                   >
@@ -419,17 +467,8 @@ const ShopDetailsClient = ({
                   </button>
                 </div>
 
-                {/* The count was only surfaced once you exceeded it. It is
-                    what the quantity field is capped at, so it is stated. */}
-                {availability.tone === "low" ? (
-                  <span className="text-[12.5px] font-semibold text-yellow-dark">
-                    {availability.label} order soon
-                  </span>
-                ) : availability.canBuy && product.stock ? (
-                  <span className="text-[12.5px] text-dark-4">
-                    {product.stock} in stock
-                  </span>
-                ) : null}
+                {/* Counts are deliberately not stated — the field simply caps
+                    at what the selected colour has. */}
               </div>
 
               <div className="mt-5 flex flex-col gap-3 sm:flex-row">

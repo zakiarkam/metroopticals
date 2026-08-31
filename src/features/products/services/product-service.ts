@@ -6,6 +6,11 @@ import type {
   ProductQueryInput,
 } from "@/features/products/validators/product";
 import { deleteFile } from "@/lib/storage/r2";
+import { deleteTryOnFilesForProduct } from "@/features/try-on/services/tryon-service";
+import {
+  syncColorStocks,
+  pruneColorStocks,
+} from "@/features/products/services/color-stock-service";
 import { FRAME_SIZE_RANGES } from "@/features/products/types/product";
 import type { FrameShape, Gender } from "@/features/products/types/product";
 import type { Prisma, StockReason } from "@prisma/client";
@@ -17,6 +22,34 @@ import type { Prisma, StockReason } from "@prisma/client";
  * that changes it  a website order, a counter bill, a delivery, a correction
  *  writes a row here so a count that looks wrong can be traced.
  */
+/** The shape every product response carries its per-colour rows in. */
+const colorStocksInclude = {
+  select: { color: true, stock: true, image: true },
+  orderBy: { id: "asc" },
+} as const;
+
+/**
+ * A stock adjustment names a colourway only as far as the product's own list
+ * allows — and returns the list's spelling of it, so rows never fork on case.
+ */
+function resolveProductColor(
+  frameColors: string[],
+  requested?: string,
+): string | null {
+  const wanted = requested?.trim();
+  if (!wanted) return null;
+  const match = frameColors.find(
+    (option) => option.trim().toLowerCase() === wanted.toLowerCase(),
+  );
+  if (!match) {
+    throw new ValidationError(
+      `"${wanted}" is not one of this product's colours`,
+      [{ path: "color", message: "Pick one of the product's colours" }],
+    );
+  }
+  return match.trim();
+}
+
 async function recordStockMovement(
   tx: Prisma.TransactionClient,
   input: {
@@ -197,6 +230,7 @@ export async function getProducts(query: ProductQueryInput) {
             status: true,
           },
         },
+        colorStocks: colorStocksInclude,
       },
       skip,
       take: limit,
@@ -381,6 +415,7 @@ export async function getProductById(id: number) {
     include: {
       category: true,
       brand: true,
+      colorStocks: colorStocksInclude,
     },
   });
 
@@ -392,38 +427,75 @@ export async function getProductById(id: number) {
 }
 
 export async function createProduct(data: CreateProductInput) {
-  const slugSource = data.slug?.trim() || data.title;
+  const { colorStocks, ...productData } = data;
+  const slugSource = productData.slug?.trim() || productData.title;
   const slug = slugSource
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
-  const status = data.stock === 0 ? "OUT_OF_STOCK" : data.status;
-  const unitType = data.unitType || "PIECES";
+  const status = productData.stock === 0 ? "OUT_OF_STOCK" : productData.status;
+  const unitType = productData.unitType || "PIECES";
 
-  const product = await prisma.product.create({
-    data: {
-      ...data,
-      slug,
-      status,
-      unitType,
-      images: data.images || [],
-      catalogueFile: data.catalogueFile || null,
-      // Blank rather than empty string: both columns are unique, and Postgres
-      // would treat a second empty string as a duplicate while it lets any
-      // number of NULLs coexist.
-      sku: data.sku?.trim() || null,
-      barcode: data.barcode?.trim() || null,
-    },
-    include: {
-      category: true,
-      brand: true,
-    },
-  });
+  return prisma.$transaction(async (tx) => {
+    const created = await tx.product.create({
+      data: {
+        ...productData,
+        slug,
+        status,
+        unitType,
+        images: productData.images || [],
+        catalogueFile: productData.catalogueFile || null,
+        // Blank rather than empty string: both columns are unique, and Postgres
+        // would treat a second empty string as a duplicate while it lets any
+        // number of NULLs coexist.
+        sku: productData.sku?.trim() || null,
+        barcode: productData.barcode?.trim() || null,
+      },
+    });
 
-  return product;
+    // When the form counts stock per colour, the rows are the record and the
+    // total is their sum — whatever the stock box said. Uncounted rows (a
+    // colour tagged with a photo but no quantity) return no total, and the
+    // stock box stays in charge.
+    if (colorStocks?.length) {
+      const total = await syncColorStocks(
+        tx,
+        created.id,
+        created.frameColors,
+        colorStocks,
+        created.images,
+      );
+      if (total != null) {
+        await tx.product.update({
+          where: { id: created.id },
+          data: {
+            stock: total,
+            status:
+              total === 0
+                ? created.status === "INACTIVE"
+                  ? "INACTIVE"
+                  : "OUT_OF_STOCK"
+                : created.status === "OUT_OF_STOCK"
+                  ? "ACTIVE"
+                  : created.status,
+          },
+        });
+      }
+    }
+
+    return tx.product.findUniqueOrThrow({
+      where: { id: created.id },
+      include: {
+        category: true,
+        brand: true,
+        colorStocks: colorStocksInclude,
+      },
+    });
+  }, { timeout: 20_000, maxWait: 10_000 });
 }
 
 export async function updateProduct(id: number, data: UpdateProductInput) {
+  const { colorStocks } = data;
   const updateData: any = {};
 
   if (data.title) {
@@ -483,16 +555,54 @@ export async function updateProduct(id: number, data: UpdateProductInput) {
     if (data[field] !== undefined) updateData[field] = data[field];
   }
 
-  const product = await prisma.product.update({
-    where: { id },
-    data: updateData,
-    include: {
-      category: true,
-      brand: true,
-    },
-  });
+  return prisma.$transaction(async (tx) => {
+    const product = await tx.product.update({
+      where: { id },
+      data: updateData,
+    });
 
-  return product;
+    if (colorStocks !== undefined) {
+      // When every colour is counted, the total becomes the rows' sum and
+      // the status follows it — except a deliberate retirement, which stays
+      // retired. Uncounted rows return no total and the stock box's figure
+      // stands.
+      const total = await syncColorStocks(
+        tx,
+        id,
+        product.frameColors,
+        colorStocks,
+        product.images,
+      );
+      if (total != null) {
+        await tx.product.update({
+          where: { id },
+          data: {
+            stock: total,
+            ...(total === 0
+              ? product.status === "INACTIVE"
+                ? {}
+                : { status: "OUT_OF_STOCK" }
+              : product.status === "OUT_OF_STOCK"
+                ? { status: "ACTIVE" }
+                : {}),
+          },
+        });
+      }
+    } else if (data.frameColors !== undefined) {
+      // The colour list changed without new counts: a dropped colour must
+      // not keep a count nothing can spend.
+      await pruneColorStocks(tx, id, product.frameColors);
+    }
+
+    return tx.product.findUniqueOrThrow({
+      where: { id },
+      include: {
+        category: true,
+        brand: true,
+        colorStocks: colorStocksInclude,
+      },
+    });
+  }, { timeout: 20_000, maxWait: 10_000 });
 }
 
 export async function deleteProduct(id: number) {
@@ -528,6 +638,8 @@ export async function deleteProduct(id: number) {
       () => {},
     );
   }
+  // Try-on rows cascade with the product; their bucket files do not.
+  await deleteTryOnFilesForProduct(id);
 
   // Delete product from DB
   await prisma.product.delete({
@@ -539,14 +651,38 @@ export async function incrementProductStock(
   id: number,
   count: number,
   adminId?: number,
+  color?: string,
 ) {
   return await prisma.$transaction(async (tx) => {
     const current = await tx.product.findUnique({
       where: { id },
-      select: { stock: true },
+      select: { stock: true, frameColors: true },
     });
     if (!current) {
       throw new NotFoundError("Product not found");
+    }
+
+    // A delivery lands against one colourway. Counting a colour starts here:
+    // a missing row is created and an uncounted one (NULL) starts from this
+    // delivery, so the shop can begin tracking a colour without a stocktake.
+    const colorName = resolveProductColor(current.frameColors, color);
+    if (colorName) {
+      const rows = await tx.productColorStock.findMany({
+        where: { productId: id },
+      });
+      const row = rows.find(
+        (r) => r.color.trim().toLowerCase() === colorName.toLowerCase(),
+      );
+      if (row) {
+        await tx.productColorStock.update({
+          where: { id: row.id },
+          data: { stock: row.stock == null ? count : { increment: count } },
+        });
+      } else {
+        await tx.productColorStock.create({
+          data: { productId: id, color: colorName, stock: count },
+        });
+      }
     }
 
     await tx.product.update({
@@ -567,6 +703,7 @@ export async function incrementProductStock(
       delta: count,
       reason: "PURCHASE",
       createdById: adminId,
+      note: colorName ? `Colour: ${colorName}` : undefined,
     });
 
     return tx.product.findUniqueOrThrow({
@@ -582,14 +719,40 @@ export async function decrementProductStock(
   id: number,
   count: number,
   adminId?: number,
+  color?: string,
 ) {
   return await prisma.$transaction(async (tx) => {
     const current = await tx.product.findUnique({
       where: { id },
-      select: { id: true },
+      select: { id: true, frameColors: true },
     });
     if (!current) {
       throw new NotFoundError("Product not found");
+    }
+
+    // Removing against a colourway spends that colour's count first, and a
+    // colour cannot go below zero any more than the total can. An uncounted
+    // colour (no row, or a NULL count) moves only the total.
+    const colorName = resolveProductColor(current.frameColors, color);
+    if (colorName) {
+      const rows = await tx.productColorStock.findMany({
+        where: { productId: id },
+      });
+      const row = rows.find(
+        (r) => r.color.trim().toLowerCase() === colorName.toLowerCase(),
+      );
+      if (row && row.stock != null) {
+        const taken = await tx.productColorStock.updateMany({
+          where: { id: row.id, stock: { gte: count } },
+          data: { stock: { decrement: count } },
+        });
+        if (taken.count === 0) {
+          throw new ValidationError(
+            `Only ${row.stock} of the ${row.color} colour in stock`,
+            [{ path: "count", message: "Count exceeds this colour's stock" }],
+          );
+        }
+      }
     }
 
     // Compare and swap: the write only matches while there is still enough on
@@ -617,6 +780,7 @@ export async function decrementProductStock(
       delta: -count,
       reason: "ADJUSTMENT",
       createdById: adminId,
+      note: colorName ? `Colour: ${colorName}` : undefined,
     });
 
     return tx.product.findUniqueOrThrow({

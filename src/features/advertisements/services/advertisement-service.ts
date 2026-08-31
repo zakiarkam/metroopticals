@@ -228,28 +228,6 @@ export async function deleteAdvertisement(id: number) {
   });
 }
 
-export async function incrementAdvertisementView(id: number) {
-  return prisma.advertisement.update({
-    where: { id },
-    data: {
-      viewCount: {
-        increment: 1,
-      },
-    },
-  });
-}
-
-export async function incrementAdvertisementClick(id: number) {
-  return prisma.advertisement.update({
-    where: { id },
-    data: {
-      clickCount: {
-        increment: 1,
-      },
-    },
-  });
-}
-
 const buildActiveAdvertisementWhere = (
   placement?: AdvertisementPlacement,
 ): Prisma.AdvertisementWhereInput => {
@@ -325,14 +303,6 @@ export async function getHomePromoAdvertisements(): Promise<Advertisement[]> {
   })) as Advertisement[];
 }
 
-export const getProductDetailsUrl = (productId: number) => {
-  const slug = `/shop-details/${productId}`;
-  if (typeof window !== "undefined" && window.location?.origin) {
-    return `${window.location.origin}${slug}`;
-  }
-  return slug;
-};
-
 export async function getBannerAdvertisements(
   placement: AdvertisementPlacement,
 ): Promise<Advertisement[]> {
@@ -353,20 +323,3 @@ export async function getBannerAdvertisements(
   })) as Advertisement[];
 }
 
-/** Per-placement active counts, used by the admin overview cards. */
-export async function getAdvertisementPlacementCounts() {
-  const grouped = await prisma.advertisement.groupBy({
-    by: ["placement", "status"],
-    _count: { _all: true },
-  });
-
-  return grouped.reduce<Record<string, { active: number; inactive: number }>>(
-    (acc, row) => {
-      const bucket = (acc[row.placement] ||= { active: 0, inactive: 0 });
-      if (row.status === "active") bucket.active += row._count._all;
-      else bucket.inactive += row._count._all;
-      return acc;
-    },
-    {},
-  );
-}

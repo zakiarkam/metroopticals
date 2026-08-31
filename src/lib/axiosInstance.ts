@@ -99,7 +99,16 @@ axiosInstance.interceptors.response.use(
         localStorage.removeItem("authToken");
         localStorage.removeItem("admin_user");
 
-        if (!window.location.pathname.includes("/log-in")) {
+        // Only pages that need a login are sent to it. A 401 on a public
+        // page  a retired session fetching the cart on the home page  is
+        // handled by the caller; navigating away from it turned a stale
+        // cookie into a redirect loop between / and /log-in.
+        const { pathname } = window.location;
+        const needsLogin =
+          pathname.startsWith("/admin") ||
+          pathname.startsWith("/checkout") ||
+          pathname.startsWith("/my-account");
+        if (needsLogin && !pathname.includes("/log-in")) {
           window.location.href = "/log-in";
         }
       }

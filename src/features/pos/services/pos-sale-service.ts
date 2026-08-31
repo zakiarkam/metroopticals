@@ -25,6 +25,10 @@ import {
   resolveCustomerForSale,
 } from "@/features/pos/services/pos-customer-service";
 import { WALK_IN_CUSTOMER } from "@/features/orders/utils/order-display";
+import {
+  takeColorStock,
+  returnColorStock,
+} from "@/features/products/services/color-stock-service";
 
 /** Everything a receipt or a sale detail panel needs, in one shape. */
 const saleInclude = {
@@ -298,6 +302,17 @@ export async function createSale(input: CreateSaleInput, cashierId: number) {
       if (updated.count === 0) {
         throw new ValidationError(`${line.title} does not have enough stock left`);
       }
+
+      // Strict, same as the website: a colourway's count cannot go below
+      // zero even from a stale till screen. When the shelf disagrees with
+      // the book, the cashier's escape hatch is adding the line without a
+      // colour; the count is then corrected from the products page.
+      await takeColorStock(tx, {
+        productId: line.productId,
+        color: line.color,
+        quantity: line.quantity,
+        strict: true,
+      });
 
       await tx.product.updateMany({
         where: { id: line.productId, stock: { lte: 0 } },
@@ -588,6 +603,12 @@ export async function voidSale(
         where: { id: item.productId },
         data: { stock: { increment: putBack } },
       });
+      // The units go back onto the colourway they were sold from.
+      await returnColorStock(tx, {
+        productId: item.productId,
+        color: item.color,
+        quantity: putBack,
+      });
       await tx.product.updateMany({
         where: { id: item.productId, stock: { gt: 0 }, status: "OUT_OF_STOCK" },
         data: { status: "ACTIVE" },
@@ -753,6 +774,12 @@ export async function returnSaleItems(
             await tx.product.update({
               where: { id: item.productId },
               data: { stock: { increment: line.quantity } },
+            });
+            // The units go back onto the colourway they were sold from.
+            await returnColorStock(tx, {
+              productId: item.productId,
+              color: item.color,
+              quantity: line.quantity,
             });
             await tx.product.updateMany({
               where: {

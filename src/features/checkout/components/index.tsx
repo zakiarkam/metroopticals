@@ -269,7 +269,7 @@ const Checkout = () => {
     }
 
     // Check for unavailable items. A line asking for more than is left is as
-    // unbuyable as one that is out of stock  the order would only fail on the
+    // unbuyable as one that is out of stock — the order would only fail on the
     // stock check at the far end, after the address form had been filled in.
     const unavailableItems = cartItems.filter(
       (item: any) =>
@@ -535,7 +535,7 @@ const Checkout = () => {
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     rows={5}
-                    placeholder="e.g. My prescription is from January 2026  I'll email a photo. Please call before delivery."
+                    placeholder="e.g. My prescription is from January 2026 — I'll email a photo. Please call before delivery."
                     className={textareaClasses}
                   />
                 </Panel>

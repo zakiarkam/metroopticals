@@ -26,6 +26,11 @@ import {
 import { logger, serializeError } from "@/lib/logger";
 import { orderLineName } from "@/features/orders/utils/order-display";
 import { canTransitionOrderStatus } from "@/features/orders/constants/status";
+import { getEffectiveStock } from "@/features/products/utils/availability";
+import {
+  takeColorStock,
+  returnColorStock,
+} from "@/features/products/services/color-stock-service";
 import { shopDateKey } from "@/features/pos/utils/shop-time";
 
 type OrderWithItemsAndUser = Order & {
@@ -206,6 +211,7 @@ export async function createOrder(userId: number, data: CreateOrderInput) {
   for (const item of items) {
     const product = await prisma.product.findUnique({
       where: { id: item.productId },
+      include: { colorStocks: { select: { color: true, stock: true } } },
     });
 
     if (!product) {
@@ -242,6 +248,24 @@ export async function createOrder(userId: number, data: CreateOrderInput) {
       )
         ? requestedColor
         : null;
+
+    // The colourway picked has to be on the shelf, not just the frame: a
+    // cart line kept open while its colour sold out stops here, with the
+    // colour named so the shopper knows another one may still be available.
+    if (color) {
+      const colorCeiling = getEffectiveStock(
+        product.stock,
+        product.colorStocks,
+        color,
+      );
+      if (colorCeiling < item.quantity) {
+        throw new ValidationError(
+          colorCeiling <= 0
+            ? `The ${color} colour of ${product.title} is out of stock`
+            : `Only ${colorCeiling} of the ${color} colour of ${product.title} in stock`,
+        );
+      }
+    }
 
     validatedItems.push({
       productId: item.productId,
@@ -293,6 +317,16 @@ export async function createOrder(userId: number, data: CreateOrderInput) {
       if (updated.count === 0) {
         throw new ValidationError("Insufficient stock for one of the items");
       }
+
+      // The colourway's own count moves with the total. Strict: on the
+      // website the shopper can be told the colour just sold out and pick
+      // another, so a race on the last unit fails the order honestly.
+      await takeColorStock(tx, {
+        productId: item.productId,
+        color: item.color,
+        quantity: item.quantity,
+        strict: true,
+      });
       await tx.product.updateMany({
         where: { id: item.productId, stock: 0 },
         data: { status: "OUT_OF_STOCK" },
@@ -475,6 +509,12 @@ export async function updateOrderStatus(
         await tx.product.update({
           where: { id: item.productId },
           data: { stock: { increment: putBack } },
+        });
+        // The units go back onto the colourway they were sold from.
+        await returnColorStock(tx, {
+          productId: item.productId,
+          color: item.color,
+          quantity: putBack,
         });
         await tx.product.updateMany({
           where: { id: item.productId, stock: { gt: 0 }, status: "OUT_OF_STOCK" },

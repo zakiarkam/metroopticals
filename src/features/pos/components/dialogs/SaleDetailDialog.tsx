@@ -265,7 +265,7 @@ const SaleDetailDialog: React.FC<SaleDetailDialogProps> = ({
 
   return (
     <Dialog open={!!saleId} onOpenChange={(value) => !value && onClose()}>
-      <DialogContent className="flex max-h-[92vh] max-w-2xl flex-col p-0">
+      <DialogContent hideClose className="flex max-h-[92vh] max-w-2xl flex-col p-0 sm:p-0">
         <DialogHeader className="sticky top-0 z-10 border-b border-gray-3 bg-gray-2 px-6 py-4">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">

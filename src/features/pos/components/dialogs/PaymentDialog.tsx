@@ -119,7 +119,7 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={(value) => !value && onClose()}>
-      <DialogContent className="flex max-h-[92vh] max-w-lg flex-col p-0">
+      <DialogContent hideClose className="flex max-h-[92vh] max-w-lg flex-col p-0 sm:p-0">
         <DialogHeader className="sticky top-0 z-10 border-b border-gray-3 bg-gray-2 px-6 py-4">
           <div className="flex items-center justify-between">
             <div>

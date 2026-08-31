@@ -32,6 +32,10 @@ import {
   EMPTY_EYEWEAR_FIELDS,
   toEyewearPayload,
   toEyewearFormFields,
+  toColorStocksPayload,
+  colorRowsHaveCounts,
+  colorRowsPartiallyCounted,
+  sumColorRows,
 } from "../types";
 import EyewearSpecFields from "../EyewearSpecFields";
 import { updateProduct, getProductById } from "@/features/products/api/product-api";
@@ -42,6 +46,10 @@ import CatalogueUpload from "../CatalogueUpload";
 import { Toast } from "@/lib/utils/toast";
 import { useBrands } from "@/features/brands/hooks/use-brands";
 import { useCategoriesCache } from "@/features/categories/hooks/use-categories-cache";
+import TryOnAssetsTab from "@/features/try-on/components/admin/TryOnAssetsTab";
+import type { FrameShape, RimType } from "@/features/products/types/product";
+
+type EditTab = "details" | "tryon";
 
 interface EditProductDialogProps {
   isOpen: boolean;
@@ -93,6 +101,42 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
 
   const watchedStock = form.watch("stock");
   const watchedStatus = form.watch("status");
+
+  // The try-on tab saves on its own; the form is left mounted underneath so
+  // switching tabs never loses an unsaved edit.
+  const [tab, setTab] = useState<EditTab>("details");
+  const watchedColorRows = form.watch("colorStocks");
+  const tryOnColours = React.useMemo(
+    () =>
+      (watchedColorRows ?? [])
+        .map((row) => row.color.trim())
+        .filter(Boolean),
+    [watchedColorRows],
+  );
+
+  // Once any colour carries a count, the total is their sum and the stock
+  // box stops being editable — two numbers disagreeing helps no one.
+  const stockFromColors = colorRowsHaveCounts(watchedColorRows);
+  const colorRowsTotal = sumColorRows(watchedColorRows);
+
+  useEffect(() => {
+    if (!stockFromColors) return;
+    if (form.getValues("stock") !== colorRowsTotal) {
+      form.setValue("stock", colorRowsTotal, { shouldDirty: true });
+    }
+  }, [form, stockFromColors, colorRowsTotal]);
+  const num = (value: string) => {
+    const n = Number(value);
+    return value?.trim?.() && Number.isFinite(n) ? n : null;
+  };
+  const tryOnSpec = {
+    lensWidth: num(form.watch("lensWidth")),
+    bridgeWidth: num(form.watch("bridgeWidth")),
+    templeLength: num(form.watch("templeLength")),
+    weightGrams: num(form.watch("weightGrams")),
+    rimType: (form.watch("rimType") || null) as RimType | null,
+    frameShape: (form.watch("frameShape") || null) as FrameShape | null,
+  };
 
   const { brands: brandOptions } = useBrands();
   const { data: cachedCategories, error: categoriesError } = useCategoriesCache(
@@ -167,6 +211,7 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
   useEffect(() => {
     if (isOpen) {
       setRemovedFiles({ images: [], catalogue: null });
+      setTab("details");
     }
   }, [isOpen, productId]);
 
@@ -234,6 +279,13 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
       return;
     }
 
+    if (colorRowsPartiallyCounted(data.colorStocks)) {
+      Toast.error(
+        "Give every colour a quantity (0 for sold out), or leave them all blank",
+      );
+      return;
+    }
+
     if (!data.images || data.images.length === 0) {
       form.setError("images", {
         type: "manual",
@@ -269,6 +321,7 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
         status: data.status,
         unitType: data.unitType,
         ...toEyewearPayload(data),
+        colorStocks: toColorStocksPayload(data.colorStocks),
       };
 
       await updateProduct(productId, productData);
@@ -359,7 +412,7 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0">
+      <DialogContent hideClose className="max-w-2xl max-h-[90vh] flex flex-col p-0 sm:p-0">
         <DialogHeader className="sticky top-0 z-10 bg-gray-2 border-b border-gray-3 px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
@@ -384,6 +437,36 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
           </div>
         </DialogHeader>
 
+        {!isFetching && (
+          <div
+            role="tablist"
+            aria-label="Product sections"
+            className="flex gap-1 border-b border-gray-3 bg-gray-2 px-6"
+          >
+            {(
+              [
+                ["details", "Details"],
+                ["tryon", "Virtual try-on"],
+              ] as [EditTab, string][]
+            ).map(([key, label]) => (
+              <button
+                key={key}
+                type="button"
+                role="tab"
+                aria-selected={tab === key}
+                onClick={() => setTab(key)}
+                className={`-mb-px border-b-2 px-3 py-2.5 text-custom-sm font-semibold transition-colors ${
+                  tab === key
+                    ? "border-blue text-blue"
+                    : "border-transparent text-dark-4 hover:text-dark"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
+
         {isFetching ? (
           <div className="flex items-center justify-center py-12 px-6">
             <div className="text-center">
@@ -393,13 +476,36 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
               </p>
             </div>
           </div>
+        ) : tab === "tryon" && productId ? (
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+            <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
+              <TryOnAssetsTab
+                productId={productId}
+                productTitle={form.watch("title")}
+                frameColors={tryOnColours}
+                spec={tryOnSpec}
+              />
+            </div>
+            {/* Try-on rows save themselves; Done just closes and refreshes the list. */}
+            <DialogFooter className="shrink-0 bg-gray-2 border-t border-gray-3 px-6 py-4">
+              <Button
+                type="button"
+                onClick={() => {
+                  onSuccess?.();
+                  void handleClose();
+                }}
+              >
+                Done
+              </Button>
+            </DialogFooter>
+          </div>
         ) : (
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(onSubmit)}
-              className="flex flex-col flex-1 overflow-hidden"
+              className="flex min-h-0 flex-1 flex-col overflow-hidden"
             >
-              <div className="overflow-y-auto flex-1 px-6 py-4">
+              <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
                 <div className="space-y-5">
                   {/* Product Title */}
                   <FormField
@@ -414,7 +520,7 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
                         </FormLabel>
                         <FormControl>
                           <Input
-                            placeholder="e.g., AeroGlow Sneakers"
+                            placeholder="e.g., Ray-Ban Aviator Classic"
                             {...field}
                           />
                         </FormControl>
@@ -434,7 +540,7 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
                           SKU Code <span className="text-destructive">*</span>
                         </FormLabel>
                         <FormControl>
-                          <Input placeholder="e.g., ags-123" {...field} />
+                          <Input placeholder="e.g., rb-aviator-classic" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -543,7 +649,7 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
                             <Input
                               type="number"
                               step="0.01"
-                              placeholder="199.99"
+                              placeholder="8500"
                               {...field}
                               value={field.value ?? ""}
                               onChange={(e) => {
@@ -592,7 +698,7 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
                             <Input
                               type="number"
                               step="0.01"
-                              placeholder="149.99"
+                              placeholder="7250"
                               {...field}
                               value={
                                 field.value !== undefined &&
@@ -681,7 +787,12 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
                             type="number"
                             placeholder="50"
                             {...field}
-                            value={field.value ?? ""}
+                            disabled={stockFromColors}
+                            value={
+                              stockFromColors
+                                ? colorRowsTotal
+                                : (field.value ?? "")
+                            }
                             onChange={(e) =>
                               field.onChange(parseInt(e.target.value) || 0)
                             }
@@ -692,6 +803,11 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
                             }}
                           />
                         </FormControl>
+                        {stockFromColors && (
+                          <p className="text-custom-xs text-dark-5">
+                            Totalled from the colour counts below.
+                          </p>
+                        )}
                         <FormMessage />
                       </FormItem>
                     )}
@@ -754,8 +870,6 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
                             <SelectItem value="OUT_OF_STOCK">
                               Out of Stock
                             </SelectItem>
-                            {/* <SelectItem value="DRAFT">Draft</SelectItem>
-                            <SelectItem value="SCHEDULED">Scheduled</SelectItem> */}
                           </SelectContent>
                         </Select>
                         <FormMessage />

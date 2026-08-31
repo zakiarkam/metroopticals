@@ -195,7 +195,7 @@ const OrderDetailDialog: React.FC<OrderDetailDialogProps> = ({
         if (!open) onClose();
       }}
     >
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-0 overflow-hidden">
+      <DialogContent hideClose className="max-w-4xl max-h-[90vh] flex flex-col p-0 overflow-hidden sm:p-0">
         {/* Header (compact + responsive controls) */}
         <DialogHeader className="sticky top-0 z-10 bg-gray-2 border-b border-gray-3">
           <div className="px-3 py-2 md:px-4 md:py-3">

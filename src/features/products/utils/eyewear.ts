@@ -52,6 +52,44 @@ export const formatFrameSizeCode = ({
   return `${lensWidth} □ ${bridgeWidth} - ${templeLength}`;
 };
 
+/**
+ * How much rim sits outside each lens, by construction. Used only when the
+ * caliper width of a frame has not been recorded; the caliper always wins.
+ */
+export const RIM_THICKNESS_MM: Record<RimType, number> = {
+  FULL_RIM: 6,
+  SEMI_RIMLESS: 3,
+  RIMLESS: 1,
+};
+
+type FrameWidthSpec = Pick<
+  EyewearSpec,
+  "lensWidth" | "bridgeWidth" | "rimType"
+> & { frameWidthMm?: number | null };
+
+/**
+ * Total width across the front of the frame, in mm  what has to match the
+ * face. The recorded caliper reading if there is one, else derived from the
+ * printed measurements plus an allowance for the rim.
+ */
+export const frameFrontWidthMm = (spec: FrameWidthSpec): number | null => {
+  if (spec.frameWidthMm != null) return spec.frameWidthMm;
+  if (spec.lensWidth == null || spec.bridgeWidth == null) return null;
+  const rim = RIM_THICKNESS_MM[spec.rimType ?? "FULL_RIM"];
+  return 2 * spec.lensWidth + spec.bridgeWidth + 2 * rim;
+};
+
+/**
+ * Distance between the geometric centres of the two lenses. A frame fits
+ * optically when this is at, or a little above, the wearer's PD.
+ */
+export const opticalCentreDistanceMm = (
+  spec: Pick<EyewearSpec, "lensWidth" | "bridgeWidth">,
+): number | null => {
+  if (spec.lensWidth == null || spec.bridgeWidth == null) return null;
+  return spec.lensWidth + spec.bridgeWidth;
+};
+
 export const getFrameSizeLabel = (lensWidth?: number | null) => {
   if (lensWidth == null) return null;
   if (lensWidth < 48) return "Small";

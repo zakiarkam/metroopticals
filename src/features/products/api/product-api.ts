@@ -100,22 +100,26 @@ export const deleteProduct = async (id: number): Promise<void> => {
 
 export const incrementProductStock = async (
   id: number,
-  count: number
+  count: number,
+  color?: string
 ): Promise<Product> => {
   const response = await axiosInstance.patch(`/products/${id}/stock`, {
     count,
+    ...(color ? { color } : {}),
   });
   return response.data.product;
 };
 
 export const decrementProductStock = async (
   id: number,
-  count: number
+  count: number,
+  color?: string
 ): Promise<Product> => {
   const response = await axiosInstance.patch(
     `/products/${id}/stock/decrement`,
     {
       count,
+      ...(color ? { color } : {}),
     }
   );
   return response.data.product;

@@ -14,10 +14,11 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id: rawId } = await params;
-  const id = parseIdParam(rawId);
   try {
     await requireAdmin();
+    // Inside the try so a mistyped id is a clean 400, not an unhandled 500.
+    const { id: rawId } = await params;
+    const id = parseIdParam(rawId);
     const user = await getUserById(id);
     return createSuccessResponse(user);
   } catch (error) {
@@ -29,11 +30,11 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id: rawId } = await params;
-  const id = parseIdParam(rawId);
   const start = Date.now();
   try {
     const session = await requireAdmin();
+    const { id: rawId } = await params;
+    const id = parseIdParam(rawId);
 
     const body = await request.json();
     const data = adminUpdateUserSchema.parse(body);
@@ -70,11 +71,11 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id: rawId } = await params;
-  const id = parseIdParam(rawId);
   const start = Date.now();
   try {
     const session = await requireAdmin();
+    const { id: rawId } = await params;
+    const id = parseIdParam(rawId);
 
     if (id === session.user.id) {
       throw new ForbiddenError("You cannot delete your own account");

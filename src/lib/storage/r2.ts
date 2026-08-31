@@ -41,6 +41,10 @@ const getClient = (): S3Client => {
 export type UploadFolder =
   | "product/image"
   | "product/catalogue"
+  // Virtual try-on assets, one prefix per tier so they can be cache-tuned,
+  // audited and bulk-reprocessed independently of the gallery photos.
+  | "product/tryon-2d"
+  | "product/tryon-3d"
   | "category/image"
   | "advertisement/image"
   | "brand/image";
@@ -55,6 +59,31 @@ export interface UploadResult {
   fileName: string;
   publicUrl: string;
 }
+
+// The browser's declared type is unreliable: it is empty for a `.glb` picked
+// in most browsers and for `.wasm` everywhere, and an object stored as
+// `application/octet-stream` breaks WebAssembly streaming compilation
+// outright. The type is derived here from the extension instead.
+const CONTENT_TYPE_BY_EXTENSION: Record<string, string> = {
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  png: "image/png",
+  webp: "image/webp",
+  pdf: "application/pdf",
+  glb: "model/gltf-binary",
+  wasm: "application/wasm",
+  task: "application/octet-stream",
+  js: "text/javascript",
+};
+
+export const contentTypeFor = (fileName: string, declared?: string) => {
+  const extension = fileName.split(".").pop()?.toLowerCase() ?? "";
+  return (
+    CONTENT_TYPE_BY_EXTENSION[extension] ||
+    declared ||
+    "application/octet-stream"
+  );
+};
 
 // Object keys are built from user-supplied names; strip anything that could
 // escape the folder prefix ("../", "/", control chars) before use.
@@ -79,22 +108,27 @@ export const uploadFile = async ({
     const filePath = `${folder}/${fileName}`;
 
     const buffer = Buffer.from(await file.arrayBuffer());
+    const contentType = contentTypeFor(fileName, file.type);
 
     await getClient().send(
       new PutObjectCommand({
         Bucket: BUCKET_NAME,
         Key: filePath,
         Body: buffer,
-        ContentType: file.type,
+        ContentType: contentType,
         // Images may be cached for a year. A PDF is offered as a download so
         // the browser never runs it in the bucket's origin, and cached for a
-        // day so a replaced catalogue does not linger for a year.
-        ...(file.type === "application/pdf"
+        // day so a replaced catalogue does not linger for a year. Try-on
+        // assets never change under a name  a replacement gets a new
+        // filename  so they are marked immutable as well.
+        ...(contentType === "application/pdf"
           ? {
               ContentDisposition: `attachment; filename="${fileName}"`,
               CacheControl: "public, max-age=86400",
             }
-          : { CacheControl: "public, max-age=31536000" }),
+          : folder.startsWith("product/tryon-")
+            ? { CacheControl: "public, max-age=31536000, immutable" }
+            : { CacheControl: "public, max-age=31536000" }),
       })
     );
 

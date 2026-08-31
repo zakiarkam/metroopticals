@@ -16,7 +16,7 @@ import { buildSiteUrl } from "@/lib/seo";
 export const metadata: Metadata = {
   title: "FAQ",
   description:
-    "Frequently asked questions about Metro Opticals  eyewear range, prescriptions, eye tests, delivery times, warranty and payment options.",
+    "Frequently asked questions about Metro Opticals — eyewear range, prescriptions, eye tests, delivery times, warranty and payment options.",
   alternates: { canonical: buildSiteUrl("/faq") },
 };
 
@@ -43,7 +43,7 @@ export default async function FAQPage() {
       <PageHero
         eyebrow="Help centre"
         title="Frequently asked questions"
-        description="From choosing the right frame to understanding your prescription  the questions our customers ask most."
+        description="From choosing the right frame to understanding your prescription — the questions our customers ask most."
         crumbs={[{ label: "FAQ" }]}
       />
 
@@ -54,7 +54,7 @@ export default async function FAQPage() {
             eyebrow="Before you ask"
             title="Most answers are here."
             titleAccent="The rest, just call us."
-            body="Prescriptions, eye tests, lead times, warranty and delivery  the things people ring the shop about most often, answered properly rather than in one line. If yours is not here, the store will pick up."
+            body="Prescriptions, eye tests, lead times, warranty and delivery — the things people ring the shop about most often, answered properly rather than in one line. If yours is not here, the store will pick up."
             action={<PillLink href="/contact">Send us a message</PillLink>}
           />
 
@@ -119,7 +119,7 @@ export default async function FAQPage() {
         eyebrow="Still stuck?"
         title="Talk to someone"
         titleAccent="who fits lenses daily."
-        body="Call the store, message us on WhatsApp, or book a free eye test. If the question is about your prescription, bring it in  five minutes at the counter beats twenty on the phone."
+        body="Call the store, message us on WhatsApp, or book a free eye test. If the question is about your prescription, bring it in — five minutes at the counter beats twenty on the phone."
         image="/images/store/eye-test.jpg"
         imageAlt="A phoropter eye-testing instrument in a warm, dimly lit consulting room"
         primary={{ href: "/contact", label: "Book an eye test" }}

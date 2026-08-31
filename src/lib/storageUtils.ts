@@ -13,6 +13,8 @@ const shouldUseStorage = (value: string) =>
 type StorageFolder =
   | "product/image"
   | "product/catalogue"
+  | "product/tryon-2d"
+  | "product/tryon-3d"
   | "category/image"
   | "advertisement/image"
   | "brand/image";
@@ -74,6 +76,30 @@ export const getBrandLogoUrl = (value?: string | null) => {
   }
 
   return buildStorageUrl("brand/image", trimmed);
+};
+
+/** Transparent front-on cut-out a frame is drawn onto a face with. */
+export const getTryOnOverlayUrl = (value?: string | null) => {
+  if (!value) return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  if (!shouldUseStorage(trimmed)) {
+    return trimmed;
+  }
+
+  return buildStorageUrl("product/tryon-2d", trimmed);
+};
+
+/** Real-scale 3D model (GLB) of a frame, for the rotating try-on. */
+export const getTryOnModelUrl = (value?: string | null) => {
+  if (!value) return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  if (!shouldUseStorage(trimmed)) {
+    return trimmed;
+  }
+
+  return buildStorageUrl("product/tryon-3d", trimmed);
 };
 
 export const normalizeImageArray = (values?: (string | null)[] | null) => {

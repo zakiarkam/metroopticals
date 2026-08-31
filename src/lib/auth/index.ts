@@ -99,7 +99,10 @@ export const authOptions: NextAuthOptions = {
               select: { customerType: true },
             });
             if (dbUser) token.customerType = dbUser.customerType;
-          } catch {}
+          } catch {
+            // Best effort: a missed enrichment only delays the customerType
+            // until the next session refresh.
+          }
         }
       }
 

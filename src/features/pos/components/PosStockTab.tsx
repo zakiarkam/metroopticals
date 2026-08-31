@@ -328,7 +328,7 @@ const PosStockTab: React.FC = () => {
                 <Input
                   value={note}
                   onChange={(event) => setNote(event.target.value)}
-                  placeholder="Note  supplier invoice number, who counted it"
+                  placeholder="Note — supplier invoice number, who counted it"
                   className="mt-3 h-10 text-custom-sm"
                 />
 

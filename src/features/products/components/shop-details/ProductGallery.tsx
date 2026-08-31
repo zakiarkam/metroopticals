@@ -10,11 +10,19 @@ export default function ProductGallery({
   images,
   title,
   badges,
+  jumpToIndex = null,
+  jumpKey,
 }: {
   images: string[];
   title: string;
   /** Discount flag and availability chip, drawn over the main plate. */
   badges?: React.ReactNode;
+  /** Land the gallery on this image — set when a colourway with a tagged
+      photo is picked. Null asks for no jump; browsing stays free after. */
+  jumpToIndex?: number | null;
+  /** Changes with each pick (the colour name), so choosing another colour
+      re-jumps even between two colours tagged to the same photo. */
+  jumpKey?: string;
 }) {
   const [index, setIndex] = useState(0);
   const count = images.length;
@@ -25,6 +33,13 @@ export default function ProductGallery({
   useEffect(() => {
     setIndex((current) => (current < count ? current : 0));
   }, [count]);
+
+  // The colour pick lands the gallery on that colour's photo; the arrows and
+  // thumbnails stay in charge afterwards.
+  useEffect(() => {
+    if (jumpToIndex == null || jumpToIndex < 0 || jumpToIndex >= count) return;
+    setIndex(jumpToIndex);
+  }, [jumpToIndex, jumpKey, count]);
 
   const step = useCallback(
     (delta: number) => setIndex((i) => (i + delta + count) % count),

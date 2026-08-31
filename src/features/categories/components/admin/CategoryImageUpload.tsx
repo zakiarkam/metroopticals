@@ -147,7 +147,7 @@ const CategoryImageUpload: React.FC<CategoryImageUploadProps> = ({
             className="absolute top-2 right-2 bg-gray-2 rounded-full p-1.5 shadow-lg hover:bg-red-50 transition-opacity duration-200 flex items-center justify-center disabled:opacity-50 border border-gray-3"
           >
             {deleting ? (
-              <div className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
+              <div className="w-4 h-4 border-2 border-blue border-t-transparent rounded-full animate-spin" />
             ) : (
               <X size={16} className="text-red-500" />
             )}

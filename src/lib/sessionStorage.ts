@@ -52,12 +52,3 @@ export function clearUserSession(): void {
   }
 }
 
-export function hasUserSession(): boolean {
-  if (typeof window === "undefined") return false;
-
-  try {
-    return !!localStorage.getItem(SESSION_KEY);
-  } catch (error) {
-    return false;
-  }
-}

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -8,6 +8,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -16,6 +23,9 @@ import {
 } from "@/features/products/api/product-api";
 import { Toast } from "@/lib/utils/toast";
 
+/** Sentinel for "no specific colour" — Radix Select forbids an empty value. */
+const NO_COLOR = "__none__";
+
 interface StockDialogProps {
   isOpen: boolean;
   onClose: () => void;
@@ -23,6 +33,10 @@ interface StockDialogProps {
   productId: number | null;
   productName: string;
   currentStock: number;
+  /** The product's colourways, so units land on the right colour. */
+  frameColors?: string[];
+  /** Per-colour rows; a null stock means the colour is not counted yet. */
+  colorStocks?: { color: string; stock: number | null }[];
   type: "increment" | "decrement";
 }
 
@@ -33,10 +47,39 @@ const StockDialog: React.FC<StockDialogProps> = ({
   productId,
   productName,
   currentStock,
+  frameColors = [],
+  colorStocks = [],
   type,
 }) => {
   const [count, setCount] = useState(1);
+  const [color, setColor] = useState<string>(NO_COLOR);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const colors = frameColors.map((c) => c.trim()).filter(Boolean);
+
+  // Units belong to a colourway whenever the product has them, so the first
+  // colour is pre-selected rather than the untracked bucket.
+  useEffect(() => {
+    if (isOpen) setColor(colors[0] ?? NO_COLOR);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, productId]);
+
+  const countFor = (colorName: string) =>
+    colorStocks.find(
+      (row) => row.color.trim().toLowerCase() === colorName.toLowerCase(),
+    )?.stock;
+
+  const selectedColor = color === NO_COLOR ? undefined : color;
+  const selectedColorCount = selectedColor ? countFor(selectedColor) : undefined;
+
+  // Removing stock is bounded by whichever count is being spent: the
+  // colourway's when one is recorded, the total otherwise.
+  const removalCeiling =
+    type === "decrement"
+      ? selectedColorCount != null
+        ? Math.min(selectedColorCount, currentStock)
+        : currentStock
+      : null;
 
   const handleSubmit = async () => {
     if (!productId || count <= 0) {
@@ -44,13 +87,12 @@ const StockDialog: React.FC<StockDialogProps> = ({
       return;
     }
 
-    if (count < 1) {
-      Toast.error("Quantity must be at least 1");
-      return;
-    }
-
-    if (type === "decrement" && count > currentStock) {
-      Toast.error(`Cannot remove more than ${currentStock} units`);
+    if (removalCeiling != null && count > removalCeiling) {
+      Toast.error(
+        selectedColor && selectedColorCount != null
+          ? `Only ${removalCeiling} of the ${selectedColor} colour to remove`
+          : `Cannot remove more than ${removalCeiling} units`,
+      );
       return;
     }
 
@@ -63,15 +105,17 @@ const StockDialog: React.FC<StockDialogProps> = ({
 
     try {
       if (type === "increment") {
-        await incrementProductStock(productId, count);
+        await incrementProductStock(productId, count, selectedColor);
       } else {
-        await decrementProductStock(productId, count);
+        await decrementProductStock(productId, count, selectedColor);
       }
 
       Toast.update(toastId, {
         render: `Successfully ${
           type === "increment" ? "added" : "removed"
-        } ${count} unit${count > 1 ? "s" : ""}!`,
+        } ${count} unit${count > 1 ? "s" : ""}${
+          selectedColor ? ` of ${selectedColor}` : ""
+        }!`,
         type: "success",
         isLoading: false,
         autoClose: 3000,
@@ -106,7 +150,7 @@ const StockDialog: React.FC<StockDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md flex flex-col p-0">
+      <DialogContent hideClose className="max-w-md flex flex-col p-0 sm:p-0">
         <DialogHeader className="sticky top-0 z-10 bg-gray-2 border-b border-gray-3 px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
@@ -150,8 +194,46 @@ const StockDialog: React.FC<StockDialogProps> = ({
               </label>
               <p className="text-custom-sm font-semibold text-dark">
                 {currentStock} units
+                {selectedColor && selectedColorCount != null && (
+                  <span className="ml-2 font-normal text-dark-4">
+                    ({selectedColorCount} in {selectedColor})
+                  </span>
+                )}
               </p>
             </div>
+
+            {colors.length > 0 && (
+              <div>
+                <label className="mb-2 block text-custom-sm font-medium text-dark">
+                  Colour
+                </label>
+                <Select value={color} onValueChange={setColor}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pick a colour" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {colors.map((c) => {
+                      const recorded = countFor(c);
+                      return (
+                        <SelectItem key={c} value={c}>
+                          {c}
+                          {recorded != null
+                            ? ` — ${recorded} in stock`
+                            : " — not counted yet"}
+                        </SelectItem>
+                      );
+                    })}
+                    <SelectItem value={NO_COLOR}>
+                      No specific colour
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="mt-1.5 text-custom-xs text-dark-5">
+                  Units are counted against the colour, so the shop can show a
+                  sold-out colourway.
+                </p>
+              </div>
+            )}
 
             <div>
               <label
@@ -165,7 +247,7 @@ const StockDialog: React.FC<StockDialogProps> = ({
                 id="quantity"
                 type="number"
                 min="1"
-                max={type === "decrement" ? currentStock : undefined}
+                max={removalCeiling ?? undefined}
                 value={count}
                 onChange={(e) => {
                   const value = parseInt(e.target.value);
@@ -192,9 +274,19 @@ const StockDialog: React.FC<StockDialogProps> = ({
                 <span className="font-semibold">
                   {type === "increment"
                     ? currentStock + count
-                    : currentStock - count}{" "}
+                    : Math.max(0, currentStock - count)}{" "}
                   units
                 </span>
+                {selectedColor && selectedColorCount != null && (
+                  <span>
+                    {" "}
+                    ({selectedColor}:{" "}
+                    {type === "increment"
+                      ? selectedColorCount + count
+                      : Math.max(0, selectedColorCount - count)}
+                    )
+                  </span>
+                )}
               </p>
             </div>
           </div>

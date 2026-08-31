@@ -183,7 +183,7 @@ const EditUserDialog: React.FC<EditUserDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0">
+      <DialogContent hideClose className="max-w-2xl max-h-[90vh] flex flex-col p-0 sm:p-0">
         <DialogHeader className="sticky top-0 z-10 bg-gray-2 border-b border-gray-3 px-6 py-4">
           <div className="flex items-center justify-between">
               <div>

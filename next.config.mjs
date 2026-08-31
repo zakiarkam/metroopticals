@@ -36,7 +36,9 @@ const nextConfig = {
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     minimumCacheTTL: 3600 * 24 * 365, // 1 year for production
-    dangerouslyAllowSVG: true,
+    // Nothing in the app serves SVG through the image optimizer — the upload
+    // route refuses SVG in every folder — so the risky format stays off.
+    dangerouslyAllowSVG: false,
     contentDispositionType: "attachment",
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
@@ -63,6 +65,38 @@ const nextConfig = {
           {
             key: "Permissions-Policy",
             value: "camera=(), microphone=(), geolocation=()",
+          },
+        ],
+      },
+      {
+        // The virtual try-on needs the front camera, and only on the pages
+        // that run it: the product page and the admin product editor's
+        // preview. A later rule for the same header wins, so the site-wide
+        // "camera=()" above stays in force everywhere else. Microphone and
+        // geolocation stay off  nothing on this site has a use for them.
+        source: "/shop-details/:path*",
+        headers: [
+          {
+            key: "Permissions-Policy",
+            value: "camera=(self), microphone=(), geolocation=()",
+          },
+        ],
+      },
+      {
+        source: "/admin/products/:path*",
+        headers: [
+          {
+            key: "Permissions-Policy",
+            value: "camera=(self), microphone=(), geolocation=()",
+          },
+        ],
+      },
+      {
+        source: "/admin/try-on-lab",
+        headers: [
+          {
+            key: "Permissions-Policy",
+            value: "camera=(self), microphone=(), geolocation=()",
           },
         ],
       },

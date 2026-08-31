@@ -14,10 +14,11 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id: rawId } = await params;
-  const id = parseIdParam(rawId);
-
   try {
+    // Inside the try so a mistyped id is a clean 400, not an unhandled 500.
+    const { id: rawId } = await params;
+    const id = parseIdParam(rawId);
+
     const product = await getProductById(id);
     if (product.status !== "ACTIVE") {
       await requireAdmin().catch(() => {
@@ -34,12 +35,12 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id: rawId } = await params;
-  const id = parseIdParam(rawId);
   const start = Date.now();
 
   try {
     await requireAdmin();
+    const { id: rawId } = await params;
+    const id = parseIdParam(rawId);
 
     const body = await request.json();
     const data = updateProductSchema.parse(body);
@@ -65,12 +66,12 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id: rawId } = await params;
-  const id = parseIdParam(rawId);
   const start = Date.now();
 
   try {
     await requireAdmin();
+    const { id: rawId } = await params;
+    const id = parseIdParam(rawId);
 
     await deleteProduct(id);
 

@@ -84,7 +84,7 @@ const AddAdvertisementDialog: React.FC<AddAdvertisementDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-gray-3 bg-gray-2 p-0 shadow-xl">
+      <DialogContent className="flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-gray-3 bg-gray-2 p-0 shadow-xl sm:p-0">
         <DialogHeader className="border-b border-gray-3 px-6 py-5">
           <DialogTitle className="text-[19px] font-semibold text-dark">
             New advertisement

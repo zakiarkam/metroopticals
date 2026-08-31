@@ -76,8 +76,37 @@ const eyewearSpecFields = {
   ),
 };
 
+/**
+ * Per-colour rows, sent alongside `frameColors`. A null stock keeps the
+ * colour uncounted (it falls back to the product total), so a colour can
+ * carry a photo before anyone has counted it; `image` names one of the
+ * product's own gallery images. Optional so products recorded before
+ * per-colour stock existed keep working without rows at all.
+ */
+const colorStocksSchema = z
+  .array(
+    z.object({
+      color: z.string().trim().min(1).max(40),
+      stock: z.preprocess(
+        (v) => (v === "" || v === undefined || v === null ? null : Number(v)),
+        z
+          .number()
+          .int("Stock must be a whole number")
+          .min(0, "Stock must be non-negative")
+          .nullable(),
+      ),
+      image: z.preprocess(
+        (v) => (typeof v === "string" && v.trim() === "" ? null : v),
+        z.string().trim().max(300).nullable().optional(),
+      ),
+    }),
+  )
+  .max(20)
+  .optional();
+
 export const createProductSchema = z.object({
   ...eyewearSpecFields,
+  colorStocks: colorStocksSchema,
   title: z.string().min(1, "Title is required"),
   slug: z.string().optional(),
   description: z.string().optional(),
@@ -100,6 +129,7 @@ export const createProductSchema = z.object({
 
 export const updateProductSchema = z.object({
   ...eyewearSpecFields,
+  colorStocks: colorStocksSchema,
   title: z.string().min(1).optional(),
   slug: z.string().optional(),
   description: z.string().optional(),
@@ -118,10 +148,14 @@ export const updateProductSchema = z.object({
 
 export const incrementProductStockSchema = z.object({
   count: z.number().int().positive("Count must be a positive integer"),
+  /** Which colourway the units belong to. Omitted for colourless products. */
+  color: z.string().trim().min(1).max(40).optional(),
 });
 
 export const decrementProductStockSchema = z.object({
   count: z.number().int().positive("Count must be a positive integer"),
+  /** Which colourway the units belong to. Omitted for colourless products. */
+  color: z.string().trim().min(1).max(40).optional(),
 });
 
 export const updateProductStatusSchema = z.object({

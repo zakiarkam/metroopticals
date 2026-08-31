@@ -166,7 +166,7 @@ const CatalogueUpload: React.FC<CatalogueUploadProps> = ({
               title="Delete catalogue"
             >
               {deleting ? (
-                <div className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-blue border-t-transparent rounded-full animate-spin" />
               ) : (
                 <X size={16} className="text-red-500" />
               )}
