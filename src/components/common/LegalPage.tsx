@@ -1,6 +1,21 @@
+import Link from "next/link";
+
 import PageHero from "@/components/common/PageHero";
 import SiteContainer from "@/components/common/SiteContainer";
 import { siteConfig } from "@/config/site";
+
+/**
+ * The policy set, cross-linked from every one of its pages.
+ *
+ * A customer reading the refund policy is one click from the terms that
+ * govern it, and the three documents read as a set rather than three pages
+ * that happen to exist.
+ */
+const POLICY_PAGES = [
+  { href: "/refund-policy", label: "Refund policy" },
+  { href: "/privacy", label: "Privacy policy" },
+  { href: "/terms", label: "Terms & conditions" },
+];
 
 export type LegalSection = { heading: string; paragraphs: string[]; bullets?: string[] };
 
@@ -51,7 +66,26 @@ export default function LegalPage({
                 </div>
               ))}
             </div>
-            <div className="mt-12 rounded-2xl border border-gray-3 bg-gray-1 p-6">
+            <div className="mt-12 border-t border-gray-3 pt-8">
+              <p className="text-custom-xs font-semibold uppercase tracking-[0.16em] text-dark-5">
+                The rest of the small print
+              </p>
+              <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2">
+                {POLICY_PAGES.filter((page) => page.label !== title).map(
+                  (page) => (
+                    <Link
+                      key={page.href}
+                      href={page.href}
+                      className="text-custom-sm font-semibold text-blue underline-offset-2 hover:underline"
+                    >
+                      {page.label}
+                    </Link>
+                  ),
+                )}
+              </div>
+            </div>
+
+            <div className="mt-8 rounded-2xl border border-gray-3 bg-gray-1 p-6">
               <p className="text-custom-sm text-body">
                 Questions about this policy? Write to{" "}
                 <a href={`mailto:${siteConfig.contact.email}`} className="font-semibold text-blue underline-offset-2 hover:underline">

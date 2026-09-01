@@ -3,6 +3,7 @@ import autoTable from "jspdf-autotable";
 import type { Order } from "@/features/orders/types/order";
 import { siteConfig } from "@/config/site";
 import { orderLineName } from "@/features/orders/utils/order-display";
+import { ONLINE_PAYMENT_FEE_LABEL } from "@/features/checkout/utils/payment-fee";
 
 type BusinessDetails = {
   legalName: string;
@@ -300,9 +301,17 @@ export const downloadOrderReceiptPdf = async (order: Order) => {
     totalLines.push({ label: "Discount", value: `- ${money(totalDiscount)}`, color: GREEN });
   }
   totalLines.push({
-    label: "Delivery",
+    label: order.shippingMethod === "pickup" ? "Collection" : "Delivery",
     value: order.shippingFee > 0 ? money(order.shippingFee) : "Free",
   });
+  // Named on its own line rather than folded into the goods, so the customer
+  // can see exactly what paying by card added.
+  if ((order.paymentFee ?? 0) > 0) {
+    totalLines.push({
+      label: ONLINE_PAYMENT_FEE_LABEL,
+      value: money(order.paymentFee as number),
+    });
+  }
 
   const totalsBlockH = totalLines.length * 6 + 12;
   if (y + totalsBlockH + 50 > pageH) {

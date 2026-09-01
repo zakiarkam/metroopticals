@@ -1,35 +1,88 @@
 import { z } from "zod";
 
-export const createOrderSchema = z.object({
-  items: z
-    .array(
-      z.object({
-        productId: z.coerce.number().int().positive(),
-        quantity: z.number().int().min(1),
-        price: z.number().positive(),
-        /** The colourway as chosen in the cart; blank for colour-less items. */
-        color: z.string().trim().max(60).optional(),
-      })
-    )
-    .min(1),
-  paymentMethod: z.enum(["cod", "bank_transfer"]),
-  shippingMethod: z.enum(["standard"]),
-  notes: z.string().trim().max(1000).optional(),
-  billingName: z.string().min(1),
-  billingEmail: z.string().email(),
-  billingPhone: z.string().min(1),
-  billingAddress: z.string().min(1),
-  billingCity: z.string().min(1),
-  billingCountry: z.string().optional(),
-  billingPostalCode: z.string().optional(),
-  shippingName: z.string().min(1),
-  shippingEmail: z.string().email(),
-  shippingPhone: z.string().min(1),
-  shippingAddress: z.string().min(1),
-  shippingCity: z.string().min(1),
-  shippingCountry: z.string().optional(),
-  shippingPostalCode: z.string().optional(),
-});
+import {
+  FULFILMENT_METHODS,
+  PAYMENT_METHODS,
+} from "@/features/checkout/constants/payment";
+
+/**
+ * A phone number as a person types one: digits, and the punctuation phones
+ * are written with. Deliberately loose — the shop calls these numbers, it
+ * does not parse them — but tight enough that free text cannot be smuggled
+ * into a field that ends up on a picking slip and in a WhatsApp message.
+ */
+const phone = z
+  .string()
+  .trim()
+  .min(9, "Enter a valid phone number")
+  .max(20)
+  .regex(/^[+()\d][\d\s()+-]*$/, "Enter a valid phone number");
+
+const shortText = (max: number) => z.string().trim().max(max);
+const requiredText = (max: number, message: string) =>
+  z.string().trim().min(1, message).max(max);
+
+const optionalText = (max: number) =>
+  shortText(max)
+    .optional()
+    .transform((value) => (value ? value : undefined));
+
+export const createOrderSchema = z
+  .object({
+    items: z
+      .array(
+        z.object({
+          productId: z.coerce.number().int().positive(),
+          quantity: z.number().int().min(1).max(99),
+          price: z.number().positive(),
+          /** The colourway as chosen in the cart; blank for colour-less items. */
+          color: shortText(60).optional(),
+        }),
+      )
+      .min(1)
+      .max(50),
+    paymentMethod: z.enum(PAYMENT_METHODS),
+    /** `standard` is island-wide delivery; `pickup` is collection at the shop. */
+    shippingMethod: z.enum(FULFILMENT_METHODS),
+    notes: shortText(1000).optional(),
+
+    billingName: requiredText(120, "Enter the name for the invoice"),
+    billingEmail: z.string().trim().email().max(120),
+    billingPhone: phone,
+    billingAddress: optionalText(200),
+    billingCity: optionalText(60),
+    billingCountry: optionalText(60),
+    billingPostalCode: optionalText(20),
+
+    // Optional in shape, required by the refinement below whenever the order
+    // is actually being delivered. A collection order has nothing to ship, so
+    // demanding an address for it would only teach people to type "N/A".
+    shippingName: optionalText(120),
+    shippingEmail: z.string().trim().email().max(120).optional().or(z.literal("")),
+    shippingPhone: phone.optional().or(z.literal("")),
+    shippingAddress: optionalText(200),
+    shippingCity: optionalText(60),
+    shippingCountry: optionalText(60),
+    shippingPostalCode: optionalText(20),
+  })
+  .superRefine((data, ctx) => {
+    if (data.shippingMethod !== "standard") return;
+
+    const required: Array<[keyof typeof data, string]> = [
+      ["billingAddress", "Enter the billing address"],
+      ["billingCity", "Enter the billing city"],
+      ["shippingName", "Enter who the delivery is for"],
+      ["shippingAddress", "Enter the delivery address"],
+      ["shippingCity", "Enter the delivery city"],
+      ["shippingPhone", "Enter a phone number for the delivery"],
+    ];
+
+    for (const [field, message] of required) {
+      if (!data[field]) {
+        ctx.addIssue({ code: "custom", message, path: [field] });
+      }
+    }
+  });
 
 export const updateOrderStatusSchema = z.object({
   status: z.enum([

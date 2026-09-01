@@ -133,6 +133,83 @@ device is in **[VIRTUAL-TRY-ON.md](VIRTUAL-TRY-ON.md)**.
 
 ---
 
+## Online payments (PayHere)
+
+Card payments go through **PayHere**, Sri Lanka's card gateway, in LKR. The
+storefront offers three ways to pay: cash on hand, bank transfer, and online
+card. The card option only appears when `NEXT_PUBLIC_PAYHERE_ENABLED="true"`.
+
+**How the flow works.** The customer's browser posts a *server-signed* form to
+PayHere and pays there — no card details ever touch this site. PayHere then
+calls back to `/api/payments/payhere/notify` server to server, and **that
+callback is the only thing that marks an order paid**. The customer's return
+to the site proves nothing; the confirmation page just polls the order until
+the callback has landed. A card order holds its stock but keeps the cart
+intact, so a declined or abandoned payment leaves the shopper able to retry
+from the confirmation page or from **My account → Orders**.
+
+**The surcharge.** `NEXT_PUBLIC_PAYHERE_FEE_PERCENT` (default `2.5`) is added
+to card orders only, computed on the server, shown on the checkout before the
+customer commits and printed on the invoice. Set it to `0` to charge nothing,
+and rename the line with `NEXT_PUBLIC_PAYHERE_FEE_LABEL`.
+
+**Testing against the sandbox.**
+
+1. Create a sandbox account at <https://sandbox.payhere.lk>, register your
+   domain under **Settings → Domains & Credentials**, and copy the merchant id
+   and secret into `.env`.
+2. PayHere has to reach your callback, and it cannot reach `localhost`. Run a
+   tunnel (`ngrok http 4500`) and set
+   `PAYHERE_NOTIFY_URL="https://<tunnel>/api/payments/payhere/notify"`.
+3. Set `NEXT_PUBLIC_PAYHERE_ENABLED="true"` and `NEXT_PUBLIC_PAYHERE_MODE="sandbox"`,
+   then restart — both are build-time values.
+4. Check out with a PayHere test card — Visa `4916217501611292`, Mastercard
+   `5307732125531191`, Amex `346781005510225`; any name, CVV and future
+   expiry are accepted. The order should land as **Confirmed / Card paid**,
+   the confirmation email should arrive, and the cart should empty.
+5. Cancel a payment instead, and confirm the order is cancelled, the stock
+   goes back, and the cart still has your items.
+
+Anything other than exactly `live` in `NEXT_PUBLIC_PAYHERE_MODE` is treated as
+sandbox, so a typo can never charge a real card. Full deployment notes are in
+[RAILWAY.md](RAILWAY.md#online-card-payments-payhere).
+
+### Why registering the domain is not optional
+
+PayHere signs `merchant_id + order_id + amount + currency` with **no separator
+between the fields**, so the digest cannot tell one reading of that string from
+another: `512` + `3500.00` and `5123` + `500.00` concatenate identically and
+hash identically. A customer holding a form we signed for their own order could
+re-split it, be charged a fraction of the total, and hand PayHere's genuine —
+correctly signed — reply back to us as proof the full amount was paid.
+
+Two things stand between that and a working exploit, and both must be in place:
+
+1. **Fixed-width order ids.** We always send `order_id` zero-padded to 12
+   digits and reject any callback whose order id is not exactly 12 digits
+   (`src/lib/payments/payhere.ts`). A re-split then produces a 13-digit order
+   id, so the callback PayHere sends for the shifted charge names no order we
+   will accept. **Do not "tidy up" that padding.**
+2. **PayHere's domain restriction.** The attack only survives if the attacker
+   can intercept that callback, which means repointing `notify_url` — a field
+   that is *outside* the signature. Registering the domain under
+   **Settings → Domains & Credentials** is what makes PayHere refuse a
+   `return_url` / `cancel_url` / `notify_url` on any other host. Confirm this
+   is active on the live account before taking real money, and keep
+   `PAYHERE_NOTIFY_URL` unset in production.
+
+If you move to a PayHere plan with the Payment Retrieval API, the belt-and-
+braces fix is to confirm each `payment_id` against that API before marking an
+order paid, and trust its amount over the callback's.
+
+**Policy pages.** PayHere's activation review requires a Refund policy, a
+Privacy policy and Terms & conditions reachable from the landing page. They
+live at `/refund-policy`, `/privacy` and `/terms`, are linked from the footer
+on every page, and share one layout in
+[`src/components/common/LegalPage.tsx`](src/components/common/LegalPage.tsx).
+
+---
+
 ## Brand and contact details
 
 Store name, contact details, social links and bank details live in one place:

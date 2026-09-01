@@ -32,6 +32,14 @@ import {
   returnColorStock,
 } from "@/features/products/services/color-stock-service";
 import { shopDateKey } from "@/features/pos/utils/shop-time";
+import {
+  isOnlinePayment,
+  isPickup,
+} from "@/features/checkout/constants/payment";
+import {
+  onlinePaymentFee,
+  roundMoney,
+} from "@/features/checkout/utils/payment-fee";
 
 type OrderWithItemsAndUser = Order & {
   // A counter line can be a service, and a product can be deleted after the
@@ -52,12 +60,7 @@ function formatOrderNumber(orderId: number, createdAt: Date): string {
   return `${day}/${month}/${year}/MO/${orderId}`;
 }
 
-async function notifyOrderPlacedWhatsApp(params: {
-  order: OrderWithItemsAndUser;
-  orderData: Omit<CreateOrderInput, "items" | "shippingFee">;
-}) {
-  const { order, orderData } = params;
-
+async function notifyOrderPlacedWhatsApp(order: OrderWithItemsAndUser) {
   const items = order.items.map((i) => ({
     product: {
       title: i.color ? `${orderLineName(i)} (${i.color})` : orderLineName(i),
@@ -67,8 +70,8 @@ async function notifyOrderPlacedWhatsApp(params: {
   }));
 
   const customerPhone =
-    orderData.shippingPhone?.trim() ||
-    orderData.billingPhone?.trim() ||
+    order.shippingPhone?.trim() ||
+    order.billingPhone?.trim() ||
     order.user?.phone?.trim() ||
     undefined;
 
@@ -187,9 +190,12 @@ export async function getOrderById(
   return order;
 }
 
-// Delivery pricing is decided here, never by the client.
+// Delivery pricing is decided here, never by the client. Island-wide delivery
+// is free, and so is collecting at the shop; the map stays because the day a
+// price appears it has to appear on the server, not in the checkout form.
 const SHIPPING_FEES: Record<CreateOrderInput["shippingMethod"], number> = {
   standard: 0,
+  pickup: 0,
 };
 
 export async function createOrder(userId: number, data: CreateOrderInput) {
@@ -277,7 +283,31 @@ export async function createOrder(userId: number, data: CreateOrderInput) {
     });
   }
 
-  const totalAmount = subtotal + shippingFee;
+  // The gateway's surcharge is worked out here from the method the customer
+  // chose, never taken from the request: a checkout that posted its own total
+  // could otherwise pay the card fee on a rupee.
+  const paymentFee = onlinePaymentFee(subtotal + shippingFee, data.paymentMethod);
+  const totalAmount = roundMoney(subtotal + shippingFee + paymentFee);
+
+  // Collecting at the shop has nothing to ship. The delivery columns are
+  // cleared rather than filled in from the invoice, so no picking slip ever
+  // implies a courier run that was not ordered — but the name, email and
+  // phone stay, because that is who we call when the glasses are ready.
+  const collecting = isPickup(data.shippingMethod);
+  const fulfilment = {
+    shippingName: orderData.shippingName || orderData.billingName,
+    shippingEmail: orderData.shippingEmail || orderData.billingEmail,
+    shippingPhone: orderData.shippingPhone || orderData.billingPhone,
+    shippingAddress: collecting ? null : orderData.shippingAddress ?? null,
+    shippingCity: collecting ? null : orderData.shippingCity ?? null,
+    shippingCountry: collecting ? null : orderData.shippingCountry ?? null,
+    shippingPostalCode: collecting ? null : orderData.shippingPostalCode ?? null,
+  };
+
+  // Nothing has been collected yet on a card order — the customer has not
+  // even reached the gateway — so it is written as unpaid and stays that way
+  // until the signed callback says otherwise.
+  const awaitingOnlinePayment = isOnlinePayment(data.paymentMethod);
 
   // Create order in transaction
   const order = await prisma.$transaction(async (tx) => {
@@ -288,8 +318,10 @@ export async function createOrder(userId: number, data: CreateOrderInput) {
         status: "PENDING",
         totalAmount,
         shippingFee,
+        paymentFee,
         subtotal,
         ...orderData,
+        ...fulfilment,
         items: {
           create: validatedItems.map(
             ({ productId, quantity, price, discountedPrice, color }) => ({
@@ -344,8 +376,13 @@ export async function createOrder(userId: number, data: CreateOrderInput) {
       });
     }
 
-    // Clear cart
-    await tx.cartItem.deleteMany({ where: { userId } });
+    // A card payment has not happened yet, so the basket stays exactly as it
+    // is: an abandoned or refused payment leaves the shopper able to try
+    // again instead of staring at an empty cart. The gateway callback clears
+    // the lines it actually paid for, once the money is in.
+    if (!awaitingOnlinePayment) {
+      await tx.cartItem.deleteMany({ where: { userId } });
+    }
 
     const finalOrderNumber = formatOrderNumber(newOrder.id, newOrder.createdAt);
 
@@ -363,31 +400,61 @@ export async function createOrder(userId: number, data: CreateOrderInput) {
   // transaction would expire mid-checkout. Production never gets close.
   { timeout: 20_000, maxWait: 10_000 });
 
+  // A card order is not news until it is paid for: telling the customer
+  // "order placed" while they are still on the gateway, and telling the shop
+  // to start cutting lenses, would both be wrong if the payment then failed.
+  // The gateway callback sends these instead.
+  if (!awaitingOnlinePayment) {
+    void sendOrderPlacedNotifications(order);
+  }
+
+  return order;
+}
+
+/**
+ * Everything that goes out when an order becomes real: the customer's receipt,
+ * the shop's copy, and the WhatsApp message.
+ *
+ * Split out of `createOrder` because a card order becomes real later than it
+ * is created — the gateway callback calls this once the payment clears, so
+ * both routes send the same three messages, in the same words.
+ *
+ * Every send is fire-and-forget and swallows its own failure: a mail provider
+ * having a bad afternoon must never turn a paid order into a failed request.
+ */
+export function sendOrderPlacedNotifications(order: OrderWithItemsAndUser) {
+  const emailItems = order.items.map((item) => ({
+    quantity: item.quantity,
+    price: item.discountedPrice ?? item.price,
+    color: item.color,
+    product: {
+      title: orderLineName(item),
+      images: item.product?.images ?? [],
+      catalogueFile: item.product?.catalogueFile ?? null,
+    },
+  }));
+
+  const customerEmail =
+    order.billingEmail?.trim() || order.user?.email?.trim() || "";
+
   // Customer email
   void (async () => {
     try {
-      const emailItems = order.items.map((item) => ({
-        quantity: item.quantity,
-        price: item.discountedPrice ?? item.price,
-        color: item.color,
-        product: {
-          title: orderLineName(item),
-          images: item.product?.images ?? [],
-          catalogueFile: item.product?.catalogueFile ?? null,
-        },
-      }));
-
+      if (!customerEmail) {
+        logger.warn("Skipping order confirmation email: no address on order");
+        return;
+      }
       await sendOrderConfirmationEmail(
-        orderData.billingEmail,
+        customerEmail,
         order.orderNumber,
         order.id,
         {
-          billingName: orderData.billingName,
-          billingEmail: orderData.billingEmail,
-          shippingAddress: orderData.shippingAddress,
-          shippingCity: orderData.shippingCity,
-          shippingCountry: orderData.shippingCountry,
-          totalAmount,
+          billingName: order.billingName,
+          billingEmail: customerEmail,
+          shippingAddress: order.shippingAddress ?? undefined,
+          shippingCity: order.shippingCity ?? undefined,
+          shippingCountry: order.shippingCountry ?? undefined,
+          totalAmount: order.totalAmount,
           items: emailItems,
         },
       );
@@ -402,47 +469,36 @@ export async function createOrder(userId: number, data: CreateOrderInput) {
       const adminEmail = process.env.ADMIN_EMAIL?.trim();
       if (!adminEmail) return;
 
-      const emailItems = order.items.map((item) => ({
-        quantity: item.quantity,
-        price: item.discountedPrice ?? item.price,
-        color: item.color,
-        product: {
-          title: orderLineName(item),
-          images: item.product?.images ?? [],
-          catalogueFile: item.product?.catalogueFile ?? null,
-        },
-      }));
-
       await sendOrderNotificationToAdmin(adminEmail, order.orderNumber, {
-        billingName: orderData.billingName,
-        billingEmail: orderData.billingEmail,
-        billingPhone: orderData.billingPhone,
-        totalAmount,
+        billingName: order.billingName,
+        billingEmail: customerEmail,
+        billingPhone: order.billingPhone,
+        totalAmount: order.totalAmount,
         items: emailItems,
-        shippingAddress: orderData.shippingAddress,
-        shippingCity: orderData.shippingCity,
-        shippingCountry: orderData.shippingCountry,
-        notes: orderData.notes,
+        shippingAddress: order.shippingAddress ?? undefined,
+        shippingCity: order.shippingCity ?? undefined,
+        shippingCountry: order.shippingCountry ?? undefined,
+        notes: order.notes ?? undefined,
       });
     } catch (err) {
       logger.error("❌ Admin email sending error", serializeError(err));
     }
   })();
 
-  // WhatsApp: order placed (customer -> admin)
-  void notifyOrderPlacedWhatsApp({ order, orderData }).catch((err) => {
+  // WhatsApp: order placed
+  void notifyOrderPlacedWhatsApp(order).catch((err) => {
     logger.error("❌ notifyOrderPlacedWhatsApp error", serializeError(err));
   });
-
-  return order;
 }
 
 /**
- * Which payment row a settled online order writes.
+ * Which payment row is written when an order is settled on delivery.
  *
- * The order carries the customer's chosen method as the checkout wrote it;
- * the payments table speaks the counter's enum, so the two are mapped here
- * rather than guessed at the call site.
+ * Only reached with money still outstanding, which is why a card order maps
+ * to CASH rather than ONLINE: a successful card payment writes its own row
+ * from the gateway callback, so an order that still owes money at the door
+ * was one whose card payment never landed — and what the courier took was
+ * cash.
  */
 function paymentMethodForOrder(paymentMethod: string | null): PaymentMethod {
   return paymentMethod === "bank_transfer" ? "BANK_TRANSFER" : "CASH";

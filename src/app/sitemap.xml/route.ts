@@ -84,7 +84,7 @@ export async function GET() {
       priority: 0.3,
     },
     {
-      url: buildSiteUrl("/returns"),
+      url: buildSiteUrl("/refund-policy"),
       changeFrequency: "yearly",
       priority: 0.4,
     },

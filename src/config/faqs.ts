@@ -26,7 +26,7 @@ export const faqs: Faq[] = [
     question: "How long does it take to make my glasses?",
     answer: [
       "Single-vision lenses are typically ready in 2–3 working days. Progressive, high-index and specially coated lenses usually take 5–7 working days.",
-      "Once your glasses are ready, we will notify you, and delivery across Sri Lanka takes a further 1–3 working days depending on your location.",
+      "Once your glasses are ready we message you, and delivery takes a further 1–3 working days depending on where you are. Delivery is free anywhere in Sri Lanka, or you can collect from the store at no charge.",
     ],
   },
   {
@@ -46,8 +46,14 @@ export const faqs: Faq[] = [
   {
     question: "What payment methods do you accept?",
     answer: [
-      "We accept credit and debit cards, bank transfers, and cash on delivery for orders within selected areas.",
-      "Select your preferred method at checkout. For corporate or bulk orders, contact us to arrange invoicing.",
+      "Online you can pay cash on collection or delivery, by bank transfer to the account on your invoice, or by card. Card payments go through PayHere's secure page — your card details never touch our website — and carry a small online payment fee, which is shown before you commit. In the shop we take cash, card and bank transfer.",
+      "For corporate or bulk orders, contact us to arrange invoicing.",
+    ],
+  },
+  {
+    question: "How much is delivery?",
+    answer: [
+      "Nothing. Delivery is free anywhere in Sri Lanka, on every order, with no minimum spend. You can also choose to collect from our Nawalapitiya store, which is free too — we hold collection orders for 30 days.",
     ],
   },
 ];

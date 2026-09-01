@@ -566,7 +566,7 @@ export const BLOCKS: BlockDefinition[] = [
           links: [
             { label: "Contact us", href: "/contact" },
             { label: "Book an eye test", href: "/contact" },
-            { label: "Delivery & returns", href: "/faq" },
+            { label: "Delivery & returns", href: "/refund-policy" },
             { label: "Track my order", href: "/my-account/orders" },
             { label: "How to measure your PD", href: "/faq" },
             { label: "FAQ", href: "/faq" },
@@ -580,7 +580,7 @@ export const BLOCKS: BlockDefinition[] = [
             { label: "Visit our store", href: "/contact" },
             { label: "Privacy policy", href: "/privacy" },
             { label: "Terms & conditions", href: "/terms" },
-            { label: "Returns & warranty", href: "/returns" },
+            { label: "Refund policy", href: "/refund-policy" },
           ],
         },
       ],

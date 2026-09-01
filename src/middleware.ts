@@ -13,6 +13,27 @@ import { safeRedirectPath } from "@/lib/safe-redirect";
  * that way. `'strict-dynamic'` lets nonce'd scripts load the chunks they
  * need without every hash being listed here.
  */
+/**
+ * The card gateway's origin, for `form-action`, when one is switched on.
+ *
+ * Scoped by environment and not by path, deliberately. A policy binds to the
+ * document that carried it, and an App Router navigation replaces no
+ * document: a shopper reaching /checkout from the cart is still running the
+ * cart's policy, so a per-path exception would never be the one in force at
+ * the moment the payment form is submitted. The browser would block the
+ * hand-off silently — no error to catch, no page to show — and the order
+ * would sit unpaid with its stock held.
+ *
+ * So: one origin, site-wide, only while the gateway is on, and only the one
+ * actually in use — production never permits posting to the sandbox host.
+ */
+const paymentFormAction = () => {
+  if (process.env.NEXT_PUBLIC_PAYHERE_ENABLED?.trim() !== "true") return "";
+  return process.env.NEXT_PUBLIC_PAYHERE_MODE?.trim().toLowerCase() === "live"
+    ? " https://www.payhere.lk"
+    : " https://sandbox.payhere.lk";
+};
+
 const buildCsp = (nonce: string, path: string) => {
   const r2 = process.env.NEXT_PUBLIC_R2_PUBLIC_URL || "";
   const dev = process.env.NODE_ENV !== "production";
@@ -39,7 +60,11 @@ const buildCsp = (nonce: string, path: string) => {
     "frame-src 'self'",
     "frame-ancestors 'self'",
     "base-uri 'self'",
-    "form-action 'self'",
+    // Paying by card is a form POST to PayHere, which `form-action 'self'`
+    // would block outright. Nothing else on the site may post anywhere but
+    // here, which is what stops an injected form being used to exfiltrate
+    // what a customer typed.
+    `form-action 'self'${paymentFormAction()}`,
     "object-src 'none'",
     "upgrade-insecure-requests",
   ].join("; ");

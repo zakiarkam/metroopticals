@@ -144,6 +144,37 @@ including after you attach a custom domain.
 | `LOG_LEVEL`                   | `info` (use `debug` temporarily when investigating) |
 | `NODE_ENV`                    | `production` in both environments                   |
 
+### Online card payments (PayHere)
+
+Optional. Leave `NEXT_PUBLIC_PAYHERE_ENABLED` unset and the storefront offers
+only cash and bank transfer — nothing PayHere-related is rendered.
+
+| Variable                          | Notes                                                                                       |
+| --------------------------------- | ------------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_PAYHERE_ENABLED`     | `true` to offer "Pay online" and show the card logos **build-time**                          |
+| `NEXT_PUBLIC_PAYHERE_MODE`        | `sandbox` or `live`. Anything but exactly `live` is sandbox **build-time**                    |
+| `NEXT_PUBLIC_PAYHERE_FEE_PERCENT` | Surcharge on card orders, e.g. `2.5`. `0` charges nothing **build-time**                      |
+| `NEXT_PUBLIC_PAYHERE_FEE_LABEL`   | Optional. Defaults to `Online payment fee (2.5%)` **build-time**                              |
+| `PAYHERE_MERCHANT_ID`             | From the PayHere dashboard                                                                    |
+| `PAYHERE_MERCHANT_SECRET`         | From the PayHere dashboard. **Server-only** — never give it a `NEXT_PUBLIC_` prefix           |
+| `PAYHERE_NOTIFY_URL`              | Leave unset in production; built from `NEXT_PUBLIC_SITE_URL`. Only for tunnelled local testing |
+
+Before it works, register the deployed domain in the PayHere dashboard under
+**Settings → Domains & Credentials** — PayHere refuses payments from a domain
+it has not been told about, and that page is where the merchant secret comes
+from. **This is a security control, not just setup**: it is what stops a
+`notify_url` being repointed at someone else's collector, which is the one
+thing that would make PayHere's separator-free signature forgeable. See
+[README](README.md#why-registering-the-domain-is-not-optional). Keep
+`PAYHERE_NOTIFY_URL` unset in production. The sandbox and live dashboards are separate accounts with separate
+credentials, so switching `NEXT_PUBLIC_PAYHERE_MODE` means switching
+`PAYHERE_MERCHANT_ID` and `PAYHERE_MERCHANT_SECRET` too.
+
+Turn the gateway on in **sandbox** mode before submitting the site for PayHere
+activation: their reviewer checks that the accepted-card logos and the Refund,
+Privacy and Terms pages are visible from the landing page, and all four are
+gated on `NEXT_PUBLIC_PAYHERE_ENABLED` / linked from the footer.
+
 **The `NEXT_PUBLIC_*` gotcha:** those values are compiled into the JavaScript
 sent to the browser during `npm run build`. Changing one and restarting does
 nothing you must **redeploy** for it to take effect.

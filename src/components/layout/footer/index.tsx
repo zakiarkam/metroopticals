@@ -1,4 +1,5 @@
 import React from "react";
+import Image from "next/image";
 import Link from "next/link";
 import {
   Facebook,
@@ -103,6 +104,22 @@ type FooterColumn = {
 type FooterSocial = { platform?: string; href?: string };
 
 const shopLink = (query: string) => `/shop-with-sidebar?${query}`;
+
+/**
+ * The three documents a customer — and a payment gateway's activation review —
+ * expects to find linked from the landing page. Hard-coded rather than pulled
+ * from the editable footer columns: these have to be reachable even if someone
+ * rearranges the columns in the storefront editor.
+ */
+const POLICY_LINKS = [
+  { label: "Refund policy", href: "/refund-policy" },
+  { label: "Privacy policy", href: "/privacy" },
+  { label: "Terms & conditions", href: "/terms" },
+];
+
+/** Only claim online card acceptance when the gateway is actually switched on. */
+const SHOWS_PAYMENT_LOGOS =
+  process.env.NEXT_PUBLIC_PAYHERE_ENABLED === "true";
 
 export default async function Footer() {
   // Catalogue-sourced columns need the live tables. Both are optional  a
@@ -238,6 +255,40 @@ export default async function Footer() {
                 </nav>
               ))}
             </div>
+          </div>
+
+          {/* --------------------- payments & policies --------------------- */}
+          <div className="flex flex-col items-center justify-between gap-6 border-t border-white/10 py-6 sm:flex-row">
+            {SHOWS_PAYMENT_LOGOS && (
+              <div className="flex flex-col items-center gap-2.5 sm:items-start">
+                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-white/45">
+                  We accept
+                </p>
+                <Image
+                  src="https://www.payhere.lk/downloads/images/payhere_long_banner_dark.png"
+                  alt="Visa, Mastercard, American Express and mobile wallets, accepted securely through PayHere"
+                  width={400}
+                  height={45}
+                  unoptimized
+                  className="h-auto w-[250px] max-w-full"
+                />
+              </div>
+            )}
+
+            <nav
+              aria-label="Policies"
+              className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 sm:ml-auto"
+            >
+              {POLICY_LINKS.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="text-[12.5px] text-white/65 transition-colors hover:text-blue-light"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
           </div>
 
           <div className="flex flex-col items-center justify-between gap-3 border-t border-white/10 py-6 text-[12.5px] text-white/50 sm:flex-row">

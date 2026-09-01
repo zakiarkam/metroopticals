@@ -31,6 +31,14 @@ const nextConfig = {
         hostname: "cdn.metroopticals.lk",
         pathname: "/**",
       },
+      // PayHere's own "cards we accept" banner, shown at checkout and in the
+      // footer. Served from their site so it stays current when they add a
+      // payment method; rendered unoptimised, since it is already a small PNG.
+      {
+        protocol: "https",
+        hostname: "www.payhere.lk",
+        pathname: "/downloads/images/**",
+      },
     ],
     // Optimize cache and device sizes for production
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
@@ -49,6 +57,20 @@ const nextConfig = {
   // Railway terminates TLS and proxies to the container; gzip here still helps
   // because the proxy forwards the response body as-is.
   compress: true,
+
+  async redirects() {
+    return [
+      {
+        // Returns, refunds and the warranty used to be three-quarters of a
+        // page at /returns. They are now one complete Refund policy — the
+        // document a payment gateway looks for by name — so the old URL
+        // follows rather than going stale in inbound links and old invoices.
+        source: "/returns",
+        destination: "/refund-policy",
+        permanent: true,
+      },
+    ];
+  },
 
   async headers() {
     return [

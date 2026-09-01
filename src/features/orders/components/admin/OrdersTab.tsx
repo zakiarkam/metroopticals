@@ -425,6 +425,23 @@ const OrdersTab: React.FC<OrdersTabProps> = ({
                       <p className="font-semibold text-dark truncate">
                         {formatPrice(order.totalAmount)}
                       </p>
+                      {/* Whether the money is actually in, for the orders
+                          where that is not obvious from the status. A card
+                          order that says PENDING here has not been paid for
+                          and must not be picked and packed. */}
+                      {order.paymentMethod === "payhere" && (
+                        <span
+                          className={`mt-1 inline-flex rounded-full border px-2 py-0.5 text-[10px] font-medium ${
+                            order.paymentStatus === "PAID"
+                              ? "border-green/25 bg-green/10 text-green"
+                              : "border-orange/25 bg-orange/10 text-orange"
+                          }`}
+                        >
+                          {order.paymentStatus === "PAID"
+                            ? "Card paid"
+                            : "Awaiting payment"}
+                        </span>
+                      )}
                     </div>
                     <div className="min-w-0 flex items-center">
                       {/* Status Button - Clickable to change */}

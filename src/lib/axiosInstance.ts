@@ -114,19 +114,32 @@ axiosInstance.interceptors.response.use(
       }
     }
 
-    console.error("API Error:", {
+    const status = error.response?.status;
+    const detail = {
       url: error.config?.url,
       method: error.config?.method,
-      status: error.response?.status,
+      status,
       message:
         // prefer server message if exists
         (error.response?.data as any)?.message || error.message,
-    });
+    };
+
+    // "You are not signed in" is a state the app handles, not a fault. Logged
+    // as an error it became a red overlay in development and a stream of
+    // pointless entries in the client log — for something as ordinary as a
+    // session expiring while a tab was left open. The caller still gets the
+    // rejection and still decides what to do about it.
+    if (status === 401 || status === 403) {
+      console.warn("API request not authorised:", detail);
+      return Promise.reject(error);
+    }
+
+    console.error("API Error:", detail);
 
     logClientError(error, {
       url: error.config?.url,
       method: error.config?.method,
-      status: error.response?.status,
+      status,
     });
 
     return Promise.reject(error);

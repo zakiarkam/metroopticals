@@ -147,15 +147,15 @@ model Product {
   rating      Float? // null until the first published review
   reviewCount Int    @default(0)
 
-  id             Int             @id @default(autoincrement())
+  id             Int                 @id @default(autoincrement())
   categoryId     Int?
   brandId        Int?
   advertisements Advertisement[]
   cartItems      CartItem[]
   orderItems     OrderItem[]
   reviews        Review[]
-  brand          Brand?          @relation(fields: [brandId], references: [id])
-  category       Category?       @relation("ProductCategory", fields: [categoryId], references: [id])
+  brand          Brand?              @relation(fields: [brandId], references: [id])
+  category       Category?           @relation("ProductCategory", fields: [categoryId], references: [id])
   wishlistItems  WishlistItem[]
   stockMovements StockMovement[]
   tryOnAssets    ProductTryOnAsset[]
@@ -178,7 +178,7 @@ model Product {
 /// count (and any colour with no row at all) is uncounted and falls back to
 /// the total, so nothing recorded before per-colour stock existed changes.
 model ProductColorStock {
-  id        Int    @id @default(autoincrement())
+  id        Int     @id @default(autoincrement())
   productId Int
   /// Matches an entry in Product.frameColors.
   color     String
@@ -224,10 +224,10 @@ model ProductTryOnAsset {
   /// derived from lensWidth + bridgeWidth + rim thickness when present.
   frameWidthMm Float?
 
-  source TryOnSource @default(PHOTO)
+  source   TryOnSource @default(PHOTO)
   /// False until it passes the QA checklist. Also the per-product rollout
   /// flag: a product with no active asset shows no Try On button.
-  isActive Boolean @default(false)
+  isActive Boolean     @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -293,6 +293,10 @@ model Order {
   paymentStatus  PaymentStatus @default(PENDING)
   /// Bill-level discount in rupees, on top of any per-line discount.
   discountAmount Float         @default(0)
+  /// Surcharge added for paying online through the card gateway, in rupees.
+  /// Kept out of `shippingFee` and `subtotal` so the invoice can name it for
+  /// what it is, and so a bill paid in cash never carries one.
+  paymentFee     Float         @default(0)
   /// Sum of the payment rows, kept here so lists do not have to aggregate.
   amountPaid     Float         @default(0)
   /// When the rest of the money is expected, on a bill the customer is paying
@@ -599,14 +603,19 @@ model Customer {
 /// and the balance on collection  so payments are rows rather than a single
 /// method column on the order.
 model Payment {
-  id        Int           @id @default(autoincrement())
-  orderId   Int
-  method    PaymentMethod
+  id               Int           @id @default(autoincrement())
+  orderId          Int
+  method           PaymentMethod
   /// Positive for a collection, negative for a refund against a return.
-  amount    Float
+  amount           Float
   /// Card slip number, bank transfer reference, or a note on a refund.
-  reference String?
-  createdAt DateTime      @default(now())
+  reference        String?
+  /// The gateway's own payment id, for a row raised by an online payment.
+  /// Unique because the gateway retries its notification until it is
+  /// acknowledged: the second delivery of the same payment must not be able
+  /// to write a second row and double the money collected.
+  gatewayPaymentId String?       @unique
+  createdAt        DateTime      @default(now())
 
   createdById Int?
   order       Order @relation(fields: [orderId], references: [id], onDelete: Cascade)

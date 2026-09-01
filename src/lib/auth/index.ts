@@ -161,9 +161,19 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
     async session({ session, token }) {
+      // A retired session — account removed, password changed, a staff login
+      // older than a shift — is retired above by stripping the token's
+      // identity, not by deleting the cookie. Handing back a session object
+      // anyway gave it `id: NaN`, which every API route refuses but which
+      // `useSession` still reports as *authenticated*: the browser believed it
+      // was signed in while the cart, the account page and everything else
+      // answered 401. No id, no session.
+      const userId =
+        typeof token?.id === "number" ? token.id : Number(token?.id ?? NaN);
+      if (!Number.isInteger(userId)) return null as unknown as typeof session;
+
       if (token && session.user) {
-        session.user.id =
-          typeof token.id === "number" ? token.id : Number(token.id ?? NaN);
+        session.user.id = userId;
         session.user.email = token.email as string;
         session.user.name = token.name as string;
 

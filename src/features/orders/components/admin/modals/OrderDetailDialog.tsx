@@ -28,6 +28,7 @@ import {
   orderLineName,
 } from "@/features/orders/utils/order-display";
 import { savedLineTotal } from "@/features/pos/utils/bill";
+import { ONLINE_PAYMENT_FEE_LABEL } from "@/features/checkout/utils/payment-fee";
 
 interface OrderDetailDialogProps {
   isOpen: boolean;
@@ -441,10 +442,24 @@ const OrderDetailDialog: React.FC<OrderDetailDialogProps> = ({
                   {order.shippingFee > 0 && (
                     <div className="flex items-center justify-between gap-3">
                       <span className="text-xs md:text-sm text-body">
-                        Delivery
+                        {order.shippingMethod === "pickup"
+                          ? "Collection"
+                          : "Delivery"}
                       </span>
                       <span className="text-xs md:text-sm font-semibold text-dark">
                         {formatPrice(order.shippingFee)}
+                      </span>
+                    </div>
+                  )}
+                  {/* The card surcharge, on its own line: it is the cost of
+                      taking the payment, not part of the goods. */}
+                  {(order.paymentFee ?? 0) > 0 && (
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-xs md:text-sm text-body">
+                        {ONLINE_PAYMENT_FEE_LABEL}
+                      </span>
+                      <span className="text-xs md:text-sm font-semibold text-dark">
+                        {formatPrice(order.paymentFee ?? 0)}
                       </span>
                     </div>
                   )}

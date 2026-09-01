@@ -78,7 +78,11 @@ export interface Order {
   totalAmount: number;
   subtotal: number;
   shippingFee: number;
+  /** Surcharge for paying online by card, in rupees. Zero for every other way. */
+  paymentFee?: number;
+  /** `cod`, `bank_transfer` or `payhere` on a storefront order. */
   paymentMethod?: string | null;
+  /** `standard` for island-wide delivery, `pickup` for store collection. */
   shippingMethod?: string | null;
   notes?: string | null;
   billingName: string;

@@ -1,11 +1,16 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Download, ImageOff, Loader2, Star } from "lucide-react";
+import toast from "react-hot-toast";
+import { CreditCard, Download, ImageOff, Loader2, Star } from "lucide-react";
 
 import { Order, OrderStatus } from "@/features/orders/types/order";
+import {
+  createPayHereSession,
+  submitPayHereCheckout,
+} from "@/features/checkout/api/payhere-api";
 import { getProductImageUrl } from "@/lib/storageUtils";
 import { formatPrice } from "@/lib/utils/price";
 import { orderLineName } from "@/features/orders/utils/order-display";
@@ -63,6 +68,30 @@ const OrderRow: React.FC<OrderRowProps> = ({
   const imageUrl = resolveImage(firstItem?.product?.images);
   const extraItems = order.items.length - 1;
 
+  const [isPaying, setIsPaying] = useState(false);
+
+  // A card payment the customer walked away from: the order is real and its
+  // stock is held, but no money has arrived. Rather than leave them to place
+  // it again, the row offers the payment page back.
+  const awaitingPayment =
+    order.paymentMethod === "payhere" &&
+    order.paymentStatus !== "PAID" &&
+    order.status !== "CANCELLED";
+
+  const handlePayNow = async () => {
+    if (isPaying) return;
+    setIsPaying(true);
+    try {
+      submitPayHereCheckout(await createPayHereSession(order.id));
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.message ||
+          "We couldn't open the payment page. Please try again.",
+      );
+      setIsPaying(false);
+    }
+  };
+
   const canReview = order.status === "DELIVERED";
   const reviewableExtras = canReview
     ? order.items.slice(1).filter((item) => item.product?.id)
@@ -88,13 +117,20 @@ const OrderRow: React.FC<OrderRowProps> = ({
           </span>
         </div>
 
-        <span
-          className={`shrink-0 rounded-full border px-2.5 py-1 text-[10.5px] font-bold uppercase tracking-[0.1em] ${
-            statusStyles[order.status]
-          }`}
-        >
-          {statusLabel}
-        </span>
+        <div className="flex shrink-0 items-center gap-2">
+          {awaitingPayment && (
+            <span className="rounded-full border border-orange/30 bg-orange/10 px-2.5 py-1 text-[10.5px] font-bold uppercase tracking-[0.1em] text-orange">
+              Unpaid
+            </span>
+          )}
+          <span
+            className={`rounded-full border px-2.5 py-1 text-[10.5px] font-bold uppercase tracking-[0.1em] ${
+              statusStyles[order.status]
+            }`}
+          >
+            {statusLabel}
+          </span>
+        </div>
       </div>
 
       {/* Body: thumbnail + title, with the total on the right on wide screens
@@ -155,6 +191,22 @@ const OrderRow: React.FC<OrderRowProps> = ({
 
         {/* Actions: side by side, each taking half the width on phones. */}
         <div className="mt-4 flex gap-2.5 sm:justify-end">
+          {awaitingPayment && (
+            <button
+              type="button"
+              onClick={handlePayNow}
+              disabled={isPaying}
+              className="inline-flex h-11 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-blue px-3 text-[12.5px] font-semibold text-white transition-colors hover:bg-blue-dark disabled:cursor-wait disabled:opacity-60 sm:flex-none sm:px-5 sm:text-[13px]"
+            >
+              {isPaying ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <CreditCard className="h-4 w-4" />
+              )}
+              Pay now
+            </button>
+          )}
+
           {canReview && productUrl && (
             <Link
               href={`${productUrl}#reviews`}

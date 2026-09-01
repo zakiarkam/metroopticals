@@ -83,7 +83,11 @@ export const useCart = () => {
       });
       dispatch(syncCartItems(mappedItems));
     } catch (error) {
-      console.error("Failed to load cart:", error);
+      // A signed-out or expired session is not a cart failure — the basket is
+      // simply empty until they sign in again. Anything else is worth seeing.
+      if ((error as any)?.response?.status !== 401) {
+        console.error("Failed to load cart:", error);
+      }
     } finally {
       cartPollInFlight = false;
     }
