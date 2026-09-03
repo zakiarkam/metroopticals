@@ -37,6 +37,14 @@ export const createOrderSchema = z
           price: z.number().positive(),
           /** The colourway as chosen in the cart; blank for colour-less items. */
           color: shortText(60).optional(),
+          /**
+           * Which basket line this is. Sent so the server can find the lens
+           * choice attached to it — the lens type, tint and prescription are
+           * never taken from the request, only the line's identity is, and
+           * everything about the lenses is read back off our own row and
+           * re-priced from the live price list.
+           */
+          cartItemId: z.coerce.number().int().positive().optional(),
         }),
       )
       .min(1)

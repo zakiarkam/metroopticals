@@ -24,6 +24,26 @@ type CartItem = {
     thumbnails: string[];
     previews: string[];
   };
+  /** Prescription lenses fitted to this frame; absent on a bare frame. */
+  lens?: {
+    lensTypeId: number;
+    lensTypeName: string;
+    lensTypeSlug: string;
+    /** The build — single vision, bifocal, progressive. */
+    designId: number | null;
+    designName: string | null;
+    designKind: "SINGLE_VISION" | "BIFOCAL" | "PROGRESSIVE" | null;
+    tintId: number | null;
+    tintName: string | null;
+    tintHex: string | null;
+    prescriptionId: number | null;
+    prescriptionLabel: string | null;
+    prescriptionVersion: number | null;
+    /** Summary line for the cart row, e.g. "OD -2.25 … · OS …". */
+    summary: string | null;
+    /** Price for the pair, tint included. */
+    price: number;
+  } | null;
 };
 
 const initialState: InitialState = {
@@ -49,6 +69,7 @@ export const cart = createSlice({
         imgs,
         stock,
         status,
+        lens,
       } = action.payload;
 
       // A line is identified by product *and* colour: adding the tortoise of a
@@ -78,6 +99,7 @@ export const cart = createSlice({
           imgs,
           stock,
           status,
+          lens,
         });
       }
       state.lastFetched = Date.now();
@@ -127,11 +149,23 @@ export const cart = createSlice({
 
 export const selectCartItems = (state: RootState) => state.cartReducer.items;
 
+/** What one line costs: the frame plus whatever lenses were fitted to it. */
+export const lineUnitPrice = (item: {
+  discountedPrice: number;
+  lens?: { price: number } | null;
+}) => item.discountedPrice + (item.lens?.price ?? 0);
+
 export const selectTotalPrice = createSelector([selectCartItems], (items) => {
-  return items.reduce((total, item) => {
-    return total + item.discountedPrice * item.quantity;
-  }, 0);
+  return items.reduce(
+    (total, item) => total + lineUnitPrice(item) * item.quantity,
+    0,
+  );
 });
+
+/** The lens half of the basket on its own, so the summary can name it. */
+export const selectLensTotal = createSelector([selectCartItems], (items) =>
+  items.reduce((total, item) => total + (item.lens?.price ?? 0) * item.quantity, 0),
+);
 
 export const {
   addItemToCart,

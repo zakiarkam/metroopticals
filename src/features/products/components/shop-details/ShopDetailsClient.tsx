@@ -6,6 +6,7 @@ import Link from "next/link";
 import {
   ChevronRight,
   Download,
+  Eye,
   Heart,
   Loader2,
   Minus,
@@ -504,6 +505,27 @@ const ShopDetailsClient = ({
                   />
                   {saved ? "Saved" : "Save"}
                 </button>
+              </div>
+
+              {/* Said on the frame page, because "does this come with my
+                  prescription in it?" is the question a frame page leaves
+                  unanswered, and the answer is yes. */}
+              <div className="mt-4 flex gap-2.5 rounded-xl border border-blue/25 bg-blue/[0.06] px-4 py-3">
+                <Eye className="mt-0.5 h-4 w-4 shrink-0 text-blue" />
+                <p className="text-[12.5px] leading-relaxed text-dark-3">
+                  <strong className="font-semibold text-dark">
+                    Add prescription lenses in your cart.
+                  </strong>{" "}
+                  Single vision, blue cut, photochromic, bifocal or progressive
+                  — type your prescription in, upload a photo of it, or use one
+                  we already hold.{" "}
+                  <Link
+                    href="/lenses"
+                    className="font-semibold text-blue underline underline-offset-2"
+                  >
+                    Compare lens types
+                  </Link>
+                </p>
               </div>
 
               {catalogueUrl && (

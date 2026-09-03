@@ -1,5 +1,33 @@
 import axiosInstance from "@/lib/axiosInstance";
 
+export type CartItemLens = {
+  lensTypeId: number | null;
+  lensDesignId: number | null;
+  lensTintId: number | null;
+  prescriptionId: number | null;
+  /** Price for the pair of lenses on this line, tint included. */
+  lensPrice: number;
+  lensType?: {
+    id: number;
+    name: string;
+    slug: string;
+    isActive: boolean;
+  } | null;
+  lensDesign?: {
+    id: number;
+    name: string;
+    kind: "SINGLE_VISION" | "BIFOCAL" | "PROGRESSIVE";
+    isActive: boolean;
+  } | null;
+  lensTint?: { id: number; name: string; hex: string | null; surcharge: number } | null;
+  prescription?: {
+    id: number;
+    label: string;
+    version: number;
+    [key: string]: unknown;
+  } | null;
+};
+
 export type CartItem = {
   id: number;
   userId: number;
@@ -21,7 +49,7 @@ export type CartItem = {
     /** Per-colour rows; a null stock means the colour is not counted. */
     colorStocks?: { color: string; stock: number | null }[];
   };
-};
+} & Partial<CartItemLens>;
 
 export type AddToCartInput = {
   productId: number;
@@ -69,4 +97,45 @@ export const removeFromCart = async (id: number): Promise<void> => {
 
 export const clearCart = async (): Promise<void> => {
   await axiosInstance.delete("/cart");
+};
+
+/** A basket line whose lens price moved, or can no longer be priced at all. */
+export type RepricedLine = {
+  id: number;
+  title: string;
+  from: number;
+  /** Null when the lens can no longer be sold at any price. */
+  to: number | null;
+  reason: string | null;
+};
+
+/**
+ * Bring the basket's lens prices up to date with the live price list.
+ *
+ * Run once when the checkout opens, so a price that moved while the basket
+ * sat open is shown before the customer fills in an address rather than after.
+ */
+export const repriceCartLenses = async (): Promise<RepricedLine[]> => {
+  const { data } = await axiosInstance.post("/cart/reprice", {});
+  return (data.data ?? data).changed ?? [];
+};
+
+/**
+ * Fit lenses to a line, or take them off with `lensTypeId: null`.
+ *
+ * No price is sent: the server re-quotes from the live price list, so what
+ * ends up on the line is what the shop actually charges today.
+ */
+export const setCartItemLens = async (
+  id: number,
+  data: {
+    lensTypeId: number | null;
+    lensDesignId?: number | null;
+    lensTintId?: number | null;
+    prescriptionId?: number | null;
+  },
+): Promise<{ cartItem: CartItem }> => {
+  const response = await axiosInstance.put(`/cart/${id}/lens`, data);
+  const apiData = response.data;
+  return { cartItem: apiData.data?.cartItem || apiData.cartItem };
 };

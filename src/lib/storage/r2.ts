@@ -2,6 +2,7 @@ import {
   S3Client,
   PutObjectCommand,
   DeleteObjectCommand,
+  GetObjectCommand,
 } from "@aws-sdk/client-s3";
 
 const ACCOUNT_ID = process.env.R2_ACCOUNT_ID;
@@ -47,7 +48,12 @@ export type UploadFolder =
   | "product/tryon-3d"
   | "category/image"
   | "advertisement/image"
-  | "brand/image";
+  | "brand/image"
+  // A customer's prescription slip. PRIVATE: never built into a public URL
+  // and never listed anywhere a browser can reach. It is read back only by
+  // `downloadFile` from an authenticated route, because the document carries
+  // the patient's name, their optometrist and their eyes.
+  | "prescription/private";
 
 export interface UploadOptions {
   folder: UploadFolder;
@@ -121,7 +127,14 @@ export const uploadFile = async ({
         // day so a replaced catalogue does not linger for a year. Try-on
         // assets never change under a name  a replacement gets a new
         // filename  so they are marked immutable as well.
-        ...(contentType === "application/pdf"
+        ...(folder === "prescription/private"
+          ? {
+              // Nothing between us and the reader may hold a copy of somebody's
+              // prescription, and it is only ever served through an
+              // authenticated route anyway.
+              CacheControl: "private, no-store",
+            }
+          : contentType === "application/pdf"
           ? {
               ContentDisposition: `attachment; filename="${fileName}"`,
               CacheControl: "public, max-age=86400",
@@ -138,6 +151,43 @@ export const uploadFile = async ({
     };
   } catch (error: any) {
     throw new Error(error?.message || "Failed to upload file");
+  }
+};
+
+/**
+ * Read an object back through the S3 API, server-side.
+ *
+ * This exists so a private file can be served without its public URL ever
+ * being built: the route authenticates the caller, then streams the bytes it
+ * fetches here. Returns null when the object is gone, so a prescription whose
+ * file was cleaned up degrades to "no image" rather than a 500.
+ */
+export const downloadFile = async (
+  folder: UploadFolder,
+  fileName: string,
+): Promise<{ body: Uint8Array; contentType: string } | null> => {
+  const filePath = `${folder}/${sanitizeFileName(fileName)}`;
+
+  try {
+    const result = await getClient().send(
+      new GetObjectCommand({ Bucket: BUCKET_NAME, Key: filePath }),
+    );
+
+    const body = await result.Body?.transformToByteArray();
+    if (!body) return null;
+
+    return {
+      body,
+      contentType: result.ContentType || contentTypeFor(fileName),
+    };
+  } catch (error: any) {
+    if (
+      error?.name === "NoSuchKey" ||
+      error?.$metadata?.httpStatusCode === 404
+    ) {
+      return null;
+    }
+    throw error;
   }
 };
 

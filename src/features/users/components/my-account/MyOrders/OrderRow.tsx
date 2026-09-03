@@ -13,7 +13,10 @@ import {
 } from "@/features/checkout/api/payhere-api";
 import { getProductImageUrl } from "@/lib/storageUtils";
 import { formatPrice } from "@/lib/utils/price";
-import { orderLineName } from "@/features/orders/utils/order-display";
+import {
+  orderLineLensName,
+  orderLineName,
+} from "@/features/orders/utils/order-display";
 
 type OrderRowProps = {
   order: Order;
@@ -174,6 +177,13 @@ const OrderRow: React.FC<OrderRowProps> = ({
                 ? `+ ${extraItems} more ${extraItems === 1 ? "item" : "items"}`
                 : "1 item"}
             </p>
+            {/* Lenses can be most of what an order cost, so they are named on
+                the row rather than only on the invoice. */}
+            {firstItem && orderLineLensName(firstItem) && (
+              <p className="mt-0.5 text-[12.5px] font-medium text-blue">
+                With {orderLineLensName(firstItem)}
+              </p>
+            )}
             <p className="mt-1 text-[15px] font-bold text-dark sm:hidden">
               {formatPrice(order.totalAmount)}
             </p>

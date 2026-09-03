@@ -46,3 +46,26 @@ export function orderCustomerEmail(order: NameableOrder): string {
 export function orderLineName(item: NameableItem): string {
   return item?.title?.trim() || item?.product?.title?.trim() || "Item";
 }
+
+/**
+ * "Blue Cut (Grey) lenses" — what to print under the frame's name on a line
+ * that was sold with lenses. Empty string when it was sold bare, so callers
+ * can render it unconditionally.
+ */
+export function orderLineLensName(item: {
+  lensName?: string | null;
+  lensDesignName?: string | null;
+  lensTintName?: string | null;
+}): string {
+  const name = item?.lensName?.trim();
+  if (!name) return "";
+
+  // The build belongs in the name. "Blue Cut" alone does not say whether the
+  // customer bought a single vision pair or a progressive one, and those are
+  // different glasses at very different prices.
+  const design = item?.lensDesignName?.trim();
+  const tint = item?.lensTintName?.trim();
+
+  const parts = [name, design].filter(Boolean).join(" ");
+  return tint ? `${parts} (${tint}) lenses` : `${parts} lenses`;
+}

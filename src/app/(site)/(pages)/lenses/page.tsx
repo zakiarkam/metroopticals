@@ -13,6 +13,7 @@ import {
   PillLink,
   SectionIntro,
 } from "@/components/common/editorial";
+import { getGuideLensPricing } from "@/features/lenses/services/lens-service";
 import { getLensType, lensTypes } from "@/config/lenses";
 import { buildSiteUrl } from "@/lib/seo";
 
@@ -83,7 +84,11 @@ const COMPARE: Record<
   progressive: { screens: true, sun: false, night: false, reading: true },
 };
 
-export default function LensesPage() {
+export default async function LensesPage() {
+  // The shop's live price list. The guide reads perfectly well without it, so
+  // a lens nobody has priced simply shows no figure rather than a placeholder.
+  const pricing = await getGuideLensPricing();
+
   const tiles = LAYOUT.map((entry) => ({
     ...entry,
     lens: getLensType(entry.slug),
@@ -151,7 +156,12 @@ export default function LensesPage() {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-12">
             {tiles.map(({ lens, span, size }, index) => (
               <div key={lens.slug} className={span}>
-                <LensTile lens={lens} size={size} priority={index < 2} />
+                <LensTile
+                  lens={lens}
+                  size={size}
+                  priority={index < 2}
+                  priceFrom={pricing.get(lens.slug)?.priceFrom}
+                />
               </div>
             ))}
           </div>

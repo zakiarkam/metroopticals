@@ -38,6 +38,7 @@ import {
   RIM_TYPE_LABELS,
 } from "@/features/products/utils/eyewear";
 import { useProducts } from "@/features/products/hooks/use-products";
+import LensIntentBanner from "@/features/lenses/components/LensIntentBanner";
 import { useCategories } from "@/features/categories/hooks/use-categories";
 import { ProductsLoadingSkeleton } from "./ShopSkeleton";
 import Pagination from "@/components/ui/pagination";
@@ -583,6 +584,11 @@ export default function ShopWithSidebar() {
 
       <section className="bg-gray-1 pb-16 pt-8">
         <SiteContainer>
+          {/* Someone who arrived from a lens guide is here to put that lens
+              into a frame. Saying so keeps the errand visible while they
+              browse, and carries the choice into the lens picker later. */}
+          <LensIntentBanner />
+
           {error && (
             <div className="mb-5 rounded-2xl border border-red/30 bg-red/10 px-5 py-4 text-[14px] text-red">
               {error}

@@ -7,6 +7,7 @@ import { toast } from "react-hot-toast";
 import { Minus, Plus, Trash2 } from "lucide-react";
 
 import { useCart } from "@/features/cart/hooks/use-cart";
+import LensLineButton from "@/features/lenses/components/checkout/LensLineButton";
 import { normalizeImageArray } from "@/lib/storageUtils";
 import {
   AVAILABILITY_PILL_CLASSES,
@@ -30,6 +31,21 @@ type CartItem = {
     thumbnails: string[];
     previews: string[];
   };
+  /** Prescription lenses fitted to this frame; null on a bare frame. */
+  lens?: {
+    lensTypeId: number;
+    lensTypeName: string;
+    designId: number | null;
+    designName: string | null;
+    tintId: number | null;
+    tintName: string | null;
+    tintHex: string | null;
+    prescriptionId: number | null;
+    prescriptionLabel: string | null;
+    prescriptionVersion: number | null;
+    summary: string | null;
+    price: number;
+  } | null;
 };
 
 const ColorControl = ({
@@ -135,12 +151,15 @@ const SingleItem = ({ item }: { item: CartItem }) => {
   const hasReachedStock =
     typeof item.stock === "number" && item.quantity >= item.stock;
 
+  // The frame and its lenses are one saleable thing, so the line total is
+  // both — showing the frame price alone would not add up to the summary.
+  const unitPrice = item.discountedPrice + (item.lens?.price ?? 0);
+
   return (
     <div
-      className={`flex flex-col gap-4 p-5 transition-opacity sm:flex-row sm:items-center sm:gap-5 sm:p-6 ${
-        isUpdating ? "opacity-60" : ""
-      }`}
+      className={`p-5 transition-opacity sm:p-6 ${isUpdating ? "opacity-60" : ""}`}
     >
+    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-5">
       <Link
         href={productUrl}
         className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-gray-3 bg-gray-1"
@@ -164,7 +183,7 @@ const SingleItem = ({ item }: { item: CartItem }) => {
 
         <div className="mt-1.5 flex flex-wrap items-center gap-2.5">
           <span className="text-[13px] text-dark-4">
-            {formatPrice(item.discountedPrice)} each
+            {formatPrice(unitPrice)} each
           </span>
           {(item.color || (item.colorOptions?.length ?? 0) > 0) && (
             <ColorControl
@@ -214,7 +233,7 @@ const SingleItem = ({ item }: { item: CartItem }) => {
         </div>
 
         <p className="min-w-[80px] flex-1 text-right text-[15px] font-bold text-dark sm:w-[110px] sm:flex-none">
-          {formatPrice(item.discountedPrice * item.quantity)}
+          {formatPrice(unitPrice * item.quantity)}
         </p>
 
         <button
@@ -227,6 +246,16 @@ const SingleItem = ({ item }: { item: CartItem }) => {
           <Trash2 className="h-[17px] w-[17px]" />
         </button>
       </div>
+    </div>
+
+      {/* Under the frame rather than beside it: the lens choice is a second
+          decision about the same line, and it needs room for a prescription
+          summary that a price column has no space for. */}
+      <LensLineButton
+        item={item}
+        variant="full"
+        disabled={isUpdating || isUnavailable}
+      />
     </div>
   );
 };

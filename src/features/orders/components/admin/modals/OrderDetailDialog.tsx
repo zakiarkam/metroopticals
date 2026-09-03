@@ -20,14 +20,17 @@ import { Order } from "@/features/orders/types/order";
 import Image from "next/image";
 import { Toast } from "@/lib/utils/toast";
 import { getProductImageUrl } from "@/lib/storageUtils";
-import { Printer, X } from "lucide-react";
+import { FileText, Printer, X } from "lucide-react";
 import { downloadOrderReceiptPdf } from "@/lib/utils/orderReceiptPdf";
 import {
   orderCustomerEmail,
   orderCustomerName,
   orderLineName,
+  orderLineLensName,
 } from "@/features/orders/utils/order-display";
 import { savedLineTotal } from "@/features/pos/utils/bill";
+import { describeEye } from "@/features/lenses/utils/prescription";
+import { formatPd } from "@/features/lenses/constants/optics";
 import { ONLINE_PAYMENT_FEE_LABEL } from "@/features/checkout/utils/payment-fee";
 
 interface OrderDetailDialogProps {
@@ -336,7 +339,9 @@ const OrderDetailDialog: React.FC<OrderDetailDialogProps> = ({
                       price: item.price,
                       discountedPrice: item.discountedPrice,
                       lineDiscount: item.lineDiscount,
+                      lensPrice: item.lensPrice,
                     });
+                    const lensName = orderLineLensName(item);
 
                     return (
                       <div
@@ -409,6 +414,65 @@ const OrderDetailDialog: React.FC<OrderDetailDialogProps> = ({
                                   </span>
                                 )}
                               </div>
+
+                              {/* The powers, in full, on the screen the shop
+                                  works from. This is what gets read out to
+                                  the lab, so it is printed rather than
+                                  summarised or hidden behind a click. */}
+                              {lensName && (
+                                <div className="rounded-lg border border-blue/25 bg-blue/[0.06] px-3 py-2.5">
+                                  <p className="flex flex-wrap items-center justify-between gap-2 text-xs font-bold text-dark">
+                                    {lensName}
+                                    <span className="font-semibold">
+                                      {formatPrice(item.lensPrice ?? 0)} / pair
+                                    </span>
+                                  </p>
+
+                                  {item.prescriptionId && item.prescriptionHasImage && (
+                                    <a
+                                      href={`/api/prescriptions/${item.prescriptionId}/file`}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-blue/40 bg-white px-2.5 py-1.5 text-[11.5px] font-semibold text-blue transition-colors hover:bg-blue hover:text-white"
+                                    >
+                                      <FileText className="h-3.5 w-3.5" />
+                                      View the customer&apos;s prescription
+                                    </a>
+                                  )}
+
+                                  {item.lensRx && (
+                                    <dl className="mt-1.5 space-y-0.5 font-mono text-[11px] leading-relaxed text-dark-3">
+                                      <div>
+                                        <dt className="inline font-sans font-semibold text-dark-4">
+                                          OD{" "}
+                                        </dt>
+                                        <dd className="inline">
+                                          {describeEye(item.lensRx.right ?? {})}
+                                        </dd>
+                                      </div>
+                                      <div>
+                                        <dt className="inline font-sans font-semibold text-dark-4">
+                                          OS{" "}
+                                        </dt>
+                                        <dd className="inline">
+                                          {describeEye(item.lensRx.left ?? {})}
+                                        </dd>
+                                      </div>
+                                      <div>
+                                        <dt className="inline font-sans font-semibold text-dark-4">
+                                          PD{" "}
+                                        </dt>
+                                        <dd className="inline">
+                                          {item.lensRx.pdRight != null &&
+                                          item.lensRx.pdLeft != null
+                                            ? `${item.lensRx.pdRight} / ${item.lensRx.pdLeft} mm`
+                                            : formatPd(item.lensRx.pdSingle)}
+                                        </dd>
+                                      </div>
+                                    </dl>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>

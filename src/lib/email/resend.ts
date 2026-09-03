@@ -49,8 +49,10 @@ const resend = {
 
 type OrderItem = {
   quantity: number;
-  price: number; // unit price
+  price: number; // unit price, lenses included
   color?: string | null; // the colourway as sold
+  /** "Blue Cut (Grey) lenses" — set when the frame was sold with lenses. */
+  lensLabel?: string | null;
   product?: {
     title?: string;
     imageUrl?: string; // single image URL (legacy support)
@@ -850,7 +852,13 @@ function renderAdminOrderEmail({
   const subtotal = calcSubtotal(order.items);
   const shipping = Number(order.shippingAmount || 0);
   const discount = Number(order.discountAmount || 0);
-  const total = Math.max(0, subtotal + shipping - discount);
+  // The figure actually charged wins whenever the caller supplies it: the
+  // arithmetic here cannot see a card-gateway surcharge, and an email whose
+  // total disagrees with the customer's card statement reads as a mistake.
+  const total =
+    Number(order.totalAmount) > 0
+      ? Number(order.totalAmount)
+      : Math.max(0, subtotal + shipping - discount);
 
   const placeholderImg = ensureAbsoluteUrl("/images/placeholder.jpg", baseUrl);
 
@@ -858,6 +866,7 @@ function renderAdminOrderEmail({
     .map((it) => {
       const title = escapeHtml(it.product?.title || "Product");
       const color = it.color ? escapeHtml(it.color) : "";
+      const lens = it.lensLabel ? escapeHtml(it.lensLabel) : "";
       const qty = Math.max(1, Number(it.quantity || 1));
       const unit = Number(it.price || 0);
       const line = unit * qty;
@@ -883,6 +892,7 @@ function renderAdminOrderEmail({
                   <div style="font-weight:600;font-size:14px;color:#1A1A1A;line-height:1.4;">
                     ${title}
                   </div>
+                  ${lens ? `<div style="font-size:12px;color:#8F6A37;margin-top:3px;font-weight:600;">+ ${lens}</div>` : ""}
                   <div style="font-size:12px;color:#6b7280;margin-top:4px;">
                     ${color ? `Colour: ${color} • ` : ""}Qty: ${qty} • ${formatMoney(unit, currency)} each
                   </div>

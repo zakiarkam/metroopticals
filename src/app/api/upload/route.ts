@@ -101,6 +101,11 @@ const ALLOWED_TYPES_BY_FOLDER: Record<UploadFolder, string[]> = {
   "product/catalogue": ["application/pdf"],
   "product/tryon-2d": ["image/png", "image/webp"],
   "product/tryon-3d": ["model/gltf-binary"],
+  // Deliberately empty, and absent from ALLOWED_FOLDERS above. A customer's
+  // prescription reaches storage only through the extract route, which owns
+  // the private naming and the ownership checks; this admin uploader must
+  // never be a second way in.
+  "prescription/private": [],
 };
 
 const TYPE_LABEL_BY_FOLDER: Record<UploadFolder, string> = {
@@ -112,6 +117,7 @@ const TYPE_LABEL_BY_FOLDER: Record<UploadFolder, string> = {
   "product/tryon-2d":
     "The try-on overlay must be a PNG or WebP with a transparent background",
   "product/tryon-3d": "Only a binary glTF (.glb) model is allowed",
+  "prescription/private": "Prescriptions cannot be uploaded here",
 };
 
 // Browsers report an empty type for a `.glb`, so the declared type falls back

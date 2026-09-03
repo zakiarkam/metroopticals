@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useSelector } from "react-redux";
 import { AlertTriangle, ArrowRight, Lock } from "lucide-react";
 
-import { selectTotalPrice } from "@/store/features/cart-slice";
+import { selectLensTotal, selectTotalPrice } from "@/store/features/cart-slice";
 import { useCart } from "@/features/cart/hooks/use-cart";
 import { getAvailability } from "@/features/products/utils/availability";
 import { formatPrice } from "@/lib/utils/price";
@@ -15,6 +15,7 @@ import { formatPrice } from "@/lib/utils/price";
 const OrderSummary = () => {
   const { cartItems } = useCart();
   const totalPrice = useSelector(selectTotalPrice);
+  const lensTotal = useSelector(selectLensTotal);
   const itemCount = cartItems.reduce(
     (sum: number, item: { quantity: number }) => sum + item.quantity,
     0
@@ -41,6 +42,24 @@ const OrderSummary = () => {
         </div>
 
         <div className="flex items-center justify-between text-[14px]">
+          <span className="text-dark-4">Frames</span>
+          <span className="font-semibold text-dark">
+            {formatPrice(totalPrice - lensTotal)}
+          </span>
+        </div>
+
+        {/* Named separately once there are any: a customer who sees only one
+            number cannot tell what the lenses cost them. */}
+        {lensTotal > 0 && (
+          <div className="flex items-center justify-between text-[14px]">
+            <span className="text-dark-4">Prescription lenses</span>
+            <span className="font-semibold text-dark">
+              {formatPrice(lensTotal)}
+            </span>
+          </div>
+        )}
+
+        <div className="flex items-center justify-between border-t border-gray-3 pt-4 text-[14px]">
           <span className="text-dark-4">Subtotal</span>
           <span className="font-semibold text-dark">{formatPrice(totalPrice)}</span>
         </div>

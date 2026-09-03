@@ -37,12 +37,17 @@ import type {
 } from "@/features/checkout/constants/payment";
 import { useCachedSession } from "@/features/auth/hooks/use-cached-session";
 import { useCart } from "@/features/cart/hooks/use-cart";
+import {
+  repriceCartLenses,
+  type RepricedLine,
+} from "@/features/cart/api/cart-api";
 import { normalizeImageArray } from "@/lib/storageUtils";
 import SiteContainer from "@/components/common/SiteContainer";
 import PageHero from "@/components/common/PageHero";
 import EmptyState from "@/components/common/EmptyState";
 import { formatPrice } from "@/lib/utils/price";
 import { inputClasses, textareaClasses } from "@/components/common/form";
+import LensLineButton from "@/features/lenses/components/checkout/LensLineButton";
 import { siteConfig } from "@/config/site";
 
 const CHECKOUT_DRAFT_KEY = "metro_checkout_draft_v1";
@@ -248,7 +253,7 @@ const PHONE_PATTERN = /^[+()\d][\d\s()+-]{8,19}$/;
 const Checkout = () => {
   const router = useRouter();
   const { data: session, status } = useCachedSession();
-  const { cartItems, clearCart } = useCart();
+  const { cartItems, clearCart, refreshCart } = useCart();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [paymentMethod, setPaymentMethod] =
@@ -265,6 +270,8 @@ const Checkout = () => {
   const [notes, setNotes] = useState("");
   const [errors, setErrors] = useState<Errors>({});
   const [isClient, setIsClient] = useState(false);
+  /** Lens prices that moved while the basket sat open. */
+  const [repriced, setRepriced] = useState<RepricedLine[]>([]);
 
   const isDelivery = fulfilment === "standard";
   /** Only ask for a delivery address when one is actually needed. */
@@ -275,6 +282,30 @@ const Checkout = () => {
       router.push("/log-in?redirect=/checkout");
     }
   }, [status, router]);
+
+  // The lens price list is the shop's and it moves. Re-priced once, here, so
+  // a change is shown before the address form rather than as a failed order
+  // after it. The order itself re-prices again server-side — this is for the
+  // customer's benefit, not for the money.
+  useEffect(() => {
+    if (status !== "authenticated") return;
+    let cancelled = false;
+
+    repriceCartLenses()
+      .then(async (changed) => {
+        if (cancelled || changed.length === 0) return;
+        setRepriced(changed);
+        await refreshCart();
+      })
+      .catch(() => {
+        // A failed re-price is not a reason to block the checkout: the order
+        // endpoint prices authoritatively either way.
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [status, refreshCart]);
 
   useEffect(() => {
     setIsClient(true);
@@ -359,11 +390,23 @@ const Checkout = () => {
 
   /* ------------------------------ totals ------------------------------ */
 
+  // The lens fitted to a line is part of that line's price, so it is in the
+  // subtotal the customer is asked to pay — the server adds the same figures
+  // back from its own price list, and the two have to agree.
   const subtotal = useMemo(
     () =>
       cartItems.reduce(
-        (sum: number, item: { discountedPrice: number; quantity: number }) =>
-          sum + item.discountedPrice * item.quantity,
+        (sum: number, item: any) =>
+          sum + (item.discountedPrice + (item.lens?.price ?? 0)) * item.quantity,
+        0,
+      ),
+    [cartItems],
+  );
+
+  const lensTotal = useMemo(
+    () =>
+      cartItems.reduce(
+        (sum: number, item: any) => sum + (item.lens?.price ?? 0) * item.quantity,
         0,
       ),
     [cartItems],
@@ -469,6 +512,10 @@ const Checkout = () => {
           // Frozen onto the order line so the picking slip still names the
           // colourway after the product's colour list is edited.
           color: item.color || undefined,
+          // Which basket line this is, so the server can find the lenses
+          // fitted to it and re-price them from the live price list. Nothing
+          // about the lens itself is sent from here.
+          cartItemId: item.id,
         })),
         paymentMethod,
         shippingMethod: fulfilment,
@@ -664,6 +711,32 @@ const Checkout = () => {
             </span>
           </div>
 
+          {/* Said plainly, before anything is filled in: a lens price that
+              moved while the basket sat open is the customer's business, and
+              finding out from a failed order would not be honest. */}
+          {repriced.length > 0 && (
+            <div className="mb-6 rounded-2xl border border-orange/40 bg-orange/[0.08] px-5 py-4">
+              <p className="flex items-center gap-2 text-[13.5px] font-bold text-dark">
+                <AlertCircle className="h-4 w-4 shrink-0 text-orange-dark" />
+                Your lens prices have been updated
+              </p>
+              <ul className="mt-2 space-y-1.5">
+                {repriced.map((line) => (
+                  <li key={line.id} className="text-[12.5px] leading-relaxed text-dark-4">
+                    <span className="font-semibold text-dark">{line.title}</span>
+                    {" — "}
+                    {line.to === null
+                      ? (line.reason ?? "these lenses are no longer available")
+                      : `lenses now ${formatPrice(line.to)} (was ${formatPrice(line.from)})`}
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-2 text-[11.5px] text-dark-5">
+                The totals below already include the change.
+              </p>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} noValidate>
             <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-8">
               {/* ------------------------ left column ------------------------ */}
@@ -806,10 +879,8 @@ const Checkout = () => {
                       }`;
 
                       return (
-                        <li
-                          key={item.id}
-                          className="flex items-center gap-3.5 py-4"
-                        >
+                        <li key={item.id} className="py-4">
+                          <div className="flex items-center gap-3.5">
                           <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-gray-3 bg-gray-1">
                             <Image
                               src={displayImage}
@@ -835,17 +906,49 @@ const Checkout = () => {
                                 Colour: {item.color}
                               </p>
                             )}
+                            {/* The build changes the price materially, so it
+                                belongs on the line the customer confirms. */}
+                            {item.lens && (
+                              <p className="mt-0.5 text-[12px] font-medium text-blue">
+                                {item.lens.lensTypeName}
+                                {item.lens.designName
+                                  ? ` · ${item.lens.designName}`
+                                  : ""}
+                              </p>
+                            )}
                           </div>
 
                           <span className="shrink-0 text-[13.5px] font-semibold text-dark">
-                            {formatPrice(item.discountedPrice * item.quantity)}
+                            {formatPrice(
+                              (item.discountedPrice + (item.lens?.price ?? 0)) *
+                                item.quantity,
+                            )}
                           </span>
+                          </div>
+
+                          {/* Lenses can still be chosen here. A shopper who
+                              added a frame from a card or a slider and came
+                              straight to pay never saw the cart page, and
+                              would otherwise buy glasses with no prescription
+                              in them. */}
+                          <LensLineButton item={item} disabled={isSubmitting} />
                         </li>
                       );
                     })}
                   </ul>
 
                   <div className="space-y-3 border-t border-gray-3 px-5 py-5 sm:px-6">
+                    {lensTotal > 0 && (
+                      <div className="flex items-center justify-between text-[13px]">
+                        <span className="text-dark-5">
+                          of which prescription lenses
+                        </span>
+                        <span className="font-medium text-dark-4">
+                          {formatPrice(lensTotal)}
+                        </span>
+                      </div>
+                    )}
+
                     <div className="flex items-center justify-between text-[14px]">
                       <span className="text-dark-4">Subtotal</span>
                       <span className="font-semibold text-dark">

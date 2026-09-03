@@ -128,11 +128,23 @@ export type SavedLine = {
   price: number;
   discountedPrice?: number | null;
   lineDiscount?: number | null;
+  /**
+   * Prescription lenses fitted to this line, per unit. Zero or absent on a
+   * counter line and on any frame sold bare — which is every line written
+   * before lenses were sold online, so nothing already on file moves.
+   */
+  lensPrice?: number | null;
 };
 
-/** The unit price actually charged, discount aside. */
+/**
+ * The unit price actually charged, discount aside.
+ *
+ * The frame and the lenses ground for it are one saleable thing: a customer
+ * buys "this frame with these lenses" and pays one figure for it. Splitting
+ * them here would leave every total on every screen short by the lenses.
+ */
 export const savedLineUnitPrice = (line: SavedLine): number =>
-  line.discountedPrice ?? line.price;
+  (line.discountedPrice ?? line.price) + (line.lensPrice ?? 0);
 
 /** Before this line's own discount. */
 export const savedLineGross = (line: SavedLine): number =>

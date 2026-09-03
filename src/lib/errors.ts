@@ -97,6 +97,21 @@ export function handleError(error: unknown): NextResponse {
         { status: 404 }
       );
     }
+
+    // A write that ran out of its transaction budget. Nothing was saved, and
+    // trying again usually works, so say that rather than "internal server
+    // error" — which reads as "your data is gone" and is not what happened.
+    if (prismaError.code === "P2028") {
+      return NextResponse.json(
+        {
+          error: true,
+          message:
+            "That took too long and was rolled back — nothing was saved. Please try again.",
+          code: "TRANSACTION_TIMEOUT",
+        },
+        { status: 503 }
+      );
+    }
   }
 
   // Unknown errors

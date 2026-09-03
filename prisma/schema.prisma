@@ -35,6 +35,7 @@ model User {
   reviews           Review[]
   sessions          Session[]
   wishlistItems     WishlistItem[]
+  prescriptions     Prescription[]
 
   // Counter staff: the bills, payments and stock corrections this admin made.
   billedOrders   Order[]         @relation("OrderCashier")
@@ -240,23 +241,47 @@ model ProductTryOnAsset {
 }
 
 model CartItem {
-  quantity  Int      @default(1)
+  quantity       Int      @default(1)
   // The colourway the shopper picked on the product page. Empty when the
   // product lists no colours  an empty string rather than null so the unique
   // index below still collapses repeat adds (Postgres treats NULLs as
   // distinct, which would let the same frame stack up as separate rows).
-  color     String   @default("")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  id        Int      @id @default(autoincrement())
+  color          String   @default("")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  // ---- Prescription lenses fitted to this frame (all optional) ----
+  // A frame can be bought bare, so every column below is null on an ordinary
+  // line. `lensPrice` is the quoted price for the PAIR of lenses, frozen when
+  // the shopper accepted the quote, and re-checked against the live price
+  // list at checkout so a stale basket cannot buy last month's price.
+  lensTypeId     Int?
+  lensDesignId   Int?
+  lensTintId     Int?
+  prescriptionId Int?
+  lensPrice      Float    @default(0)
+
+  /// What makes two lines of the same frame and colour different: the lens
+  /// choice. Empty for a bare frame, so repeat adds still collapse into one
+  /// line exactly as they did before lenses existed, while a second pair of
+  /// the same frame made to a different prescription becomes its own line.
+  lensSignature String @default("")
+
+  id        Int     @id @default(autoincrement())
   userId    Int
   productId Int
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // One row per colourway, so black and tortoise of the same frame are two
-  // lines in the cart rather than one line with a lost choice.
-  @@unique([userId, productId, color])
+  lensType     LensType?     @relation(fields: [lensTypeId], references: [id], onDelete: SetNull)
+  lensDesign   LensDesign?   @relation(fields: [lensDesignId], references: [id], onDelete: SetNull)
+  lensTint     LensTint?     @relation(fields: [lensTintId], references: [id], onDelete: SetNull)
+  prescription Prescription? @relation(fields: [prescriptionId], references: [id], onDelete: SetNull)
+
+  // One row per colourway *and* lens choice, so black and tortoise of the
+  // same frame are two lines rather than one line with a lost choice, and so
+  // are two pairs of the same frame made to two different prescriptions.
+  @@unique([userId, productId, color, lensSignature])
+  @@index([prescriptionId])
   @@map("cart_items")
 }
 
@@ -382,8 +407,31 @@ model OrderItem {
   order           Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product         Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
 
+  // ---- Prescription lenses, frozen at the moment of sale ----
+  // Names and money are copied rather than joined: the price list is edited,
+  // lens types are retired and a customer replaces a prescription with a
+  // newer version, and none of that may rewrite an invoice already issued.
+  lensTypeId     Int?
+  lensName       String?
+  /// The build as sold — "Progressive — Free Form". Frozen like the name.
+  lensDesignId   Int?
+  lensDesignName String?
+  lensTintName   String?
+  /// Price for the pair of lenses on this line, per frame.
+  lensPrice      Float   @default(0)
+  /// The powers exactly as they were sent to the lab, as JSON. The live row
+  /// may have moved on to version 3 by the time this pair is remade.
+  lensRx         Json?
+  /// Which saved prescription this came from, for the customer's history.
+  prescriptionId Int?
+
+  lensType     LensType?     @relation(fields: [lensTypeId], references: [id], onDelete: SetNull)
+  lensDesign   LensDesign?   @relation(fields: [lensDesignId], references: [id], onDelete: SetNull)
+  prescription Prescription? @relation(fields: [prescriptionId], references: [id], onDelete: SetNull)
+
   @@index([orderId])
   @@index([productId])
+  @@index([prescriptionId])
   @@map("order_items")
 }
 
@@ -679,4 +727,293 @@ enum StockReason {
   VOID
   PURCHASE
   ADJUSTMENT
+}
+
+// ===========================================================================
+//  Prescription lenses
+// ===========================================================================
+//
+// A frame is a product; the lenses fitted into it are not. Their price does
+// not come from a shelf count, it comes from the power that has to be ground
+// into them — a -1.00 lens and a -9.00 lens are the same piece of plastic to
+// the catalogue and very different money to the lab. So lenses live in their
+// own small price list, maintained by the shop, and are quoted against the
+// customer's prescription at the moment they choose.
+
+/// One line on the lens menu — "Blue Cut", "Progressive", "Photochromic".
+///
+/// The long-form guide for each of these lives in `src/config/lenses.ts` and
+/// is matched by `slug`; this table holds only what the shop actually
+/// maintains — whether it is offered, what it costs, and in what order it is
+/// shown. A type with no matching guide entry is still perfectly sellable, it
+/// simply has no "Learn more" page behind it.
+model LensType {
+  id          Int     @id @default(autoincrement())
+  /// Matches a `slug` in the lens guide when there is a guide page for it.
+  slug        String  @unique
+  name        String
+  /// The single line shown under the name on the picker.
+  description String?
+  /// Free-text grouping used as a heading on the picker, e.g. "Multifocal".
+  groupLabel  String?
+
+  /// False for a plano/fashion lens, which is sold with no powers at all and
+  /// is therefore priced from `basePrice` rather than from the bands.
+  requiresPrescription Boolean @default(true)
+  /// What the pair costs when no power banding applies — the whole price for
+  /// a non-prescription lens, and the fallback for a prescription lens whose
+  /// price list has not been filled in yet.
+  basePrice            Float   @default(0)
+  sortOrder            Int     @default(0)
+  isActive             Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  designs    LensDesign[]
+  tints      LensTint[]
+  cartItems  CartItem[]
+  orderItems OrderItem[]
+
+  @@index([isActive, sortOrder])
+  @@map("lens_types")
+}
+
+/// One way a lens type is built, and the prices that go with it.
+///
+/// The shop sells more than one of each kind — a round-top and a flat-top
+/// bifocal, a free-form and a Vision Max progressive — and they are different
+/// money. So the design is a named row the shop maintains, not a fixed enum:
+/// `kind` is what the software needs to know (does this need a reading
+/// addition?), `name` is what the customer reads.
+model LensDesign {
+  id          Int            @id @default(autoincrement())
+  lensTypeId  Int
+  kind        LensDesignKind @default(SINGLE_VISION)
+  /// What the customer sees: "Single Vision", "Bifocal — Round Top".
+  name        String
+  /// One line under the name in the picker.
+  description String?
+
+  sortOrder Int     @default(0)
+  isActive  Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lensType    LensType         @relation(fields: [lensTypeId], references: [id], onDelete: Cascade)
+  powerPrices LensPowerPrice[]
+  cartItems   CartItem[]
+  orderItems  OrderItem[]
+
+  @@unique([lensTypeId, name])
+  @@index([lensTypeId, sortOrder])
+  @@map("lens_designs")
+}
+
+/// One row of the shop's lens price list: "this type, in this power range,
+/// costs this much for the pair".
+///
+/// Ranges are written in MINUS-CYLINDER form, which is what the bands are
+/// matched against — a prescription written in plus cylinder is transposed
+/// before it is priced, so the same glasses land in the same band whichever
+/// way the optometrist wrote them down.
+///
+/// Bands are tried in `sortOrder` and the first one that fits wins, so a
+/// narrow special case can be placed above a broad catch-all. A prescription
+/// that fits no band is quoted as "ask us" rather than guessed at.
+model LensPowerPrice {
+  id           Int     @id @default(autoincrement())
+  /// Which build of this lens the row prices. Every row belongs to exactly
+  /// one, and the lens type follows from the design — storing it here as well
+  /// would be a second copy of the same fact, free to drift out of step.
+  lensDesignId Int
+  /// Optional human label for the row, e.g. "Standard range".
+  label        String?
+
+  /// Sphere range, inclusive, signed dioptres.
+  sphMin Float
+  sphMax Float
+  /// Cylinder range, inclusive, signed dioptres, minus-cyl convention. A row
+  /// covering "no astigmatism to -2.00" is written -2.00 to 0.
+  cylMin Float
+  cylMax Float
+  /// Reading addition range, inclusive. Null on both means the row does not
+  /// care about the addition.
+  addMin Float?
+  addMax Float?
+
+  /// Price for the PAIR of lenses in this range.
+  price     Float
+  sortOrder Int   @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lensDesign LensDesign @relation(fields: [lensDesignId], references: [id], onDelete: Cascade)
+
+  @@index([lensDesignId, sortOrder])
+  @@map("lens_power_prices")
+}
+
+/// A tint or colour offered within one lens type — the six photochromic
+/// colours, the three polarised ones. Priced as a surcharge on top of the
+/// power band, because a brown polarised lens and a grey one are usually the
+/// same money but not always.
+model LensTint {
+  id          Int     @id @default(autoincrement())
+  lensTypeId  Int
+  name        String
+  /// Swatch fill for the picker — the tint itself, not the frame.
+  hex         String?
+  /// One line under the swatch name.
+  description String?
+  surcharge   Float   @default(0)
+  sortOrder   Int     @default(0)
+  isActive    Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lensType  LensType   @relation(fields: [lensTypeId], references: [id], onDelete: Cascade)
+  cartItems CartItem[]
+
+  @@unique([lensTypeId, name])
+  @@index([lensTypeId, sortOrder])
+  @@map("lens_tints")
+}
+
+/// How a lens is built: one power, two, or a smooth range between them.
+///
+/// This is a different axis from the lens TYPE. The shop's price list is a
+/// grid — coatings across the top (uncoated, multicoat, blue cut), and down
+/// the side the same three designs repeated for each of them. A "Blue Cut
+/// Progressive" is not a lens type of its own, it is the blue cut lens built
+/// as a progressive, which is why this hangs off the type rather than
+/// multiplying it.
+enum LensDesignKind {
+  SINGLE_VISION // one power across the lens
+  BIFOCAL // distance and reading, with a visible line
+  PROGRESSIVE // distance to reading, no line
+}
+
+/// Where a set of powers came from.
+enum PrescriptionSource {
+  MANUAL // typed in by the customer
+  UPLOAD // read off a photo or PDF, then confirmed by the customer
+  STAFF // entered at the counter by the shop
+}
+
+/// A customer's spectacle prescription, kept so they never have to type it
+/// twice.
+///
+/// Prescriptions are VERSIONED rather than edited. An eye test a year later
+/// produces version 2 of the same record: the old powers stay exactly as they
+/// were, because they are what an order already placed was made to, and the
+/// customer can still see what they used to be. `rootId` chains the versions
+/// together; the newest un-archived version of a chain is the one offered at
+/// checkout.
+model Prescription {
+  id     Int @id @default(autoincrement())
+  userId Int
+
+  /// What the customer calls it — "Mine", "Amma's", "Driving pair".
+  label   String             @default("My prescription")
+  version Int                @default(1)
+  /// Version 1 of this chain. Null on version 1 itself.
+  rootId  Int?
+  source  PrescriptionSource @default(MANUAL)
+
+  /// Hidden from the picker without being destroyed: an order may point here.
+  isArchived Boolean @default(false)
+
+  /// What the prescriber said to make, when they said it.
+  ///
+  /// Doctors write "Bifocals", "PAL", "SV" on the slip, and this is the one
+  /// question a customer genuinely cannot answer for themselves — plenty do
+  /// not know which they were prescribed, and a reading addition alone does
+  /// not settle it (it could be a bifocal, a progressive, or a separate pair
+  /// of readers). Null means nobody has said, which is a normal state and not
+  /// a missing value: the picker then explains the choice instead of
+  /// pretending to know.
+  prescribedDesign LensDesignKind?
+
+  /// R2 key of the uploaded photo or PDF, when there was one.
+  imageFile     String?
+  /// What the reader was sure of, 0–1. Null when typed in by hand.
+  ocrConfidence Float?
+
+  /// When the optometrist wrote it, and when it should be re-tested. Both are
+  /// optional: plenty of people no longer have the slip.
+  issuedAt  DateTime?
+  expiresAt DateTime?
+
+  // ---- Right eye (OD) ----
+  rightSph   Float?
+  rightCyl   Float?
+  rightAxis  Int?
+  rightAdd   Float?
+  rightPrism Float?
+  rightBase  String?
+
+  // ---- Left eye (OS) ----
+  leftSph   Float?
+  leftCyl   Float?
+  leftAxis  Int?
+  leftAdd   Float?
+  leftPrism Float?
+  leftBase  String?
+
+  /// Pupillary distance in mm. Either one binocular figure, or the two
+  /// monocular halves when the slip gives them separately.
+  pdSingle Float?
+  pdRight  Float?
+  pdLeft   Float?
+
+  notes String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cartItems  CartItem[]
+  orderItems OrderItem[]
+
+  @@index([userId, isArchived])
+  @@index([rootId])
+  @@map("prescriptions")
+}
+
+/// What the reader returned for one uploaded file, kept so the same photo is
+/// never sent twice.
+///
+/// The key is the file's own SHA-256, so a customer who uploads, changes
+/// their mind about the lens type and comes back is served from here rather
+/// than from another paid API call — and so is a second customer uploading
+/// the identical file. This is a cache, not a record: nothing here is shown
+/// to anyone until it has been through the customer's own confirmation step,
+/// and the row can be deleted at any time with no loss.
+model PrescriptionExtraction {
+  id       Int    @id @default(autoincrement())
+  /// SHA-256 of the uploaded bytes, lower-case hex.
+  fileHash String @unique
+  provider String
+
+  /// Exactly what the provider sent back, for debugging a bad read.
+  raw        Json
+  /// The optical fields we managed to recognise in it.
+  parsed     Json
+  /// The provider's own confidence, when it gives one.
+  confidence Float?
+
+  /// Storage key of the uploaded slip itself, under the private prefix.
+  ///
+  /// Held here rather than derived from the hash so that re-uploading the
+  /// same file reuses the one object instead of writing another copy — and so
+  /// the key itself can stay random, which is what stops it being guessable.
+  storedFile String?
+
+  createdAt DateTime @default(now())
+
+  @@map("prescription_extractions")
 }

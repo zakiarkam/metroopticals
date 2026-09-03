@@ -2,7 +2,11 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import type { Order } from "@/features/orders/types/order";
 import { siteConfig } from "@/config/site";
-import { orderLineName } from "@/features/orders/utils/order-display";
+import {
+  orderLineLensName,
+  orderLineName,
+} from "@/features/orders/utils/order-display";
+import { describeEye } from "@/features/lenses/utils/prescription";
 import { ONLINE_PAYMENT_FEE_LABEL } from "@/features/checkout/utils/payment-fee";
 
 type BusinessDetails = {
@@ -232,11 +236,36 @@ export const downloadOrderReceiptPdf = async (order: Order) => {
   }, 0);
 
   const rows = order.items.map((item, index) => {
-    const net = item.discountedPrice ?? item.price;
-    const label = item.color
-      ? `${clean(orderLineName(item))}\n${item.color}`
-      : clean(orderLineName(item));
-    const base = [String(index + 1), label, String(item.quantity), money(item.price)];
+    // Frame plus lenses: one saleable thing at one price, so the unit price
+    // column has to carry both or the amounts will not add up to the total.
+    const lensPrice = item.lensPrice ?? 0;
+    const net = (item.discountedPrice ?? item.price) + lensPrice;
+    const gross = item.price + lensPrice;
+
+    // The lenses and the powers they were made to are printed on the invoice
+    // rather than left to the shop's screen: this is the document a customer
+    // takes to another optician when they want the same again.
+    const lines = [clean(orderLineName(item))];
+    if (item.color) lines.push(item.color);
+
+    const lensName = orderLineLensName(item);
+    if (lensName) {
+      lines.push(clean(lensName));
+      if (item.lensRx) {
+        lines.push(
+          clean(
+            `OD ${describeEye(item.lensRx.right ?? {})}  OS ${describeEye(item.lensRx.left ?? {})}`,
+          ),
+        );
+      }
+    }
+
+    const base = [
+      String(index + 1),
+      lines.join("\n"),
+      String(item.quantity),
+      money(gross),
+    ];
     return hasDiscounts
       ? [...base, money(net), money(net * item.quantity)]
       : [...base, money(net * item.quantity)];

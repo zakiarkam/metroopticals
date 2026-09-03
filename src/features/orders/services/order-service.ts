@@ -24,7 +24,10 @@ import {
   formatOrderStatusWhatsAppMessage,
 } from "@/lib/whatsapp";
 import { logger, serializeError } from "@/lib/logger";
-import { orderLineName } from "@/features/orders/utils/order-display";
+import {
+  orderLineLensName,
+  orderLineName,
+} from "@/features/orders/utils/order-display";
 import { canTransitionOrderStatus } from "@/features/orders/constants/status";
 import { getEffectiveStock } from "@/features/products/utils/availability";
 import {
@@ -40,6 +43,8 @@ import {
   onlinePaymentFee,
   roundMoney,
 } from "@/features/checkout/utils/payment-fee";
+import { quoteLensType } from "@/features/lenses/services/lens-service";
+import { valuesFromRow } from "@/features/lenses/utils/prescription";
 
 type OrderWithItemsAndUser = Order & {
   // A counter line can be a service, and a product can be deleted after the
@@ -171,6 +176,10 @@ export async function getOrderById(
       items: {
         include: {
           product: { include: { category: true } },
+          // Only whether a slip exists — never the storage key, which has no
+          // business leaving the server. The file is fetched by prescription
+          // id from a route that authenticates the viewer.
+          prescription: { select: { imageFile: true } },
         },
       },
       user: { select: { id: true, name: true, email: true } },
@@ -187,7 +196,13 @@ export async function getOrderById(
     throw new NotFoundError("Order not found");
   }
 
-  return order;
+  return {
+    ...order,
+    items: order.items.map(({ prescription, ...item }) => ({
+      ...item,
+      prescriptionHasImage: Boolean(prescription?.imageFile),
+    })),
+  };
 }
 
 // Delivery pricing is decided here, never by the client. Island-wide delivery
@@ -212,7 +227,47 @@ export async function createOrder(userId: number, data: CreateOrderInput) {
     discountedPrice: number | null;
     color: string | null;
     currentStock: number;
+    lens: {
+      lensTypeId: number;
+      lensName: string;
+      lensDesignId: number | null;
+      lensDesignName: string | null;
+      lensTintName: string | null;
+      lensPrice: number;
+      lensRx: Record<string, unknown> | null;
+      prescriptionId: number | null;
+    } | null;
   }> = [];
+
+  // The basket lines this checkout claims to be, so the lens fitted to each
+  // one can be read off our own row. Nothing about a lens is taken from the
+  // request: it names the line, we look up what is on it.
+  const cartLineIds = items
+    .map((item) => item.cartItemId)
+    .filter((id): id is number => Boolean(id));
+
+  const cartLines = cartLineIds.length
+    ? await prisma.cartItem.findMany({
+        where: { id: { in: cartLineIds }, userId },
+        include: {
+          lensType: { select: { id: true, name: true, isActive: true } },
+          lensDesign: { select: { id: true, name: true, isActive: true } },
+          lensTint: { select: { id: true, name: true } },
+          prescription: {
+            select: {
+              id: true, label: true, version: true,
+              rightSph: true, rightCyl: true, rightAxis: true, rightAdd: true,
+              rightPrism: true, rightBase: true,
+              leftSph: true, leftCyl: true, leftAxis: true, leftAdd: true,
+              leftPrism: true, leftBase: true,
+              pdSingle: true, pdRight: true, pdLeft: true,
+            },
+          },
+        },
+      })
+    : [];
+
+  const cartLineById = new Map(cartLines.map((line) => [line.id, line]));
 
   for (const item of items) {
     const product = await prisma.product.findUnique({
@@ -273,6 +328,74 @@ export async function createOrder(userId: number, data: CreateOrderInput) {
       }
     }
 
+    // ---- Lenses fitted to this line ----
+    //
+    // Re-quoted from today's price list rather than trusted from the basket:
+    // a cart can sit open for weeks across a price change, and the customer
+    // pays what the shop charges now. The prescription is copied onto the
+    // order line as JSON, because the customer may have a version 3 on file
+    // by the time this pair is remade and the lab needs what it was made to.
+    let lens: (typeof validatedItems)[number]["lens"] = null;
+    const cartLine = item.cartItemId ? cartLineById.get(item.cartItemId) : undefined;
+
+    // The named basket line must actually be a line for THIS product. A
+    // request pairing product A with a basket line for product B would
+    // otherwise write B's lens name and prescription onto A's invoice — the
+    // customer's own basket either way, but a wrong document all the same.
+    if (cartLine && cartLine.productId !== item.productId) {
+      throw new ValidationError(
+        "The order doesn't match your basket — refresh the page and try again",
+      );
+    }
+
+    if (cartLine?.lensTypeId && cartLine.lensType) {
+      if (!cartLine.lensType.isActive) {
+        throw new ValidationError(
+          `${cartLine.lensType.name} lenses are no longer available — please choose another lens for ${product.title}`,
+        );
+      }
+
+      if (cartLine.lensDesign && !cartLine.lensDesign.isActive) {
+        throw new ValidationError(
+          `${cartLine.lensType.name} is no longer offered as ${cartLine.lensDesign.name} — please choose another for ${product.title}`,
+        );
+      }
+
+      const quote = await quoteLensType(userId, {
+        lensTypeId: cartLine.lensTypeId,
+        lensDesignId: cartLine.lensDesignId,
+        lensTintId: cartLine.lensTintId,
+        prescriptionId: cartLine.prescriptionId,
+      });
+
+      if (!quote.priced) {
+        throw new ValidationError(
+          quote.reason ??
+            `We can't price the lenses for ${product.title} — please talk to us before ordering`,
+        );
+      }
+
+      subtotal += quote.total * item.quantity;
+
+      lens = {
+        lensTypeId: cartLine.lensTypeId,
+        lensName: cartLine.lensType.name,
+        lensDesignId: cartLine.lensDesignId,
+        lensDesignName: cartLine.lensDesign?.name ?? null,
+        lensTintName: cartLine.lensTint?.name ?? null,
+        lensPrice: quote.total,
+        lensRx: cartLine.prescription
+          ? {
+              prescriptionId: cartLine.prescription.id,
+              label: cartLine.prescription.label,
+              version: cartLine.prescription.version,
+              ...valuesFromRow(cartLine.prescription),
+            }
+          : null,
+        prescriptionId: cartLine.prescriptionId,
+      };
+    }
+
     validatedItems.push({
       productId: item.productId,
       quantity: item.quantity,
@@ -280,6 +403,7 @@ export async function createOrder(userId: number, data: CreateOrderInput) {
       discountedPrice,
       color,
       currentStock: product.stock,
+      lens,
     });
   }
 
@@ -324,12 +448,24 @@ export async function createOrder(userId: number, data: CreateOrderInput) {
         ...fulfilment,
         items: {
           create: validatedItems.map(
-            ({ productId, quantity, price, discountedPrice, color }) => ({
+            ({ productId, quantity, price, discountedPrice, color, lens }) => ({
               productId,
               quantity,
               price,
               ...(discountedPrice !== null ? { discountedPrice } : {}),
               ...(color ? { color } : {}),
+              ...(lens
+                ? {
+                    lensTypeId: lens.lensTypeId,
+                    lensName: lens.lensName,
+                    lensDesignId: lens.lensDesignId,
+                    lensDesignName: lens.lensDesignName,
+                    lensTintName: lens.lensTintName,
+                    lensPrice: lens.lensPrice,
+                    lensRx: lens.lensRx ?? undefined,
+                    prescriptionId: lens.prescriptionId,
+                  }
+                : {}),
             }),
           ),
         },
@@ -425,8 +561,11 @@ export async function createOrder(userId: number, data: CreateOrderInput) {
 export function sendOrderPlacedNotifications(order: OrderWithItemsAndUser) {
   const emailItems = order.items.map((item) => ({
     quantity: item.quantity,
-    price: item.discountedPrice ?? item.price,
+    // The unit price the customer actually paid: frame plus its lenses, or
+    // the emailed lines will not add up to the emailed total.
+    price: (item.discountedPrice ?? item.price) + (item.lensPrice ?? 0),
     color: item.color,
+    lensLabel: orderLineLensName(item) || null,
     product: {
       title: orderLineName(item),
       images: item.product?.images ?? [],

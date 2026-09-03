@@ -51,7 +51,7 @@ const Cart = () => {
         title="Your cart"
         description={
           cartItems.length
-            ? `${itemCount} ${itemCount === 1 ? "item" : "items"} ready to check out. Lenses are fitted after your prescription is confirmed.`
+            ? `${itemCount} ${itemCount === 1 ? "item" : "items"} ready to check out. Add prescription lenses to any frame below — you will see the price before you pay.`
             : "Nothing here yet — everything you add will be saved to your account."
         }
         crumbs={[{ label: "Cart" }]}

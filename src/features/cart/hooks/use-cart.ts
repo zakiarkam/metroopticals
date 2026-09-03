@@ -17,7 +17,9 @@ import {
   updateCartItem,
   removeFromCart,
   clearCart,
+  setCartItemLens,
 } from "@/features/cart/api/cart-api";
+import { describePrescription, valuesFromRow } from "@/features/lenses/utils/prescription";
 import { toast } from "react-hot-toast";
 import { normalizeImageArray } from "@/lib/storageUtils";
 import { getEffectiveStock } from "@/features/products/utils/availability";
@@ -79,6 +81,28 @@ export const useCart = () => {
             previews: normalizeImageArray(item.product.images),
             thumbnails: normalizeImageArray(item.product.images),
           },
+          // Flattened here rather than in every component that shows a cart
+          // row: the row wants a name and a price, not four nested relations.
+          lens: item.lensType
+            ? {
+                lensTypeId: item.lensType.id,
+                lensTypeName: item.lensType.name,
+                lensTypeSlug: item.lensType.slug,
+                designId: item.lensDesign?.id ?? null,
+                designName: item.lensDesign?.name ?? null,
+                designKind: item.lensDesign?.kind ?? null,
+                tintId: item.lensTint?.id ?? null,
+                tintName: item.lensTint?.name ?? null,
+                tintHex: item.lensTint?.hex ?? null,
+                prescriptionId: item.prescription?.id ?? null,
+                prescriptionLabel: item.prescription?.label ?? null,
+                prescriptionVersion: item.prescription?.version ?? null,
+                summary: item.prescription
+                  ? describePrescription(valuesFromRow(item.prescription))
+                  : null,
+                price: item.lensPrice ?? 0,
+              }
+            : null,
         };
       });
       dispatch(syncCartItems(mappedItems));
@@ -290,6 +314,45 @@ export const useCart = () => {
     [dispatch, loadCart],
   );
 
+  /**
+   * Fit lenses to a line, or take them off.
+   *
+   * The cart is reloaded rather than patched in place because the server may
+   * have merged this line into an identical one — two pairs of the same frame
+   * with the same lenses are one line of quantity two.
+   */
+  const handleSetLens = useCallback(
+    async (
+      itemId: number,
+      selection: {
+        lensTypeId: number | null;
+        lensDesignId?: number | null;
+        lensTintId?: number | null;
+        prescriptionId?: number | null;
+      },
+    ) => {
+      const loadingToast = toast.loading(
+        selection.lensTypeId ? "Adding lenses…" : "Removing lenses…",
+      );
+      try {
+        await setCartItemLens(itemId, selection);
+        toast.dismiss(loadingToast);
+        toast.success(
+          selection.lensTypeId ? "Lenses added" : "Lenses removed",
+        );
+        await loadCart();
+        return true;
+      } catch (error: any) {
+        toast.dismiss(loadingToast);
+        toast.error(
+          error?.response?.data?.message || "Couldn't update the lenses",
+        );
+        return false;
+      }
+    },
+    [loadCart],
+  );
+
   const handleClearCart = useCallback(async () => {
     const loadingToast = toast.loading("Clearing cart...");
     try {
@@ -314,6 +377,7 @@ export const useCart = () => {
     addToCart: handleAddToCart,
     updateQuantity: handleUpdateQuantity,
     removeFromCart: handleRemoveFromCart,
+    setLens: handleSetLens,
     clearCart: handleClearCart,
     refreshCart: loadCart,
   };

@@ -22,6 +22,24 @@ export interface OrderItem {
   returnedQty?: number;
   /** The colourway as sold, frozen at checkout. */
   color?: string | null;
+
+  // ---- Prescription lenses, as sold ----
+  // Copied onto the line at checkout, never joined: the price list is edited
+  // and prescriptions gain new versions, and neither may rewrite an invoice.
+  lensTypeId?: number | null;
+  lensName?: string | null;
+  /** The build as sold — "Progressive — Free Form". */
+  lensDesignId?: number | null;
+  lensDesignName?: string | null;
+  lensTintName?: string | null;
+  /** Price for the pair of lenses on this line, per frame. */
+  lensPrice?: number;
+  /** The powers exactly as sent to the lab. */
+  lensRx?: Record<string, any> | null;
+  prescriptionId?: number | null;
+  /** True when the customer uploaded a slip the shop can check against. */
+  prescriptionHasImage?: boolean;
+
   createdAt: string;
   product?: {
     id: number;

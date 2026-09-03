@@ -11,11 +11,13 @@ import { LensIcon } from "@/features/lenses/components/lens-icons";
 import {
   ConsultBand,
   NumberedSteps,
-  PillLink,
   SectionIntro,
 } from "@/components/common/editorial";
+import LensCtaPanel from "@/features/lenses/components/LensCtaPanel";
+import { getGuideLensPricing } from "@/features/lenses/services/lens-service";
 import { getLensType } from "@/config/lenses";
 import { buildSiteUrl } from "@/lib/seo";
+import { siteConfig } from "@/config/site";
 
 type LensPageProps = { params: Promise<{ slug: string }> };
 
@@ -55,6 +57,10 @@ export default async function LensDetailPage({ params }: LensPageProps) {
   const lens = getLensType(slug);
   if (!lens) notFound();
   const nonce = (await headers()).get("x-nonce") ?? undefined;
+
+  // The shop's live price list, so the guide can quote a real "from" figure
+  // rather than sending an interested reader to the contact form.
+  const pricing = (await getGuideLensPricing()).get(lens.slug);
 
   const related = lens.compareWith
     .map((relatedSlug) => getLensType(relatedSlug))
@@ -117,11 +123,13 @@ export default async function LensDetailPage({ params }: LensPageProps) {
                 ))}
               </div>
 
-              <div className="mt-8 flex flex-wrap gap-3">
-                <PillLink href="/contact">Ask about this lens</PillLink>
-                <PillLink href="/shop-with-sidebar" tone="quiet">
-                  Choose a frame
-                </PillLink>
+              <div className="mt-8">
+                <LensCtaPanel
+                  slug={lens.slug}
+                  lensName={lens.name}
+                  pricing={pricing}
+                  whatsappHref={`https://wa.me/${siteConfig.contact.whatsapp}`}
+                />
               </div>
             </div>
           </div>

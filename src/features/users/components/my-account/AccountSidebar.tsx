@@ -2,9 +2,9 @@
 
 import React from "react";
 import Link from "next/link";
-import { Heart, Package, User } from "lucide-react";
+import { Eye, Heart, Package, User } from "lucide-react";
 
-type SectionKey = "account" | "orders";
+type SectionKey = "account" | "orders" | "prescriptions";
 
 type AccountSidebarProps = {
   name?: string | null;
@@ -38,6 +38,12 @@ const sectionItems: {
     label: "My orders",
     href: "/my-account/orders",
     icon: Package,
+  },
+  {
+    key: "prescriptions",
+    label: "My prescriptions",
+    href: "/my-account/prescriptions",
+    icon: Eye,
   },
 ];
 

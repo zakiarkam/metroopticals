@@ -8,6 +8,7 @@ import {
   ChevronLeft,
   FolderTree,
   LayoutDashboard,
+  Glasses,
   Megaphone,
   Package,
   Boxes,
@@ -82,6 +83,15 @@ const NAV_GROUPS: NavGroup[] = [
         icon: FolderTree,
       },
       { id: "brands", label: "Brands", href: "/admin/brands", icon: Tags },
+      {
+        // The lens price list. Super admin only: it is what the shop charges
+        // for every pair of lenses it sells online.
+        id: "lenses",
+        label: "Lens pricing",
+        href: "/admin/lenses",
+        icon: Glasses,
+        superAdminOnly: true,
+      },
       {
         id: "orders",
         label: "Orders",
