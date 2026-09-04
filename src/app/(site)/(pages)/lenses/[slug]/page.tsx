@@ -16,7 +16,7 @@ import {
 import LensCtaPanel from "@/features/lenses/components/LensCtaPanel";
 import { getGuideLensPricing } from "@/features/lenses/services/lens-service";
 import { getLensType } from "@/config/lenses";
-import { buildSiteUrl } from "@/lib/seo";
+import { buildSiteUrl, jsonLdScript } from "@/lib/seo";
 import { siteConfig } from "@/config/site";
 
 type LensPageProps = { params: Promise<{ slug: string }> };
@@ -83,7 +83,7 @@ export default async function LensDetailPage({ params }: LensPageProps) {
       <script
         type="application/ld+json"
         nonce={nonce}
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: jsonLdScript(faqJsonLd) }}
       />
 
       <PageHero

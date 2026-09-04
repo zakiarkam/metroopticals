@@ -4,7 +4,7 @@ import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import ShopDetailsClient from "@/features/products/components/shop-details/ShopDetailsClient";
 import { getProductById } from "@/features/products/services/product-service";
-import { buildSiteUrl } from "@/lib/seo";
+import { buildSiteUrl, jsonLdScript } from "@/lib/seo";
 import { normalizeImageArray } from "@/lib/storageUtils";
 import type { Product } from "@/features/products/types/product";
 
@@ -176,7 +176,7 @@ const ShopDetailsPage = async ({ params }: ShopDetailsPageProps) => {
         type="application/ld+json"
         nonce={nonce}
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
+          __html: jsonLdScript(jsonLd),
         }}
       />
     </>

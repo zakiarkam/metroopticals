@@ -11,7 +11,7 @@ import {
   SectionIntro,
 } from "@/components/common/editorial";
 import { faqs } from "@/config/faqs";
-import { buildSiteUrl } from "@/lib/seo";
+import { buildSiteUrl, jsonLdScript } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "FAQ",
@@ -37,7 +37,7 @@ export default async function FAQPage() {
       <script
         type="application/ld+json"
         nonce={nonce}
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: jsonLdScript(faqJsonLd) }}
       />
 
       <PageHero

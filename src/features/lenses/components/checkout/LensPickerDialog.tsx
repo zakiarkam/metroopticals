@@ -1591,6 +1591,7 @@ function StepReview({
           <Link
             href={whatsapp}
             target="_blank"
+            rel="noopener noreferrer"
             className="mt-3 inline-flex h-10 items-center rounded-xl bg-blue px-4 text-[12.5px] font-bold text-white transition-colors hover:bg-blue-dark"
           >
             Message us for a quote

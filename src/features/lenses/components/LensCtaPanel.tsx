@@ -139,6 +139,7 @@ export default function LensCtaPanel({
           <Link
             href={whatsappHref}
             target="_blank"
+            rel="noopener noreferrer"
             className="inline-flex h-12 items-center gap-2 rounded-xl bg-blue px-6 text-[14px] font-bold text-white transition-colors hover:bg-blue-dark"
           >
             <MessageCircle className="h-4 w-4" />

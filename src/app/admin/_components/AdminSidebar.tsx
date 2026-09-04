@@ -227,7 +227,9 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
 
         {/* ------------------------------- nav ------------------------------- */}
         <nav
-          className={`flex-1 overflow-y-auto py-3 ${collapsed ? "px-2" : "px-2.5"}`}
+          // Still scrolls; the bar itself is hidden, which keeps the narrow
+          // rail from losing width to it.
+          className={`no-scrollbar flex-1 overflow-y-auto py-3 ${collapsed ? "px-2" : "px-2.5"}`}
         >
           {groups.map((group) => (
             <div
