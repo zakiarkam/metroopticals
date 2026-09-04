@@ -1,126 +1,295 @@
 /**
- * The power ranges an optical price list is actually written in.
+ * The rows an optical price list is actually written in.
  *
- * Modelled on this shop's own printed sheet rather than on symmetry, because
- * the two are not the same thing. The sheet prices MINUS and PLUS separately —
- * in the CR MC column, -6.50 to -8.00 is 4500 while +6.50 to +8.00 is 5000 —
- * so a single band spanning -8.00 to +8.00 cannot express it, and would
- * quietly charge every long-sighted customer the short-sighted price.
+ * A price sheet is not a flat list of ranges, it is a grid of BLOCKS, and the
+ * block a prescription falls in is decided before any number is compared:
  *
- * It also separates three shapes of prescription, which is how a lab quotes:
+ *   SPH          a spherical lens, no astigmatism      (CR SV SPH / CR SV +SPH)
+ *   CYL          astigmatism with a plano sphere       (CR SV CYL)
+ *   SPH + CYL    both together                         (CR TORIC / HI TORIC)
+ *   SPH + ADD    a sphere with a reading addition, bifocal or progressive
+ *   SPH+CYL+ADD  all three - the made-to-order corner of the sheet
  *
- *   SPH    a spherical lens, no cylinder            (CR SV SPH / CR SV +SPH)
- *   CYL    cylinder only, no sphere                 (CR SV CYL)
- *   TORIC  both together, priced by the pair        (CR TORIC / HI TORIC)
+ * The last two are each written TWICE, once as a bifocal and once as a
+ * progressive: the same powers made either way are different lenses to grind
+ * and different money, and the sheet prices them apart. That is why there are
+ * seven blocks rather than five.
  *
- * The ranges are inclusive, in MINUS CYLINDER, and disjoint — no row shadows
- * another, so the order they are tried in does not change the answer.
+ * Inside a block the ranges are inclusive, written in MINUS CYLINDER, and cut
+ * in even steps - 3.00 dioptres by default, plano out to ±20.00, because the
+ * sheet prices minus and plus separately and a single band spanning both
+ * would quietly charge every long-sighted customer the short-sighted price.
  *
- * A shop that bands differently can retype or delete any row: this is a
- * starting point for transcribing a price list, not a rule about one.
+ * These are a STARTING POINT for transcribing a price list, not a rule about
+ * one. Every figure below is a default the shop can retype, and the generator
+ * takes the step, the reach and the number of addition bands as arguments so
+ * a shop that bands differently can regenerate rather than delete.
  */
+
+import {
+  ADD_MAX,
+  ADD_MIN,
+  CYL_MIN,
+  DIOPTRE_STEP,
+  SPH_MAX,
+  SPH_MIN,
+  formatDiopter,
+  roundToStep,
+} from "@/features/lenses/constants/optics";
+import {
+  LENS_POWER_CATEGORIES,
+  categoriesForDesignKind,
+  type LensDesignKind,
+  type LensPowerCategory,
+} from "@/features/lenses/utils/pricing";
+
 export type StandardBand = {
+  category: LensPowerCategory;
   label: string;
   sphMin: number;
   sphMax: number;
   cylMin: number;
   cylMax: number;
-  addMin?: number | null;
-  addMax?: number | null;
+  addMin: number | null;
+  addMax: number | null;
+  isOrderLens: boolean;
 };
 
-/** Spherical: a cylinder of zero. Minus first, as the sheet lists them. */
-const SPHERE_ONLY: StandardBand[] = [
-  { label: "SPH plano to -3.00", sphMin: -3, sphMax: 0, cylMin: 0, cylMax: 0 },
-  { label: "SPH -3.25 to -6.00", sphMin: -6, sphMax: -3.25, cylMin: 0, cylMax: 0 },
-  { label: "SPH -6.50 to -8.00", sphMin: -8, sphMax: -6.5, cylMin: 0, cylMax: 0 },
-  { label: "SPH -8.50 to -10.00", sphMin: -10, sphMax: -8.5, cylMin: 0, cylMax: 0 },
-  { label: "SPH -11.00 to -16.00", sphMin: -16, sphMax: -11, cylMin: 0, cylMax: 0 },
-  { label: "SPH -17.00 to -20.00", sphMin: -20, sphMax: -17, cylMin: 0, cylMax: 0 },
+/** How the grid is cut, when nobody says otherwise. */
+export const BAND_DEFAULTS = {
+  /** Sphere reach either side of plano, and the step it is cut in. */
+  sphReach: 20,
+  sphStep: 3,
+  /** Cylinder reach (always minus) and its step. */
+  cylReach: 6,
+  cylStep: 3,
+  /** How many bands the reading addition is split into. */
+  addBands: 3,
+} as const;
 
-  { label: "+SPH +0.25 to +3.00", sphMin: 0.25, sphMax: 3, cylMin: 0, cylMax: 0 },
-  { label: "+SPH +3.25 to +6.00", sphMin: 3.25, sphMax: 6, cylMin: 0, cylMax: 0 },
-  { label: "+SPH +6.50 to +8.00", sphMin: 6.5, sphMax: 8, cylMin: 0, cylMax: 0 },
-  { label: "+SPH +8.50 to +10.00", sphMin: 8.5, sphMax: 10, cylMin: 0, cylMax: 0 },
-];
+export type BandGridOptions = {
+  sphReach?: number;
+  sphStep?: number;
+  cylReach?: number;
+  cylStep?: number;
+  addBands?: number;
+};
 
-/** Cylinder with no sphere. */
-const CYLINDER_ONLY: StandardBand[] = [
-  { label: "CYL -0.25 to -2.00", sphMin: 0, sphMax: 0, cylMin: -2, cylMax: -0.25 },
-  { label: "CYL -2.25 to -4.00", sphMin: 0, sphMax: 0, cylMin: -4, cylMax: -2.25 },
-  { label: "CYL -4.25 to -6.00", sphMin: 0, sphMax: 0, cylMin: -6, cylMax: -4.25 },
-];
+type Range = { min: number; max: number; label: string };
 
-/** Sphere and cylinder together. The sheet's TORIC and HI TORIC blocks. */
-const TORIC: StandardBand[] = [
-  // Minus sphere with a low cylinder.
-  { label: "TORIC -0.25/-3.00 with -0.25/-2.00", sphMin: -3, sphMax: -0.25, cylMin: -2, cylMax: -0.25 },
-  { label: "TORIC -3.25/-6.00 with -0.25/-2.00", sphMin: -6, sphMax: -3.25, cylMin: -2, cylMax: -0.25 },
-  { label: "TORIC -6.50/-8.00 with -0.25/-2.00", sphMin: -8, sphMax: -6.5, cylMin: -2, cylMax: -0.25 },
-  { label: "TORIC -8.50/-10.00 with -0.25/-2.00", sphMin: -10, sphMax: -8.5, cylMin: -2, cylMax: -0.25 },
-  { label: "TORIC -10.50/-12.00 with -0.25/-2.00", sphMin: -12, sphMax: -10.5, cylMin: -2, cylMax: -0.25 },
-  { label: "TORIC -12.50/-14.00 with -0.25/-2.00", sphMin: -14, sphMax: -12.5, cylMin: -2, cylMax: -0.25 },
-  { label: "TORIC -14.50/-16.00 with -0.25/-2.00", sphMin: -16, sphMax: -14.5, cylMin: -2, cylMax: -0.25 },
-
-  // Minus sphere with a higher cylinder.
-  { label: "HI TORIC -0.25/-3.00 with -2.25/-3.00", sphMin: -3, sphMax: -0.25, cylMin: -3, cylMax: -2.25 },
-  { label: "HI TORIC -3.25/-6.00 with -2.25/-3.00", sphMin: -6, sphMax: -3.25, cylMin: -3, cylMax: -2.25 },
-  { label: "HI TORIC -6.50/-8.00 with -2.25/-3.00", sphMin: -8, sphMax: -6.5, cylMin: -3, cylMax: -2.25 },
-  { label: "HI TORIC -8.50/-10.00 with -2.25/-3.00", sphMin: -10, sphMax: -8.5, cylMin: -3, cylMax: -2.25 },
-  { label: "HI TORIC -0.25/-3.00 with -3.25/-4.00", sphMin: -3, sphMax: -0.25, cylMin: -4, cylMax: -3.25 },
-  { label: "HI TORIC -3.25/-6.00 with -3.25/-4.00", sphMin: -6, sphMax: -3.25, cylMin: -4, cylMax: -3.25 },
-  { label: "HI TORIC -0.25/-3.00 with -4.25/-5.00", sphMin: -3, sphMax: -0.25, cylMin: -5, cylMax: -4.25 },
-  { label: "HI TORIC -4.25/-6.00 with -4.25/-5.00", sphMin: -6, sphMax: -4.25, cylMin: -5, cylMax: -4.25 },
-
-  // Plus sphere with a minus cylinder — the sheet's "+/- TORIC" block.
-  { label: "+/- TORIC +0.25/+3.00 with -0.25/-2.00", sphMin: 0.25, sphMax: 3, cylMin: -2, cylMax: -0.25 },
-  { label: "+/- TORIC +3.25/+6.00 with -0.25/-2.00", sphMin: 3.25, sphMax: 6, cylMin: -2, cylMax: -0.25 },
-  { label: "+/- TORIC +0.25/+3.00 with -2.25/-3.00", sphMin: 0.25, sphMax: 3, cylMin: -3, cylMax: -2.25 },
-  { label: "+/- TORIC +3.25/+6.00 with -2.25/-3.00", sphMin: 3.25, sphMax: 6, cylMin: -3, cylMax: -2.25 },
-  { label: "+/- TORIC +0.25/+3.00 with -3.25/-4.00", sphMin: 0.25, sphMax: 3, cylMin: -4, cylMax: -3.25 },
-  { label: "+/- TORIC +3.25/+6.00 with -3.25/-4.00", sphMin: 3.25, sphMax: 6, cylMin: -4, cylMax: -3.25 },
-];
+/* ------------------------------ the ranges ------------------------------ */
 
 /**
- * A bifocal or progressive is quoted on a much shorter list — the sheet gives
- * two rows for each, split on the sign of the sphere, both capped at a +3.00
- * reading addition. There is no separate toric block: the addition is what
- * drives the price.
- */
-const MULTIFOCAL: StandardBand[] = [
-  {
-    label: "Plano to +3.00, ADD to +3.00",
-    sphMin: 0,
-    sphMax: 3,
-    cylMin: -2,
-    cylMax: 0,
-    addMin: 0.75,
-    addMax: 3,
-  },
-  {
-    label: "-0.25 to -3.00, ADD to +3.00",
-    sphMin: -3,
-    sphMax: -0.25,
-    cylMin: -2,
-    cylMax: 0,
-    addMin: 0.75,
-    addMax: 3,
-  },
-];
-
-/**
- * The rows to start from for one build.
+ * Sphere ranges from plano outwards, one sign at a time.
  *
- * Kind-aware because the sheet is: a single vision lens is priced across
- * thirty-odd sphere, cylinder and toric rows, a progressive across two.
- * Offering the single vision grid for a progressive would be thirty rows of
- * busywork that the shop would have to delete.
+ * Minus and plus are generated separately and never merged: they are separate
+ * columns on the sheet and separate money at the lab.
+ *
+ * `includePlano` is what keeps the blocks from overlapping. A plano sphere
+ * with a cylinder is a CYL prescription, not a weak toric one, so the toric
+ * block starts at the first quarter step away from zero instead of at zero.
  */
-export function standardBandsFor(
-  kind: "SINGLE_VISION" | "BIFOCAL" | "PROGRESSIVE",
-): StandardBand[] {
-  if (kind === "SINGLE_VISION") {
-    return [...SPHERE_ONLY, ...CYLINDER_ONLY, ...TORIC];
+function sphereRanges(
+  reach: number,
+  step: number,
+  includePlano: boolean,
+): Range[] {
+  const out: Range[] = [];
+
+  for (const sign of [-1, 1] as const) {
+    for (let index = 0; index * step < reach - 1e-9; index += 1) {
+      // Band k covers the magnitudes just past k steps up to k+1 steps, so
+      // -3.00 belongs to the first band and -3.25 opens the second. Plano is
+      // given to the minus side alone, or to neither on a toric block.
+      const openAt = index * step;
+      const magFrom =
+        index === 0 && includePlano && sign === -1
+          ? 0
+          : roundToStep(openAt + DIOPTRE_STEP);
+      const magTo = roundToStep(Math.min(openAt + step, reach));
+      if (magFrom > magTo + 1e-9) break;
+
+      const from = roundToStep(sign * magFrom);
+      const to = roundToStep(sign * magTo);
+
+      out.push({
+        min: Math.min(from, to),
+        max: Math.max(from, to),
+        // Written the way it is read: outwards from plano, not left to right.
+        label: `${formatDiopter(from)} to ${formatDiopter(to)}`,
+      });
+    }
   }
-  return MULTIFOCAL;
+
+  return out;
+}
+
+/** Cylinder ranges, minus only, starting at the first real astigmatism. */
+function cylinderRanges(reach: number, step: number): Range[] {
+  const out: Range[] = [];
+
+  for (let index = 0; index * step < reach - 1e-9; index += 1) {
+    const from = roundToStep(-(index * step + DIOPTRE_STEP));
+    const to = roundToStep(-Math.min(index * step + step, reach));
+    if (from < to - 1e-9) break;
+
+    out.push({
+      min: to,
+      max: from,
+      label: `${formatDiopter(from)} to ${formatDiopter(to)}`,
+    });
+  }
+
+  return out;
+}
+
+/**
+ * The reading addition, cut into as many bands as asked for.
+ *
+ * Three by default, because a +1.00 and a +3.00 addition are not the same
+ * lens to grind - the corridor of a progressive gets harder as the addition
+ * rises - and pricing them as one row means either overcharging the first
+ * customer or losing money on the last.
+ *
+ * Cut by quarter step rather than by dioptre so the bands come out even: the
+ * legal additions are twelve values, and three bands are four values each.
+ */
+function additionRanges(count: number): Range[] {
+  const bands = Math.max(1, Math.round(count));
+  const steps = Math.round((ADD_MAX - ADD_MIN) / DIOPTRE_STEP) + 1;
+  const out: Range[] = [];
+
+  for (let index = 0; index < bands; index += 1) {
+    const firstStep = Math.round((index * steps) / bands);
+    const lastStep = Math.round(((index + 1) * steps) / bands) - 1;
+    if (lastStep < firstStep) continue;
+
+    const from = roundToStep(ADD_MIN + firstStep * DIOPTRE_STEP);
+    const to = roundToStep(ADD_MIN + lastStep * DIOPTRE_STEP);
+
+    out.push({
+      min: from,
+      max: to,
+      label: `ADD ${formatDiopter(from)} to ${formatDiopter(to)}`,
+    });
+  }
+
+  return out;
+}
+
+/* ------------------------------ the blocks ------------------------------ */
+
+function clampReach(
+  value: number | undefined,
+  fallback: number,
+  limit: number,
+) {
+  const wanted = Number.isFinite(value) ? Number(value) : fallback;
+  return Math.min(Math.max(Math.abs(wanted), 1), limit);
+}
+
+function clampStep(value: number | undefined, fallback: number) {
+  const wanted = Number.isFinite(value) ? Number(value) : fallback;
+  return Math.min(Math.max(roundToStep(Math.abs(wanted)), DIOPTRE_STEP), 20);
+}
+
+/**
+ * Every row of one block, for one build.
+ *
+ * The SPH+CYL+ADD block is marked as an order lens by default: a toric
+ * multifocal is the one corner of the sheet a shop normally does not hold in
+ * stock. It is a default on a row the shop can untick, not a rule.
+ */
+export function standardBandsForCategory(
+  category: LensPowerCategory,
+  options: BandGridOptions = {},
+): StandardBand[] {
+  const sphReach = clampReach(
+    options.sphReach,
+    BAND_DEFAULTS.sphReach,
+    Math.min(Math.abs(SPH_MIN), SPH_MAX),
+  );
+  const sphStep = clampStep(options.sphStep, BAND_DEFAULTS.sphStep);
+  const cylReach = clampReach(
+    options.cylReach,
+    BAND_DEFAULTS.cylReach,
+    Math.abs(CYL_MIN),
+  );
+  const cylStep = clampStep(options.cylStep, BAND_DEFAULTS.cylStep);
+  const addBands = Math.min(
+    Math.max(Math.round(options.addBands ?? BAND_DEFAULTS.addBands), 1),
+    6,
+  );
+
+  // A toric row prices a sphere that is actually there; plano-with-cylinder
+  // is the CYL block's job. The toric ADD blocks do cover a plano sphere,
+  // because there is nowhere else for a plano-with-cylinder reader to go.
+  const spheres = sphereRanges(sphReach, sphStep, category !== "SPH_CYL");
+  const cylinders = cylinderRanges(cylReach, cylStep);
+  const additions = additionRanges(addBands);
+
+  const row = (
+    sph: Range | null,
+    cyl: Range | null,
+    add: Range | null,
+    isOrderLens = false,
+  ): StandardBand => ({
+    category,
+    label: [sph?.label, cyl && `CYL ${cyl.label}`, add?.label]
+      .filter(Boolean)
+      .join(" · "),
+    sphMin: sph?.min ?? 0,
+    sphMax: sph?.max ?? 0,
+    cylMin: cyl?.min ?? 0,
+    cylMax: cyl?.max ?? 0,
+    addMin: add?.min ?? null,
+    addMax: add?.max ?? null,
+    isOrderLens,
+  });
+
+  switch (category) {
+    case "SPH":
+      return spheres.map((sph) => row(sph, null, null));
+
+    case "CYL":
+      return cylinders.map((cyl) => row(null, cyl, null));
+
+    case "SPH_CYL":
+      return spheres.flatMap((sph) =>
+        cylinders.map((cyl) => row(sph, cyl, null)),
+      );
+
+    case "SPH_ADD_BIFOCAL":
+    case "SPH_ADD_PROGRESSIVE":
+      return spheres.flatMap((sph) =>
+        additions.map((add) => row(sph, null, add)),
+      );
+
+    case "SPH_CYL_ADD_BIFOCAL":
+    case "SPH_CYL_ADD_PROGRESSIVE":
+      return spheres.flatMap((sph) =>
+        cylinders.flatMap((cyl) =>
+          additions.map((add) => row(sph, cyl, add, true)),
+        ),
+      );
+  }
+}
+
+/** Every row of the whole sheet for one lens, in the order it is read. */
+export function standardBandsForLens(
+  options: BandGridOptions = {},
+): StandardBand[] {
+  return LENS_POWER_CATEGORIES.flatMap((category) =>
+    standardBandsForCategory(category, options),
+  );
+}
+
+/** The rows for the blocks a pair made this way is priced from. */
+export function standardBandsFor(
+  kind: LensDesignKind,
+  options: BandGridOptions = {},
+): StandardBand[] {
+  return categoriesForDesignKind(kind).flatMap((category) =>
+    standardBandsForCategory(category, options),
+  );
 }

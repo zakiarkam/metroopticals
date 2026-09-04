@@ -19,7 +19,7 @@ import { siteConfig } from "@/config/site";
 
 /** How long the sequence holds before it starts leaving. */
 const HOLD_MS = 2000;
-/** The fade itself — must match the CSS transition duration. */
+/** The fade itself - must match the CSS transition duration. */
 const FADE_MS = 520;
 /** Someone who asked for less motion gets the brand mark, not the show. */
 const REDUCED_HOLD_MS = 300;
@@ -107,7 +107,13 @@ export default function SiteIntro() {
               stroke="#8F6A37"
               strokeWidth={2}
             />
-            <circle className="site-intro__pupil" cx={70} cy={45} r={7} fill="#5E4520" />
+            <circle
+              className="site-intro__pupil"
+              cx={70}
+              cy={45}
+              r={7}
+              fill="#5E4520"
+            />
             <circle
               className="site-intro__glint"
               cx={76.5}

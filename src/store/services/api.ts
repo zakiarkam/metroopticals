@@ -9,7 +9,10 @@ import type {
   AdvertisementsResponse,
   AdvertisementPlacement,
 } from "@/features/advertisements/types/advertisement";
-import type { UserQueryParams, UsersResponse } from "@/features/users/types/user";
+import type {
+  UserQueryParams,
+  UsersResponse,
+} from "@/features/users/types/user";
 import type { OrdersResponse } from "@/features/orders/types/order";
 import type { DashboardData } from "@/features/dashboard/types/dashboard";
 import { getProducts } from "@/features/products/api/product-api";
@@ -23,7 +26,7 @@ import { getDashboardDataOnce } from "@/features/dashboard/api/dashboard-api";
  * RTK Query is used purely as the admin's list cache: the tabs read their
  * tables through these queries, and after any write (made through the plain
  * `*-api.ts` clients) they invalidate the matching tag to refetch. Only the
- * list endpoints live here — per-record reads and writes go through the
+ * list endpoints live here - per-record reads and writes go through the
  * feature API clients directly.
  */
 

@@ -241,24 +241,35 @@ model ProductTryOnAsset {
 }
 
 model CartItem {
-  quantity       Int      @default(1)
+  quantity       Int             @default(1)
   // The colourway the shopper picked on the product page. Empty when the
   // product lists no colours  an empty string rather than null so the unique
   // index below still collapses repeat adds (Postgres treats NULLs as
   // distinct, which would let the same frame stack up as separate rows).
-  color          String   @default("")
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  color          String          @default("")
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
   // ---- Prescription lenses fitted to this frame (all optional) ----
   // A frame can be bought bare, so every column below is null on an ordinary
   // line. `lensPrice` is the quoted price for the PAIR of lenses, frozen when
   // the shopper accepted the quote, and re-checked against the live price
   // list at checkout so a stale basket cannot buy last month's price.
   lensTypeId     Int?
-  lensDesignId   Int?
+  /// How the pair is made: one power, or a bifocal or progressive built to a
+  /// reading addition. Not a row in a table - it is one of three ways every
+  /// lens is made, and it decides which block of the price list is read.
+  lensDesignKind LensDesignKind?
   lensTintId     Int?
   prescriptionId Int?
-  lensPrice      Float    @default(0)
+  lensPrice      Float           @default(0)
+
+  /// True when the matched price row is a lens the shop has to order in
+  /// rather than cut from stock. Copied off the quote so the basket can say
+  /// so without re-pricing the line to draw a badge.
+  lensIsOrderLens  Boolean @default(false)
+  /// Working days the shop quotes for an order lens. Null when it does not
+  /// publish one, which is not the same as "next day".
+  lensLeadTimeDays Int?
 
   /// What makes two lines of the same frame and colour different: the lens
   /// choice. Empty for a bare frame, so repeat adds still collapse into one
@@ -273,7 +284,6 @@ model CartItem {
   user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   lensType     LensType?     @relation(fields: [lensTypeId], references: [id], onDelete: SetNull)
-  lensDesign   LensDesign?   @relation(fields: [lensDesignId], references: [id], onDelete: SetNull)
   lensTint     LensTint?     @relation(fields: [lensTintId], references: [id], onDelete: SetNull)
   prescription Prescription? @relation(fields: [prescriptionId], references: [id], onDelete: SetNull)
 
@@ -411,22 +421,28 @@ model OrderItem {
   // Names and money are copied rather than joined: the price list is edited,
   // lens types are retired and a customer replaces a prescription with a
   // newer version, and none of that may rewrite an invoice already issued.
-  lensTypeId     Int?
-  lensName       String?
-  /// The build as sold — "Progressive — Free Form". Frozen like the name.
-  lensDesignId   Int?
-  lensDesignName String?
-  lensTintName   String?
+  lensTypeId       Int?
+  lensName         String?
+  /// How it was made, and the words that were printed for it. Frozen like the
+  /// name: the price list is edited and the wording may change, but an
+  /// invoice must reprint exactly as it was issued.
+  lensDesignKind   LensDesignKind?
+  lensDesignName   String?
+  lensTintName     String?
   /// Price for the pair of lenses on this line, per frame.
-  lensPrice      Float   @default(0)
+  lensPrice        Float           @default(0)
   /// The powers exactly as they were sent to the lab, as JSON. The live row
   /// may have moved on to version 3 by the time this pair is remade.
-  lensRx         Json?
+  lensRx           Json?
+  /// Whether this pair was made to order, and how long the shop said it
+  /// would take. Frozen with the rest: an order lens is a promise made on
+  /// the day of sale, and the price list may say something else next month.
+  lensIsOrderLens  Boolean         @default(false)
+  lensLeadTimeDays Int?
   /// Which saved prescription this came from, for the customer's history.
-  prescriptionId Int?
+  prescriptionId   Int?
 
   lensType     LensType?     @relation(fields: [lensTypeId], references: [id], onDelete: SetNull)
-  lensDesign   LensDesign?   @relation(fields: [lensDesignId], references: [id], onDelete: SetNull)
   prescription Prescription? @relation(fields: [prescriptionId], references: [id], onDelete: SetNull)
 
   @@index([orderId])
@@ -735,16 +751,16 @@ enum StockReason {
 //
 // A frame is a product; the lenses fitted into it are not. Their price does
 // not come from a shelf count, it comes from the power that has to be ground
-// into them — a -1.00 lens and a -9.00 lens are the same piece of plastic to
+// into them - a -1.00 lens and a -9.00 lens are the same piece of plastic to
 // the catalogue and very different money to the lab. So lenses live in their
 // own small price list, maintained by the shop, and are quoted against the
 // customer's prescription at the moment they choose.
 
-/// One line on the lens menu — "Blue Cut", "Progressive", "Photochromic".
+/// One line on the lens menu - "Blue Cut", "Progressive", "Photochromic".
 ///
 /// The long-form guide for each of these lives in `src/config/lenses.ts` and
 /// is matched by `slug`; this table holds only what the shop actually
-/// maintains — whether it is offered, what it costs, and in what order it is
+/// maintains - whether it is offered, what it costs, and in what order it is
 /// shown. A type with no matching guide entry is still perfectly sellable, it
 /// simply has no "Learn more" page behind it.
 model LensType {
@@ -760,7 +776,7 @@ model LensType {
   /// False for a plano/fashion lens, which is sold with no powers at all and
   /// is therefore priced from `basePrice` rather than from the bands.
   requiresPrescription Boolean @default(true)
-  /// What the pair costs when no power banding applies — the whole price for
+  /// What the pair costs when no power banding applies - the whole price for
   /// a non-prescription lens, and the fallback for a prescription lens whose
   /// price list has not been filled in yet.
   basePrice            Float   @default(0)
@@ -770,93 +786,97 @@ model LensType {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  designs    LensDesign[]
-  tints      LensTint[]
-  cartItems  CartItem[]
-  orderItems OrderItem[]
+  powerPrices LensPowerPrice[]
+  tints       LensTint[]
+  cartItems   CartItem[]
+  orderItems  OrderItem[]
 
   @@index([isActive, sortOrder])
   @@map("lens_types")
 }
 
-/// One way a lens type is built, and the prices that go with it.
+/// One row of the shop's lens price list: "this lens, in this SHAPE of
+/// prescription, in this power range, costs this much for the pair".
 ///
-/// The shop sells more than one of each kind — a round-top and a flat-top
-/// bifocal, a free-form and a Vision Max progressive — and they are different
-/// money. So the design is a named row the shop maintains, not a fixed enum:
-/// `kind` is what the software needs to know (does this need a reading
-/// addition?), `name` is what the customer reads.
-model LensDesign {
-  id          Int            @id @default(autoincrement())
-  lensTypeId  Int
-  kind        LensDesignKind @default(SINGLE_VISION)
-  /// What the customer sees: "Single Vision", "Bifocal — Round Top".
-  name        String
-  /// One line under the name in the picker.
-  description String?
-
-  sortOrder Int     @default(0)
-  isActive  Boolean @default(true)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  lensType    LensType         @relation(fields: [lensTypeId], references: [id], onDelete: Cascade)
-  powerPrices LensPowerPrice[]
-  cartItems   CartItem[]
-  orderItems  OrderItem[]
-
-  @@unique([lensTypeId, name])
-  @@index([lensTypeId, sortOrder])
-  @@map("lens_designs")
-}
-
-/// One row of the shop's lens price list: "this type, in this power range,
-/// costs this much for the pair".
+/// The shape is the part a printed price sheet takes for granted and software
+/// cannot. A sphere-only lens, a cylinder-only lens and the two together are
+/// three different jobs at the lab at three different prices; adding a reading
+/// addition makes them different again, and a bifocal and a progressive made
+/// to the SAME powers are different money as well. `category` says which of
+/// the seven blocks a row prices, so a plain -2.00 can never be quoted off a
+/// toric row that happens to span zero cylinder, and a progressive is never
+/// sold at the bifocal price.
 ///
-/// Ranges are written in MINUS-CYLINDER form, which is what the bands are
-/// matched against — a prescription written in plus cylinder is transposed
-/// before it is priced, so the same glasses land in the same band whichever
-/// way the optometrist wrote them down.
+/// Ranges are written in MINUS-CYLINDER form, which is what they are matched
+/// against - a prescription written in plus cylinder is transposed before it
+/// is priced, so the same glasses land in the same row whichever way the
+/// optometrist wrote them down.
 ///
-/// Bands are tried in `sortOrder` and the first one that fits wins, so a
-/// narrow special case can be placed above a broad catch-all. A prescription
-/// that fits no band is quoted as "ask us" rather than guessed at.
+/// Within a block rows are tried in `sortOrder` and the first that fits wins,
+/// so a narrow special case can be placed above a broad catch-all. A
+/// prescription that fits no row is quoted as "ask us" rather than guessed at.
 model LensPowerPrice {
-  id           Int     @id @default(autoincrement())
-  /// Which build of this lens the row prices. Every row belongs to exactly
-  /// one, and the lens type follows from the design — storing it here as well
-  /// would be a second copy of the same fact, free to drift out of step.
-  lensDesignId Int
+  id         Int               @id @default(autoincrement())
+  lensTypeId Int
+  /// Which of the seven blocks this row prices. See `LensPowerCategory`.
+  category   LensPowerCategory @default(SPH)
   /// Optional human label for the row, e.g. "Standard range".
-  label        String?
+  label      String?
 
-  /// Sphere range, inclusive, signed dioptres.
+  /// Sphere range, inclusive, signed dioptres. Both 0 on a cylinder-only row.
   sphMin Float
   sphMax Float
-  /// Cylinder range, inclusive, signed dioptres, minus-cyl convention. A row
-  /// covering "no astigmatism to -2.00" is written -2.00 to 0.
+  /// Cylinder range, inclusive, signed dioptres, minus-cyl convention. Both 0
+  /// on a row that prices a sphere with no astigmatism.
   cylMin Float
   cylMax Float
-  /// Reading addition range, inclusive. Null on both means the row does not
-  /// care about the addition.
+  /// Reading addition range, inclusive. Both null outside the ADD blocks, and
+  /// both required inside them.
   addMin Float?
   addMax Float?
 
   /// Price for the PAIR of lenses in this range.
-  price     Float
-  sortOrder Int   @default(0)
+  price        Float
+  /// True when this power has to be ordered in rather than cut from stock.
+  /// The customer is told so before they pay, and the order carries it
+  /// through to the shop - a made-to-order pair is a different promise about
+  /// when the glasses will be ready, not just a different price.
+  isOrderLens  Boolean @default(false)
+  /// Working days the shop quotes for an order lens. Null publishes no
+  /// figure, which is honest when the supplier's own lead time varies.
+  leadTimeDays Int?
+  sortOrder    Int     @default(0)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  lensDesign LensDesign @relation(fields: [lensDesignId], references: [id], onDelete: Cascade)
+  lensType LensType @relation(fields: [lensTypeId], references: [id], onDelete: Cascade)
 
-  @@index([lensDesignId, sortOrder])
+  @@index([lensTypeId, category, sortOrder])
   @@map("lens_power_prices")
 }
 
-/// A tint or colour offered within one lens type — the six photochromic
+/// The seven blocks a lens price sheet is written in.
+///
+/// A prescription is classified into exactly one of these and priced from the
+/// rows that carry it. The first three are how a pair with one power is
+/// priced; the last four are the same shapes made with a reading addition,
+/// once as a bifocal and once as a progressive - because those are two
+/// different lenses to make and the sheet prices them separately.
+///
+/// There is deliberately no CYL+ADD block: no sheet has one, and a plano
+/// sphere with a cylinder and an addition is priced from the toric rows.
+enum LensPowerCategory {
+  SPH // sphere only, no cylinder
+  CYL // cylinder only, sphere is plano
+  SPH_CYL // both, the toric block on a printed sheet
+  SPH_ADD_BIFOCAL // sphere with an addition, made as a bifocal
+  SPH_ADD_PROGRESSIVE // sphere with an addition, made as a progressive
+  SPH_CYL_ADD_BIFOCAL // sphere, cylinder and an addition, as a bifocal
+  SPH_CYL_ADD_PROGRESSIVE // the same, made as a progressive
+}
+
+/// A tint or colour offered within one lens type - the six photochromic
 /// colours, the three polarised ones. Priced as a surcharge on top of the
 /// power band, because a brown polarised lens and a grey one are usually the
 /// same money but not always.
@@ -864,7 +884,7 @@ model LensTint {
   id          Int     @id @default(autoincrement())
   lensTypeId  Int
   name        String
-  /// Swatch fill for the picker — the tint itself, not the frame.
+  /// Swatch fill for the picker - the tint itself, not the frame.
   hex         String?
   /// One line under the swatch name.
   description String?
@@ -885,8 +905,12 @@ model LensTint {
 
 /// How a lens is built: one power, two, or a smooth range between them.
 ///
+/// Used in three places and no longer a table of its own: what the prescriber
+/// said to make, what the customer chose, and - crossed with the shape of the
+/// prescription - which block of the price list the pair is quoted from.
+///
 /// This is a different axis from the lens TYPE. The shop's price list is a
-/// grid — coatings across the top (uncoated, multicoat, blue cut), and down
+/// grid - coatings across the top (uncoated, multicoat, blue cut), and down
 /// the side the same three designs repeated for each of them. A "Blue Cut
 /// Progressive" is not a lens type of its own, it is the blue cut lens built
 /// as a progressive, which is why this hangs off the type rather than
@@ -917,7 +941,7 @@ model Prescription {
   id     Int @id @default(autoincrement())
   userId Int
 
-  /// What the customer calls it — "Mine", "Amma's", "Driving pair".
+  /// What the customer calls it - "Mine", "Amma's", "Driving pair".
   label   String             @default("My prescription")
   version Int                @default(1)
   /// Version 1 of this chain. Null on version 1 itself.
@@ -930,7 +954,7 @@ model Prescription {
   /// What the prescriber said to make, when they said it.
   ///
   /// Doctors write "Bifocals", "PAL", "SV" on the slip, and this is the one
-  /// question a customer genuinely cannot answer for themselves — plenty do
+  /// question a customer genuinely cannot answer for themselves - plenty do
   /// not know which they were prescribed, and a reading addition alone does
   /// not settle it (it could be a bifocal, a progressive, or a separate pair
   /// of readers). Null means nobody has said, which is a normal state and not
@@ -989,7 +1013,7 @@ model Prescription {
 ///
 /// The key is the file's own SHA-256, so a customer who uploads, changes
 /// their mind about the lens type and comes back is served from here rather
-/// than from another paid API call — and so is a second customer uploading
+/// than from another paid API call - and so is a second customer uploading
 /// the identical file. This is a cache, not a record: nothing here is shown
 /// to anyone until it has been through the customer's own confirmation step,
 /// and the row can be deleted at any time with no loss.
@@ -1009,7 +1033,7 @@ model PrescriptionExtraction {
   /// Storage key of the uploaded slip itself, under the private prefix.
   ///
   /// Held here rather than derived from the hash so that re-uploading the
-  /// same file reuses the one object instead of writing another copy — and so
+  /// same file reuses the one object instead of writing another copy - and so
   /// the key itself can stay random, which is what stops it being guessable.
   storedFile String?
 

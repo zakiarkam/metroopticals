@@ -8,7 +8,7 @@ import { createSuccessResponse, handleError } from "@/lib/errors";
  * Re-price every lens in the basket against today's price list.
  *
  * Called once when the checkout opens. `createOrder` re-prices too and is the
- * one that actually charges — but discovering a price change *after* filling
+ * one that actually charges - but discovering a price change *after* filling
  * in an address form is a bad way to find out, so this brings the basket up
  * to date first and reports what moved.
  */

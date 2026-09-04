@@ -30,19 +30,29 @@ const prescriptionSelect = {
   notes: true,
   createdAt: true,
   updatedAt: true,
-  rightSph: true, rightCyl: true, rightAxis: true, rightAdd: true,
-  rightPrism: true, rightBase: true,
-  leftSph: true, leftCyl: true, leftAxis: true, leftAdd: true,
-  leftPrism: true, leftBase: true,
-  pdSingle: true, pdRight: true, pdLeft: true,
+  rightSph: true,
+  rightCyl: true,
+  rightAxis: true,
+  rightAdd: true,
+  rightPrism: true,
+  rightBase: true,
+  leftSph: true,
+  leftCyl: true,
+  leftAxis: true,
+  leftAdd: true,
+  leftPrism: true,
+  leftBase: true,
+  pdSingle: true,
+  pdRight: true,
+  pdLeft: true,
 } as const;
 
 /**
  * The row plus the shapes the UI actually wants: nested values and a summary.
  *
  * The storage key is stripped and replaced with a plain boolean. The browser
- * has no use for it — the slip is fetched from an authenticated route by
- * prescription id — and a key that never leaves the server cannot leak from a
+ * has no use for it - the slip is fetched from an authenticated route by
+ * prescription id - and a key that never leaves the server cannot leak from a
  * cached API response or a screenshot of one.
  */
 function present<T extends Record<string, any>>(row: T) {
@@ -111,7 +121,7 @@ export async function getPrescriptionById(userId: number, id: number) {
   return present(rest);
 }
 
-/** Every version of one chain, oldest first — the account page's history. */
+/** Every version of one chain, oldest first - the account page's history. */
 export async function getPrescriptionHistory(userId: number, id: number) {
   const anchor = await prisma.prescription.findUnique({
     where: { id },
@@ -137,7 +147,7 @@ export async function getPrescriptionHistory(userId: number, id: number) {
  * Save a prescription, or the next version of one already on file.
  *
  * Re-testing is the normal case for a returning customer: a year later the
- * powers change, and both sets matter — the new one for what they are buying
+ * powers change, and both sets matter - the new one for what they are buying
  * now, the old one for what their last pair was made to. So a re-test writes
  * version 2 alongside version 1 rather than over it.
  *
@@ -156,7 +166,13 @@ export async function createPrescription(
   if (data.supersedesId) {
     const previous = await prisma.prescription.findUnique({
       where: { id: data.supersedesId },
-      select: { id: true, userId: true, rootId: true, version: true, label: true },
+      select: {
+        id: true,
+        userId: true,
+        rootId: true,
+        version: true,
+        label: true,
+      },
     });
 
     if (!previous || previous.userId !== userId) {
@@ -176,7 +192,7 @@ export async function createPrescription(
 
     if (version > MAX_VERSIONS_PER_CHAIN) {
       throw new ValidationError(
-        "This prescription has been updated many times — save these powers as a new prescription instead.",
+        "This prescription has been updated many times - save these powers as a new prescription instead.",
       );
     }
   }
@@ -236,7 +252,9 @@ export async function updatePrescription(
       ...(data.prescribedDesign !== undefined
         ? { prescribedDesign: data.prescribedDesign }
         : {}),
-      ...(data.notes !== undefined ? { notes: data.notes?.trim() || null } : {}),
+      ...(data.notes !== undefined
+        ? { notes: data.notes?.trim() || null }
+        : {}),
       ...(data.expiresAt !== undefined
         ? { expiresAt: toDate(data.expiresAt) }
         : {}),
@@ -251,7 +269,7 @@ export async function updatePrescription(
 /**
  * Archive rather than delete.
  *
- * A prescription an order was made to is part of that order's record — the
+ * A prescription an order was made to is part of that order's record - the
  * shop has to be able to answer "what did we make these to?" years later, and
  * a customer asking for the same again should get the same again. So it is
  * hidden from the picker and kept.
@@ -325,7 +343,7 @@ async function forgetSlip(imageFile: string) {
 }
 
 /**
- * The number of live prescription CHAINS — a record and all its versions
+ * The number of live prescription CHAINS - a record and all its versions
  * count as one, because that is how the customer sees them.
  */
 export async function countPrescriptions(userId: number) {

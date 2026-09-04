@@ -1,5 +1,11 @@
 import axiosInstance from "@/lib/axiosInstance";
 import type { PrescriptionValues } from "@/features/lenses/utils/prescription";
+import type {
+  LensDesignKind,
+  LensPowerCategory,
+} from "@/features/lenses/utils/pricing";
+
+export type { LensDesignKind, LensPowerCategory };
 
 export type LensTint = {
   id: number;
@@ -13,6 +19,8 @@ export type LensTint = {
 
 export type LensPowerBand = {
   id: number;
+  /** Which block of the price list the row belongs to. */
+  category: LensPowerCategory;
   label: string | null;
   sphMin: number;
   sphMax: number;
@@ -21,20 +29,11 @@ export type LensPowerBand = {
   addMin: number | null;
   addMax: number | null;
   price: number;
+  /** Made to order rather than cut from stock. */
+  isOrderLens: boolean;
+  /** Working days quoted for it, when the shop publishes a figure. */
+  leadTimeDays: number | null;
   sortOrder: number;
-};
-
-export type LensDesignKind = "SINGLE_VISION" | "BIFOCAL" | "PROGRESSIVE";
-
-/** One way a lens type is built, with the price rows that belong to it. */
-export type LensDesign = {
-  id: number;
-  kind: LensDesignKind;
-  name: string;
-  description: string | null;
-  sortOrder: number;
-  isActive: boolean;
-  powerPrices: LensPowerBand[];
 };
 
 export type LensType = {
@@ -47,32 +46,37 @@ export type LensType = {
   basePrice: number;
   sortOrder: number;
   isActive: boolean;
-  designs: LensDesign[];
+  /** The whole sheet: every block's rows, each row naming its block. */
+  powerPrices: LensPowerBand[];
   tints: LensTint[];
   /** Link to the guide page for this lens, when the site has one. */
   guideHref: string | null;
   guideTagline: string | null;
   image: string | null;
   priceFrom: number;
+  /** Which of the three ways the shop has actually priced this lens. */
+  designKinds?: LensDesignKind[];
 };
 
-/** A price for one build of one lens type. */
+/** A price for one lens type made one of the three ways. */
 export type DesignQuote = {
-  designId: number | null;
   kind: LensDesignKind;
-  name: string;
-  description: string | null;
+  /** The cheapest this lens can be when made this way. */
+  priceFrom: number;
   priced: boolean;
   lensPrice: number;
   tintSurcharge: number;
   total: number;
   bandLabel: string | null;
+  category: LensPowerCategory | null;
+  isOrderLens: boolean;
+  leadTimeDays: number | null;
   reason: string | null;
 };
 
 export type LensQuote = {
   lensTypeId: number;
-  designId?: number | null;
+  designKind: LensDesignKind;
   priced: boolean;
   lensPrice: number;
   tintSurcharge: number;
@@ -80,6 +84,9 @@ export type LensQuote = {
   rightBandId: number | null;
   leftBandId: number | null;
   bandLabel: string | null;
+  category?: LensPowerCategory | null;
+  isOrderLens: boolean;
+  leadTimeDays: number | null;
   reason: string | null;
   /** Every build of this lens, priced. Present on the batch endpoint. */
   designs?: DesignQuote[];
@@ -117,7 +124,7 @@ export const quoteLensTypes = async (input: {
 /** One lens type, with a tint applied. */
 export const quoteLensType = async (input: {
   lensTypeId: number;
-  lensDesignId?: number | null;
+  lensDesignKind?: LensDesignKind;
   lensTintId?: number | null;
   prescriptionId?: number | null;
   prescription?: PrescriptionValues | null;
@@ -137,12 +144,7 @@ export type LensTypePayload = {
   basePrice: number;
   sortOrder: number;
   isActive: boolean;
-  designs: Array<
-    Omit<LensDesign, "id" | "powerPrices"> & {
-      id?: number;
-      powerPrices: Array<Omit<LensPowerBand, "id"> & { id?: number }>;
-    }
-  >;
+  powerPrices: Array<Omit<LensPowerBand, "id"> & { id?: number }>;
   tints: Array<Omit<LensTint, "id"> & { id?: number }>;
 };
 

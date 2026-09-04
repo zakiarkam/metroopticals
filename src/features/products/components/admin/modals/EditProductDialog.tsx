@@ -38,7 +38,10 @@ import {
   sumColorRows,
 } from "../types";
 import EyewearSpecFields from "../EyewearSpecFields";
-import { updateProduct, getProductById } from "@/features/products/api/product-api";
+import {
+  updateProduct,
+  getProductById,
+} from "@/features/products/api/product-api";
 import { uploadApi } from "@/features/uploads/api/upload-api";
 import { ProductStatus } from "@/features/products/types/product";
 import ImageUpload from "../ImageUpload";
@@ -67,7 +70,7 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(false);
   const [initialValues, setInitialValues] = useState<ProductFormData | null>(
-    null
+    null,
   );
   const [newlyUploadedFiles, setNewlyUploadedFiles] = useState<{
     images: string[];
@@ -108,14 +111,12 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
   const watchedColorRows = form.watch("colorStocks");
   const tryOnColours = React.useMemo(
     () =>
-      (watchedColorRows ?? [])
-        .map((row) => row.color.trim())
-        .filter(Boolean),
+      (watchedColorRows ?? []).map((row) => row.color.trim()).filter(Boolean),
     [watchedColorRows],
   );
 
   // Once any colour carries a count, the total is their sum and the stock
-  // box stops being editable — two numbers disagreeing helps no one.
+  // box stops being editable - two numbers disagreeing helps no one.
   const stockFromColors = colorRowsHaveCounts(watchedColorRows);
   const colorRowsTotal = sumColorRows(watchedColorRows);
 
@@ -141,7 +142,7 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
   const { brands: brandOptions } = useBrands();
   const { data: cachedCategories, error: categoriesError } = useCategoriesCache(
     { page: 1, limit: 200 },
-    { staleTimeMs: 10 * 60 * 1000, enabled: isOpen }
+    { staleTimeMs: 10 * 60 * 1000, enabled: isOpen },
   );
 
   const categories = cachedCategories?.categories || [];
@@ -179,7 +180,7 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
       Toast.error(
         error?.response?.data?.message ||
           error?.message ||
-          "Failed to load product details"
+          "Failed to load product details",
       );
     } finally {
       setIsFetching(false);
@@ -229,7 +230,7 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
     // Delete newly uploaded catalogue
     if (newlyUploadedFiles.catalogue) {
       deletePromises.push(
-        uploadApi.deleteFile("product/catalogue", newlyUploadedFiles.catalogue)
+        uploadApi.deleteFile("product/catalogue", newlyUploadedFiles.catalogue),
       );
     }
 
@@ -309,7 +310,7 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
         discountedPrice: data.discountedPrice ?? null,
         images: Array.isArray(data.images)
           ? data.images.filter(
-              (img) => !!img && typeof img === "string" && img.trim() !== ""
+              (img) => !!img && typeof img === "string" && img.trim() !== "",
             )
           : [],
         catalogueFile: data.catalogueFile || null,
@@ -375,7 +376,7 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
     // Delete removed catalogue
     if (removedFiles.catalogue) {
       deletePromises.push(
-        uploadApi.deleteFile("product/catalogue", removedFiles.catalogue)
+        uploadApi.deleteFile("product/catalogue", removedFiles.catalogue),
       );
     }
     try {
@@ -412,7 +413,10 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent hideClose className="max-w-2xl max-h-[90vh] flex flex-col p-0 sm:p-0">
+      <DialogContent
+        hideClose
+        className="max-w-2xl max-h-[90vh] flex flex-col p-0 sm:p-0"
+      >
         <DialogHeader className="sticky top-0 z-10 bg-gray-2 border-b border-gray-3 px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
@@ -540,7 +544,10 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
                           SKU Code <span className="text-destructive">*</span>
                         </FormLabel>
                         <FormControl>
-                          <Input placeholder="e.g., rb-aviator-classic" {...field} />
+                          <Input
+                            placeholder="e.g., rb-aviator-classic"
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -594,38 +601,40 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
 
                   {/* Brand (optional) */}
                   <FormField
-                                      control={form.control}
-                  name="brandId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Brand</FormLabel>
-                      <Select
-                        onValueChange={(val) =>
-                          field.onChange(val === "__none__" ? null : Number(val))
-                        }
-                        value={
-                          field.value !== null && field.value !== undefined
-                            ? String(field.value)
-                            : "__none__"
-                        }
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select brand (optional)" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="__none__">No brand</SelectItem>
-                          {brandOptions.map((b) => (
-                            <SelectItem key={b.id} value={String(b.id)}>
-                              {b.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                    control={form.control}
+                    name="brandId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Brand</FormLabel>
+                        <Select
+                          onValueChange={(val) =>
+                            field.onChange(
+                              val === "__none__" ? null : Number(val),
+                            )
+                          }
+                          value={
+                            field.value !== null && field.value !== undefined
+                              ? String(field.value)
+                              : "__none__"
+                          }
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select brand (optional)" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="__none__">No brand</SelectItem>
+                            {brandOptions.map((b) => (
+                              <SelectItem key={b.id} value={String(b.id)}>
+                                {b.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
 
                   {/* Price and Discounted Price */}
@@ -659,7 +668,7 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
                                 } else {
                                   const numValue = parseFloat(value);
                                   field.onChange(
-                                    isNaN(numValue) ? "" : numValue
+                                    isNaN(numValue) ? "" : numValue,
                                   );
                                 }
                               }}
@@ -713,7 +722,7 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
                                 } else {
                                   const numValue = parseFloat(value);
                                   field.onChange(
-                                    isNaN(numValue) ? undefined : numValue
+                                    isNaN(numValue) ? undefined : numValue,
                                   );
                                 }
                               }}
@@ -731,45 +740,45 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
                   </div>
 
                   {/* Shop code and barcode  used by the counter, not the website */}
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <FormField
-                    control={form.control}
-                    name="sku"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Shop code (SKU)</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="MO-RB2140-BLK"
-                            {...field}
-                            value={field.value ?? ""}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <FormField
+                      control={form.control}
+                      name="sku"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Shop code (SKU)</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="MO-RB2140-BLK"
+                              {...field}
+                              value={field.value ?? ""}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
-                    name="barcode"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Barcode</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Scan or type the barcode"
-                            {...field}
-                            value={field.value ?? ""}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                    <FormField
+                      control={form.control}
+                      name="barcode"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Barcode</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Scan or type the barcode"
+                              {...field}
+                              value={field.value ?? ""}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
-                {/* Stock */}
+                  {/* Stock */}
                   <FormField
                     control={form.control}
                     name="stock"
@@ -922,7 +931,7 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
                               const initialImages = initialValues?.images || [];
                               // Track newly added images (not in initial values)
                               const addedImages = newImages.filter(
-                                (img) => !initialImages.includes(img)
+                                (img) => !initialImages.includes(img),
                               );
                               setNewlyUploadedFiles((prev) => ({
                                 ...prev,
@@ -930,7 +939,7 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
                               }));
                               // Track removed images (in initial, but not in newImages)
                               const removed = initialImages.filter(
-                                (img) => !newImages.includes(img)
+                                (img) => !newImages.includes(img),
                               );
                               setRemovedFiles((prev) => ({
                                 ...prev,

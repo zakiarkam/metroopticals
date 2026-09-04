@@ -1,17 +1,17 @@
-import { z } from 'zod'
+import { z } from "zod";
 
-const colorRef = z.string().trim().max(60).optional().default('')
+const colorRef = z.string().trim().max(60).optional().default("");
 
 export const addToCartSchema = z.object({
   productId: z.coerce.number().int().positive(),
-  quantity: z.number().int().positive('Quantity must be positive'),
+  quantity: z.number().int().positive("Quantity must be positive"),
   color: colorRef,
-})
+});
 
 export const updateCartItemSchema = z.object({
-  quantity: z.number().int().positive('Quantity must be positive'),
+  quantity: z.number().int().positive("Quantity must be positive"),
   color: colorRef.optional(),
-})
+});
 
 /**
  * Fitting lenses to a frame already in the basket, or taking them off again.
@@ -22,12 +22,14 @@ export const updateCartItemSchema = z.object({
  */
 export const setCartItemLensSchema = z.object({
   lensTypeId: z.coerce.number().int().positive().nullable(),
-  /** Which build — single vision, bifocal, progressive. */
-  lensDesignId: z.coerce.number().int().positive().nullable().optional(),
+  /** How the pair is made - single vision, bifocal, progressive. */
+  lensDesignKind: z
+    .enum(["SINGLE_VISION", "BIFOCAL", "PROGRESSIVE"])
+    .default("SINGLE_VISION"),
   lensTintId: z.coerce.number().int().positive().nullable().optional(),
   prescriptionId: z.coerce.number().int().positive().nullable().optional(),
-})
+});
 
-export type AddToCartInput = z.infer<typeof addToCartSchema>
-export type UpdateCartItemInput = z.infer<typeof updateCartItemSchema>
-export type SetCartItemLensInput = z.infer<typeof setCartItemLensSchema>
+export type AddToCartInput = z.infer<typeof addToCartSchema>;
+export type UpdateCartItemInput = z.infer<typeof updateCartItemSchema>;
+export type SetCartItemLensInput = z.infer<typeof setCartItemLensSchema>;

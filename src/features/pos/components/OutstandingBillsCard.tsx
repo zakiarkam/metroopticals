@@ -1,7 +1,12 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { CalendarClock, MessageCircle, TriangleAlert, Wallet } from "lucide-react";
+import {
+  CalendarClock,
+  MessageCircle,
+  TriangleAlert,
+  Wallet,
+} from "lucide-react";
 import { formatPrice } from "@/lib/utils/price";
 import { siteConfig } from "@/config/site";
 import type { OutstandingBill } from "@/features/pos/api/pos-api";
@@ -21,7 +26,10 @@ type OutstandingBillsCardProps = {
 
 const dayLabel = (value: string | null) =>
   value
-    ? new Date(value).toLocaleDateString("en-GB", { day: "2-digit", month: "short" })
+    ? new Date(value).toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+      })
     : "No date given";
 
 /** A wa.me link with a polite reminder already typed out. */
@@ -122,7 +130,7 @@ const OutstandingBillsCard: React.FC<OutstandingBillsCardProps> = ({
         <p className="px-5 py-10 text-center text-custom-sm text-body">
           {overdueOnly
             ? "Nothing is late."
-            : "Nothing outstanding — every bill is paid."}
+            : "Nothing outstanding - every bill is paid."}
         </p>
       ) : (
         <ul className="divide-y divide-gray-2">
@@ -148,7 +156,9 @@ const OutstandingBillsCard: React.FC<OutstandingBillsCardProps> = ({
                   </p>
                   <p className="truncate font-mono text-custom-xs text-blue">
                     {bill.orderNumber}
-                    {bill.phone ? <span className="text-body"> · {bill.phone}</span> : null}
+                    {bill.phone ? (
+                      <span className="text-body"> · {bill.phone}</span>
+                    ) : null}
                   </p>
                 </button>
 
@@ -168,7 +178,8 @@ const OutstandingBillsCard: React.FC<OutstandingBillsCardProps> = ({
                 </span>
 
                 <span className="text-right text-custom-xs text-body">
-                  Paid {formatPrice(bill.amountPaid)} of {formatPrice(bill.totalAmount)}
+                  Paid {formatPrice(bill.amountPaid)} of{" "}
+                  {formatPrice(bill.totalAmount)}
                 </span>
 
                 <span className="w-28 text-right text-custom-sm font-semibold tabular-nums text-dark">

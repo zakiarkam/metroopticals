@@ -33,7 +33,7 @@ export const dynamic = "force-dynamic";
 export default function HomePage() {
   return (
     <>
-      {/* Home page only, and only on a real page load — see SiteIntro. */}
+      {/* Home page only, and only on a real page load - see SiteIntro. */}
       <SiteIntro />
       <Home />
     </>

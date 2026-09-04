@@ -36,7 +36,10 @@ import {
   type PosReport,
   type SaleListRow,
 } from "@/features/pos/types/pos";
-import { shopDateKey, shopDateKeyDaysAgo } from "@/features/pos/utils/shop-time";
+import {
+  shopDateKey,
+  shopDateKeyDaysAgo,
+} from "@/features/pos/utils/shop-time";
 import SaleDetailDialog from "@/features/pos/components/dialogs/SaleDetailDialog";
 
 type RangePreset = "today" | "week" | "month" | "custom";
@@ -57,8 +60,10 @@ const paymentTone = (status: PaymentStatus) => {
 const presetRange = (preset: RangePreset) => {
   const today = shopDateKey();
   if (preset === "today") return { startDate: today, endDate: today };
-  if (preset === "week") return { startDate: shopDateKeyDaysAgo(6), endDate: today };
-  if (preset === "month") return { startDate: shopDateKeyDaysAgo(29), endDate: today };
+  if (preset === "week")
+    return { startDate: shopDateKeyDaysAgo(6), endDate: today };
+  if (preset === "month")
+    return { startDate: shopDateKeyDaysAgo(29), endDate: today };
   return { startDate: today, endDate: today };
 };
 
@@ -80,7 +85,11 @@ const PosSalesTab: React.FC<{ canVoid: boolean }> = ({ canVoid }) => {
   const [limit] = useState(20);
 
   const [rows, setRows] = useState<SaleListRow[]>([]);
-  const [summary, setSummary] = useState({ billed: 0, collected: 0, outstanding: 0 });
+  const [summary, setSummary] = useState({
+    billed: 0,
+    collected: 0,
+    outstanding: 0,
+  });
   const [totalPages, setTotalPages] = useState(1);
   const [totalRows, setTotalRows] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -99,7 +108,13 @@ const PosSalesTab: React.FC<{ canVoid: boolean }> = ({ canVoid }) => {
     };
   }>({
     bills: [],
-    summary: { count: 0, total: 0, overdueCount: 0, overdueTotal: 0, dueToday: 0 },
+    summary: {
+      count: 0,
+      total: 0,
+      overdueCount: 0,
+      overdueTotal: 0,
+      dueToday: 0,
+    },
   });
 
   useEffect(() => {
@@ -164,15 +179,14 @@ const PosSalesTab: React.FC<{ canVoid: boolean }> = ({ canVoid }) => {
       {
         label: "Collected",
         value: formatPrice(report?.summary.collected ?? summary.collected),
-        helper:
-          report?.byMethod.length
-            ? report.byMethod
-                .map(
-                  (row) =>
-                    `${PAYMENT_METHOD_LABELS[row.method] ?? row.method} ${formatPrice(row.net)}`,
-                )
-                .join(" · ")
-            : "Nothing taken yet",
+        helper: report?.byMethod.length
+          ? report.byMethod
+              .map(
+                (row) =>
+                  `${PAYMENT_METHOD_LABELS[row.method] ?? row.method} ${formatPrice(row.net)}`,
+              )
+              .join(" · ")
+          : "Nothing taken yet",
         tone: "bg-green-light-6 text-green",
       },
       {
@@ -223,7 +237,10 @@ const PosSalesTab: React.FC<{ canVoid: boolean }> = ({ canVoid }) => {
             <p className="mt-2 text-heading-6 font-semibold tabular-nums text-dark">
               {card.value}
             </p>
-            <p className="mt-0.5 line-clamp-1 text-custom-xs text-body" title={card.helper}>
+            <p
+              className="mt-0.5 line-clamp-1 text-custom-xs text-body"
+              title={card.helper}
+            >
               {card.helper}
             </p>
           </div>
@@ -233,7 +250,9 @@ const PosSalesTab: React.FC<{ canVoid: boolean }> = ({ canVoid }) => {
       <div className="rounded-xl border border-gray-3 bg-gray-2 shadow-1">
         <div className="flex flex-wrap items-center gap-3 border-b border-gray-3 px-5 py-4">
           <div>
-            <h3 className="text-custom-lg font-semibold text-dark">Counter bills</h3>
+            <h3 className="text-custom-lg font-semibold text-dark">
+              Counter bills
+            </h3>
             <p className="text-custom-xs text-body">
               {range.startDate === range.endDate
                 ? new Date(range.startDate).toLocaleDateString("en-GB", {
@@ -344,8 +363,10 @@ const PosSalesTab: React.FC<{ canVoid: boolean }> = ({ canVoid }) => {
                   endDate: range.endDate,
                 });
                 if (debouncedSearch) params.set("search", debouncedSearch);
-                if (paymentStatus !== "all") params.set("paymentStatus", paymentStatus);
-                if (paymentMethod !== "all") params.set("paymentMethod", paymentMethod);
+                if (paymentStatus !== "all")
+                  params.set("paymentStatus", paymentStatus);
+                if (paymentMethod !== "all")
+                  params.set("paymentMethod", paymentMethod);
                 // A plain navigation: the browser saves the file the route sends.
                 window.location.href = `/api/pos/sales/export?${params.toString()}`;
               }}
@@ -432,8 +453,10 @@ const PosSalesTab: React.FC<{ canVoid: boolean }> = ({ canVoid }) => {
                         {sale.customer?.name || sale.billingName}
                       </p>
                       <p className="truncate text-custom-xs text-body">
-                        {sale.customer?.phone || sale.billingPhone || "—"}
-                        {sale.createdBy?.name ? ` · ${sale.createdBy.name}` : ""}
+                        {sale.customer?.phone || sale.billingPhone || "-"}
+                        {sale.createdBy?.name
+                          ? ` · ${sale.createdBy.name}`
+                          : ""}
                       </p>
                     </div>
 
@@ -472,7 +495,7 @@ const PosSalesTab: React.FC<{ canVoid: boolean }> = ({ canVoid }) => {
                             ? "Split"
                             : PAYMENT_METHOD_LABELS[
                                 sale.paymentMethod as keyof typeof PAYMENT_METHOD_LABELS
-                              ] || "—"}
+                              ] || "-"}
                         </span>
                       )}
                     </div>
@@ -521,65 +544,68 @@ const PosSalesTab: React.FC<{ canVoid: boolean }> = ({ canVoid }) => {
         onOpen={setOpenSaleId}
       />
 
-      {report && (report.byCashier.length > 0 || report.topProducts.length > 0) && (
-        <div className="grid gap-6 lg:grid-cols-2">
-          <div className="rounded-xl border border-gray-3 bg-gray-2 shadow-1">
-            <h3 className="border-b border-gray-3 px-5 py-4 text-custom-lg font-semibold text-dark">
-              Who billed what
-            </h3>
-            <ul className="divide-y divide-gray-2">
-              {report.byCashier.map((cashier) => (
-                <li
-                  key={`${cashier.id}-${cashier.name}`}
-                  className="flex items-center gap-3 px-5 py-3 text-custom-sm"
-                >
-                  <span className="font-medium text-dark">{cashier.name}</span>
-                  <span className="text-custom-xs text-body">
-                    {cashier.bills} bill{cashier.bills === 1 ? "" : "s"}
-                  </span>
-                  <span className="ml-auto tabular-nums text-dark">
-                    {formatPrice(cashier.billed)}
-                  </span>
-                </li>
-              ))}
-              {report.byCashier.length === 0 && (
-                <li className="px-5 py-6 text-center text-custom-xs text-body">
-                  No bills yet.
-                </li>
-              )}
-            </ul>
-          </div>
+      {report &&
+        (report.byCashier.length > 0 || report.topProducts.length > 0) && (
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div className="rounded-xl border border-gray-3 bg-gray-2 shadow-1">
+              <h3 className="border-b border-gray-3 px-5 py-4 text-custom-lg font-semibold text-dark">
+                Who billed what
+              </h3>
+              <ul className="divide-y divide-gray-2">
+                {report.byCashier.map((cashier) => (
+                  <li
+                    key={`${cashier.id}-${cashier.name}`}
+                    className="flex items-center gap-3 px-5 py-3 text-custom-sm"
+                  >
+                    <span className="font-medium text-dark">
+                      {cashier.name}
+                    </span>
+                    <span className="text-custom-xs text-body">
+                      {cashier.bills} bill{cashier.bills === 1 ? "" : "s"}
+                    </span>
+                    <span className="ml-auto tabular-nums text-dark">
+                      {formatPrice(cashier.billed)}
+                    </span>
+                  </li>
+                ))}
+                {report.byCashier.length === 0 && (
+                  <li className="px-5 py-6 text-center text-custom-xs text-body">
+                    No bills yet.
+                  </li>
+                )}
+              </ul>
+            </div>
 
-          <div className="rounded-xl border border-gray-3 bg-gray-2 shadow-1">
-            <h3 className="border-b border-gray-3 px-5 py-4 text-custom-lg font-semibold text-dark">
-              Best sellers at the counter
-            </h3>
-            <ul className="divide-y divide-gray-2">
-              {report.topProducts.map((product) => (
-                <li
-                  key={product.name}
-                  className="flex items-center gap-3 px-5 py-3 text-custom-sm"
-                >
-                  <span className="min-w-0 flex-1 truncate text-dark">
-                    {product.name}
-                  </span>
-                  <span className="text-custom-xs text-body">
-                    ×{product.quantity}
-                  </span>
-                  <span className="w-28 text-right tabular-nums text-dark">
-                    {formatPrice(product.revenue)}
-                  </span>
-                </li>
-              ))}
-              {report.topProducts.length === 0 && (
-                <li className="px-5 py-6 text-center text-custom-xs text-body">
-                  Nothing sold yet.
-                </li>
-              )}
-            </ul>
+            <div className="rounded-xl border border-gray-3 bg-gray-2 shadow-1">
+              <h3 className="border-b border-gray-3 px-5 py-4 text-custom-lg font-semibold text-dark">
+                Best sellers at the counter
+              </h3>
+              <ul className="divide-y divide-gray-2">
+                {report.topProducts.map((product) => (
+                  <li
+                    key={product.name}
+                    className="flex items-center gap-3 px-5 py-3 text-custom-sm"
+                  >
+                    <span className="min-w-0 flex-1 truncate text-dark">
+                      {product.name}
+                    </span>
+                    <span className="text-custom-xs text-body">
+                      ×{product.quantity}
+                    </span>
+                    <span className="w-28 text-right tabular-nums text-dark">
+                      {formatPrice(product.revenue)}
+                    </span>
+                  </li>
+                ))}
+                {report.topProducts.length === 0 && (
+                  <li className="px-5 py-6 text-center text-custom-xs text-body">
+                    Nothing sold yet.
+                  </li>
+                )}
+              </ul>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
       <SaleDetailDialog
         saleId={openSaleId}

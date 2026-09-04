@@ -2,8 +2,8 @@
  * Reading, normalising and describing a spectacle prescription.
  *
  * The single most important function here is `toMinusCylinder`. The same pair
- * of glasses can be written two ways — "+1.00 -2.00 x 90" and "-1.00 +2.00 x
- * 180" are the identical lens — and which one you get depends on which
+ * of glasses can be written two ways - "+1.00 -2.00 x 90" and "-1.00 +2.00 x
+ * 180" are the identical lens - and which one you get depends on which
  * machine the optometrist used. The price list is written one way, so every
  * prescription is transposed into that form before it is priced or stored.
  * Without it the same customer gets two different prices for the same eyes.
@@ -124,9 +124,9 @@ const inRange = (value: number, min: number, max: number) =>
 /**
  * What is wrong with these numbers, keyed by form field.
  *
- * Deliberately strict about the things that produce unwearable glasses — a
+ * Deliberately strict about the things that produce unwearable glasses - a
  * cylinder with no axis, an axis outside 1–180, a power off the quarter-
- * dioptre step — and deliberately quiet about the things that are merely
+ * dioptre step - and deliberately quiet about the things that are merely
  * unusual, because unusual prescriptions are real and the shop can ring the
  * customer.
  */
@@ -150,7 +150,8 @@ export function validatePrescription(
 
     if (eye.cyl !== null && eye.cyl !== 0) {
       if (!inRange(eye.cyl, CYL_MIN, CYL_MAX)) {
-        errors[p("Cyl")] = `Cylinder must be between ${CYL_MIN} and +${CYL_MAX}`;
+        errors[p("Cyl")] =
+          `Cylinder must be between ${CYL_MIN} and +${CYL_MAX}`;
       } else if (!isOnDioptreStep(eye.cyl)) {
         errors[p("Cyl")] = "Powers move in steps of 0.25";
       }
@@ -163,7 +164,10 @@ export function validatePrescription(
     }
 
     if (eye.axis !== null) {
-      if (!Number.isInteger(eye.axis) || !inRange(eye.axis, AXIS_MIN, AXIS_MAX)) {
+      if (
+        !Number.isInteger(eye.axis) ||
+        !inRange(eye.axis, AXIS_MIN, AXIS_MAX)
+      ) {
         errors[p("Axis")] = "Axis is a whole number from 1 to 180";
       } else if ((eye.cyl ?? 0) === 0) {
         errors[p("Axis")] = "An axis needs a cylinder value as well";
@@ -172,7 +176,8 @@ export function validatePrescription(
 
     if (eye.add !== null) {
       if (!inRange(eye.add, ADD_MIN, ADD_MAX)) {
-        errors[p("Add")] = `Reading addition is between +${ADD_MIN} and +${ADD_MAX}`;
+        errors[p("Add")] =
+          `Reading addition is between +${ADD_MIN} and +${ADD_MAX}`;
       } else if (!isOnDioptreStep(eye.add)) {
         errors[p("Add")] = "Powers move in steps of 0.25";
       }
@@ -190,7 +195,7 @@ export function validatePrescription(
     }
   });
 
-  // Either one binocular figure or both halves — a single half on its own
+  // Either one binocular figure or both halves - a single half on its own
   // cannot be centred.
   const hasMono = values.pdRight !== null || values.pdLeft !== null;
   if (hasMono) {
@@ -199,7 +204,8 @@ export function validatePrescription(
       if (value === null) {
         errors[field] = "Enter both eyes, or use a single PD";
       } else if (!inRange(value, PD_MONO_MIN, PD_MONO_MAX)) {
-        errors[field] = `Each eye's PD is between ${PD_MONO_MIN} and ${PD_MONO_MAX} mm`;
+        errors[field] =
+          `Each eye's PD is between ${PD_MONO_MIN} and ${PD_MONO_MAX} mm`;
       }
     });
   } else if (values.pdSingle !== null) {
@@ -240,9 +246,9 @@ export function totalPd(values: PrescriptionValues): number | null {
 
 /* ------------------------------- describing ----------------------------- */
 
-/** "-2.25 / -0.75 x 090" — one eye on one line, the way a slip reads. */
+/** "-2.25 / -0.75 x 090" - one eye on one line, the way a slip reads. */
 export function describeEye(eye: EyeValues): string {
-  if (eye.sph === null && eye.cyl === null) return "—";
+  if (eye.sph === null && eye.cyl === null) return "-";
   const parts = [formatDiopter(eye.sph ?? 0)];
   if ((eye.cyl ?? 0) !== 0) {
     parts.push(`${formatDiopter(eye.cyl)} x ${formatAxis(eye.axis)}`);

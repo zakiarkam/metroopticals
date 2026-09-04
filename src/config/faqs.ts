@@ -46,14 +46,14 @@ export const faqs: Faq[] = [
   {
     question: "What payment methods do you accept?",
     answer: [
-      "Online you can pay cash on collection or delivery, by bank transfer to the account on your invoice, or by card. Card payments go through PayHere's secure page — your card details never touch our website — and carry a small online payment fee, which is shown before you commit. In the shop we take cash, card and bank transfer.",
+      "Online you can pay cash on collection or delivery, by bank transfer to the account on your invoice, or by card. Card payments go through PayHere's secure page - your card details never touch our website - and carry a small online payment fee, which is shown before you commit. In the shop we take cash, card and bank transfer.",
       "For corporate or bulk orders, contact us to arrange invoicing.",
     ],
   },
   {
     question: "How much is delivery?",
     answer: [
-      "Nothing. Delivery is free anywhere in Sri Lanka, on every order, with no minimum spend. You can also choose to collect from our Nawalapitiya store, which is free too — we hold collection orders for 30 days.",
+      "Nothing. Delivery is free anywhere in Sri Lanka, on every order, with no minimum spend. You can also choose to collect from our Nawalapitiya store, which is free too - we hold collection orders for 30 days.",
     ],
   },
 ];

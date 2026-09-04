@@ -43,7 +43,8 @@ type PosProductPanelProps = {
 
 const stockTone = (available: number) => {
   if (available <= 0) return "bg-red-light-6 text-red border-red/20";
-  if (available <= 3) return "bg-yellow-light-4 text-yellow-dark border-yellow-dark/20";
+  if (available <= 3)
+    return "bg-yellow-light-4 text-yellow-dark border-yellow-dark/20";
   return "bg-green-light-6 text-green border-green/20";
 };
 
@@ -110,7 +111,8 @@ const PosProductPanel: React.FC<PosProductPanelProps> = ({
         }
       }
     } catch (error: any) {
-      if (error?.name === "CanceledError" || error?.code === "ERR_CANCELED") return;
+      if (error?.name === "CanceledError" || error?.code === "ERR_CANCELED")
+        return;
       Toast.error(
         error?.response?.data?.message || "Could not search the catalogue",
       );
@@ -156,7 +158,7 @@ const PosProductPanel: React.FC<PosProductPanelProps> = ({
             autoFocus
             value={term}
             onChange={(event) => setTerm(event.target.value)}
-            placeholder="Search or scan — name, code, barcode, brand"
+            placeholder="Search or scan - name, code, barcode, brand"
             className="h-10 pl-10 pr-9 text-custom-sm"
             aria-label="Search or scan a product"
           />
@@ -291,7 +293,10 @@ const PosProductPanel: React.FC<PosProductPanelProps> = ({
                       {product.title}
                     </p>
                     <p className="text-custom-xs text-body">
-                      {product.sku || product.brand?.name || product.category?.name || ""}
+                      {product.sku ||
+                        product.brand?.name ||
+                        product.category?.name ||
+                        ""}
                     </p>
                     <div className="mt-auto flex items-baseline gap-2 pt-1">
                       <span className="text-custom-sm font-semibold text-blue">
@@ -326,7 +331,7 @@ const PosProductPanel: React.FC<PosProductPanelProps> = ({
   );
 };
 
-/** Which colourway is leaving the shop — it prints on the bill. */
+/** Which colourway is leaving the shop - it prints on the bill. */
 const ColourPicker: React.FC<{
   product: PosProduct;
   onClose: () => void;
@@ -357,7 +362,7 @@ const ColourPicker: React.FC<{
         <div className="flex flex-wrap gap-2">
           {product.frameColors.map((colour) => {
             // The recorded count for this colourway, when it has one. Staff
-            // see the number — unlike the storefront, the counter runs on it.
+            // see the number - unlike the storefront, the counter runs on it.
             // A counted colour at zero cannot be picked at all; if the shelf
             // disagrees with the book, "Add without a colour" still works
             // and the count is corrected from the products page.

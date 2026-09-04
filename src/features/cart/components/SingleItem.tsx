@@ -35,7 +35,7 @@ type CartItem = {
   lens?: {
     lensTypeId: number;
     lensTypeName: string;
-    designId: number | null;
+    designKind: "SINGLE_VISION" | "BIFOCAL" | "PROGRESSIVE";
     designName: string | null;
     tintId: number | null;
     tintName: string | null;
@@ -45,6 +45,8 @@ type CartItem = {
     prescriptionVersion: number | null;
     summary: string | null;
     price: number;
+    isOrderLens?: boolean;
+    leadTimeDays?: number | null;
   } | null;
 };
 
@@ -152,101 +154,101 @@ const SingleItem = ({ item }: { item: CartItem }) => {
     typeof item.stock === "number" && item.quantity >= item.stock;
 
   // The frame and its lenses are one saleable thing, so the line total is
-  // both — showing the frame price alone would not add up to the summary.
+  // both - showing the frame price alone would not add up to the summary.
   const unitPrice = item.discountedPrice + (item.lens?.price ?? 0);
 
   return (
     <div
       className={`p-5 transition-opacity sm:p-6 ${isUpdating ? "opacity-60" : ""}`}
     >
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-5">
-      <Link
-        href={productUrl}
-        className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-gray-3 bg-gray-1"
-      >
-        <Image
-          src={displayImage}
-          alt={item.title}
-          fill
-          sizes="80px"
-          className="object-cover"
-        />
-      </Link>
-
-      <div className="min-w-0 flex-1">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-5">
         <Link
           href={productUrl}
-          className="line-clamp-2 break-words text-[14.5px] font-semibold capitalize text-dark transition-colors hover:text-blue"
+          className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-gray-3 bg-gray-1"
         >
-          {item.title}
+          <Image
+            src={displayImage}
+            alt={item.title}
+            fill
+            sizes="80px"
+            className="object-cover"
+          />
         </Link>
 
-        <div className="mt-1.5 flex flex-wrap items-center gap-2.5">
-          <span className="text-[13px] text-dark-4">
-            {formatPrice(unitPrice)} each
-          </span>
-          {(item.color || (item.colorOptions?.length ?? 0) > 0) && (
-            <ColorControl
-              item={item}
-              onChange={handleColorChange}
-              disabled={isUpdating}
-            />
-          )}
-          {isUnavailable && (
-            <span
-              className={`rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.1em] ${
-                AVAILABILITY_PILL_CLASSES[availability.tone]
-              }`}
-            >
-              {availability.label}
+        <div className="min-w-0 flex-1">
+          <Link
+            href={productUrl}
+            className="line-clamp-2 break-words text-[14.5px] font-semibold capitalize text-dark transition-colors hover:text-blue"
+          >
+            {item.title}
+          </Link>
+
+          <div className="mt-1.5 flex flex-wrap items-center gap-2.5">
+            <span className="text-[13px] text-dark-4">
+              {formatPrice(unitPrice)} each
             </span>
-          )}
-        </div>
-      </div>
-
-      <div className="flex min-w-0 items-center justify-between gap-3 sm:gap-4 sm:justify-end">
-        <div className="flex items-center overflow-hidden rounded-xl border border-gray-3 bg-gray-1">
-          <button
-            type="button"
-            onClick={() => handleQuantityChange(item.quantity - 1)}
-            disabled={isUpdating || item.quantity <= 1 || isUnavailable}
-            aria-label="Decrease quantity"
-            className="grid h-10 w-10 place-items-center text-dark transition-colors hover:text-blue disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            <Minus className="h-4 w-4" />
-          </button>
-
-          <span className="grid h-10 w-11 place-items-center border-x border-gray-3 text-[13.5px] font-bold text-dark">
-            {item.quantity}
-          </span>
-
-          <button
-            type="button"
-            onClick={() => handleQuantityChange(item.quantity + 1)}
-            disabled={isUpdating || hasReachedStock || isUnavailable}
-            aria-label="Increase quantity"
-            title={hasReachedStock ? "Maximum stock reached" : undefined}
-            className="grid h-10 w-10 place-items-center text-dark transition-colors hover:text-blue disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            <Plus className="h-4 w-4" />
-          </button>
+            {(item.color || (item.colorOptions?.length ?? 0) > 0) && (
+              <ColorControl
+                item={item}
+                onChange={handleColorChange}
+                disabled={isUpdating}
+              />
+            )}
+            {isUnavailable && (
+              <span
+                className={`rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.1em] ${
+                  AVAILABILITY_PILL_CLASSES[availability.tone]
+                }`}
+              >
+                {availability.label}
+              </span>
+            )}
+          </div>
         </div>
 
-        <p className="min-w-[80px] flex-1 text-right text-[15px] font-bold text-dark sm:w-[110px] sm:flex-none">
-          {formatPrice(unitPrice * item.quantity)}
-        </p>
+        <div className="flex min-w-0 items-center justify-between gap-3 sm:gap-4 sm:justify-end">
+          <div className="flex items-center overflow-hidden rounded-xl border border-gray-3 bg-gray-1">
+            <button
+              type="button"
+              onClick={() => handleQuantityChange(item.quantity - 1)}
+              disabled={isUpdating || item.quantity <= 1 || isUnavailable}
+              aria-label="Decrease quantity"
+              className="grid h-10 w-10 place-items-center text-dark transition-colors hover:text-blue disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <Minus className="h-4 w-4" />
+            </button>
 
-        <button
-          type="button"
-          onClick={handleRemove}
-          disabled={isUpdating}
-          aria-label={`Remove ${item.title} from cart`}
-          className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gray-3 text-dark-4 transition-colors hover:border-red hover:text-red disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          <Trash2 className="h-[17px] w-[17px]" />
-        </button>
+            <span className="grid h-10 w-11 place-items-center border-x border-gray-3 text-[13.5px] font-bold text-dark">
+              {item.quantity}
+            </span>
+
+            <button
+              type="button"
+              onClick={() => handleQuantityChange(item.quantity + 1)}
+              disabled={isUpdating || hasReachedStock || isUnavailable}
+              aria-label="Increase quantity"
+              title={hasReachedStock ? "Maximum stock reached" : undefined}
+              className="grid h-10 w-10 place-items-center text-dark transition-colors hover:text-blue disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <Plus className="h-4 w-4" />
+            </button>
+          </div>
+
+          <p className="min-w-[80px] flex-1 text-right text-[15px] font-bold text-dark sm:w-[110px] sm:flex-none">
+            {formatPrice(unitPrice * item.quantity)}
+          </p>
+
+          <button
+            type="button"
+            onClick={handleRemove}
+            disabled={isUpdating}
+            aria-label={`Remove ${item.title} from cart`}
+            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gray-3 text-dark-4 transition-colors hover:border-red hover:text-red disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <Trash2 className="h-[17px] w-[17px]" />
+          </button>
+        </div>
       </div>
-    </div>
 
       {/* Under the frame rather than beside it: the lens choice is a second
           decision about the same line, and it needs room for a prescription

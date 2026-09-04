@@ -150,7 +150,7 @@ const ShopDetailsClient = ({
 
   // The gallery position for the selected colour's tagged photo, handed to
   // the gallery so picking a colour lands on its picture. Null when the
-  // colour has no tag (or the tagged photo left the gallery) — no jump then.
+  // colour has no tag (or the tagged photo left the gallery) - no jump then.
   const colorImageIndex = useMemo(() => {
     const tagged = getColorImage(product?.colorStocks, selectedColor);
     if (!tagged) return null;
@@ -166,8 +166,8 @@ const ShopDetailsClient = ({
     );
   const unitLabel = getUnitLabel(product?.unitType);
 
-  // Two availabilities: the product's own (the gallery badge — the frame as
-  // a whole) and the selected colourway's (the buy box — what "Add to cart"
+  // Two availabilities: the product's own (the gallery badge - the frame as
+  // a whole) and the selected colourway's (the buy box - what "Add to cart"
   // would actually put in the parcel).
   const productAvailability = getAvailability(product?.status, product?.stock);
   const selectedStock = getEffectiveStock(
@@ -468,7 +468,7 @@ const ShopDetailsClient = ({
                   </button>
                 </div>
 
-                {/* Counts are deliberately not stated — the field simply caps
+                {/* Counts are deliberately not stated - the field simply caps
                     at what the selected colour has. */}
               </div>
 
@@ -517,7 +517,7 @@ const ShopDetailsClient = ({
                     Add prescription lenses in your cart.
                   </strong>{" "}
                   Single vision, blue cut, photochromic, bifocal or progressive
-                  — type your prescription in, upload a photo of it, or use one
+                  - type your prescription in, upload a photo of it, or use one
                   we already hold.{" "}
                   <Link
                     href="/lenses"

@@ -139,7 +139,7 @@ export default function ProductSpecTable({
           label: "Sold by",
           value: unitLabel(product.unitType),
         },
-        // Availability is stated, never counted — the shop does not advertise
+        // Availability is stated, never counted - the shop does not advertise
         // how many are left.
         {
           label: "Availability",

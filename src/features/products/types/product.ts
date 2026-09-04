@@ -78,7 +78,7 @@ export type Product = {
   stock: number;
   /**
    * How the total splits across `frameColors`. Absent on products recorded
-   * before per-colour counts existed — their colours are all treated as
+   * before per-colour counts existed - their colours are all treated as
    * available while the total is above zero.
    */
   colorStocks?: ProductColorStock[];

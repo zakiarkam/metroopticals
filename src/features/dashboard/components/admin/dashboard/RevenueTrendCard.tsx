@@ -12,7 +12,7 @@ type RevenueTrendCardProps = {
 /**
  * Takings per day, split by where the sale happened.
  *
- * Stacked because the two channels add up to one day's money — the shop asks
+ * Stacked because the two channels add up to one day's money - the shop asks
  * "what did we take" first and "how much of it was over the counter" second.
  *
  * The two hues are the brand gold and the palette's purple: distinct enough to
@@ -77,7 +77,7 @@ const RevenueTrendCard: React.FC<RevenueTrendCardProps> = ({
   );
   const combined = totals.counter + totals.online;
   const weekly = bars.some((row) => row.span > 1);
-  const active = hover === null ? null : bars[hover] ?? null;
+  const active = hover === null ? null : (bars[hover] ?? null);
 
   return (
     <div className="rounded-xl border border-gray-3 bg-gray-2 shadow-sm">
@@ -88,10 +88,10 @@ const RevenueTrendCard: React.FC<RevenueTrendCardProps> = ({
           </h3>
           <p className="text-[11px] text-body">
             {active
-            ? `${money(active.total)} · ${active.orders} sale${
-                active.orders === 1 ? "" : "s"
-              }`
-            : `${money(combined)} over the ${rangeLabel}`}
+              ? `${money(active.total)} · ${active.orders} sale${
+                  active.orders === 1 ? "" : "s"
+                }`
+              : `${money(combined)} over the ${rangeLabel}`}
           </p>
         </div>
 
@@ -190,7 +190,10 @@ const RevenueTrendCard: React.FC<RevenueTrendCardProps> = ({
                       {row.counter > 0 && (
                         <span
                           className="w-full min-h-0"
-                          style={{ background: COUNTER, flexBasis: `${counterShare}%` }}
+                          style={{
+                            background: COUNTER,
+                            flexBasis: `${counterShare}%`,
+                          }}
                         />
                       )}
                     </span>

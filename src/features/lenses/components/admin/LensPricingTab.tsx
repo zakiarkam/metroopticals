@@ -3,6 +3,9 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle,
+  ChevronDown,
+  ChevronRight,
+  Clock,
   Eye,
   EyeOff,
   Glasses,
@@ -25,9 +28,23 @@ import {
   type LensType,
 } from "@/features/lenses/api/lens-api";
 import { invalidateLensCatalogue } from "@/features/lenses/hooks/use-lens-picker";
-import { overlappingBands } from "@/features/lenses/utils/pricing";
-import { standardBandsFor } from "@/features/lenses/constants/bands";
-import { formatDiopter } from "@/features/lenses/constants/optics";
+import {
+  CATEGORY_HINTS,
+  CATEGORY_LABELS,
+  DESIGN_KIND_LABELS,
+  LENS_POWER_CATEGORIES,
+  categoryHasCyl,
+  categoryHasSph,
+  categoryNeedsAdd,
+  overlappingBands,
+  type LensPowerCategory,
+} from "@/features/lenses/utils/pricing";
+import {
+  BAND_DEFAULTS,
+  standardBandsForCategory,
+  type BandGridOptions,
+} from "@/features/lenses/constants/bands";
+import { ADD_MIN, formatDiopter } from "@/features/lenses/constants/optics";
 import { Toast } from "@/lib/utils/toast";
 import {
   AlertDialog,
@@ -40,50 +57,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-import type { LensDesign, LensDesignKind } from "@/features/lenses/api/lens-api";
-
 type DraftBand = Omit<LensPowerBand, "id"> & { id?: number; key: string };
 type DraftTint = Omit<LensTint, "id"> & { id?: number; key: string };
-type DraftDesign = Omit<LensDesign, "id" | "powerPrices"> & {
-  id?: number;
-  key: string;
-  bands: DraftBand[];
-};
-
-/**
- * What each build is, in the shop's own terms.
- *
- * `kind` is the part the software acts on — a bifocal or a progressive cannot
- * be made without a reading addition, a single vision lens has no use for one.
- * The name is free text because the shop sells more than one of each: a round
- * top and a flat top bifocal are different lenses at different prices, and the
- * price sheet lists them as separate rows.
- */
-const DESIGN_KINDS: {
-  value: LensDesignKind;
-  label: string;
-  hint: string;
-  suggested: string[];
-}[] = [
-  {
-    value: "SINGLE_VISION",
-    label: "Single vision",
-    hint: "One power across the lens. No reading addition.",
-    suggested: ["Single Vision"],
-  },
-  {
-    value: "BIFOCAL",
-    label: "Bifocal",
-    hint: "Distance and reading with a visible line. Needs an ADD.",
-    suggested: ["Bifocal — Round Top", "Bifocal — Flat Top"],
-  },
-  {
-    value: "PROGRESSIVE",
-    label: "Progressive",
-    hint: "Distance to reading with no line. Needs an ADD.",
-    suggested: ["Progressive — Free Form", "Progressive — Vision Max"],
-  },
-];
 
 type Draft = {
   id: number | null;
@@ -95,7 +70,8 @@ type Draft = {
   basePrice: number;
   sortOrder: number;
   isActive: boolean;
-  designs: DraftDesign[];
+  /** The whole sheet in one list; each row names the block it belongs to. */
+  bands: DraftBand[];
   tints: DraftTint[];
 };
 
@@ -112,19 +88,7 @@ const EMPTY_DRAFT: Draft = {
   basePrice: 0,
   sortOrder: 0,
   isActive: false,
-  // A new lens starts as a single vision lens, because every lens is one.
-  // Bifocal and progressive builds are added when the shop prices them.
-  designs: [
-    {
-      key: nextKey(),
-      kind: "SINGLE_VISION",
-      name: "Single Vision",
-      description: "One power across the whole lens.",
-      sortOrder: 0,
-      isActive: true,
-      bands: [],
-    },
-  ],
+  bands: [],
   tints: [],
 };
 
@@ -139,28 +103,54 @@ function toDraft(lensType: LensType): Draft {
     basePrice: lensType.basePrice,
     sortOrder: lensType.sortOrder,
     isActive: lensType.isActive,
-    designs: lensType.designs.map((design) => ({
-      ...design,
-      key: nextKey(),
-      bands: design.powerPrices.map((band) => ({ ...band, key: nextKey() })),
-    })),
+    bands: lensType.powerPrices.map((band) => ({ ...band, key: nextKey() })),
     tints: lensType.tints.map((tint) => ({ ...tint, key: nextKey() })),
   };
 }
 
-/** The row a shop adds first: everything ordinary, one price. */
-const STARTER_BAND = (sortOrder: number): DraftBand => ({
+/** A row to type into by hand, shaped for the block it is being added to. */
+const STARTER_BAND = (
+  category: LensPowerCategory,
+  sortOrder: number,
+): DraftBand => ({
   key: nextKey(),
+  category,
   label: "",
-  sphMin: -4,
-  sphMax: 4,
-  cylMin: -2,
-  cylMax: 0,
-  addMin: null,
-  addMax: null,
+  sphMin: categoryHasSph(category) ? -3 : 0,
+  sphMax: 0,
+  cylMin: categoryHasCyl(category) ? -2 : 0,
+  cylMax: categoryHasCyl(category) ? -0.25 : 0,
+  addMin: categoryNeedsAdd(category) ? ADD_MIN : null,
+  addMax: categoryNeedsAdd(category) ? 1.5 : null,
   price: 0,
+  // The toric multifocal corner of the sheet is the one a shop normally has
+  // to order in, so it starts ticked and can be unticked.
+  isOrderLens:
+    category === "SPH_CYL_ADD_BIFOCAL" ||
+    category === "SPH_CYL_ADD_PROGRESSIVE",
+  leadTimeDays: null,
   sortOrder,
 });
+
+/** A row's ranges, as a key - used to carry prices across a regeneration. */
+const rangeKey = (band: {
+  category: string;
+  sphMin: number;
+  sphMax: number;
+  cylMin: number;
+  cylMax: number;
+  addMin: number | null;
+  addMax: number | null;
+}) =>
+  [
+    band.category,
+    band.sphMin,
+    band.sphMax,
+    band.cylMin,
+    band.cylMax,
+    band.addMin ?? "",
+    band.addMax ?? "",
+  ].join("|");
 
 /* ------------------------------ small atoms ----------------------------- */
 
@@ -216,7 +206,9 @@ function Toggle({
         className="mt-0.5 h-4 w-4 accent-blue-light"
       />
       <span>
-        <span className="block text-[13px] font-semibold text-dark">{label}</span>
+        <span className="block text-[13px] font-semibold text-dark">
+          {label}
+        </span>
         {hint && (
           <span className="mt-0.5 block text-[11.5px] leading-relaxed text-dark-5">
             {hint}
@@ -227,137 +219,450 @@ function Toggle({
   );
 }
 
+/* ------------------------------ price block ----------------------------- */
+
 /**
- * One build's price rows.
+ * One block of the price sheet: every row that prices one shape of
+ * prescription, for one build.
  *
- * Extracted because the grid is now drawn once per build, and a lens with a
- * single vision, a bifocal and two progressives would otherwise be four copies
- * of the same 90 lines of table.
+ * Drawn per block rather than as one long table because the columns differ -
+ * a sphere-only row has no cylinder to type and a cylinder-only row has no
+ * sphere - and because this is how the shop reads its own sheet. It is also
+ * what makes a full grid usable: the toric-with-addition block alone is
+ * eighty-odd rows, and nobody types eighty prices one at a time, so the
+ * block header carries the tools that fill it.
  */
-function BandGrid({
+function BandBlock({
+  category,
   bands,
   clashes,
   onChange,
+  gridOptions,
 }: {
+  category: LensPowerCategory;
+  /** Every row of the build; this block edits the ones in its category. */
   bands: DraftBand[];
   clashes: Set<string>;
   onChange: (next: DraftBand[]) => void;
+  gridOptions: BandGridOptions;
 }) {
+  const rows = useMemo(
+    () => bands.filter((band) => band.category === category),
+    [bands, category],
+  );
+
+  const [open, setOpen] = useState(rows.length > 0 && rows.length <= 30);
+  const [bulkPrice, setBulkPrice] = useState("");
+  const [bulkLead, setBulkLead] = useState("");
+
+  const showSph = categoryHasSph(category);
+  const showCyl = categoryHasCyl(category);
+  const showAdd = categoryNeedsAdd(category);
+  const unpriced = rows.filter((band) => band.price === 0).length;
+  const ordered = rows.filter((band) => band.isOrderLens).length;
+
+  /**
+   * Replace this block's rows, leaving every other block untouched.
+   *
+   * Rewritten in place rather than appended, so editing a cell does not
+   * shuffle the build's rows to the bottom of the list on every keystroke.
+   */
+  const setRows = (next: DraftBand[]) => {
+    const queue = [...next];
+    const merged: DraftBand[] = [];
+
+    for (const band of bands) {
+      if (band.category !== category) {
+        merged.push(band);
+        continue;
+      }
+      const replacement = queue.shift();
+      if (replacement) merged.push(replacement);
+    }
+
+    onChange([...merged, ...queue]);
+  };
+
+  const patchRow = (key: string, changes: Partial<DraftBand>) =>
+    setRows(
+      rows.map((band) => (band.key === key ? { ...band, ...changes } : band)),
+    );
+
+  /**
+   * Lay the block out from the standard grid.
+   *
+   * Prices already typed against an identical range are carried across, so
+   * regenerating after changing the step is not the same as starting again.
+   */
+  const generate = () => {
+    const held = new Map(rows.map((band) => [rangeKey(band), band]));
+
+    setRows(
+      standardBandsForCategory(category, gridOptions).map((band, index) => {
+        const previous = held.get(rangeKey(band));
+        return {
+          ...band,
+          key: nextKey(),
+          id: previous?.id,
+          price: previous?.price ?? 0,
+          isOrderLens: previous?.isOrderLens ?? band.isOrderLens,
+          leadTimeDays: previous?.leadTimeDays ?? null,
+          sortOrder: index,
+        };
+      }),
+    );
+    setOpen(true);
+  };
+
+  const fill = (onlyBlank: boolean) => {
+    const price = Number(bulkPrice);
+    if (!bulkPrice.trim() || !Number.isFinite(price) || price < 0) return;
+    setRows(
+      rows.map((band) =>
+        onlyBlank && band.price !== 0 ? band : { ...band, price },
+      ),
+    );
+  };
+
+  const markAllOrdered = (next: boolean) => {
+    const days = bulkLead.trim() === "" ? null : Number(bulkLead);
+    setRows(
+      rows.map((band) => ({
+        ...band,
+        isOrderLens: next,
+        leadTimeDays: next
+          ? Number.isFinite(days) && days !== null
+            ? Math.round(days)
+            : band.leadTimeDays
+          : null,
+      })),
+    );
+  };
+
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full min-w-[760px] border-separate border-spacing-y-1.5">
-        <thead>
-          <tr className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-dark-4">
-            <th className="px-1 pb-1 text-left">Label</th>
-            <th className="px-1 pb-1" colSpan={2}>
-              Sphere
-            </th>
-            <th className="px-1 pb-1" colSpan={2}>
-              Cylinder (minus)
-            </th>
-            <th className="px-1 pb-1" colSpan={2}>
-              Addition
-            </th>
-            <th className="px-1 pb-1">Price</th>
-            <th className="px-1 pb-1" />
-          </tr>
-        </thead>
+    <div className="overflow-hidden rounded-xl border border-gray-3 bg-white">
+      <div className="flex flex-wrap items-center gap-2.5 border-b border-gray-3 bg-gray-2 px-3 py-2.5">
+        <button
+          type="button"
+          onClick={() => setOpen((value) => !value)}
+          className="flex min-w-[210px] flex-1 items-center gap-2 text-left"
+          aria-expanded={open}
+        >
+          {open ? (
+            <ChevronDown className="h-4 w-4 shrink-0 text-dark-4" />
+          ) : (
+            <ChevronRight className="h-4 w-4 shrink-0 text-dark-4" />
+          )}
+          <span>
+            <span className="block text-[13px] font-bold text-dark">
+              {CATEGORY_LABELS[category]}
+            </span>
+            <span className="block text-[11px] leading-relaxed text-dark-5">
+              {CATEGORY_HINTS[category]}
+            </span>
+          </span>
+        </button>
 
-        <tbody>
-          {bands.map((band, index) => {
-            const setBand = (changes: Partial<DraftBand>) =>
-              onChange(
-                bands.map((entry, i) =>
-                  i === index ? { ...entry, ...changes } : entry,
-                ),
-              );
+        <span className="flex flex-wrap items-center gap-1.5 text-[11px] font-semibold">
+          <span className="rounded-full bg-gray-3 px-2 py-0.5 text-dark-4">
+            {rows.length} {rows.length === 1 ? "row" : "rows"}
+          </span>
+          {unpriced > 0 && (
+            <span className="rounded-full bg-orange/15 px-2 py-0.5 text-orange-dark">
+              {unpriced} unpriced
+            </span>
+          )}
+          {ordered > 0 && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-blue/12 px-2 py-0.5 text-blue">
+              <Clock className="h-3 w-3" />
+              {ordered} order
+            </span>
+          )}
+        </span>
 
-            return (
-              <tr
-                key={band.key}
-                className={clashes.has(band.key) ? "opacity-60" : ""}
-              >
-                <td className="pr-1.5">
-                  <input
-                    value={band.label ?? ""}
-                    onChange={(event) => setBand({ label: event.target.value })}
-                    placeholder="Standard"
-                    aria-label="Row label"
-                    className="h-10 w-full min-w-[110px] rounded-lg border border-gray-3 bg-white px-2.5 text-[12.5px] text-dark outline-none focus:border-blue"
-                  />
-                </td>
+        <div className="flex flex-wrap gap-1.5">
+          <button
+            type="button"
+            onClick={generate}
+            title="Lay this block out from the standard grid, keeping prices already typed"
+            className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-blue/40 bg-blue/[0.08] px-2.5 text-[12px] font-semibold text-blue transition-colors hover:bg-blue/[0.14]"
+          >
+            <Wand2 className="h-3.5 w-3.5" />
+            {rows.length ? "Regenerate" : "Generate rows"}
+          </button>
+          <button
+            type="button"
+            onClick={() =>
+              setRows([...rows, STARTER_BAND(category, rows.length)])
+            }
+            className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-gray-3 bg-white px-2.5 text-[12px] font-semibold text-dark transition-colors hover:border-blue hover:text-blue"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Row
+          </button>
+        </div>
+      </div>
 
-                <td className="px-1">
-                  <NumberCell
-                    ariaLabel="Sphere from"
-                    value={band.sphMin}
-                    onChange={(next) => setBand({ sphMin: next ?? 0 })}
-                  />
-                </td>
-                <td className="px-1">
-                  <NumberCell
-                    ariaLabel="Sphere to"
-                    value={band.sphMax}
-                    onChange={(next) => setBand({ sphMax: next ?? 0 })}
-                  />
-                </td>
+      {open && (
+        <>
+          {rows.length > 0 && (
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-gray-3 bg-gray-1 px-3 py-2.5">
+              <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-dark-4">
+                Fill the block
+              </span>
 
-                <td className="px-1">
-                  <NumberCell
-                    ariaLabel="Cylinder from"
-                    value={band.cylMin}
-                    onChange={(next) => setBand({ cylMin: next ?? 0 })}
-                  />
-                </td>
-                <td className="px-1">
-                  <NumberCell
-                    ariaLabel="Cylinder to"
-                    value={band.cylMax}
-                    onChange={(next) => setBand({ cylMax: next ?? 0 })}
-                  />
-                </td>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[11.5px] text-dark-5">Rs</span>
+                <input
+                  type="number"
+                  step="1"
+                  value={bulkPrice}
+                  onChange={(event) => setBulkPrice(event.target.value)}
+                  aria-label={`Price for every ${CATEGORY_LABELS[category]} row`}
+                  className="h-8 w-[96px] rounded-lg border border-gray-3 bg-white px-2 text-center text-[12.5px] font-semibold text-dark outline-none focus:border-blue"
+                />
+                <button
+                  type="button"
+                  onClick={() => fill(true)}
+                  className="h-8 rounded-lg border border-gray-3 bg-white px-2.5 text-[12px] font-semibold text-dark transition-colors hover:border-blue hover:text-blue"
+                >
+                  Unpriced only
+                </button>
+                <button
+                  type="button"
+                  onClick={() => fill(false)}
+                  className="h-8 rounded-lg border border-gray-3 bg-white px-2.5 text-[12px] font-semibold text-dark transition-colors hover:border-blue hover:text-blue"
+                >
+                  Every row
+                </button>
+              </div>
 
-                <td className="px-1">
-                  <NumberCell
-                    ariaLabel="Addition from"
-                    value={band.addMin}
-                    placeholder="any"
-                    onChange={(next) => setBand({ addMin: next })}
-                  />
-                </td>
-                <td className="px-1">
-                  <NumberCell
-                    ariaLabel="Addition to"
-                    value={band.addMax}
-                    placeholder="any"
-                    onChange={(next) => setBand({ addMax: next })}
-                  />
-                </td>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[11.5px] text-dark-5">
+                  Order lens, days
+                </span>
+                <input
+                  type="number"
+                  step="1"
+                  min="0"
+                  value={bulkLead}
+                  onChange={(event) => setBulkLead(event.target.value)}
+                  placeholder="-"
+                  aria-label={`Lead time for every ${CATEGORY_LABELS[category]} row`}
+                  className="h-8 w-[70px] rounded-lg border border-gray-3 bg-white px-2 text-center text-[12.5px] font-semibold text-dark outline-none focus:border-blue"
+                />
+                <button
+                  type="button"
+                  onClick={() => markAllOrdered(true)}
+                  className="h-8 rounded-lg border border-gray-3 bg-white px-2.5 text-[12px] font-semibold text-dark transition-colors hover:border-blue hover:text-blue"
+                >
+                  Mark all
+                </button>
+                <button
+                  type="button"
+                  onClick={() => markAllOrdered(false)}
+                  className="h-8 rounded-lg border border-gray-3 bg-white px-2.5 text-[12px] font-semibold text-dark transition-colors hover:border-blue hover:text-blue"
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+          )}
 
-                <td className="px-1">
-                  <NumberCell
-                    ariaLabel="Price"
-                    step={1}
-                    value={band.price}
-                    onChange={(next) => setBand({ price: next ?? 0 })}
-                  />
-                </td>
+          {rows.length === 0 ? (
+            <p className="px-4 py-4 text-center text-[12px] leading-relaxed text-dark-5">
+              Nothing priced in this block. A prescription of this shape is
+              quoted as &ldquo;message us&rdquo; until there is a row for it.
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[720px] border-separate border-spacing-y-1 px-3 py-2.5">
+                <thead>
+                  <tr className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-dark-4">
+                    <th className="px-1 pb-1 text-left">Row</th>
+                    {showSph && (
+                      <th className="px-1 pb-1" colSpan={2}>
+                        Sphere
+                      </th>
+                    )}
+                    {showCyl && (
+                      <th className="px-1 pb-1" colSpan={2}>
+                        Cylinder (minus)
+                      </th>
+                    )}
+                    {showAdd && (
+                      <th className="px-1 pb-1" colSpan={2}>
+                        Addition
+                      </th>
+                    )}
+                    <th className="px-1 pb-1">Price</th>
+                    <th className="px-1 pb-1">Order lens</th>
+                    <th className="px-1 pb-1">Days</th>
+                    <th className="px-1 pb-1" />
+                  </tr>
+                </thead>
 
-                <td className="pl-1.5">
-                  <button
-                    type="button"
-                    onClick={() => onChange(bands.filter((_, i) => i !== index))}
-                    aria-label={`Remove row ${index + 1}`}
-                    className="grid h-10 w-10 place-items-center rounded-lg border border-gray-3 bg-white text-dark-4 transition-colors hover:border-red hover:text-red"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+                <tbody>
+                  {rows.map((band, index) => (
+                    <tr
+                      key={band.key}
+                      className={clashes.has(band.key) ? "opacity-60" : ""}
+                    >
+                      <td className="pr-1.5">
+                        <input
+                          value={band.label ?? ""}
+                          onChange={(event) =>
+                            patchRow(band.key, { label: event.target.value })
+                          }
+                          placeholder="Standard"
+                          aria-label="Row label"
+                          className="h-10 w-full min-w-[150px] rounded-lg border border-gray-3 bg-white px-2.5 text-[12px] text-dark outline-none focus:border-blue"
+                        />
+                      </td>
+
+                      {showSph && (
+                        <>
+                          <td className="px-1">
+                            <NumberCell
+                              ariaLabel="Sphere from"
+                              value={band.sphMin}
+                              onChange={(next) =>
+                                patchRow(band.key, { sphMin: next ?? 0 })
+                              }
+                            />
+                          </td>
+                          <td className="px-1">
+                            <NumberCell
+                              ariaLabel="Sphere to"
+                              value={band.sphMax}
+                              onChange={(next) =>
+                                patchRow(band.key, { sphMax: next ?? 0 })
+                              }
+                            />
+                          </td>
+                        </>
+                      )}
+
+                      {showCyl && (
+                        <>
+                          <td className="px-1">
+                            <NumberCell
+                              ariaLabel="Cylinder from"
+                              value={band.cylMin}
+                              onChange={(next) =>
+                                patchRow(band.key, { cylMin: next ?? 0 })
+                              }
+                            />
+                          </td>
+                          <td className="px-1">
+                            <NumberCell
+                              ariaLabel="Cylinder to"
+                              value={band.cylMax}
+                              onChange={(next) =>
+                                patchRow(band.key, { cylMax: next ?? 0 })
+                              }
+                            />
+                          </td>
+                        </>
+                      )}
+
+                      {showAdd && (
+                        <>
+                          <td className="px-1">
+                            <NumberCell
+                              ariaLabel="Addition from"
+                              value={band.addMin}
+                              onChange={(next) =>
+                                patchRow(band.key, { addMin: next })
+                              }
+                            />
+                          </td>
+                          <td className="px-1">
+                            <NumberCell
+                              ariaLabel="Addition to"
+                              value={band.addMax}
+                              onChange={(next) =>
+                                patchRow(band.key, { addMax: next })
+                              }
+                            />
+                          </td>
+                        </>
+                      )}
+
+                      <td className="px-1">
+                        <NumberCell
+                          ariaLabel="Price"
+                          step={1}
+                          value={band.price}
+                          onChange={(next) =>
+                            patchRow(band.key, { price: next ?? 0 })
+                          }
+                        />
+                      </td>
+
+                      <td className="px-1 text-center">
+                        <input
+                          type="checkbox"
+                          checked={band.isOrderLens}
+                          onChange={(event) =>
+                            patchRow(band.key, {
+                              isOrderLens: event.target.checked,
+                              leadTimeDays: event.target.checked
+                                ? band.leadTimeDays
+                                : null,
+                            })
+                          }
+                          aria-label="Made to order"
+                          className="h-4 w-4 accent-blue-light"
+                        />
+                      </td>
+
+                      <td className="px-1">
+                        <input
+                          type="number"
+                          step="1"
+                          min="0"
+                          disabled={!band.isOrderLens}
+                          value={band.leadTimeDays ?? ""}
+                          placeholder="-"
+                          aria-label="Working days"
+                          onChange={(event) =>
+                            patchRow(band.key, {
+                              leadTimeDays:
+                                event.target.value === ""
+                                  ? null
+                                  : Math.max(
+                                      0,
+                                      Math.round(Number(event.target.value)),
+                                    ),
+                            })
+                          }
+                          className={`${inputCls} w-[70px] disabled:bg-gray-2 disabled:text-dark-5`}
+                        />
+                      </td>
+
+                      <td className="pl-1.5">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setRows(
+                              rows.filter((entry) => entry.key !== band.key),
+                            )
+                          }
+                          aria-label={`Remove row ${index + 1}`}
+                          className="grid h-10 w-10 place-items-center rounded-lg border border-gray-3 bg-white text-dark-4 transition-colors hover:border-red hover:text-red"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }
@@ -371,11 +676,67 @@ export default function LensPricingTab() {
   const [saving, setSaving] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<LensType | null>(null);
 
+  /**
+   * How the standard grid is cut, for this session only.
+   *
+   * Not stored: it describes how rows were LAID OUT, and once they are on
+   * screen the rows themselves are the truth - a shop that regenerates at a
+   * different step and then retypes two of them has a price list the setting
+   * no longer describes.
+   */
+  const [grid, setGrid] = useState<Required<BandGridOptions>>({
+    sphReach: BAND_DEFAULTS.sphReach,
+    sphStep: BAND_DEFAULTS.sphStep,
+    cylReach: BAND_DEFAULTS.cylReach,
+    cylStep: BAND_DEFAULTS.cylStep,
+    addBands: BAND_DEFAULTS.addBands,
+  });
+
+  /**
+   * The blocks to draw: all seven, in the order the sheet reads, plus any
+   * block that already holds rows. The second half is belt and braces - a row
+   * saved under a block this build of the app does not know about stays
+   * visible and deletable instead of vanishing with its price.
+   */
+  const blocks = useMemo<LensPowerCategory[]>(() => {
+    const held = draft?.bands.map((band) => band.category) ?? [];
+    return [...new Set([...LENS_POWER_CATEGORIES, ...held])];
+  }, [draft]);
+
+  /** Lay all seven blocks out from the standard grid at once. */
+  const generateWholeSheet = useCallback(() => {
+    setDraft((current) => {
+      if (!current) return current;
+
+      // Prices already typed against an identical range are carried across,
+      // so laying the sheet out again is not the same as starting again.
+      const held = new Map(current.bands.map((band) => [rangeKey(band), band]));
+
+      const bands = LENS_POWER_CATEGORIES.flatMap((category) =>
+        standardBandsForCategory(category, grid).map(
+          (band, index) =>
+            ({
+              ...band,
+              key: nextKey(),
+              id: held.get(rangeKey(band))?.id,
+              price: held.get(rangeKey(band))?.price ?? 0,
+              isOrderLens:
+                held.get(rangeKey(band))?.isOrderLens ?? band.isOrderLens,
+              leadTimeDays: held.get(rangeKey(band))?.leadTimeDays ?? null,
+              sortOrder: index,
+            }) as DraftBand,
+        ),
+      );
+
+      return { ...current, bands };
+    });
+  }, [grid]);
+
   const load = useCallback(async () => {
     setLoading(true);
     try {
       // The lens guide is synced into this table server-side on every load, so
-      // a lens type or a colourway published on the site is already here — the
+      // a lens type or a colourway published on the site is already here - the
       // shop only ever has to put a price against it.
       const { lensTypes: rows, added } = await adminGetLensTypes();
       setLensTypes(rows);
@@ -415,15 +776,10 @@ export default function LensPricingTab() {
 
     // Switching a lens on with nothing priced would offer customers a lens
     // that quotes as "call us" on every prescription.
-    if (draft.designs.length === 0) {
-      return Toast.error("A lens needs at least one build — start with Single Vision.");
-    }
-
-    const anyBands = draft.designs.some((design) => design.bands.length > 0);
     if (
       draft.isActive &&
       draft.requiresPrescription &&
-      !anyBands &&
+      draft.bands.length === 0 &&
       draft.basePrice <= 0
     ) {
       return Toast.error(
@@ -431,31 +787,27 @@ export default function LensPricingTab() {
       );
     }
 
-    const unpriced = draft.designs.find(
-      (design) =>
-        design.isActive && design.bands.length === 0 && draft.basePrice <= 0,
-    );
-    if (draft.isActive && draft.requiresPrescription && unpriced) {
+    // Rows laid out from the sheet but never filled in. A zero price is a real
+    // price - it quotes as free - so a lens where EVERY row is zero would give
+    // the lenses away. Blocked rather than warned about, because the customer
+    // would have already paid by the time anyone noticed.
+    if (
+      draft.isActive &&
+      draft.requiresPrescription &&
+      draft.bands.length > 0 &&
+      draft.bands.every((band) => band.price === 0)
+    ) {
       return Toast.error(
-        `"${unpriced.name}" is switched on with no prices — every prescription would be quoted as "call us".`,
+        "Every price row is 0, so this lens would be sold free. Fill the prices in before switching it on.",
       );
     }
 
-    // Rows laid out from the sheet but never filled in. A zero price is a real
-    // price — it quotes as free — so a build where EVERY row is zero would
-    // give the lenses away. Blocked rather than warned about, because the
-    // customer would have already paid by the time anyone noticed.
-    const allFree = draft.designs.find(
-      (design) =>
-        design.isActive &&
-        design.bands.length > 0 &&
-        design.bands.every((band) => band.price === 0),
+    // A block priced at nothing is not an error - a shop may simply not sell
+    // progressives in this coating - but it is worth saying out loud, because
+    // the customer's side of it is a lens that quotes "message us".
+    const emptyBlocks = LENS_POWER_CATEGORIES.filter(
+      (category) => !draft.bands.some((band) => band.category === category),
     );
-    if (draft.isActive && draft.requiresPrescription && allFree) {
-      return Toast.error(
-        `Every price row on "${allFree.name}" is 0, so it would be sold free. Fill the prices in, or switch that build off.`,
-      );
-    }
 
     const payload = {
       slug: draft.slug.trim(),
@@ -466,15 +818,10 @@ export default function LensPricingTab() {
       basePrice: Number(draft.basePrice) || 0,
       sortOrder: Number(draft.sortOrder) || 0,
       isActive: draft.isActive,
-      designs: draft.designs.map(({ key, bands, ...design }, index) => ({
-        ...design,
-        description: design.description ?? "",
+      powerPrices: draft.bands.map(({ key, ...band }, index) => ({
+        ...band,
+        label: band.label ?? "",
         sortOrder: index,
-        powerPrices: bands.map(({ key: bandKey, ...band }, bandIndex) => ({
-          ...band,
-          label: band.label ?? "",
-          sortOrder: bandIndex,
-        })),
       })),
       tints: draft.tints.map(({ key, ...tint }, index) => ({
         ...tint,
@@ -494,7 +841,11 @@ export default function LensPricingTab() {
       // The storefront shares one cached copy of the catalogue; without this
       // a shopper on an open tab keeps the old prices until they reload.
       invalidateLensCatalogue();
-      Toast.success("Price list saved.");
+      Toast.success(
+        emptyBlocks.length && draft.isActive && draft.requiresPrescription
+          ? `Saved. ${emptyBlocks.length} ${emptyBlocks.length === 1 ? "block has" : "blocks have"} no prices - those prescriptions quote as "message us".`
+          : "Price list saved.",
+      );
       setDraft(null);
       await load();
     } catch (error: any) {
@@ -523,24 +874,17 @@ export default function LensPricingTab() {
 
   /* ------------------------------ render ------------------------------ */
 
-  /** Rows shadowed by one above them, per build — bands never cross builds. */
-  const clashesByDesign = useMemo(() => {
-    const map = new Map<string, Set<string>>();
-    if (!draft) return map;
+  /** Rows shadowed by one above them, per build - bands never cross builds. */
+  const clashes = useMemo(() => {
+    if (!draft) return new Set<string>();
 
-    for (const design of draft.designs) {
-      const bands = design.bands.map((band, index) => ({
-        ...band,
-        id: index,
-        label: band.label ?? null,
-      }));
-      const pairs = overlappingBands(bands as never);
-      map.set(
-        design.key,
-        new Set(pairs.map(([, second]) => design.bands[second]?.key ?? "")),
-      );
-    }
-    return map;
+    const bands = draft.bands.map((band, index) => ({
+      ...band,
+      id: index,
+      label: band.label ?? null,
+    }));
+    const pairs = overlappingBands(bands as never);
+    return new Set(pairs.map(([, second]) => draft.bands[second]?.key ?? ""));
   }, [draft]);
 
   return (
@@ -550,7 +894,7 @@ export default function LensPricingTab() {
           <h1 className="text-2xl font-bold text-dark">Lens price list</h1>
           <p className="mt-1 max-w-2xl text-[13px] leading-relaxed text-dark-5">
             What a pair of lenses costs, by power. A customer&apos;s
-            prescription is matched against these rows at checkout — the first
+            prescription is matched against these rows at checkout - the first
             row that covers both eyes wins, and the pair is charged from the
             stronger eye. Ranges are written in <strong>minus cylinder</strong>;
             a prescription written in plus cyl is transposed before it is
@@ -582,7 +926,10 @@ export default function LensPricingTab() {
           {loading ? (
             <div className="space-y-2 p-4">
               {[0, 1, 2].map((row) => (
-                <div key={row} className="h-16 animate-pulse rounded-xl bg-gray-3" />
+                <div
+                  key={row}
+                  className="h-16 animate-pulse rounded-xl bg-gray-3"
+                />
               ))}
             </div>
           ) : lensTypes.length === 0 ? (
@@ -592,19 +939,19 @@ export default function LensPricingTab() {
                 No lenses priced yet
               </p>
               <p className="mx-auto mt-1.5 max-w-[240px] text-[12px] leading-relaxed text-dark-5">
-                Import the nine lens types the site already explains, then put
-                a price against each one.
+                Import the nine lens types the site already explains, then put a
+                price against each one.
               </p>
             </div>
           ) : (
             <ul className="divide-y divide-gray-3">
               {lensTypes.map((lensType) => {
                 const selected = draft?.id === lensType.id;
-                const bandCount = lensType.designs.reduce(
-                  (total, design) => total + design.powerPrices.length,
-                  0,
-                );
+                const bandCount = lensType.powerPrices.length;
                 const priced = bandCount > 0 || lensType.basePrice > 0;
+                // What the shop can actually sell this coating as, which is
+                // decided by which blocks have rows in them.
+                const kinds = lensType.designKinds ?? [];
 
                 return (
                   <li key={lensType.id}>
@@ -638,11 +985,16 @@ export default function LensPricingTab() {
                       <span className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11.5px] text-dark-5">
                         <span>{lensType.groupLabel || "Ungrouped"}</span>
                         <span aria-hidden>·</span>
-                        <span>
-                          {lensType.designs.length}{" "}
-                          {lensType.designs.length === 1 ? "build" : "builds"}
-                        </span>
-                        <span aria-hidden>·</span>
+                        {kinds.length > 0 && (
+                          <>
+                            <span>
+                              {kinds
+                                .map((kind) => DESIGN_KIND_LABELS[kind])
+                                .join(" · ")}
+                            </span>
+                            <span aria-hidden>·</span>
+                          </>
+                        )}
                         <span>
                           {bandCount} price {bandCount === 1 ? "row" : "rows"}
                         </span>
@@ -723,8 +1075,10 @@ export default function LensPricingTab() {
                 </span>
                 <input
                   value={draft.description}
-                  onChange={(event) => patch({ description: event.target.value })}
-                  placeholder="Filters screen glare — for anyone at a desk all day."
+                  onChange={(event) =>
+                    patch({ description: event.target.value })
+                  }
+                  placeholder="Filters screen glare - for anyone at a desk all day."
                   className="h-11 w-full rounded-xl border border-gray-3 bg-white px-3.5 text-[14px] text-dark outline-none focus:border-blue"
                 />
               </label>
@@ -735,7 +1089,9 @@ export default function LensPricingTab() {
                 </span>
                 <input
                   value={draft.groupLabel}
-                  onChange={(event) => patch({ groupLabel: event.target.value })}
+                  onChange={(event) =>
+                    patch({ groupLabel: event.target.value })
+                  }
                   placeholder="Screen & indoor"
                   className="h-11 w-full rounded-xl border border-gray-3 bg-white px-3.5 text-[14px] text-dark outline-none focus:border-blue"
                 />
@@ -791,261 +1147,108 @@ export default function LensPricingTab() {
               </span>
             </label>
 
-            {/* ----------------------- builds ----------------------- */}
+            {/* ------------------------ prices ---------------------- */}
             <section>
               <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
                 <div>
                   <h3 className="text-[14px] font-bold text-dark">
-                    Builds &amp; prices
+                    Price list
                   </h3>
                   <p className="mt-0.5 max-w-xl text-[11.5px] leading-relaxed text-dark-5">
-                    The same lens costs different money made as a single vision,
-                    a bifocal or a progressive — so each build keeps its own
-                    price rows. Rows are tried top to bottom and the first that
-                    covers an eye wins; ranges are in{" "}
+                    One sheet for this lens, in the seven blocks a price sheet
+                    is written in. A prescription is read from the block that
+                    matches its shape - and, when it has a reading addition,
+                    from the bifocal or the progressive half of it, because
+                    those are two different lenses to make. Inside a block the
+                    first row that covers the eye wins; ranges are in{" "}
                     <strong>minus cylinder</strong>.
                   </p>
                 </div>
 
-                <div className="flex flex-wrap gap-2">
-                  {DESIGN_KINDS.map((kind) => (
-                    <button
-                      key={kind.value}
-                      type="button"
-                      onClick={() =>
-                        patch({
-                          designs: [
-                            ...draft.designs,
-                            {
-                              key: nextKey(),
-                              kind: kind.value,
-                              // Suggest the shop's own wording, then step
-                              // aside — they may sell two of this kind.
-                              name:
-                                kind.suggested.find(
-                                  (name) =>
-                                    !draft.designs.some(
-                                      (design) => design.name === name,
-                                    ),
-                                ) ?? `${kind.label} ${draft.designs.length + 1}`,
-                              description: kind.hint,
-                              sortOrder: draft.designs.length,
-                              isActive: true,
-                              bands: [],
-                            },
-                          ],
-                        })
-                      }
-                      className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-gray-3 bg-white px-3 text-[12.5px] font-semibold text-dark transition-colors hover:border-blue hover:text-blue"
-                    >
-                      <Plus className="h-3.5 w-3.5" />
-                      {kind.label}
-                    </button>
-                  ))}
+                <button
+                  type="button"
+                  onClick={generateWholeSheet}
+                  className="inline-flex h-11 items-center gap-2 rounded-xl border border-blue/40 bg-blue/[0.08] px-4 text-[13px] font-bold text-blue transition-colors hover:bg-blue/[0.14]"
+                >
+                  <Wand2 className="h-4 w-4" />
+                  Lay out the whole sheet
+                </button>
+              </div>
+
+              <div className="mb-3 flex flex-wrap items-end gap-x-4 gap-y-2.5 rounded-xl border border-gray-3 bg-gray-1 px-4 py-3">
+                <div className="min-w-[190px] flex-1">
+                  <p className="text-[12px] font-bold text-dark">
+                    How the standard grid is cut
+                  </p>
+                  <p className="mt-0.5 text-[11px] leading-relaxed text-dark-5">
+                    Used by &ldquo;generate rows&rdquo; below. Sphere runs plano
+                    out to the reach, minus and plus priced separately;
+                    regenerating keeps every price already typed against the
+                    same range.
+                  </p>
                 </div>
+
+                {(
+                  [
+                    { key: "sphReach", label: "Sphere to ±", step: 1 },
+                    { key: "sphStep", label: "Sphere step", step: 0.25 },
+                    { key: "cylReach", label: "Cylinder to -", step: 1 },
+                    { key: "cylStep", label: "Cylinder step", step: 0.25 },
+                    { key: "addBands", label: "ADD bands", step: 1 },
+                  ] as const
+                ).map((field) => (
+                  <label key={field.key} className="block">
+                    <span className="mb-1 block text-[11px] font-semibold text-dark-4">
+                      {field.label}
+                    </span>
+                    <input
+                      type="number"
+                      step={field.step}
+                      value={grid[field.key]}
+                      onChange={(event) =>
+                        setGrid((current) => ({
+                          ...current,
+                          [field.key]:
+                            Number(event.target.value) || current[field.key],
+                        }))
+                      }
+                      className="h-9 w-[92px] rounded-lg border border-gray-3 bg-white px-2 text-center text-[12.5px] font-semibold text-dark outline-none focus:border-blue"
+                    />
+                  </label>
+                ))}
               </div>
 
-              <div className="space-y-4">
-                {draft.designs.map((design, designIndex) => {
-                  const setDesign = (changes: Partial<DraftDesign>) =>
-                    patch({
-                      designs: draft.designs.map((entry, i) =>
-                        i === designIndex ? { ...entry, ...changes } : entry,
-                      ),
-                    });
-
-                  const setBands = (bands: DraftBand[]) => setDesign({ bands });
-                  const clashes =
-                    clashesByDesign.get(design.key) ?? new Set<string>();
-                  const needsAdd = design.kind !== "SINGLE_VISION";
-
-                  return (
-                    <div
-                      key={design.key}
-                      className={`rounded-xl border bg-gray-1 p-4 ${
-                        design.isActive ? "border-gray-3" : "border-dashed border-gray-4 opacity-70"
-                      }`}
-                    >
-                      {/* ---------------- build header ---------------- */}
-                      <div className="flex flex-wrap items-start gap-3">
-                        <div className="min-w-[180px] flex-1">
-                          <input
-                            value={design.name}
-                            onChange={(event) =>
-                              setDesign({ name: event.target.value })
-                            }
-                            placeholder="Bifocal — Round Top"
-                            aria-label="Build name"
-                            className="h-10 w-full rounded-lg border border-gray-3 bg-white px-3 text-[13.5px] font-bold text-dark outline-none focus:border-blue"
-                          />
-                          <input
-                            value={design.description ?? ""}
-                            onChange={(event) =>
-                              setDesign({ description: event.target.value })
-                            }
-                            placeholder="One line the customer reads under the name"
-                            aria-label="Build description"
-                            className="mt-1.5 h-9 w-full rounded-lg border border-gray-3 bg-white px-3 text-[12px] text-dark outline-none focus:border-blue"
-                          />
-                        </div>
-
-                        <div>
-                          <label
-                            htmlFor={`kind-${design.key}`}
-                            className="mb-1 block text-[11px] font-semibold text-dark-4"
-                          >
-                            Kind
-                          </label>
-                          <select
-                            id={`kind-${design.key}`}
-                            value={design.kind}
-                            onChange={(event) =>
-                              setDesign({
-                                kind: event.target.value as LensDesignKind,
-                              })
-                            }
-                            className="h-10 w-[150px] cursor-pointer rounded-lg border border-gray-3 bg-white px-2.5 text-[13px] font-semibold text-dark outline-none focus:border-blue"
-                          >
-                            {DESIGN_KINDS.map((kind) => (
-                              <option key={kind.value} value={kind.value}>
-                                {kind.label}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-
-                        <div className="flex items-end gap-2 pb-0.5">
-                          <button
-                            type="button"
-                            onClick={() => setDesign({ isActive: !design.isActive })}
-                            title={design.isActive ? "Offered" : "Hidden"}
-                            className={`grid h-10 w-10 place-items-center rounded-lg border transition-colors ${
-                              design.isActive
-                                ? "border-green/40 bg-green/10 text-green"
-                                : "border-gray-3 bg-white text-dark-5"
-                            }`}
-                          >
-                            {design.isActive ? (
-                              <Eye className="h-4 w-4" />
-                            ) : (
-                              <EyeOff className="h-4 w-4" />
-                            )}
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() =>
-                              patch({
-                                designs: draft.designs.filter(
-                                  (_, i) => i !== designIndex,
-                                ),
-                              })
-                            }
-                            aria-label={`Remove ${design.name || "build"}`}
-                            className="grid h-10 w-10 place-items-center rounded-lg border border-gray-3 bg-white text-dark-4 transition-colors hover:border-red hover:text-red"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </div>
-
-                      {needsAdd && (
-                        <p className="mt-2.5 flex items-start gap-2 text-[11.5px] leading-relaxed text-dark-5">
-                          <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-blue" />
-                          The picker will require a reading addition for this
-                          build, and refuse to price it without one. Narrow a
-                          row on the ADD columns if you charge by it.
-                        </p>
-                      )}
-
-                      {/* ----------------- price rows ----------------- */}
-                      <div className="mt-3.5 border-t border-gray-3 pt-3.5">
-                        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                          <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-dark-4">
-                            {design.bands.length} price{" "}
-                            {design.bands.length === 1 ? "row" : "rows"}
-                          </p>
-
-                          <div className="flex gap-2">
-                            {design.bands.length === 0 && (
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  setBands(
-                                    standardBandsFor(design.kind).map(
-                                      (band, index) => ({
-                                        ...band,
-                                        key: nextKey(),
-                                        addMin: band.addMin ?? null,
-                                        addMax: band.addMax ?? null,
-                                        price: 0,
-                                        sortOrder: index,
-                                      }),
-                                    ),
-                                  )
-                                }
-                                className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-blue/40 bg-blue/[0.08] px-3 text-[12.5px] font-semibold text-blue transition-colors hover:bg-blue/[0.14]"
-                              >
-                                <Wand2 className="h-3.5 w-3.5" />
-                                Rows from the price sheet
-                              </button>
-                            )}
-
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setBands([
-                                  ...design.bands,
-                                  STARTER_BAND(design.bands.length),
-                                ])
-                              }
-                              className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-gray-3 bg-white px-3 text-[12.5px] font-semibold text-dark transition-colors hover:border-blue hover:text-blue"
-                            >
-                              <Plus className="h-3.5 w-3.5" />
-                              Add row
-                            </button>
-                          </div>
-                        </div>
-
-                        {design.bands.length === 0 ? (
-                          <p className="rounded-lg border border-dashed border-gray-4 px-4 py-4 text-center text-[12px] leading-relaxed text-dark-5">
-                            No prices for this build yet. Lay out the rows from
-                            your printed price sheet —{" "}
-                            {design.kind === "SINGLE_VISION"
-                              ? "sphere, cylinder and toric, minus and plus priced separately"
-                              : "one row for plus powers and one for minus, both capped at a +3.00 addition"}{" "}
-                            — then type the prices in.
-                          </p>
-                        ) : (
-                          <BandGrid
-                            bands={design.bands}
-                            clashes={clashes}
-                            onChange={setBands}
-                          />
-                        )}
-
-                        {design.bands.some((band) => band.price === 0) && (
-                          <p className="mt-2.5 flex items-start gap-2 rounded-lg border border-blue/30 bg-blue/[0.06] px-3.5 py-2.5 text-[12px] leading-relaxed text-dark-3">
-                            <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-blue" />
-                            A row priced at 0 is quoted to the customer as free,
-                            not as unpriced — right if this build is included
-                            with the frame, wrong if you have not filled it in.
-                          </p>
-                        )}
-
-                        {clashes.size > 0 && (
-                          <p className="mt-2.5 flex items-start gap-2 rounded-lg border border-orange/40 bg-orange/[0.08] px-3.5 py-2.5 text-[12px] leading-relaxed text-dark-3">
-                            <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-orange-dark" />
-                            Some rows overlap a row above them. Fine if you meant
-                            it — the row above wins — but a row fully covered
-                            will never be reached.
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
+              <div className="space-y-2.5">
+                {blocks.map((category) => (
+                  <BandBlock
+                    key={category}
+                    category={category}
+                    bands={draft.bands}
+                    clashes={clashes}
+                    gridOptions={grid}
+                    onChange={(bands) => patch({ bands })}
+                  />
+                ))}
               </div>
+
+              {draft.bands.some((band) => band.price === 0) && (
+                <p className="mt-2.5 flex items-start gap-2 rounded-lg border border-blue/30 bg-blue/[0.06] px-3.5 py-2.5 text-[12px] leading-relaxed text-dark-3">
+                  <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-blue" />
+                  A row priced at 0 is quoted to the customer as free, not as
+                  unpriced - right if this lens is included with the frame,
+                  wrong if you have not filled it in. Use &ldquo;unpriced
+                  only&rdquo; on a block to fill them in one go.
+                </p>
+              )}
+
+              {clashes.size > 0 && (
+                <p className="mt-2.5 flex items-start gap-2 rounded-lg border border-orange/40 bg-orange/[0.08] px-3.5 py-2.5 text-[12px] leading-relaxed text-dark-3">
+                  <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-orange-dark" />
+                  Some rows overlap a row above them in the same block. Fine if
+                  you meant it - the row above wins - but a row fully covered
+                  will never be reached.
+                </p>
+              )}
             </section>
 
             {/* ------------------------ tints ----------------------- */}
@@ -1088,7 +1291,7 @@ export default function LensPricingTab() {
 
               {draft.tints.length === 0 ? (
                 <p className="rounded-xl border border-dashed border-gray-4 px-4 py-5 text-center text-[12.5px] text-dark-5">
-                  No colours — the picker skips the colour step for this lens.
+                  No colours - the picker skips the colour step for this lens.
                 </p>
               ) : (
                 <ul className="space-y-2">
@@ -1109,13 +1312,17 @@ export default function LensPricingTab() {
                           type="color"
                           aria-label={`Swatch for ${tint.name || "colour"}`}
                           value={tint.hex || "#6b7280"}
-                          onChange={(event) => setTint({ hex: event.target.value })}
+                          onChange={(event) =>
+                            setTint({ hex: event.target.value })
+                          }
                           className="h-10 w-11 shrink-0 cursor-pointer rounded-lg border border-gray-3 bg-white p-1"
                         />
 
                         <input
                           value={tint.name}
-                          onChange={(event) => setTint({ name: event.target.value })}
+                          onChange={(event) =>
+                            setTint({ name: event.target.value })
+                          }
                           placeholder="Grey"
                           aria-label="Colour name"
                           className="h-10 w-[120px] rounded-lg border border-gray-3 bg-white px-2.5 text-[13px] font-semibold text-dark outline-none focus:border-blue"
@@ -1126,7 +1333,7 @@ export default function LensPricingTab() {
                           onChange={(event) =>
                             setTint({ description: event.target.value })
                           }
-                          placeholder="Neutral — colours stay true"
+                          placeholder="Neutral - colours stay true"
                           aria-label="Colour description"
                           className="h-10 min-w-[180px] flex-1 rounded-lg border border-gray-3 bg-white px-2.5 text-[12.5px] text-dark outline-none focus:border-blue"
                         />
@@ -1141,7 +1348,9 @@ export default function LensPricingTab() {
                             aria-label="Surcharge"
                             value={tint.surcharge}
                             onChange={(event) =>
-                              setTint({ surcharge: Number(event.target.value) || 0 })
+                              setTint({
+                                surcharge: Number(event.target.value) || 0,
+                              })
                             }
                             className="h-10 w-[92px] rounded-lg border border-gray-3 bg-white px-2.5 text-center text-[13px] font-semibold text-dark outline-none focus:border-blue"
                           />
@@ -1189,7 +1398,9 @@ export default function LensPricingTab() {
                 <button
                   type="button"
                   onClick={() => {
-                    const row = lensTypes.find((entry) => entry.id === draft.id);
+                    const row = lensTypes.find(
+                      (entry) => entry.id === draft.id,
+                    );
                     if (row) setPendingDelete(row);
                   }}
                   className="inline-flex h-11 items-center gap-2 rounded-xl border border-gray-3 px-4 text-[13px] font-semibold text-dark-4 transition-colors hover:border-red hover:text-red"
@@ -1248,9 +1459,7 @@ export default function LensPricingTab() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>
-              Remove {pendingDelete?.name}?
-            </AlertDialogTitle>
+            <AlertDialogTitle>Remove {pendingDelete?.name}?</AlertDialogTitle>
             <AlertDialogDescription>
               If this lens has already been sold it is switched off instead of
               deleted, so the orders it is on keep their record. Otherwise it

@@ -125,42 +125,42 @@ including after you attach a custom domain.
 
 ### Storage, email and site details
 
-| Variable                      | Notes                                               |
-| ----------------------------- | --------------------------------------------------- |
-| `NEXT_PUBLIC_R2_PUBLIC_URL`   | e.g. `https://pub-xxxxxxxx.r2.dev` **build-time**   |
-| `R2_BUCKET_NAME`              |                                                     |
-| `R2_ACCOUNT_ID`               |                                                     |
-| `R2_ACCESS_KEY_ID`            |                                                     |
-| `R2_SECRET_ACCESS_KEY`        |                                                     |
-| `RESEND_API_KEY`              | Required in production unless `USE_MOCK_EMAIL=true` |
-| `EMAIL_FROM`                  | e.g. `Metro Opticals <hello@metroopticals.lk>`      |
-| `USE_MOCK_EMAIL`              | `false` in production, `true` in development        |
-| `ADMIN_EMAIL`                 | Store contact address shown on the site             |
-| `ADMIN_PHONE`                 | Store contact number                                |
-| `NEXT_PUBLIC_SITE_URL`        | `https://metroopticals.lk` (prod) **build-time**    |
-| `NEXT_PUBLIC_WHATSAPP_NUMBER` | e.g. `94770000000` **build-time**                   |
+| Variable                        | Notes                                                                  |
+| ------------------------------- | ---------------------------------------------------------------------- |
+| `NEXT_PUBLIC_R2_PUBLIC_URL`     | e.g. `https://pub-xxxxxxxx.r2.dev` **build-time**                      |
+| `R2_BUCKET_NAME`                |                                                                        |
+| `R2_ACCOUNT_ID`                 |                                                                        |
+| `R2_ACCESS_KEY_ID`              |                                                                        |
+| `R2_SECRET_ACCESS_KEY`          |                                                                        |
+| `RESEND_API_KEY`                | Required in production unless `USE_MOCK_EMAIL=true`                    |
+| `EMAIL_FROM`                    | e.g. `Metro Opticals <hello@metroopticals.lk>`                         |
+| `USE_MOCK_EMAIL`                | `false` in production, `true` in development                           |
+| `ADMIN_EMAIL`                   | Store contact address shown on the site                                |
+| `ADMIN_PHONE`                   | Store contact number                                                   |
+| `NEXT_PUBLIC_SITE_URL`          | `https://metroopticals.lk` (prod) **build-time**                       |
+| `NEXT_PUBLIC_WHATSAPP_NUMBER`   | e.g. `94770000000` **build-time**                                      |
 | `NEXT_PUBLIC_TRYON_RUNTIME_URL` | Printed by `npm run tryon:publish` **build-time** see § Virtual try-on |
-| `NEXT_PUBLIC_TRYON_ENABLED`   | `true`; `false` hides every Try On button **build-time** |
-| `LOG_LEVEL`                   | `info` (use `debug` temporarily when investigating) |
-| `NODE_ENV`                    | `production` in both environments                   |
+| `NEXT_PUBLIC_TRYON_ENABLED`     | `true`; `false` hides every Try On button **build-time**               |
+| `LOG_LEVEL`                     | `info` (use `debug` temporarily when investigating)                    |
+| `NODE_ENV`                      | `production` in both environments                                      |
 
 ### Online card payments (PayHere)
 
 Optional. Leave `NEXT_PUBLIC_PAYHERE_ENABLED` unset and the storefront offers
-only cash and bank transfer — nothing PayHere-related is rendered.
+only cash and bank transfer - nothing PayHere-related is rendered.
 
-| Variable                          | Notes                                                                                       |
-| --------------------------------- | ------------------------------------------------------------------------------------------- |
-| `NEXT_PUBLIC_PAYHERE_ENABLED`     | `true` to offer "Pay online" and show the card logos **build-time**                          |
-| `NEXT_PUBLIC_PAYHERE_MODE`        | `sandbox` or `live`. Anything but exactly `live` is sandbox **build-time**                    |
-| `NEXT_PUBLIC_PAYHERE_FEE_PERCENT` | Surcharge on card orders, e.g. `2.5`. `0` charges nothing **build-time**                      |
-| `NEXT_PUBLIC_PAYHERE_FEE_LABEL`   | Optional. Defaults to `Online payment fee (2.5%)` **build-time**                              |
-| `PAYHERE_MERCHANT_ID`             | From the PayHere dashboard                                                                    |
-| `PAYHERE_MERCHANT_SECRET`         | From the PayHere dashboard. **Server-only** — never give it a `NEXT_PUBLIC_` prefix           |
+| Variable                          | Notes                                                                                          |
+| --------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_PAYHERE_ENABLED`     | `true` to offer "Pay online" and show the card logos **build-time**                            |
+| `NEXT_PUBLIC_PAYHERE_MODE`        | `sandbox` or `live`. Anything but exactly `live` is sandbox **build-time**                     |
+| `NEXT_PUBLIC_PAYHERE_FEE_PERCENT` | Surcharge on card orders, e.g. `2.5`. `0` charges nothing **build-time**                       |
+| `NEXT_PUBLIC_PAYHERE_FEE_LABEL`   | Optional. Defaults to `Online payment fee (2.5%)` **build-time**                               |
+| `PAYHERE_MERCHANT_ID`             | From the PayHere dashboard                                                                     |
+| `PAYHERE_MERCHANT_SECRET`         | From the PayHere dashboard. **Server-only** - never give it a `NEXT_PUBLIC_` prefix            |
 | `PAYHERE_NOTIFY_URL`              | Leave unset in production; built from `NEXT_PUBLIC_SITE_URL`. Only for tunnelled local testing |
 
 Before it works, register the deployed domain in the PayHere dashboard under
-**Settings → Domains & Credentials** — PayHere refuses payments from a domain
+**Settings → Domains & Credentials** - PayHere refuses payments from a domain
 it has not been told about, and that page is where the merchant secret comes
 from. **This is a security control, not just setup**: it is what stops a
 `notify_url` being repointed at someone else's collector, which is the one
@@ -289,7 +289,10 @@ Settings → CORS policy**, add:
 ```json
 [
   {
-    "AllowedOrigins": ["https://metroopticals.lk", "https://<dev-domain>.up.railway.app"],
+    "AllowedOrigins": [
+      "https://metroopticals.lk",
+      "https://<dev-domain>.up.railway.app"
+    ],
     "AllowedMethods": ["GET", "HEAD"],
     "AllowedHeaders": ["*"],
     "MaxAgeSeconds": 3600
@@ -316,18 +319,18 @@ For one product, untick **Show to customers** on its try-on tab no deploy.
 
 ## 7. Troubleshooting
 
-| Symptom                                     | Cause                                                                                                                            |
-| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| Deploy stuck, then "health check failed"    | The app isn't listening on `$PORT`. Check that no `PORT` variable is set on the service.                                         |
-| Health check returns 503                    | `/api/health` couldn't query the database. Check `DATABASE_URL` resolves to a Postgres in the same environment.                  |
-| Login redirects to the wrong host, or loops | `NEXTAUTH_URL` doesn't match the domain being used.                                                                              |
-| Images render broken                        | The R2 hostname isn't in `next.config.mjs` → `images.remotePatterns`, or `NEXT_PUBLIC_R2_PUBLIC_URL` changed without a redeploy. |
-| Deploy fails during pre-deploy              | Read the pre-deploy log. Either a migration failed, or `ADMIN_BOOTSTRAP_PASSWORD` was rejected (too short / known placeholder).  |
-| Schema changes not appearing                | The migration wasn't committed. `migrate deploy` only runs SQL from `prisma/migrations`.                                         |
-| Dev deploy changed production data          | The `development` environment's `DATABASE_URL` is pointing at the production Postgres. Fix the reference.                        |
-| Try-on: camera starts, frame never appears  | The bucket has no CORS rule for the site's origin (§ 6.2), or the `.glb` was stored as `application/octet-stream` by an old upload. |
+| Symptom                                     | Cause                                                                                                                                          |
+| ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Deploy stuck, then "health check failed"    | The app isn't listening on `$PORT`. Check that no `PORT` variable is set on the service.                                                       |
+| Health check returns 503                    | `/api/health` couldn't query the database. Check `DATABASE_URL` resolves to a Postgres in the same environment.                                |
+| Login redirects to the wrong host, or loops | `NEXTAUTH_URL` doesn't match the domain being used.                                                                                            |
+| Images render broken                        | The R2 hostname isn't in `next.config.mjs` → `images.remotePatterns`, or `NEXT_PUBLIC_R2_PUBLIC_URL` changed without a redeploy.               |
+| Deploy fails during pre-deploy              | Read the pre-deploy log. Either a migration failed, or `ADMIN_BOOTSTRAP_PASSWORD` was rejected (too short / known placeholder).                |
+| Schema changes not appearing                | The migration wasn't committed. `migrate deploy` only runs SQL from `prisma/migrations`.                                                       |
+| Dev deploy changed production data          | The `development` environment's `DATABASE_URL` is pointing at the production Postgres. Fix the reference.                                      |
+| Try-on: camera starts, frame never appears  | The bucket has no CORS rule for the site's origin (§ 6.2), or the `.glb` was stored as `application/octet-stream` by an old upload.            |
 | Try-on: "could not be loaded"               | The runtime is unreachable: `NEXT_PUBLIC_TRYON_RUNTIME_URL` wrong or not redeployed after setting, or `prebuild` could not download the model. |
-| Try-on: no Try On button on a product       | The product has no colour with **Show to customers** on, or `NEXT_PUBLIC_TRYON_ENABLED=false`.                                   |
+| Try-on: no Try On button on a product       | The product has no colour with **Show to customers** on, or `NEXT_PUBLIC_TRYON_ENABLED=false`.                                                 |
 
 Logs: Railway dashboard → service → **Deployments** → pick a deploy →
 **Build / Deploy / Pre-deploy** logs. Everything the app writes goes to stdout

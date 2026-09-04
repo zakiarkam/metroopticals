@@ -10,7 +10,7 @@ import { auditLogger, logger, serializeError } from "@/lib/logger";
 import { getClientIp, rateLimit } from "@/lib/rate-limit";
 
 /**
- * PayHere's server-to-server result callback — the only thing on this site
+ * PayHere's server-to-server result callback - the only thing on this site
  * that may mark an online order paid.
  *
  * It is unauthenticated by nature: anyone on the internet can post here. What
@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
       return new NextResponse("Not processed", { status: 200 });
     }
 
-    // Something on our side broke — the database, the mailer, a bug. Ask for
+    // Something on our side broke - the database, the mailer, a bug. Ask for
     // the message again rather than losing a payment we have been told about.
     logger.error("PayHere notification handling failed", serializeError(error));
     return new NextResponse("Retry later", { status: 500 });

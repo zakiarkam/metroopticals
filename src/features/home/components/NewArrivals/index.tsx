@@ -175,7 +175,7 @@ const NewArrival = React.memo(() => {
         <EmptyState
           icon={<PackageSearch className="h-7 w-7" />}
           title="No new arrivals yet"
-          description="New frames are added every week — check back soon, or browse the full range."
+          description="New frames are added every week - check back soon, or browse the full range."
           action={{ label: "Browse all frames", href: "/shop-with-sidebar" }}
         />
       )}

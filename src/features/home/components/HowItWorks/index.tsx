@@ -27,7 +27,7 @@ export default function HowItWorks() {
         eyebrow="How it works"
         title="From frame to fitting"
         titleAccent="in four steps."
-        description="No guesswork and no hidden lab fees — here is exactly what happens once you place an order."
+        description="No guesswork and no hidden lab fees - here is exactly what happens once you place an order."
       />
 
       <ol className="grid grid-cols-1 gap-x-10 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">

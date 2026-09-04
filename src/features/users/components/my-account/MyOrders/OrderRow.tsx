@@ -17,6 +17,7 @@ import {
   orderLineLensName,
   orderLineName,
 } from "@/features/orders/utils/order-display";
+import OrderLensNote from "@/features/lenses/components/OrderLensNote";
 
 type OrderRowProps = {
   order: Order;
@@ -184,6 +185,14 @@ const OrderRow: React.FC<OrderRowProps> = ({
                 With {orderLineLensName(firstItem)}
               </p>
             )}
+            {/* A made-to-order pair is why an order sits at "processing"
+                longer than the last one did, so it is said here rather than
+                left for the customer to wonder about. */}
+            <OrderLensNote
+              isOrderLens={firstItem?.lensIsOrderLens}
+              leadTimeDays={firstItem?.lensLeadTimeDays}
+              className="mt-1"
+            />
             <p className="mt-1 text-[15px] font-bold text-dark sm:hidden">
               {formatPrice(order.totalAmount)}
             </p>

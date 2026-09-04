@@ -2,24 +2,28 @@ import axiosInstance from "@/lib/axiosInstance";
 
 export type CartItemLens = {
   lensTypeId: number | null;
-  lensDesignId: number | null;
+  /** How the pair is made - single vision, bifocal, progressive. */
+  lensDesignKind: "SINGLE_VISION" | "BIFOCAL" | "PROGRESSIVE" | null;
   lensTintId: number | null;
   prescriptionId: number | null;
   /** Price for the pair of lenses on this line, tint included. */
   lensPrice: number;
+  /** True when this power is made to order rather than cut from stock. */
+  lensIsOrderLens?: boolean;
+  /** Working days quoted for it, when the shop publishes a figure. */
+  lensLeadTimeDays?: number | null;
   lensType?: {
     id: number;
     name: string;
     slug: string;
     isActive: boolean;
   } | null;
-  lensDesign?: {
+  lensTint?: {
     id: number;
     name: string;
-    kind: "SINGLE_VISION" | "BIFOCAL" | "PROGRESSIVE";
-    isActive: boolean;
+    hex: string | null;
+    surcharge: number;
   } | null;
-  lensTint?: { id: number; name: string; hex: string | null; surcharge: number } | null;
   prescription?: {
     id: number;
     label: string;
@@ -71,7 +75,7 @@ export const getCartItems = async (): Promise<{ cartItems: CartItem[] }> => {
 };
 
 export const addToCart = async (
-  data: AddToCartInput
+  data: AddToCartInput,
 ): Promise<{ cartItem: CartItem }> => {
   const response = await axiosInstance.post("/cart", data);
   const apiData = response.data;
@@ -82,7 +86,7 @@ export const addToCart = async (
 
 export const updateCartItem = async (
   id: number,
-  data: UpdateCartItemInput
+  data: UpdateCartItemInput,
 ): Promise<{ cartItem: CartItem }> => {
   const response = await axiosInstance.put(`/cart/${id}`, data);
   const apiData = response.data;
@@ -130,7 +134,7 @@ export const setCartItemLens = async (
   id: number,
   data: {
     lensTypeId: number | null;
-    lensDesignId?: number | null;
+    lensDesignKind?: "SINGLE_VISION" | "BIFOCAL" | "PROGRESSIVE";
     lensTintId?: number | null;
     prescriptionId?: number | null;
   },

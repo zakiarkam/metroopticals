@@ -11,7 +11,7 @@ export type Availability = {
 
 /**
  * Availability as the storefront states it: in stock, out of stock, or
- * retired. Counts are deliberately not surfaced — "Only 3 left" reads as
+ * retired. Counts are deliberately not surfaced - "Only 3 left" reads as
  * pressure, and the shop preferred not to say it.
  */
 export function getAvailability(
@@ -70,7 +70,7 @@ const findColorStock = (
 /**
  * How many units of one colourway a shopper can actually order.
  *
- * An uncounted colour — no row, or a row with a null count — falls back to
+ * An uncounted colour - no row, or a row with a null count - falls back to
  * the product total, so nothing recorded before per-colour counts existed
  * becomes unbuyable. A recorded count never exceeds the total: the total is
  * what the POS and the ledger keep honest.

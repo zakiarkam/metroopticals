@@ -57,7 +57,9 @@ const saleInclude = {
   user: { select: { id: true, name: true, email: true } },
 } satisfies Prisma.OrderInclude;
 
-export type SaleWithDetail = Prisma.OrderGetPayload<{ include: typeof saleInclude }>;
+export type SaleWithDetail = Prisma.OrderGetPayload<{
+  include: typeof saleInclude;
+}>;
 
 /**
  * `25/08/2026/POS/17`  the counter's own series, alongside `/MO/` online.
@@ -145,7 +147,9 @@ async function priceLines(
 
     const product = byId.get(item.productId);
     if (!product) {
-      throw new NotFoundError(`Product ${item.productId} is no longer available`);
+      throw new NotFoundError(
+        `Product ${item.productId} is no longer available`,
+      );
     }
     if (product.status === "INACTIVE") {
       throw new ValidationError(`${product.title} is not available for sale`);
@@ -199,7 +203,10 @@ export async function createSale(input: CreateSaleInput, cashierId: number) {
       lineDiscount: line.lineDiscount,
     })),
     discountAmount: input.discountAmount,
-    amountPaid: input.payments.reduce((sum, payment) => sum + payment.amount, 0),
+    amountPaid: input.payments.reduce(
+      (sum, payment) => sum + payment.amount,
+      0,
+    ),
   });
 
   // A bill that comes to nothing is allowed on purpose: a warranty
@@ -238,119 +245,123 @@ export async function createSale(input: CreateSaleInput, cashierId: number) {
       ? shopDayStart(input.balanceDueDate)
       : null;
 
-  return prisma.$transaction(async (tx) => {
-    // Inside the transaction: a bill that fails on stock must not leave a new
-    // customer behind in the book.
-    const customer = await resolveCustomerForSale(input.customer, tx);
-    const billingName = customer?.name ?? WALK_IN_CUSTOMER;
-    const billingPhone = customer?.phone ?? "";
+  return prisma.$transaction(
+    async (tx) => {
+      // Inside the transaction: a bill that fails on stock must not leave a new
+      // customer behind in the book.
+      const customer = await resolveCustomerForSale(input.customer, tx);
+      const billingName = customer?.name ?? WALK_IN_CUSTOMER;
+      const billingPhone = customer?.phone ?? "";
 
-    const created = await tx.order.create({
-      data: {
-        orderNumber: `POS-PENDING-${cashierId}-${Date.now()}`,
-        channel: "POS",
-        // Goods handed over at the counter are done; a job the customer will
-        // come back for stays in progress until they collect it.
-        status: input.collectLater ? "PROCESSING" : "DELIVERED",
-        paymentStatus,
-        subtotal: totals.subtotal,
-        discountAmount: totals.discountAmount,
-        shippingFee: 0,
-        totalAmount: totals.totalAmount,
-        amountPaid: paid,
-        balanceDueDate,
-        paymentMethod: summarisePaymentMethod(
-          payments.map((payment) => payment.method),
-        ),
-        notes: input.notes || null,
-        billingName,
-        billingEmail: customer?.email || null,
-        billingPhone,
-        billingAddress: customer?.address || null,
-        billingCity: customer?.city || null,
-        customerId: customer?.id ?? null,
-        createdById: cashierId,
-        items: {
-          create: lines.map((line) => ({
-            productId: line.productId,
-            title: line.title,
-            quantity: line.quantity,
-            price: line.cataloguePrice,
-            // The unit price the cashier actually charged. The line discount
-            // is NOT folded in here: dividing it back out per unit cannot
-            // represent, say, Rs 100 off three items without leaving a cent
-            // adrift, and a bill whose lines do not add up to its total is
-            // worse than useless at a counter.
-            discountedPrice:
-              line.unitPrice === line.cataloguePrice ? null : line.unitPrice,
-            lineDiscount: line.lineDiscount,
-            color: line.color,
-          })),
+      const created = await tx.order.create({
+        data: {
+          orderNumber: `POS-PENDING-${cashierId}-${Date.now()}`,
+          channel: "POS",
+          // Goods handed over at the counter are done; a job the customer will
+          // come back for stays in progress until they collect it.
+          status: input.collectLater ? "PROCESSING" : "DELIVERED",
+          paymentStatus,
+          subtotal: totals.subtotal,
+          discountAmount: totals.discountAmount,
+          shippingFee: 0,
+          totalAmount: totals.totalAmount,
+          amountPaid: paid,
+          balanceDueDate,
+          paymentMethod: summarisePaymentMethod(
+            payments.map((payment) => payment.method),
+          ),
+          notes: input.notes || null,
+          billingName,
+          billingEmail: customer?.email || null,
+          billingPhone,
+          billingAddress: customer?.address || null,
+          billingCity: customer?.city || null,
+          customerId: customer?.id ?? null,
+          createdById: cashierId,
+          items: {
+            create: lines.map((line) => ({
+              productId: line.productId,
+              title: line.title,
+              quantity: line.quantity,
+              price: line.cataloguePrice,
+              // The unit price the cashier actually charged. The line discount
+              // is NOT folded in here: dividing it back out per unit cannot
+              // represent, say, Rs 100 off three items without leaving a cent
+              // adrift, and a bill whose lines do not add up to its total is
+              // worse than useless at a counter.
+              discountedPrice:
+                line.unitPrice === line.cataloguePrice ? null : line.unitPrice,
+              lineDiscount: line.lineDiscount,
+              color: line.color,
+            })),
+          },
         },
-      },
-    });
-
-    for (const line of lines) {
-      if (line.productId == null) continue;
-
-      // Guarded update: two tills selling the last frame at once cannot both
-      // succeed, because the second one matches no row.
-      const updated = await tx.product.updateMany({
-        where: { id: line.productId, stock: { gte: line.quantity } },
-        data: { stock: { decrement: line.quantity } },
       });
-      if (updated.count === 0) {
-        throw new ValidationError(`${line.title} does not have enough stock left`);
+
+      for (const line of lines) {
+        if (line.productId == null) continue;
+
+        // Guarded update: two tills selling the last frame at once cannot both
+        // succeed, because the second one matches no row.
+        const updated = await tx.product.updateMany({
+          where: { id: line.productId, stock: { gte: line.quantity } },
+          data: { stock: { decrement: line.quantity } },
+        });
+        if (updated.count === 0) {
+          throw new ValidationError(
+            `${line.title} does not have enough stock left`,
+          );
+        }
+
+        // Strict, same as the website: a colourway's count cannot go below
+        // zero even from a stale till screen. When the shelf disagrees with
+        // the book, the cashier's escape hatch is adding the line without a
+        // colour; the count is then corrected from the products page.
+        await takeColorStock(tx, {
+          productId: line.productId,
+          color: line.color,
+          quantity: line.quantity,
+          strict: true,
+        });
+
+        await tx.product.updateMany({
+          where: { id: line.productId, stock: { lte: 0 } },
+          data: { status: "OUT_OF_STOCK" },
+        });
+
+        await tx.stockMovement.create({
+          data: {
+            productId: line.productId,
+            delta: -line.quantity,
+            reason: "SALE",
+            orderId: created.id,
+            createdById: cashierId,
+          },
+        });
       }
 
-      // Strict, same as the website: a colourway's count cannot go below
-      // zero even from a stale till screen. When the shelf disagrees with
-      // the book, the cashier's escape hatch is adding the line without a
-      // colour; the count is then corrected from the products page.
-      await takeColorStock(tx, {
-        productId: line.productId,
-        color: line.color,
-        quantity: line.quantity,
-        strict: true,
-      });
+      if (payments.length > 0) {
+        await tx.payment.createMany({
+          data: payments.map((payment) => ({
+            orderId: created.id,
+            method: payment.method,
+            amount: roundMoney(payment.amount),
+            reference: payment.reference || null,
+            createdById: cashierId,
+          })),
+        });
+      }
 
-      await tx.product.updateMany({
-        where: { id: line.productId, stock: { lte: 0 } },
-        data: { status: "OUT_OF_STOCK" },
+      return tx.order.update({
+        where: { id: created.id },
+        data: { orderNumber: formatBillNumber(created.id, created.createdAt) },
+        include: saleInclude,
       });
-
-      await tx.stockMovement.create({
-        data: {
-          productId: line.productId,
-          delta: -line.quantity,
-          reason: "SALE",
-          orderId: created.id,
-          createdById: cashierId,
-        },
-      });
-    }
-
-    if (payments.length > 0) {
-      await tx.payment.createMany({
-        data: payments.map((payment) => ({
-          orderId: created.id,
-          method: payment.method,
-          amount: roundMoney(payment.amount),
-          reference: payment.reference || null,
-          createdById: cashierId,
-        })),
-      });
-    }
-
-    return tx.order.update({
-      where: { id: created.id },
-      data: { orderNumber: formatBillNumber(created.id, created.createdAt) },
-      include: saleInclude,
-    });
-  },
-  // Three statements per product line, so a long bill on a slow connection
-  // needs more than the 5s default.
-  { timeout: 20_000 });
+    },
+    // Three statements per product line, so a long bill on a slow connection
+    // needs more than the 5s default.
+    { timeout: 20_000 },
+  );
 }
 
 export async function getSaleById(id: number): Promise<SaleWithDetail> {
@@ -460,88 +471,103 @@ export async function addSalePayment(
 ) {
   const amount = roundMoney(input.amount);
 
-  return prisma.$transaction(async (tx) => {
-    const sale = await tx.order.findUnique({
-      where: { id: saleId },
-      select: { id: true, totalAmount: true, amountPaid: true, voidedAt: true },
-    });
-    if (!sale) throw new NotFoundError("Bill not found");
-    if (sale.voidedAt) {
-      throw new ValidationError("This bill was cancelled and cannot take payments");
-    }
-
-    const outstanding = roundMoney(sale.totalAmount - sale.amountPaid);
-    // The same tolerance the payment status uses, so a bill can never be left
-    // showing a one-cent balance that the till then refuses to take.
-    if (outstanding <= 0.005) {
-      throw new ValidationError("This bill is already settled");
-    }
-    if (amount > outstanding + 0.01) {
-      throw new ValidationError(
-        `That is more than the balance of Rs ${outstanding.toFixed(2)}`,
-      );
-    }
-
-    // Compare and swap: the update only matches while the bill still has room
-    // for this payment, and the increment is computed by the database.
-    const moved = await tx.order.updateMany({
-      where: {
-        id: saleId,
-        voidedAt: null,
-        // Both halves of the balance are pinned: a return landing in between
-        // lowers the total, and without this the payment would be measured
-        // against a bill that no longer exists.
-        totalAmount: sale.totalAmount,
-        amountPaid: { lte: roundMoney(sale.totalAmount - amount) + 0.005 },
-      },
-      data: { amountPaid: { increment: amount } },
-    });
-    if (moved.count === 0) {
-      throw new ValidationError(
-        "Someone else collected against this bill just now. Open it again to see the balance.",
-      );
-    }
-
-    await tx.payment.create({
-      data: {
-        orderId: saleId,
-        method: input.method,
-        amount,
-        reference: input.reference || null,
-        createdById: cashierId,
-      },
-    });
-
-    const [current, methods] = await Promise.all([
-      tx.order.findUniqueOrThrow({
+  return prisma.$transaction(
+    async (tx) => {
+      const sale = await tx.order.findUnique({
         where: { id: saleId },
-        select: { totalAmount: true, amountPaid: true },
-      }),
-      tx.payment.findMany({
-        where: { orderId: saleId, amount: { gt: 0 } },
-        select: { method: true },
-      }),
-    ]);
+        select: {
+          id: true,
+          totalAmount: true,
+          amountPaid: true,
+          voidedAt: true,
+        },
+      });
+      if (!sale) throw new NotFoundError("Bill not found");
+      if (sale.voidedAt) {
+        throw new ValidationError(
+          "This bill was cancelled and cannot take payments",
+        );
+      }
 
-    const stillOwed = roundMoney(current.totalAmount - current.amountPaid);
+      const outstanding = roundMoney(sale.totalAmount - sale.amountPaid);
+      // The same tolerance the payment status uses, so a bill can never be left
+      // showing a one-cent balance that the till then refuses to take.
+      if (outstanding <= 0.005) {
+        throw new ValidationError("This bill is already settled");
+      }
+      if (amount > outstanding + 0.01) {
+        throw new ValidationError(
+          `That is more than the balance of Rs ${outstanding.toFixed(2)}`,
+        );
+      }
 
-    return tx.order.update({
-      where: { id: saleId },
-      data: {
-        paymentStatus: resolvePaymentStatus(current.totalAmount, current.amountPaid),
-        paymentMethod: summarisePaymentMethod(methods.map((row) => row.method)),
-        // Settled bills stop being chased; a part payment can move the promise
-        // date to whenever the customer says they will bring the rest.
-        balanceDueDate:
-          stillOwed <= 0.005
-            ? null
-            : input.balanceDueDate
-              ? shopDayStart(input.balanceDueDate)
-              : undefined,
-      },
-      include: saleInclude,
-    });
-  }, { timeout: 20_000, maxWait: 10_000 });
+      // Compare and swap: the update only matches while the bill still has room
+      // for this payment, and the increment is computed by the database.
+      const moved = await tx.order.updateMany({
+        where: {
+          id: saleId,
+          voidedAt: null,
+          // Both halves of the balance are pinned: a return landing in between
+          // lowers the total, and without this the payment would be measured
+          // against a bill that no longer exists.
+          totalAmount: sale.totalAmount,
+          amountPaid: { lte: roundMoney(sale.totalAmount - amount) + 0.005 },
+        },
+        data: { amountPaid: { increment: amount } },
+      });
+      if (moved.count === 0) {
+        throw new ValidationError(
+          "Someone else collected against this bill just now. Open it again to see the balance.",
+        );
+      }
+
+      await tx.payment.create({
+        data: {
+          orderId: saleId,
+          method: input.method,
+          amount,
+          reference: input.reference || null,
+          createdById: cashierId,
+        },
+      });
+
+      const [current, methods] = await Promise.all([
+        tx.order.findUniqueOrThrow({
+          where: { id: saleId },
+          select: { totalAmount: true, amountPaid: true },
+        }),
+        tx.payment.findMany({
+          where: { orderId: saleId, amount: { gt: 0 } },
+          select: { method: true },
+        }),
+      ]);
+
+      const stillOwed = roundMoney(current.totalAmount - current.amountPaid);
+
+      return tx.order.update({
+        where: { id: saleId },
+        data: {
+          paymentStatus: resolvePaymentStatus(
+            current.totalAmount,
+            current.amountPaid,
+          ),
+          paymentMethod: summarisePaymentMethod(
+            methods.map((row) => row.method),
+          ),
+          // Settled bills stop being chased; a part payment can move the promise
+          // date to whenever the customer says they will bring the rest.
+          balanceDueDate:
+            stillOwed <= 0.005
+              ? null
+              : input.balanceDueDate
+                ? shopDayStart(input.balanceDueDate)
+                : undefined,
+        },
+        include: saleInclude,
+      });
+    },
+    { timeout: 20_000, maxWait: 10_000 },
+  );
 }
 
 /**
@@ -560,100 +586,110 @@ export async function voidSale(
   input: VoidSaleInput,
   adminId: number,
 ) {
-  return prisma.$transaction(async (tx) => {
-    const sale = await tx.order.findUnique({
-      where: { id: saleId },
-      select: { id: true, channel: true, voidedAt: true, status: true },
-    });
-    if (!sale) throw new NotFoundError("Bill not found");
-    if (sale.voidedAt || sale.status === "CANCELLED") {
-      throw new ValidationError("This bill is already cancelled");
-    }
-    if (sale.channel !== "POS") {
-      throw new ValidationError(
-        "Only counter bills are cancelled here. Change a website order from the Orders screen.",
-      );
-    }
-
-    const claimed = await tx.order.updateMany({
-      where: { id: saleId, voidedAt: null, status: { not: "CANCELLED" } },
-      data: {
-        status: "CANCELLED",
-        voidedAt: new Date(),
-        voidReason: input.reason,
-      },
-    });
-    if (claimed.count === 0) {
-      throw new ValidationError("This bill is already cancelled");
-    }
-
-    // Read after claiming, so these are the quantities and the money as they
-    // stand now rather than as they looked before the guard.
-    const claimedSale = await tx.order.findUniqueOrThrow({
-      where: { id: saleId },
-      include: { items: true, payments: true },
-    });
-
-    for (const item of claimedSale.items) {
-      if (item.productId == null) continue;
-      const putBack = item.quantity - item.returnedQty;
-      if (putBack <= 0) continue;
-
-      await tx.product.update({
-        where: { id: item.productId },
-        data: { stock: { increment: putBack } },
+  return prisma.$transaction(
+    async (tx) => {
+      const sale = await tx.order.findUnique({
+        where: { id: saleId },
+        select: { id: true, channel: true, voidedAt: true, status: true },
       });
-      // The units go back onto the colourway they were sold from.
-      await returnColorStock(tx, {
-        productId: item.productId,
-        color: item.color,
-        quantity: putBack,
-      });
-      await tx.product.updateMany({
-        where: { id: item.productId, stock: { gt: 0 }, status: "OUT_OF_STOCK" },
-        data: { status: "ACTIVE" },
-      });
-      await tx.stockMovement.create({
+      if (!sale) throw new NotFoundError("Bill not found");
+      if (sale.voidedAt || sale.status === "CANCELLED") {
+        throw new ValidationError("This bill is already cancelled");
+      }
+      if (sale.channel !== "POS") {
+        throw new ValidationError(
+          "Only counter bills are cancelled here. Change a website order from the Orders screen.",
+        );
+      }
+
+      const claimed = await tx.order.updateMany({
+        where: { id: saleId, voidedAt: null, status: { not: "CANCELLED" } },
         data: {
+          status: "CANCELLED",
+          voidedAt: new Date(),
+          voidReason: input.reason,
+        },
+      });
+      if (claimed.count === 0) {
+        throw new ValidationError("This bill is already cancelled");
+      }
+
+      // Read after claiming, so these are the quantities and the money as they
+      // stand now rather than as they looked before the guard.
+      const claimedSale = await tx.order.findUniqueOrThrow({
+        where: { id: saleId },
+        include: { items: true, payments: true },
+      });
+
+      for (const item of claimedSale.items) {
+        if (item.productId == null) continue;
+        const putBack = item.quantity - item.returnedQty;
+        if (putBack <= 0) continue;
+
+        await tx.product.update({
+          where: { id: item.productId },
+          data: { stock: { increment: putBack } },
+        });
+        // The units go back onto the colourway they were sold from.
+        await returnColorStock(tx, {
           productId: item.productId,
-          delta: putBack,
-          reason: "VOID",
-          orderId: saleId,
-          note: input.reason,
-          createdById: adminId,
-        },
-      });
-    }
+          color: item.color,
+          quantity: putBack,
+        });
+        await tx.product.updateMany({
+          where: {
+            id: item.productId,
+            stock: { gt: 0 },
+            status: "OUT_OF_STOCK",
+          },
+          data: { status: "ACTIVE" },
+        });
+        await tx.stockMovement.create({
+          data: {
+            productId: item.productId,
+            delta: putBack,
+            reason: "VOID",
+            orderId: saleId,
+            note: input.reason,
+            createdById: adminId,
+          },
+        });
+      }
 
-    // Money already taken is handed back, recorded as a negative payment so
-    // the day's cash total nets out correctly.
-    const refundable = roundMoney(claimedSale.amountPaid);
-    const refundedBefore = claimedSale.payments.some((payment) => payment.amount < 0);
+      // Money already taken is handed back, recorded as a negative payment so
+      // the day's cash total nets out correctly.
+      const refundable = roundMoney(claimedSale.amountPaid);
+      const refundedBefore = claimedSale.payments.some(
+        (payment) => payment.amount < 0,
+      );
 
-    if (refundable > 0) {
-      await tx.payment.create({
+      if (refundable > 0) {
+        await tx.payment.create({
+          data: {
+            orderId: saleId,
+            method:
+              claimedSale.payments.find((payment) => payment.amount > 0)
+                ?.method ?? "CASH",
+            amount: -refundable,
+            reference: `Bill cancelled: ${input.reason}`,
+            createdById: adminId,
+          },
+        });
+      }
+
+      return tx.order.update({
+        where: { id: saleId },
         data: {
-          orderId: saleId,
-          method:
-            claimedSale.payments.find((payment) => payment.amount > 0)?.method ?? "CASH",
-          amount: -refundable,
-          reference: `Bill cancelled: ${input.reason}`,
-          createdById: adminId,
+          amountPaid: 0,
+          balanceDueDate: null,
+          paymentStatus:
+            refundable > 0 || refundedBefore ? "REFUNDED" : "PENDING",
         },
+        include: saleInclude,
       });
-    }
-
-    return tx.order.update({
-      where: { id: saleId },
-      data: {
-        amountPaid: 0,
-        balanceDueDate: null,
-        paymentStatus:
-          refundable > 0 || refundedBefore ? "REFUNDED" : "PENDING",
-      },
-      include: saleInclude,
-    });
-  }, { timeout: 20_000 });
+    },
+    { timeout: 20_000 },
+  );
 }
 
 /**
@@ -802,9 +838,9 @@ export async function returnSaleItems(
               orderId: saleId,
               note: input.restock
                 ? input.reason || null
-                : [input.reason, "Not resellable — not put back into stock"]
+                : [input.reason, "Not resellable - not put back into stock"]
                     .filter(Boolean)
-                    .join(" — "),
+                    .join(" - "),
               createdById: adminId,
             },
           });

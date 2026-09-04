@@ -15,7 +15,7 @@ import { AppError } from "@/lib/errors";
  * paid, and only after its signature, merchant id, currency and amount have
  * all been checked against the order we hold.
  *
- * MD5 here is not a security choice of ours — it is the signature algorithm
+ * MD5 here is not a security choice of ours - it is the signature algorithm
  * PayHere specifies, and both sides must agree. It is used only to
  * authenticate a message against a shared secret, and every comparison below
  * is constant-time so the digest cannot be guessed a byte at a time.
@@ -92,7 +92,7 @@ const md5Upper = (value: string) =>
   crypto.createHash("md5").update(value, "utf8").digest("hex").toUpperCase();
 
 /**
- * `number_format($amount, 2, '.', '')` — PayHere signs the amount exactly as
+ * `number_format($amount, 2, '.', '')` - PayHere signs the amount exactly as
  * it is sent, so a stray thousands separator or a third decimal makes a hash
  * that will not match and a payment that will not start.
  */
@@ -110,19 +110,19 @@ export const formatPayHereAmount = (amount: number) =>
  * a fraction, and hand the gateway's genuine reply back to us as proof the
  * full amount was paid.
  *
- * Padding to a fixed width does not make the concatenation injective — the
- * digest cannot tell the two readings apart, and nothing on our side can —
+ * Padding to a fixed width does not make the concatenation injective - the
+ * digest cannot tell the two readings apart, and nothing on our side can -
  * but it does mean a re-split produces an order id of the wrong length. The
  * callback PayHere sends for the shifted charge then names no order we will
  * accept, so the attack only survives if the reply is intercepted and rewritten
  * on the way. That is what PayHere's domain restriction on `notify_url` exists
- * to stop, and why registering the domain is not optional — see README.
+ * to stop, and why registering the domain is not optional - see README.
  */
 const ORDER_ID_WIDTH = 12;
 const ORDER_ID_PATTERN = new RegExp(`^\\d{${ORDER_ID_WIDTH}}$`);
-/** `1234.00` — the exact shape `number_format($amount, 2, '.', '')` produces. */
+/** `1234.00` - the exact shape `number_format($amount, 2, '.', '')` produces. */
 const AMOUNT_PATTERN = /^\d+\.\d{2}$/;
-/** `2`, `0`, `-1`, `-2`, `-3` — every code PayHere defines, and nothing else. */
+/** `2`, `0`, `-1`, `-2`, `-3` - every code PayHere defines, and nothing else. */
 const STATUS_PATTERN = /^-?\d$/;
 
 export const formatPayHereOrderId = (orderId: number | string) =>
@@ -157,7 +157,11 @@ const checkoutHash = (params: {
  * if one is blank, so anything optional on our side gets a usable stand-in
  * rather than an empty string.
  */
-const clamp = (value: string | null | undefined, max: number, fallback = "") => {
+const clamp = (
+  value: string | null | undefined,
+  max: number,
+  fallback = "",
+) => {
   const trimmed = (value ?? "").replace(/\s+/g, " ").trim();
   return (trimmed || fallback).slice(0, max);
 };
@@ -315,7 +319,7 @@ export const verifyPayHereNotification = (
 
   // Shape first, digest second. Because the signed fields are concatenated
   // without separators, a message whose order id or amount is not in exactly
-  // the form we send is one whose field boundaries we cannot trust — see
+  // the form we send is one whose field boundaries we cannot trust - see
   // ORDER_ID_WIDTH. Rejecting it here costs a genuine payment nothing: every
   // value below is echoed back exactly as we sent it.
   if (!ORDER_ID_PATTERN.test(received.orderId)) {
@@ -365,7 +369,9 @@ export const verifyPayHereNotification = (
 
 /** Absolute URL on this site, for the three callbacks PayHere needs. */
 const siteUrl = (path: string) => {
-  const base = (process.env.NEXT_PUBLIC_SITE_URL || "").trim().replace(/\/+$/, "");
+  const base = (process.env.NEXT_PUBLIC_SITE_URL || "")
+    .trim()
+    .replace(/\/+$/, "");
   if (!base) {
     throw new AppError(
       "NEXT_PUBLIC_SITE_URL is not set, so PayHere has nowhere to send the customer back to.",

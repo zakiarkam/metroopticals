@@ -1,7 +1,7 @@
 -- A colourway can now carry its gallery photo, and its count becomes
 -- optional.
 --
--- "image" names one of products.images — the photo the gallery jumps to when
+-- "image" names one of products.images - the photo the gallery jumps to when
 -- the shopper picks the colour. "stock" loses NOT NULL (and its default): a
 -- NULL count means the colour has not been counted and falls back to the
 -- product total, so a colour can be given a photo before anyone has counted

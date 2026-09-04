@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
     const data = createPrescriptionSchema.parse(body);
 
     // A new chain needs a free slot; a re-test extends an existing chain and
-    // is bounded by its own per-chain version cap instead — otherwise a
+    // is bounded by its own per-chain version cap instead - otherwise a
     // customer whose eyes changed would be refused for owning too many.
     if (!data.supersedesId) await assertPrescriptionQuota(session.user.id);
 
@@ -58,7 +58,9 @@ export async function POST(request: NextRequest) {
       request,
       status: 201,
       durationMs: Date.now() - start,
-      action: data.supersedesId ? "prescription_new_version" : "prescription_create",
+      action: data.supersedesId
+        ? "prescription_new_version"
+        : "prescription_create",
       resourceId: prescription.id,
     });
 

@@ -7,7 +7,11 @@ import {
   updatePrescription,
 } from "@/features/prescriptions/services/prescription-service";
 import { requireAuth } from "@/lib/middleware/auth";
-import { createSuccessResponse, handleError, ValidationError } from "@/lib/errors";
+import {
+  createSuccessResponse,
+  handleError,
+  ValidationError,
+} from "@/lib/errors";
 import { logApiAction, logApiError } from "@/lib/audit";
 
 type Context = { params: Promise<{ id: string }> };
@@ -76,7 +80,7 @@ export async function DELETE(request: NextRequest, context: Context) {
     return createSuccessResponse({
       message: result.deleted
         ? "Prescription removed"
-        : "Prescription archived — it stays on the orders it was used for",
+        : "Prescription archived - it stays on the orders it was used for",
     });
   } catch (error) {
     await logApiError(error, { request, durationMs: Date.now() - start });

@@ -1,7 +1,7 @@
 -- Per-colour stock counts.
 --
--- `products.stock` stays the authoritative total — the POS, the reports and
--- the stock ledger all read it — and these rows split that total per colour
+-- `products.stock` stays the authoritative total - the POS, the reports and
+-- the stock ledger all read it - and these rows split that total per colour
 -- so the storefront can grey out a sold-out colourway and cap the quantity a
 -- shopper can order of it. A product with no rows behaves as before: every
 -- colour is treated as available while the total is above zero, so nothing

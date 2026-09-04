@@ -30,6 +30,7 @@ import {
 } from "@/features/orders/utils/order-display";
 import { savedLineTotal } from "@/features/pos/utils/bill";
 import { describeEye } from "@/features/lenses/utils/prescription";
+import OrderLensNote from "@/features/lenses/components/OrderLensNote";
 import { formatPd } from "@/features/lenses/constants/optics";
 import { ONLINE_PAYMENT_FEE_LABEL } from "@/features/checkout/utils/payment-fee";
 
@@ -199,7 +200,10 @@ const OrderDetailDialog: React.FC<OrderDetailDialogProps> = ({
         if (!open) onClose();
       }}
     >
-      <DialogContent hideClose className="max-w-4xl max-h-[90vh] flex flex-col p-0 overflow-hidden sm:p-0">
+      <DialogContent
+        hideClose
+        className="max-w-4xl max-h-[90vh] flex flex-col p-0 overflow-hidden sm:p-0"
+      >
         {/* Header (compact + responsive controls) */}
         <DialogHeader className="sticky top-0 z-10 bg-gray-2 border-b border-gray-3">
           <div className="px-3 py-2 md:px-4 md:py-3">
@@ -286,7 +290,7 @@ const OrderDetailDialog: React.FC<OrderDetailDialogProps> = ({
                     <Field label="Name" value={orderCustomerName(order)} />
                     <Field
                       label="Email"
-                      value={orderCustomerEmail(order) || "—"}
+                      value={orderCustomerEmail(order) || "-"}
                     />
                   </div>
                 </Section>
@@ -428,17 +432,28 @@ const OrderDetailDialog: React.FC<OrderDetailDialogProps> = ({
                                     </span>
                                   </p>
 
-                                  {item.prescriptionId && item.prescriptionHasImage && (
-                                    <a
-                                      href={`/api/prescriptions/${item.prescriptionId}/file`}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-blue/40 bg-white px-2.5 py-1.5 text-[11.5px] font-semibold text-blue transition-colors hover:bg-blue hover:text-white"
-                                    >
-                                      <FileText className="h-3.5 w-3.5" />
-                                      View the customer&apos;s prescription
-                                    </a>
-                                  )}
+                                  {/* The shop has to place a supplier order
+                                      for this pair before it can be cut, so
+                                      it is said on the line the counter
+                                      works from, not only on the invoice. */}
+                                  <OrderLensNote
+                                    isOrderLens={item.lensIsOrderLens}
+                                    leadTimeDays={item.lensLeadTimeDays}
+                                    className="mt-2"
+                                  />
+
+                                  {item.prescriptionId &&
+                                    item.prescriptionHasImage && (
+                                      <a
+                                        href={`/api/prescriptions/${item.prescriptionId}/file`}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-blue/40 bg-white px-2.5 py-1.5 text-[11.5px] font-semibold text-blue transition-colors hover:bg-blue hover:text-white"
+                                      >
+                                        <FileText className="h-3.5 w-3.5" />
+                                        View the customer&apos;s prescription
+                                      </a>
+                                    )}
 
                                   {item.lensRx && (
                                     <dl className="mt-1.5 space-y-0.5 font-mono text-[11px] leading-relaxed text-dark-3">
@@ -543,7 +558,9 @@ const OrderDetailDialog: React.FC<OrderDetailDialogProps> = ({
                   {order.channel === "POS" && (
                     <>
                       <div className="flex items-center justify-between gap-3">
-                        <span className="text-xs md:text-sm text-body">Paid</span>
+                        <span className="text-xs md:text-sm text-body">
+                          Paid
+                        </span>
                         <span className="text-xs md:text-sm font-semibold text-dark">
                           {formatPrice(order.amountPaid ?? 0)}
                         </span>
@@ -553,7 +570,9 @@ const OrderDetailDialog: React.FC<OrderDetailDialogProps> = ({
                           <span className="text-xs md:text-sm font-semibold text-red">
                             Balance due
                             {order.balanceDueDate
-                              ? ` by ${new Date(order.balanceDueDate).toLocaleDateString("en-GB", {
+                              ? ` by ${new Date(
+                                  order.balanceDueDate,
+                                ).toLocaleDateString("en-GB", {
                                   day: "2-digit",
                                   month: "short",
                                 })}`
@@ -567,7 +586,9 @@ const OrderDetailDialog: React.FC<OrderDetailDialogProps> = ({
                         </div>
                       ) : (
                         <div className="flex items-center justify-between gap-3">
-                          <span className="text-xs md:text-sm text-body">Balance</span>
+                          <span className="text-xs md:text-sm text-body">
+                            Balance
+                          </span>
                           <span className="inline-flex rounded-full border border-green/20 bg-green-light-6 px-2.5 py-0.5 text-xs font-medium text-green">
                             Settled
                           </span>
@@ -584,10 +605,13 @@ const OrderDetailDialog: React.FC<OrderDetailDialogProps> = ({
                                 {payment.amount < 0 ? "Refund" : "Payment"} ·{" "}
                                 {payment.method.replace("_", " ").toLowerCase()}
                                 {" · "}
-                                {new Date(payment.createdAt).toLocaleDateString("en-GB", {
-                                  day: "2-digit",
-                                  month: "short",
-                                })}
+                                {new Date(payment.createdAt).toLocaleDateString(
+                                  "en-GB",
+                                  {
+                                    day: "2-digit",
+                                    month: "short",
+                                  },
+                                )}
                               </span>
                               <span
                                 className={`font-medium tabular-nums ${

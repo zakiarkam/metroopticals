@@ -61,7 +61,7 @@ const envSchema = z.object({
   ADMIN_BOOTSTRAP_PASSWORD: z.string().optional(),
 
   // Reading a prescription off an uploaded photo, via Gemini. Unset simply
-  // hides the "Upload a photo" option — the manual form is always there, so
+  // hides the "Upload a photo" option - the manual form is always there, so
   // nothing breaks without it.
   PRESCRIPTION_OCR_PROVIDER: z.string().optional(),
   GEMINI_API_KEY: z.string().optional(),

@@ -44,7 +44,7 @@ const MyPrescriptionsPage = () => {
       <PageHero
         eyebrow="Your account"
         title="My prescriptions"
-        description="The powers we have on file for you. Pick one at checkout instead of typing it again — and when your eyes change, we keep the old one alongside the new."
+        description="The powers we have on file for you. Pick one at checkout instead of typing it again - and when your eyes change, we keep the old one alongside the new."
         crumbs={[
           { label: "My account", href: "/my-account" },
           { label: "Prescriptions" },

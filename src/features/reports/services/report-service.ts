@@ -12,7 +12,10 @@ import {
   orderCustomerEmail,
   orderCustomerName,
 } from "@/features/orders/utils/order-display";
-import { renderExcelReport, renderPdfReport } from "@/features/reports/services/report-render";
+import {
+  renderExcelReport,
+  renderPdfReport,
+} from "@/features/reports/services/report-render";
 
 type ReportRange = {
   startDate: Date;
@@ -39,7 +42,11 @@ export type ReportDataset = {
       lineDiscount: number;
       title: string | null;
       color: string | null;
-      product: { title: string; slug: string | null; sku: string | null } | null;
+      product: {
+        title: string;
+        slug: string | null;
+        sku: string | null;
+      } | null;
     }>;
     user: { name: string | null; email: string } | null;
     billingName: string;
@@ -70,7 +77,12 @@ export type ReportDataset = {
   }>;
   topProductDetails: Map<
     number,
-    { id: number; title: string; slug: string; category: { name: string } | null }
+    {
+      id: number;
+      title: string;
+      slug: string;
+      category: { name: string } | null;
+    }
   >;
   /** Money actually collected in the period, however the sale was made. */
   payments: Array<{
@@ -89,7 +101,7 @@ export type ChannelSummary = ReturnType<typeof summariseChannels>;
  * Website against counter, and how the counter's money came in.
  *
  * Revenue is counted from the bills (what was sold), collections from the
- * payments (what reached the till) — on a bill paid off in instalments those
+ * payments (what reached the till) - on a bill paid off in instalments those
  * are two different numbers, and cashing up needs the second one.
  */
 export const summariseChannels = (dataset: ReportDataset) => {
@@ -142,7 +154,9 @@ export const summariseChannels = (dataset: ReportDataset) => {
       refunded: value.refunded,
       net: value.collected - value.refunded,
     })),
-    byCashier: Array.from(cashiers.values()).sort((a, b) => b.billed - a.billed),
+    byCashier: Array.from(cashiers.values()).sort(
+      (a, b) => b.billed - a.billed,
+    ),
     counter: {
       bills: counterBills.length,
       cancelled: dataset.orders.filter(
@@ -158,10 +172,13 @@ export const summariseChannels = (dataset: ReportDataset) => {
   };
 };
 
-const sumRevenue = (orders: Array<{ status: OrderStatus; totalAmount: number }>) =>
+const sumRevenue = (
+  orders: Array<{ status: OrderStatus; totalAmount: number }>,
+) =>
   orders.reduce(
-    (sum, order) => (order.status === "CANCELLED" ? sum : sum + order.totalAmount),
-    0
+    (sum, order) =>
+      order.status === "CANCELLED" ? sum : sum + order.totalAmount,
+    0,
   );
 
 // Report boundaries are taken in the store's local time zone (Sri Lanka).
@@ -170,8 +187,13 @@ const TZ_OFFSET = "+05:30";
 const buildMonthlyRange = (month: string): ReportRange => {
   const [year, monthNum] = month.split("-").map(Number);
   const startDate = new Date(`${month}-01T00:00:00${TZ_OFFSET}`);
-  const nextMonth = monthNum === 12 ? `${year + 1}-01` : `${year}-${String(monthNum + 1).padStart(2, "0")}`;
-  const endDate = new Date(new Date(`${nextMonth}-01T00:00:00${TZ_OFFSET}`).getTime() - 1);
+  const nextMonth =
+    monthNum === 12
+      ? `${year + 1}-01`
+      : `${year}-${String(monthNum + 1).padStart(2, "0")}`;
+  const endDate = new Date(
+    new Date(`${nextMonth}-01T00:00:00${TZ_OFFSET}`).getTime() - 1,
+  );
   return {
     startDate,
     endDate,
@@ -199,7 +221,7 @@ export const resolveReportRange = (query: ReportQueryInput): ReportRange => {
 };
 
 export const fetchReportDataset = async (
-  range: ReportRange
+  range: ReportRange,
 ): Promise<ReportDataset> => {
   const { startDate, endDate } = range;
 
@@ -292,7 +314,7 @@ export const fetchReportDataset = async (
     include: { category: true },
   });
   const topProductDetails = new Map(
-    topProducts.map((product) => [product.id, product])
+    topProducts.map((product) => [product.id, product]),
   );
 
   return {
@@ -308,11 +330,13 @@ export const fetchReportDataset = async (
 
 export const buildMonthlySummaryFromDataset = (
   range: ReportRange,
-  dataset: ReportDataset
+  dataset: ReportDataset,
 ): MonthlyReportData => {
   // A cancelled bill brought in nothing, so it belongs in neither the count
   // nor the average  counting it would quietly drag the average sale down.
-  const liveOrders = dataset.orders.filter((order) => order.status !== "CANCELLED");
+  const liveOrders = dataset.orders.filter(
+    (order) => order.status !== "CANCELLED",
+  );
   const totalRevenue = sumRevenue(dataset.orders);
   const totalOrders = liveOrders.length;
   const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
@@ -333,7 +357,7 @@ export const buildMonthlySummaryFromDataset = (
 
 export async function generateExcelReportForRange(
   range: ReportRange,
-  dataset?: ReportDataset
+  dataset?: ReportDataset,
 ): Promise<Buffer> {
   const data = dataset ?? (await fetchReportDataset(range));
   return renderExcelReport(range, data, summariseChannels(data));
@@ -341,7 +365,7 @@ export async function generateExcelReportForRange(
 
 export async function generatePDFReportForRange(
   range: ReportRange,
-  dataset?: ReportDataset
+  dataset?: ReportDataset,
 ): Promise<Buffer> {
   const data = dataset ?? (await fetchReportDataset(range));
   return renderPdfReport(range, data, summariseChannels(data));
@@ -359,7 +383,7 @@ interface MonthlyReportData {
 
 export const buildReportPayload = (
   range: ReportRange,
-  dataset: ReportDataset
+  dataset: ReportDataset,
 ): ReportExportPayload => {
   const summary = buildMonthlySummaryFromDataset(range, dataset);
 
@@ -426,7 +450,7 @@ const normalizeMonth = (month?: string) => {
 };
 
 export async function generateMonthlyReport(
-  query: ReportQueryInput
+  query: ReportQueryInput,
 ): Promise<MonthlyReportResult> {
   const range = resolveReportRange(query);
   const month = normalizeMonth(query.month);

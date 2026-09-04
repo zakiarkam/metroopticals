@@ -17,14 +17,19 @@ const isMockEmail = () =>
   (!process.env.RESEND_API_KEY && process.env.NODE_ENV !== "production");
 
 const mockEmails = {
-  async send(payload: { to?: string | string[]; subject?: string; [key: string]: unknown }) {
+  async send(payload: {
+    to?: string | string[];
+    subject?: string;
+    [key: string]: unknown;
+  }) {
     // eslint-disable-next-line no-console
     console.info(
       `[mock email] to=${Array.isArray(payload.to) ? payload.to.join(",") : payload.to} subject="${payload.subject}"`,
     );
-    return { data: { id: `mock-${Date.now()}` }, error: null } as unknown as ReturnType<
-      Resend["emails"]["send"]
-    >;
+    return {
+      data: { id: `mock-${Date.now()}` },
+      error: null,
+    } as unknown as ReturnType<Resend["emails"]["send"]>;
   },
 };
 
@@ -43,7 +48,9 @@ const getResend = (): Resend => {
 /** Proxy so existing `resend.emails.send(...)` call sites keep working. */
 const resend = {
   get emails() {
-    return isMockEmail() ? (mockEmails as unknown as Resend["emails"]) : getResend().emails;
+    return isMockEmail()
+      ? (mockEmails as unknown as Resend["emails"])
+      : getResend().emails;
   },
 };
 
@@ -51,7 +58,7 @@ type OrderItem = {
   quantity: number;
   price: number; // unit price, lenses included
   color?: string | null; // the colourway as sold
-  /** "Blue Cut (Grey) lenses" — set when the frame was sold with lenses. */
+  /** "Blue Cut (Grey) lenses" - set when the frame was sold with lenses. */
   lensLabel?: string | null;
   product?: {
     title?: string;
@@ -545,7 +552,8 @@ export async function sendOrderStatusUpdateEmail({
   orderNumber: string;
   status: "CONFIRMED" | "SHIPPED" | "DELIVERED" | "CANCELLED";
 }) {
-  if (!isResendConfigured() && !isMockEmail()) throw new Error("Resend API key not configured");
+  if (!isResendConfigured() && !isMockEmail())
+    throw new Error("Resend API key not configured");
 
   const baseUrl = getEmailBaseUrl();
 
@@ -575,7 +583,8 @@ export async function sendOrderStatusUpdateEmail({
 }
 
 export async function sendPasswordResetEmail(email: string, token: string) {
-  if (!isResendConfigured() && !isMockEmail()) throw new Error("Resend API key not configured");
+  if (!isResendConfigured() && !isMockEmail())
+    throw new Error("Resend API key not configured");
 
   const emailFrom =
     process.env.EMAIL_FROM || "Metro Opticals <noreply@metroopticals.lk>";
@@ -813,7 +822,8 @@ function renderWelcomeEmail({
 }
 
 export async function sendWelcomeEmail(email: string, name?: string) {
-  if (!isResendConfigured() && !isMockEmail()) throw new Error("Resend API key not configured");
+  if (!isResendConfigured() && !isMockEmail())
+    throw new Error("Resend API key not configured");
 
   const baseUrl = getEmailBaseUrl();
 
@@ -1158,7 +1168,8 @@ export async function sendOrderConfirmationEmail(
   orderId: number | string,
   orderDetails: OrderDetails,
 ) {
-  if (!isResendConfigured() && !isMockEmail()) throw new Error("Resend API key not configured");
+  if (!isResendConfigured() && !isMockEmail())
+    throw new Error("Resend API key not configured");
 
   const baseUrl = getEmailBaseUrl();
 
@@ -1185,7 +1196,8 @@ export async function sendOrderNotificationToAdmin(
   orderNumber: string,
   orderDetails: OrderDetails,
 ) {
-  if (!isResendConfigured() && !isMockEmail()) throw new Error("Resend API key not configured");
+  if (!isResendConfigured() && !isMockEmail())
+    throw new Error("Resend API key not configured");
 
   const baseUrl = getEmailBaseUrl();
 
@@ -1220,7 +1232,8 @@ export async function sendContactFormEmail(
     message: string;
   },
 ) {
-  if (!isResendConfigured() && !isMockEmail()) throw new Error("Resend API key not configured");
+  if (!isResendConfigured() && !isMockEmail())
+    throw new Error("Resend API key not configured");
 
   const baseUrl = getEmailBaseUrl();
 

@@ -69,7 +69,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     const remainingSlots = maxFiles - images.length;
     if (remainingSlots <= 0) {
       Toast.warning(
-        `Only ${maxFiles} image${maxFiles !== 1 ? "s" : ""} are allowed`
+        `Only ${maxFiles} image${maxFiles !== 1 ? "s" : ""} are allowed`,
       );
       return;
     }
@@ -88,7 +88,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
 
     if (blockedFiles.length > 0) {
       Toast.warning(
-        "HEIC/HEIF files are not supported. Please convert them to JPG or PNG."
+        "HEIC/HEIF files are not supported. Please convert them to JPG or PNG.",
       );
     }
 
@@ -102,7 +102,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
       Toast.warning(
         `Only ${remainingSlots} more file${
           remainingSlots !== 1 ? "s" : ""
-        } can be uploaded`
+        } can be uploaded`,
       );
     }
 
@@ -110,7 +110,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     const toastId = Toast.loading(
       `Uploading ${filesToUpload.length} image${
         filesToUpload.length > 1 ? "s" : ""
-      }...`
+      }...`,
     );
 
     try {
@@ -120,7 +120,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
         const response = await uploadApi.uploadFile(
           file,
           "product/image",
-          newFileName
+          newFileName,
         );
         return response.fileName || newFileName;
       });
@@ -208,7 +208,9 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
             <div key={fileName} className="relative group">
               <div className="relative w-full h-32 rounded-lg border border-gray-3 overflow-hidden bg-gray-1">
                 <Image
-                  src={getProductImageUrl(fileName) ?? "/images/placeholder.jpg"}
+                  src={
+                    getProductImageUrl(fileName) ?? "/images/placeholder.jpg"
+                  }
                   alt={`Product ${index + 1}`}
                   fill
                   sizes="(max-width: 768px) 100vw, 200px"
@@ -264,7 +266,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
             {/* One shape everywhere: the shop, the product page, the till and
                 the cart all crop to a square, so shoot square. */}
             <p className="text-xs text-gray-400 mt-0.5">
-              Square photos work best (1:1, e.g. 1200 × 1200px) — every page
+              Square photos work best (1:1, e.g. 1200 × 1200px) - every page
               shows them square.
             </p>
           </label>

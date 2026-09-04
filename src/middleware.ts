@@ -21,11 +21,11 @@ import { safeRedirectPath } from "@/lib/safe-redirect";
  * document: a shopper reaching /checkout from the cart is still running the
  * cart's policy, so a per-path exception would never be the one in force at
  * the moment the payment form is submitted. The browser would block the
- * hand-off silently — no error to catch, no page to show — and the order
+ * hand-off silently - no error to catch, no page to show - and the order
  * would sit unpaid with its stock held.
  *
  * So: one origin, site-wide, only while the gateway is on, and only the one
- * actually in use — production never permits posting to the sandbox host.
+ * actually in use - production never permits posting to the sandbox host.
  */
 const paymentFormAction = () => {
   if (process.env.NEXT_PUBLIC_PAYHERE_ENABLED?.trim() !== "true") return "";
@@ -153,7 +153,9 @@ export async function middleware(request: NextRequest) {
   const clearDeadCookie = (response: NextResponse) => {
     if (deadCookie) {
       response.cookies.delete(
-        secureCookie ? "__Secure-next-auth.session-token" : "next-auth.session-token",
+        secureCookie
+          ? "__Secure-next-auth.session-token"
+          : "next-auth.session-token",
       );
     }
     return response;

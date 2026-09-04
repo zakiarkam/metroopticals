@@ -17,7 +17,7 @@ export default function ProductGallery({
   title: string;
   /** Discount flag and availability chip, drawn over the main plate. */
   badges?: React.ReactNode;
-  /** Land the gallery on this image — set when a colourway with a tagged
+  /** Land the gallery on this image - set when a colourway with a tagged
       photo is picked. Null asks for no jump; browsing stays free after. */
   jumpToIndex?: number | null;
   /** Changes with each pick (the colour name), so choosing another colour

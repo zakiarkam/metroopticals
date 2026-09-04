@@ -6,7 +6,7 @@ export class AppError extends Error {
   constructor(
     public message: string,
     public statusCode: number = 500,
-    public code?: string
+    public code?: string,
   ) {
     super(message);
     this.name = "AppError";
@@ -35,7 +35,10 @@ export class ForbiddenError extends AppError {
 }
 
 export class ValidationError extends AppError {
-  constructor(message: string = "Validation failed", public errors?: any) {
+  constructor(
+    message: string = "Validation failed",
+    public errors?: any,
+  ) {
     super(message, 400, "VALIDATION_ERROR");
     this.name = "ValidationError";
   }
@@ -56,7 +59,7 @@ export function handleError(error: unknown): NextResponse {
           message: err.message,
         })),
       },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -68,7 +71,7 @@ export function handleError(error: unknown): NextResponse {
         message: error.message,
         code: error.code,
       },
-      { status: error.statusCode }
+      { status: error.statusCode },
     );
   }
 
@@ -83,7 +86,7 @@ export function handleError(error: unknown): NextResponse {
           message: "A record with this value already exists",
           code: "DUPLICATE_ENTRY",
         },
-        { status: 409 }
+        { status: 409 },
       );
     }
 
@@ -94,22 +97,22 @@ export function handleError(error: unknown): NextResponse {
           message: "Record not found",
           code: "NOT_FOUND",
         },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
     // A write that ran out of its transaction budget. Nothing was saved, and
     // trying again usually works, so say that rather than "internal server
-    // error" — which reads as "your data is gone" and is not what happened.
+    // error" - which reads as "your data is gone" and is not what happened.
     if (prismaError.code === "P2028") {
       return NextResponse.json(
         {
           error: true,
           message:
-            "That took too long and was rolled back — nothing was saved. Please try again.",
+            "That took too long and was rolled back - nothing was saved. Please try again.",
           code: "TRANSACTION_TIMEOUT",
         },
-        { status: 503 }
+        { status: 503 },
       );
     }
   }
@@ -122,23 +125,23 @@ export function handleError(error: unknown): NextResponse {
         process.env.NODE_ENV === "production"
           ? "Internal server error"
           : error instanceof Error
-          ? error.message
-          : "Unknown error",
+            ? error.message
+            : "Unknown error",
       code: "INTERNAL_ERROR",
     },
-    { status: 500 }
+    { status: 500 },
   );
 }
 
 export function createSuccessResponse<T>(
   data: T,
-  status: number = 200
+  status: number = 200,
 ): NextResponse {
   return NextResponse.json(
     {
       success: true,
       data,
     },
-    { status }
+    { status },
   );
 }

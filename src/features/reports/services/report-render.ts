@@ -52,7 +52,8 @@ const rgb = (hex: string): [number, number, number] => [
   parseInt(hex.slice(4, 6), 16),
 ];
 
-const round2 = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
+const round2 = (value: number) =>
+  Math.round((value + Number.EPSILON) * 100) / 100;
 
 const money = (value: number) =>
   `Rs ${new Intl.NumberFormat("en-LK", {
@@ -125,7 +126,9 @@ export function deriveFacts(
   const live = data.orders.filter((order) => order.status !== "CANCELLED");
   const cancelled = data.orders.length - live.length;
 
-  const revenue = round2(live.reduce((sum, order) => sum + order.totalAmount, 0));
+  const revenue = round2(
+    live.reduce((sum, order) => sum + order.totalAmount, 0),
+  );
   const collected = round2(
     data.payments.reduce((sum, payment) => sum + payment.amount, 0),
   );
@@ -145,13 +148,20 @@ export function deriveFacts(
       (sum, order) =>
         sum +
         order.discountAmount +
-        order.items.reduce((inner, item) => inner + (item.lineDiscount || 0), 0),
+        order.items.reduce(
+          (inner, item) => inner + (item.lineDiscount || 0),
+          0,
+        ),
       0,
     ),
   );
   const itemsSold = live.reduce(
     (sum, order) =>
-      sum + order.items.reduce((inner, item) => inner + item.quantity - item.returnedQty, 0),
+      sum +
+      order.items.reduce(
+        (inner, item) => inner + item.quantity - item.returnedQty,
+        0,
+      ),
     0,
   );
 
@@ -170,13 +180,24 @@ export function deriveFacts(
   const byDay = new Map(
     dayKeys.map((key) => [
       key,
-      { date: key, webOrders: 0, web: 0, counterBills: 0, counter: 0, collected: 0, items: 0 },
+      {
+        date: key,
+        webOrders: 0,
+        web: 0,
+        counterBills: 0,
+        counter: 0,
+        collected: 0,
+        items: 0,
+      },
     ]),
   );
   for (const order of live) {
     const row = byDay.get(shopDateKey(order.createdAt));
     if (!row) continue;
-    const quantity = order.items.reduce((sum, item) => sum + item.quantity - item.returnedQty, 0);
+    const quantity = order.items.reduce(
+      (sum, item) => sum + item.quantity - item.returnedQty,
+      0,
+    );
     if (order.channel === "POS") {
       row.counterBills += 1;
       row.counter = round2(row.counter + order.totalAmount);
@@ -215,7 +236,9 @@ export function deriveFacts(
     .map((row) => ({
       status: STATUS_LABEL[row.status] || row.status,
       count: row._count,
-      share: data.orders.length ? round2((row._count / data.orders.length) * 100) : 0,
+      share: data.orders.length
+        ? round2((row._count / data.orders.length) * 100)
+        : 0,
     }))
     .sort((a, b) => b.count - a.count);
 
@@ -254,7 +277,11 @@ export function deriveFacts(
 const headerRow = (sheet: ExcelJS.Worksheet, rowNumber = 1) => {
   const row = sheet.getRow(rowNumber);
   row.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 10.5 };
-  row.fill = { type: "pattern", pattern: "solid", fgColor: { argb: `FF${GOLD}` } };
+  row.fill = {
+    type: "pattern",
+    pattern: "solid",
+    fgColor: { argb: `FF${GOLD}` },
+  };
   row.alignment = { vertical: "middle" };
   row.height = 22;
 };
@@ -288,7 +315,11 @@ const sectionTitle = (sheet: ExcelJS.Worksheet, text: string) => {
 const miniHead = (sheet: ExcelJS.Worksheet, cells: string[]) => {
   const row = sheet.addRow(cells);
   row.font = { bold: true, color: { argb: `FF${INK}` }, size: 10 };
-  row.fill = { type: "pattern", pattern: "solid", fgColor: { argb: `FF${SAND}` } };
+  row.fill = {
+    type: "pattern",
+    pattern: "solid",
+    fgColor: { argb: `FF${SAND}` },
+  };
   row.eachCell((cell) => {
     cell.border = { bottom: { style: "thin", color: { argb: `FF${RULE}` } } };
   });
@@ -322,9 +353,13 @@ export async function renderExcelReport(
 
   summary.mergeCells("A1:E1");
   const title = summary.getCell("A1");
-  title.value = `${siteConfig.legalName.toUpperCase()} — ${facts.title.toUpperCase()}`;
+  title.value = `${siteConfig.legalName.toUpperCase()} - ${facts.title.toUpperCase()}`;
   title.font = { bold: true, size: 16, color: { argb: "FFFFFFFF" } };
-  title.fill = { type: "pattern", pattern: "solid", fgColor: { argb: `FF${INK}` } };
+  title.fill = {
+    type: "pattern",
+    pattern: "solid",
+    fgColor: { argb: `FF${INK}` },
+  };
   title.alignment = { vertical: "middle", indent: 1 };
   summary.getRow(1).height = 34;
 
@@ -332,29 +367,63 @@ export async function renderExcelReport(
   const period = summary.getCell("A2");
   period.value = `${facts.period}   ·   generated ${dmyTime(new Date())}`;
   period.font = { size: 10, color: { argb: "FFC9C0B2" } };
-  period.fill = { type: "pattern", pattern: "solid", fgColor: { argb: `FF${INK}` } };
+  period.fill = {
+    type: "pattern",
+    pattern: "solid",
+    fgColor: { argb: `FF${INK}` },
+  };
   period.alignment = { vertical: "middle", indent: 1 };
   summary.getRow(2).height = 20;
   summary.addRow([]);
 
   sectionTitle(summary, "AT A GLANCE");
   const kpiRows: Array<[string, number | string, string]> = [
-    ["Revenue", facts.kpis.revenue, "Bills and orders in the period, cancelled ones left out"],
+    [
+      "Revenue",
+      facts.kpis.revenue,
+      "Bills and orders in the period, cancelled ones left out",
+    ],
     ["Sales", facts.kpis.sales, "Counter bills and website orders together"],
     ["Average sale", facts.kpis.averageSale, ""],
     ["Items sold", facts.kpis.itemsSold, "Net of anything returned"],
-    ["Collected", facts.kpis.collected, "Money that actually came in, refunds netted off"],
+    [
+      "Collected",
+      facts.kpis.collected,
+      "Money that actually came in, refunds netted off",
+    ],
     ["Refunded", facts.kpis.refunded, ""],
-    ["Still to collect", facts.kpis.outstanding, "Balances owed on part-paid bills"],
-    ["Discounts given", facts.kpis.discounts, "Line and bill discounts together"],
-    ["Cancelled", facts.kpis.cancelled, "Bills and orders cancelled in the period"],
+    [
+      "Still to collect",
+      facts.kpis.outstanding,
+      "Balances owed on part-paid bills",
+    ],
+    [
+      "Discounts given",
+      facts.kpis.discounts,
+      "Line and bill discounts together",
+    ],
+    [
+      "Cancelled",
+      facts.kpis.cancelled,
+      "Bills and orders cancelled in the period",
+    ],
     ["New website accounts", facts.kpis.newAccounts, ""],
   ];
   miniHead(summary, ["Measure", "Value", "", "Note"]);
   kpiRows.forEach(([label, value, note]) => {
     const row = summary.addRow([label, value, "", note]);
     row.getCell(1).font = { bold: true };
-    if (typeof value === "number" && !Number.isInteger(value) || ["Revenue", "Average sale", "Collected", "Refunded", "Still to collect", "Discounts given"].includes(label)) {
+    if (
+      (typeof value === "number" && !Number.isInteger(value)) ||
+      [
+        "Revenue",
+        "Average sale",
+        "Collected",
+        "Refunded",
+        "Still to collect",
+        "Discounts given",
+      ].includes(label)
+    ) {
       row.getCell(2).numFmt = "#,##0.00";
     }
     row.getCell(2).alignment = { horizontal: "right" };
@@ -400,7 +469,12 @@ export async function renderExcelReport(
     summary.addRow(["No counter bills in this period"]);
   }
   facts.channels.byCashier.forEach((row) => {
-    const added = summary.addRow([row.name, row.bills, round2(row.billed), round2(row.collected)]);
+    const added = summary.addRow([
+      row.name,
+      row.bills,
+      round2(row.billed),
+      round2(row.collected),
+    ]);
     [3, 4].forEach((c) => (added.getCell(c).numFmt = "#,##0.00"));
   });
   summary.addRow([]);
@@ -442,7 +516,11 @@ export async function renderExcelReport(
     items: facts.daily.reduce((s, r) => s + r.items, 0),
   });
   dailyTotal.font = { bold: true };
-  dailyTotal.fill = { type: "pattern", pattern: "solid", fgColor: { argb: `FF${GOLD_SOFT}` } };
+  dailyTotal.fill = {
+    type: "pattern",
+    pattern: "solid",
+    fgColor: { argb: `FF${GOLD_SOFT}` },
+  };
   moneyColumns(dailySheet, ["web", "counter", "total", "collected"]);
   zebra(dailySheet, 2);
 
@@ -484,7 +562,8 @@ export async function renderExcelReport(
       paid: round2(order.amountPaid),
       balance: round2(Math.max(0, order.totalAmount - order.amountPaid)),
       paymentStatus: PAYMENT_LABEL[order.paymentStatus] || order.paymentStatus,
-      method: METHOD_LABEL[order.paymentMethod || ""] || order.paymentMethod || "",
+      method:
+        METHOD_LABEL[order.paymentMethod || ""] || order.paymentMethod || "",
       status: STATUS_LABEL[order.status] || order.status,
     });
   });
@@ -634,7 +713,11 @@ export async function renderPdfReport(
   const rule = rgb(RULE);
   const ivory = rgb(IVORY);
 
-  const text = (color: RGB, size: number, style: "normal" | "bold" = "normal") => {
+  const text = (
+    color: RGB,
+    size: number,
+    style: "normal" | "bold" = "normal",
+  ) => {
     doc.setTextColor(color[0], color[1], color[2]);
     doc.setFontSize(size);
     doc.setFont("helvetica", style);
@@ -664,7 +747,10 @@ export async function renderPdfReport(
     doc.text(siteConfig.contact.address, textX, 24.5);
 
     text([192, 156, 108], 7, "bold");
-    doc.text(facts.title.toUpperCase(), pageW - mx, 12, { align: "right", charSpace: 0.5 });
+    doc.text(facts.title.toUpperCase(), pageW - mx, 12, {
+      align: "right",
+      charSpace: 0.5,
+    });
     text([255, 255, 255], 11, "bold");
     doc.text(facts.period, pageW - mx, 19, { align: "right" });
     text([201, 192, 178], 7.5);
@@ -681,8 +767,12 @@ export async function renderPdfReport(
       mx,
       pageH - 8,
     );
-    doc.text(`Generated ${dmyTime(new Date())}`, pageW / 2, pageH - 8, { align: "center" });
-    doc.text(`Page ${page} of ${total}`, pageW - mx, pageH - 8, { align: "right" });
+    doc.text(`Generated ${dmyTime(new Date())}`, pageW / 2, pageH - 8, {
+      align: "center",
+    });
+    doc.text(`Page ${page} of ${total}`, pageW - mx, pageH - 8, {
+      align: "right",
+    });
   };
 
   const heading = (label: string, y: number) => {
@@ -697,7 +787,12 @@ export async function renderPdfReport(
   const tableStyle = {
     theme: "plain" as const,
     styles: { fontSize: 8, cellPadding: 2, textColor: ink, lineWidth: 0 },
-    headStyles: { fillColor: sand, textColor: gold, fontStyle: "bold" as const, fontSize: 7.5 },
+    headStyles: {
+      fillColor: sand,
+      textColor: gold,
+      fontStyle: "bold" as const,
+      fontSize: 7.5,
+    },
     alternateRowStyles: { fillColor: ivory },
     margin: { left: mx, right: mx },
   };
@@ -707,18 +802,49 @@ export async function renderPdfReport(
   let y = 40;
 
   // KPI tiles: the six numbers the owner asks for first.
-  const tiles: Array<{ label: string; value: string; note: string; tone?: RGB }> = [
-    { label: "Revenue", value: moneyShort(facts.kpis.revenue), note: `${facts.kpis.sales} sales` },
-    { label: "Collected", value: moneyShort(facts.kpis.collected), note: facts.kpis.refunded > 0 ? `${moneyShort(facts.kpis.refunded)} refunded` : "no refunds" },
+  const tiles: Array<{
+    label: string;
+    value: string;
+    note: string;
+    tone?: RGB;
+  }> = [
+    {
+      label: "Revenue",
+      value: moneyShort(facts.kpis.revenue),
+      note: `${facts.kpis.sales} sales`,
+    },
+    {
+      label: "Collected",
+      value: moneyShort(facts.kpis.collected),
+      note:
+        facts.kpis.refunded > 0
+          ? `${moneyShort(facts.kpis.refunded)} refunded`
+          : "no refunds",
+    },
     {
       label: "Still to collect",
       value: moneyShort(facts.kpis.outstanding),
-      note: facts.kpis.outstanding > 0 ? "on part-paid bills" : "everything settled",
+      note:
+        facts.kpis.outstanding > 0
+          ? "on part-paid bills"
+          : "everything settled",
       tone: facts.kpis.outstanding > 0 ? rgb(RED) : rgb(GREEN),
     },
-    { label: "Average sale", value: moneyShort(facts.kpis.averageSale), note: `${facts.kpis.itemsSold} items sold` },
-    { label: "Discounts given", value: moneyShort(facts.kpis.discounts), note: "line and bill discounts" },
-    { label: "Cancelled", value: String(facts.kpis.cancelled), note: `${facts.kpis.newAccounts} new website accounts` },
+    {
+      label: "Average sale",
+      value: moneyShort(facts.kpis.averageSale),
+      note: `${facts.kpis.itemsSold} items sold`,
+    },
+    {
+      label: "Discounts given",
+      value: moneyShort(facts.kpis.discounts),
+      note: "line and bill discounts",
+    },
+    {
+      label: "Cancelled",
+      value: String(facts.kpis.cancelled),
+      note: `${facts.kpis.newAccounts} new website accounts`,
+    },
   ];
   const tileW = (contentW - 4 * 2) / 3;
   const tileH = 20;
@@ -752,7 +878,9 @@ export async function renderPdfReport(
     doc.line(mx, gy, pageW - mx, gy);
     if (peak > 0) {
       text(muted, 6);
-      doc.text(moneyShort(peak * fraction), mx - 1, gy + 1.5, { align: "right" });
+      doc.text(moneyShort(peak * fraction), mx - 1, gy + 1.5, {
+        align: "right",
+      });
     }
   });
   doc.setLineWidth(0.4);
@@ -761,7 +889,8 @@ export async function renderPdfReport(
 
   if (peak > 0) {
     const gap = facts.daily.length > 40 ? 0.4 : 1;
-    const barW = (contentW - gap * (facts.daily.length - 1)) / facts.daily.length;
+    const barW =
+      (contentW - gap * (facts.daily.length - 1)) / facts.daily.length;
     facts.daily.forEach((row, index) => {
       const x = mx + index * (barW + gap);
       const webH = (row.web / peak) * chartH;
@@ -772,15 +901,26 @@ export async function renderPdfReport(
       }
       if (webH > 0) {
         doc.setFillColor(109, 69, 184);
-        doc.rect(x, chartBottom - counterH - webH - (counterH > 0 ? 0.3 : 0), barW, webH, "F");
+        doc.rect(
+          x,
+          chartBottom - counterH - webH - (counterH > 0 ? 0.3 : 0),
+          barW,
+          webH,
+          "F",
+        );
       }
     });
     // First, last, and the busiest day are labelled; the rest are in the sheet.
     text(muted, 6.5);
     doc.text(dayLabel(facts.daily[0].date), mx, chartBottom + 4);
-    doc.text(dayLabel(facts.daily[facts.daily.length - 1].date), pageW - mx, chartBottom + 4, {
-      align: "right",
-    });
+    doc.text(
+      dayLabel(facts.daily[facts.daily.length - 1].date),
+      pageW - mx,
+      chartBottom + 4,
+      {
+        align: "right",
+      },
+    );
     if (facts.busiest && facts.busiest.total > 0) {
       text(ink, 7, "bold");
       doc.text(
@@ -792,7 +932,9 @@ export async function renderPdfReport(
     }
   } else {
     text(muted, 8);
-    doc.text("No sales in this period", pageW / 2, chartTop + chartH / 2, { align: "center" });
+    doc.text("No sales in this period", pageW / 2, chartTop + chartH / 2, {
+      align: "center",
+    });
   }
   // legend
   const legendY = chartBottom + 9;
@@ -819,7 +961,11 @@ export async function renderPdfReport(
       money(row.collected),
     ]),
     margin: { left: mx, right: mx + halfW + 6 },
-    columnStyles: { 1: { halign: "center" }, 2: { halign: "right" }, 3: { halign: "right" } },
+    columnStyles: {
+      1: { halign: "center" },
+      2: { halign: "right" },
+      3: { halign: "right" },
+    },
   });
   const leftEnd = (doc as any).lastAutoTable?.finalY || y;
   autoTable(doc, {
@@ -836,7 +982,11 @@ export async function renderPdfReport(
           ])
         : [["No payments recorded", "", "", ""]],
     margin: { left: mx + halfW + 6, right: mx },
-    columnStyles: { 1: { halign: "right" }, 2: { halign: "right" }, 3: { halign: "right" } },
+    columnStyles: {
+      1: { halign: "right" },
+      2: { halign: "right" },
+      3: { halign: "right" },
+    },
   });
   y = Math.max(leftEnd, (doc as any).lastAutoTable?.finalY || y) + 10;
 
@@ -846,7 +996,11 @@ export async function renderPdfReport(
       ...tableStyle,
       startY: y,
       head: [["Status", "Count", "Share"]],
-      body: facts.statusRows.map((row) => [row.status, String(row.count), `${row.share.toFixed(1)}%`]),
+      body: facts.statusRows.map((row) => [
+        row.status,
+        String(row.count),
+        `${row.share.toFixed(1)}%`,
+      ]),
       margin: { left: mx, right: mx + halfW + 6 },
       columnStyles: { 1: { halign: "center" }, 2: { halign: "right" } },
     });
@@ -865,7 +1019,11 @@ export async function renderPdfReport(
             ])
           : [["No counter bills", "", "", ""]],
       margin: { left: mx + halfW + 6, right: mx },
-      columnStyles: { 1: { halign: "center" }, 2: { halign: "right" }, 3: { halign: "right" } },
+      columnStyles: {
+        1: { halign: "center" },
+        2: { halign: "right" },
+        3: { halign: "right" },
+      },
     });
     y = Math.max(statusEnd, (doc as any).lastAutoTable?.finalY || y);
   }
@@ -890,7 +1048,11 @@ export async function renderPdfReport(
             money(row.revenue),
           ])
         : [["", "Nothing sold in this period", "", "", "", ""]],
-    columnStyles: { 0: { cellWidth: 8 }, 4: { halign: "center" }, 5: { halign: "right" } },
+    columnStyles: {
+      0: { cellWidth: 8 },
+      4: { halign: "center" },
+      5: { halign: "right" },
+    },
   });
   y = ((doc as any).lastAutoTable?.finalY || y) + 10;
 
@@ -901,17 +1063,23 @@ export async function renderPdfReport(
     head: [["Product", "Code", "Category", "In stock", "Price"]],
     body:
       facts.lowStock.length > 0
-        ? facts.lowStock.slice(0, 40).map((product) => [
-            product.title,
-            product.slug,
-            product.category?.name || "",
-            product.stock <= 0 ? "Out" : String(product.stock),
-            money(product.price),
-          ])
+        ? facts.lowStock
+            .slice(0, 40)
+            .map((product) => [
+              product.title,
+              product.slug,
+              product.category?.name || "",
+              product.stock <= 0 ? "Out" : String(product.stock),
+              money(product.price),
+            ])
         : [["Nothing is running low", "", "", "", ""]],
     columnStyles: { 3: { halign: "center" }, 4: { halign: "right" } },
     didParseCell: (hook) => {
-      if (hook.section === "body" && hook.column.index === 3 && hook.cell.raw === "Out") {
+      if (
+        hook.section === "body" &&
+        hook.column.index === 3 &&
+        hook.cell.raw === "Out"
+      ) {
         hook.cell.styles.textColor = rgb(RED);
         hook.cell.styles.fontStyle = "bold";
       }
@@ -920,7 +1088,11 @@ export async function renderPdfReport(
   if (facts.lowStock.length > 40) {
     y = ((doc as any).lastAutoTable?.finalY || y) + 4;
     text(muted, 7.5);
-    doc.text(`… and ${facts.lowStock.length - 40} more in the spreadsheet`, mx, y);
+    doc.text(
+      `… and ${facts.lowStock.length - 40} more in the spreadsheet`,
+      mx,
+      y,
+    );
   }
 
   // ================================================ PAGE 3+: EVERY SALE
@@ -929,7 +1101,18 @@ export async function renderPdfReport(
   autoTable(doc, {
     ...tableStyle,
     startY: 40,
-    head: [["Number", "Date", "Where", "Customer", "Total", "Paid", "Balance", "Status"]],
+    head: [
+      [
+        "Number",
+        "Date",
+        "Where",
+        "Customer",
+        "Total",
+        "Paid",
+        "Balance",
+        "Status",
+      ],
+    ],
     body: facts.orders.map((order) => [
       order.orderNumber,
       dmy(order.createdAt),
@@ -939,7 +1122,7 @@ export async function renderPdfReport(
       money(order.amountPaid),
       order.totalAmount - order.amountPaid > 0.01
         ? money(order.totalAmount - order.amountPaid)
-        : "—",
+        : "-",
       order.status === "CANCELLED"
         ? "Cancelled"
         : PAYMENT_LABEL[order.paymentStatus] || order.paymentStatus,
@@ -956,10 +1139,18 @@ export async function renderPdfReport(
       if (hook.pageNumber > 1) masthead("Every sale in the period (continued)");
     },
     didParseCell: (hook) => {
-      if (hook.section === "body" && hook.column.index === 6 && hook.cell.raw !== "—") {
+      if (
+        hook.section === "body" &&
+        hook.column.index === 6 &&
+        hook.cell.raw !== "-"
+      ) {
         hook.cell.styles.textColor = rgb(RED);
       }
-      if (hook.section === "body" && hook.column.index === 7 && hook.cell.raw === "Cancelled") {
+      if (
+        hook.section === "body" &&
+        hook.column.index === 7 &&
+        hook.cell.raw === "Cancelled"
+      ) {
         hook.cell.styles.textColor = rgb(MUTED);
       }
     },

@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
   try {
     // Only this site's own pages may report here. sendBeacon is CORS-simple,
     // so without this any page on the internet could fill the error log.
-    // Compared as exact origins — a prefix match would wave through
+    // Compared as exact origins - a prefix match would wave through
     // "https://metroopticals.lk.evil.com".
     const reportedHeader =
       request.headers.get("origin") || request.headers.get("referer") || "";
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
     try {
       reportedOrigin = new URL(reportedHeader).origin;
     } catch {
-      /* absent or malformed header — rejected below */
+      /* absent or malformed header - rejected below */
     }
 
     if (
@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     return NextResponse.json(
       { success: false, error: "Invalid log payload" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 }

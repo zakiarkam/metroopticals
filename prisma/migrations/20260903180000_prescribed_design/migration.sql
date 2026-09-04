@@ -1,6 +1,6 @@
 -- What the prescriber said to make.
 --
--- Doctors write it on the slip — "Bifocals", "PAL", "SV" — and it is the one
+-- Doctors write it on the slip - "Bifocals", "PAL", "SV" - and it is the one
 -- question a customer often cannot answer for themselves. A reading addition
 -- alone does not settle it: the same +2.25 ADD could be a bifocal, a
 -- progressive, or a separate pair of reading glasses.

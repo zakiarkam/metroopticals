@@ -21,7 +21,7 @@ export default function RefundPolicyPage() {
         {
           heading: "In short",
           paragraphs: [
-            "We want you to see well and to like what you are wearing. If something is not right, bring it back and talk to us — most problems are solved with an adjustment or an exchange, on the spot and at no charge.",
+            "We want you to see well and to like what you are wearing. If something is not right, bring it back and talk to us - most problems are solved with an adjustment or an exchange, on the spot and at no charge.",
             "This policy applies to everything bought from Metro Opticals, whether you ordered on this website or over the counter at our Nawalapitiya store. All amounts are in Sri Lankan rupees (LKR).",
           ],
         },
@@ -29,7 +29,7 @@ export default function RefundPolicyPage() {
           heading: "Returning a frame or accessory",
           paragraphs: [
             "You may return an unworn frame, sunglasses or accessory within 7 days of receiving it. The item must be in the condition it reached you in, with its case, cloth and any tags, and you must be able to show the invoice or your order number.",
-            "A frame that has already had prescription lenses fitted can be exchanged only where the lenses can be reused. Where they cannot, the cost of the lenses is not refundable — they were cut to your prescription and cannot be sold to anyone else.",
+            "A frame that has already had prescription lenses fitted can be exchanged only where the lenses can be reused. Where they cannot, the cost of the lenses is not refundable - they were cut to your prescription and cannot be sold to anyone else.",
           ],
         },
         {
@@ -65,7 +65,7 @@ export default function RefundPolicyPage() {
           bullets: [
             "Covered: coating defects, peeling or discolouration, hinge and joint failure, lens delamination.",
             "Not covered: scratches from normal use, damage from being dropped, sat on or crushed, and loss or theft.",
-            "Nose pads and temple tips wear out — we replace those free of charge, warranty or not.",
+            "Nose pads and temple tips wear out - we replace those free of charge, warranty or not.",
           ],
         },
         {
@@ -83,7 +83,7 @@ export default function RefundPolicyPage() {
         {
           heading: "Cancelling an order",
           paragraphs: [
-            "An order can be cancelled at no cost at any time before we begin cutting lenses or dispatch it — usually within one working day of placing it. Message us on WhatsApp or call the shop with your order number. Once lenses have been cut to your prescription the order can no longer be cancelled, because the lenses cannot be used for anyone else.",
+            "An order can be cancelled at no cost at any time before we begin cutting lenses or dispatch it - usually within one working day of placing it. Message us on WhatsApp or call the shop with your order number. Once lenses have been cut to your prescription the order can no longer be cancelled, because the lenses cannot be used for anyone else.",
             "An online card payment that is not completed cancels the order by itself, and nothing is charged.",
           ],
         },
@@ -108,7 +108,7 @@ export default function RefundPolicyPage() {
         {
           heading: "Return postage",
           paragraphs: [
-            "For a change-of-mind return you pay the cost of sending the item back, and we recommend a tracked service — an item that does not reach us cannot be refunded. Where the return is our fault, we arrange and pay for the collection.",
+            "For a change-of-mind return you pay the cost of sending the item back, and we recommend a tracked service - an item that does not reach us cannot be refunded. Where the return is our fault, we arrange and pay for the collection.",
           ],
         },
         {

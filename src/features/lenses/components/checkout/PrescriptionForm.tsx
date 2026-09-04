@@ -31,7 +31,7 @@ const EYES = [
 /**
  * The prescription grid: two eyes, four powers, and a PD.
  *
- * Laid out the way the slip is — OD above OS, sphere then cylinder then axis —
+ * Laid out the way the slip is - OD above OS, sphere then cylinder then axis -
  * so a customer can copy across without translating anything. The axis cell is
  * disabled until there is a cylinder to go with it, because an axis on its own
  * is not a thing that can be made.
@@ -52,7 +52,7 @@ const PRESCRIBED_OPTIONS: {
   {
     value: "PROGRESSIVE",
     label: "Progressive",
-    hint: "No line — the power changes gradually. Sometimes written PAL or varifocal.",
+    hint: "No line - the power changes gradually. Sometimes written PAL or varifocal.",
   },
   {
     value: null,
@@ -90,7 +90,7 @@ export default function PrescriptionForm({
     values.pdRight !== null || values.pdLeft !== null,
   );
   // Opened when there is anything in there worth seeing: a lens that needs an
-  // addition, or a prescription that already has one — the type question lives
+  // addition, or a prescription that already has one - the type question lives
   // in here and must not be hidden behind a disclosure the customer never taps.
   const [showMore, setShowMore] = useState(
     requiresAdd || (values.right.add ?? values.left.add ?? 0) > 0,
@@ -99,7 +99,7 @@ export default function PrescriptionForm({
   const highlighted = useMemo(() => new Set(highlight), [highlight]);
 
   const sharedAdd = values.right.add ?? values.left.add ?? null;
-  /** An addition means a second distance — which needs a decision. */
+  /** An addition means a second distance - which needs a decision. */
   const hasAdd = (sharedAdd ?? 0) > 0;
 
   // An upload that filled in an addition has to reveal the section holding it,
@@ -150,7 +150,7 @@ export default function PrescriptionForm({
         {confidence !== null && (
           <span className="inline-flex items-center gap-1.5 rounded-full bg-blue/10 px-3 py-1 text-[11.5px] font-semibold text-blue">
             <Sparkles className="h-3.5 w-3.5" />
-            Read from your photo — please check every number
+            Read from your photo - please check every number
           </span>
         )}
       </div>
@@ -158,7 +158,7 @@ export default function PrescriptionForm({
       <div className="rounded-2xl border border-gray-3 bg-gray-2 p-4 sm:p-5">
         {/* Column headings, on every width. On a phone the cells are too
             narrow to carry their own labels, which makes the headings the
-            ONLY thing telling sphere from cylinder — hiding them there had it
+            ONLY thing telling sphere from cylinder - hiding them there had it
             exactly backwards. */}
         <div className="grid grid-cols-[44px_repeat(3,minmax(0,1fr))] gap-2 pb-2 sm:grid-cols-[54px_repeat(3,minmax(0,1fr))] sm:gap-2.5">
           <span />
@@ -226,7 +226,7 @@ export default function PrescriptionForm({
                   options={AXIS_OPTIONS}
                   onChange={(next) => setEye(side, { axis: next })}
                   format={(value) => formatAxis(value)}
-                  placeholder="—"
+                  placeholder="-"
                   disabled={!hasCyl}
                   error={errors[`${side}Axis`]}
                   highlighted={highlighted.has(`${side}Axis`)}
@@ -252,7 +252,7 @@ export default function PrescriptionForm({
                   value={values.pdRight}
                   options={PD_MONO_OPTIONS}
                   onChange={(next) => onChange({ ...values, pdRight: next })}
-                  format={(value) => (value === null ? "—" : String(value))}
+                  format={(value) => (value === null ? "-" : String(value))}
                   placeholder="Right"
                   error={errors.pdRight}
                   highlighted={highlighted.has("pdRight")}
@@ -263,7 +263,7 @@ export default function PrescriptionForm({
                   value={values.pdLeft}
                   options={PD_MONO_OPTIONS}
                   onChange={(next) => onChange({ ...values, pdLeft: next })}
-                  format={(value) => (value === null ? "—" : String(value))}
+                  format={(value) => (value === null ? "-" : String(value))}
                   placeholder="Left"
                   error={errors.pdLeft}
                   highlighted={highlighted.has("pdLeft")}
@@ -278,14 +278,14 @@ export default function PrescriptionForm({
                   value={values.pdSingle}
                   options={PD_OPTIONS}
                   onChange={(next) => onChange({ ...values, pdSingle: next })}
-                  format={(value) => (value === null ? "—" : String(value))}
+                  format={(value) => (value === null ? "-" : String(value))}
                   placeholder="Choose"
                   error={errors.pdSingle}
                   highlighted={highlighted.has("pdSingle")}
                 />
                 <span className="col-span-2 text-[11.5px] leading-snug text-dark-5">
-                  The distance between your pupils. It is on most
-                  prescriptions; if not, ask us and we&apos;ll measure it.
+                  The distance between your pupils. It is on most prescriptions;
+                  if not, ask us and we&apos;ll measure it.
                 </span>
               </>
             )}
@@ -367,7 +367,9 @@ export default function PrescriptionForm({
                           <button
                             key={option.label}
                             type="button"
-                            onClick={() => onPrescribedDesignChange(option.value)}
+                            onClick={() =>
+                              onPrescribedDesignChange(option.value)
+                            }
                             aria-pressed={selected}
                             className={`rounded-lg border px-3 py-2.5 text-left transition-colors ${
                               selected
@@ -392,11 +394,12 @@ export default function PrescriptionForm({
                     {prescribedFromSlip && prescribedDesign ? (
                       <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-blue/10 px-2.5 py-1 text-[11px] font-semibold text-blue">
                         <Sparkles className="h-3.5 w-3.5" />
-                        Read off your prescription — change it if it&apos;s wrong
+                        Read off your prescription - change it if it&apos;s
+                        wrong
                       </p>
                     ) : (
                       <p className="mt-2 text-[11px] leading-relaxed text-dark-5">
-                        Usually written at the bottom of your prescription —
+                        Usually written at the bottom of your prescription -
                         &ldquo;Bifocal&rdquo;, &ldquo;PAL&rdquo;,
                         &ldquo;Progressive&rdquo;.
                       </p>
@@ -445,7 +448,9 @@ export default function PrescriptionForm({
                       }
                       aria-invalid={errors[`${side}Base`] ? true : undefined}
                       className={`h-11 w-full cursor-pointer appearance-none rounded-lg border bg-white px-3 text-[13.5px] font-semibold text-dark outline-none disabled:cursor-not-allowed disabled:bg-gray-2 disabled:text-dark-5 ${
-                        errors[`${side}Base`] ? "border-red" : "border-gray-3 focus:border-blue"
+                        errors[`${side}Base`]
+                          ? "border-red"
+                          : "border-gray-3 focus:border-blue"
                       }`}
                     >
                       <option value="">Base direction</option>

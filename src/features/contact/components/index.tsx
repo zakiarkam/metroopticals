@@ -108,7 +108,7 @@ const Contact = () => {
       <PageHero
         eyebrow="We're here to help"
         title="Get in touch"
-        description="Questions about a prescription, a frame, or an order? Call the store, message us on WhatsApp, or send the form — whichever is easiest."
+        description="Questions about a prescription, a frame, or an order? Call the store, message us on WhatsApp, or send the form - whichever is easiest."
         crumbs={[{ label: "Contact" }]}
       />
 
@@ -118,7 +118,7 @@ const Contact = () => {
             eyebrow="Come and see us"
             title="Colombo shop,"
             titleAccent="open six days a week."
-            body="Walk in for a free fitting, a lens adjustment or an eye test — no appointment needed. If it is quicker to ask than to visit, the form below reaches the same people."
+            body="Walk in for a free fitting, a lens adjustment or an eye test - no appointment needed. If it is quicker to ask than to visit, the form below reaches the same people."
             action={<PillLink href="#contact-form">Send a message</PillLink>}
           />
 
@@ -174,7 +174,12 @@ const Contact = () => {
                     aria-label="Metro Opticals on TikTok"
                     className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-3 text-dark-4 transition-colors hover:border-blue hover:text-blue"
                   >
-                    <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="currentColor" aria-hidden="true">
+                    <svg
+                      viewBox="0 0 24 24"
+                      className="h-[18px] w-[18px]"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
                       <path d="M16.5 3c.4 2.4 1.9 4 4.5 4.2v3.1c-1.7 0-3.2-.5-4.5-1.4v6.3A5.8 5.8 0 1 1 10.7 9.4v3.2a2.7 2.7 0 1 0 2.7 2.7V3h3.1z" />
                     </svg>
                   </a>
@@ -338,7 +343,7 @@ const Contact = () => {
                     name="message"
                     id="message"
                     rows={6}
-                    placeholder="Tell us what you need — the more detail, the faster we can help."
+                    placeholder="Tell us what you need - the more detail, the faster we can help."
                     value={message}
                     onChange={(event) => setMessage(event.target.value)}
                     className={textareaClasses}

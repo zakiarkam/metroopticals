@@ -121,7 +121,7 @@ export default function ProductCard({
       stock: item.stock ?? 0,
       status: item.status,
       // Quick view offers the same colour chooser as the product page, so the
-      // options — and which of them are sold out — have to survive the hop
+      // options - and which of them are sold out - have to survive the hop
       // through the store.
       frameColors: colorOptions,
       colorStocks: item.colorStocks ?? undefined,
@@ -140,7 +140,7 @@ export default function ProductCard({
   );
 
   // Quick-add cannot ask which colour, so it takes the first one that is
-  // actually on the shelf — never a sold-out colourway.
+  // actually on the shelf - never a sold-out colourway.
   const quickAddColor = useMemo(
     () => colorOptions.find((color) => !soldOutColors.includes(color)),
     [colorOptions, soldOutColors],
@@ -233,7 +233,7 @@ export default function ProductCard({
           return swatch ? (
             <span
               key={color}
-              title={soldOut ? `${color} — out of stock` : color}
+              title={soldOut ? `${color} - out of stock` : color}
               className={`relative h-3.5 w-3.5 overflow-hidden rounded-full ${
                 swatch.needsBorder ? "ring-1 ring-inset ring-dark/20" : ""
               } ${soldOut ? "opacity-40" : ""}`}
@@ -461,10 +461,9 @@ export default function ProductCard({
             </span>
           ) : null}
 
-          {(availability.tone === "out" || availability.tone === "inactive") && (
-            <span
-              className="rounded-full bg-dark/85 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.1em] text-white shadow-1 backdrop-blur-sm"
-            >
+          {(availability.tone === "out" ||
+            availability.tone === "inactive") && (
+            <span className="rounded-full bg-dark/85 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.1em] text-white shadow-1 backdrop-blur-sm">
               {availability.label}
             </span>
           )}

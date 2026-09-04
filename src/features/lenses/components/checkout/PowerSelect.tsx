@@ -9,8 +9,8 @@ import { formatDiopter } from "@/features/lenses/constants/optics";
  * One cell of the prescription grid.
  *
  * A select rather than a text input on purpose: every legal power is a
- * quarter-dioptre step off a known list, and a dropdown makes "-2.30" — which
- * is not a lens anybody can grind — impossible to enter rather than merely
+ * quarter-dioptre step off a known list, and a dropdown makes "-2.30" - which
+ * is not a lens anybody can grind - impossible to enter rather than merely
  * rejected after the fact.
  */
 export default function PowerSelect({
@@ -20,7 +20,7 @@ export default function PowerSelect({
   options,
   onChange,
   format = formatDiopter,
-  placeholder = "—",
+  placeholder = "-",
   disabled = false,
   error,
   highlighted = false,
@@ -51,7 +51,9 @@ export default function PowerSelect({
         disabled={disabled}
         aria-invalid={error ? true : undefined}
         onChange={(event) =>
-          onChange(event.target.value === "" ? null : Number(event.target.value))
+          onChange(
+            event.target.value === "" ? null : Number(event.target.value),
+          )
         }
         className={`h-11 w-full cursor-pointer appearance-none rounded-lg border bg-white px-1.5 pr-6 text-center text-[13px] font-semibold text-dark outline-none transition-colors disabled:cursor-not-allowed disabled:bg-gray-2 disabled:text-dark-5 sm:px-3 sm:pr-8 sm:text-[14px] ${
           error

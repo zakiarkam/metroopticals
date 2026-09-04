@@ -162,7 +162,7 @@ function Panel({
   );
 }
 
-/** A big, tappable radio card — used for fulfilment and for payment. */
+/** A big, tappable radio card - used for fulfilment and for payment. */
 function ChoiceCard({
   name,
   value,
@@ -256,8 +256,7 @@ const Checkout = () => {
   const { cartItems, clearCart, refreshCart } = useCart();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [paymentMethod, setPaymentMethod] =
-    useState<PaymentMethodValue>("cod");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodValue>("cod");
   const [fulfilment, setFulfilment] =
     useState<FulfilmentMethodValue>("standard");
 
@@ -265,7 +264,7 @@ const Checkout = () => {
   const [shippingDetails, setShippingDetails] =
     useState<Details>(EMPTY_DETAILS);
 
-  /** "Deliver to this address" — unticked reveals a separate delivery address. */
+  /** "Deliver to this address" - unticked reveals a separate delivery address. */
   const [sameAsBilling, setSameAsBilling] = useState(true);
   const [notes, setNotes] = useState("");
   const [errors, setErrors] = useState<Errors>({});
@@ -285,7 +284,7 @@ const Checkout = () => {
 
   // The lens price list is the shop's and it moves. Re-priced once, here, so
   // a change is shown before the address form rather than as a failed order
-  // after it. The order itself re-prices again server-side — this is for the
+  // after it. The order itself re-prices again server-side - this is for the
   // customer's benefit, not for the money.
   useEffect(() => {
     if (status !== "authenticated") return;
@@ -323,8 +322,8 @@ const Checkout = () => {
       if (draft?.fulfilment === "pickup" || draft?.fulfilment === "standard") {
         setFulfilment(draft.fulfilment);
       }
-      // A method the site no longer offers — the gateway switched off since
-      // the draft was saved — falls back rather than sticking on a dead option.
+      // A method the site no longer offers - the gateway switched off since
+      // the draft was saved - falls back rather than sticking on a dead option.
       if (
         draft?.paymentMethod === "cod" ||
         draft?.paymentMethod === "bank_transfer" ||
@@ -382,7 +381,7 @@ const Checkout = () => {
   ]);
 
   // Switching between delivery and collection, or revealing the separate
-  // delivery address, changes which fields are required — so the errors from
+  // delivery address, changes which fields are required - so the errors from
   // the previous shape are no longer about anything the form is asking for.
   useEffect(() => {
     setErrors({});
@@ -391,13 +390,14 @@ const Checkout = () => {
   /* ------------------------------ totals ------------------------------ */
 
   // The lens fitted to a line is part of that line's price, so it is in the
-  // subtotal the customer is asked to pay — the server adds the same figures
+  // subtotal the customer is asked to pay - the server adds the same figures
   // back from its own price list, and the two have to agree.
   const subtotal = useMemo(
     () =>
       cartItems.reduce(
         (sum: number, item: any) =>
-          sum + (item.discountedPrice + (item.lens?.price ?? 0)) * item.quantity,
+          sum +
+          (item.discountedPrice + (item.lens?.price ?? 0)) * item.quantity,
         0,
       ),
     [cartItems],
@@ -406,7 +406,8 @@ const Checkout = () => {
   const lensTotal = useMemo(
     () =>
       cartItems.reduce(
-        (sum: number, item: any) => sum + (item.lens?.price ?? 0) * item.quantity,
+        (sum: number, item: any) =>
+          sum + (item.lens?.price ?? 0) * item.quantity,
         0,
       ),
     [cartItems],
@@ -443,7 +444,8 @@ const Checkout = () => {
         next.shippingFirstName = "Enter who the delivery is for";
       if (!PHONE_PATTERN.test(s.phone.trim()))
         next.shippingPhone = "Enter a phone number for the delivery";
-      if (!s.address.trim()) next.shippingAddress = "Enter the delivery address";
+      if (!s.address.trim())
+        next.shippingAddress = "Enter the delivery address";
       if (!s.city.trim()) next.shippingCity = "Enter the delivery city";
     }
 
@@ -462,7 +464,7 @@ const Checkout = () => {
     }
 
     // A line asking for more than is left is as unbuyable as one that is out
-    // of stock — the order would only fail on the stock check at the far end,
+    // of stock - the order would only fail on the stock check at the far end,
     // after the address form had been filled in.
     const unavailableItems = cartItems.filter(
       (item: any) =>
@@ -706,7 +708,7 @@ const Checkout = () => {
               Free island-wide delivery
             </span>
             <span className="text-[12.5px] text-dark-4">
-              On every order, anywhere in Sri Lanka — or collect free at our
+              On every order, anywhere in Sri Lanka - or collect free at our
               Nawalapitiya store.
             </span>
           </div>
@@ -722,9 +724,14 @@ const Checkout = () => {
               </p>
               <ul className="mt-2 space-y-1.5">
                 {repriced.map((line) => (
-                  <li key={line.id} className="text-[12.5px] leading-relaxed text-dark-4">
-                    <span className="font-semibold text-dark">{line.title}</span>
-                    {" — "}
+                  <li
+                    key={line.id}
+                    className="text-[12.5px] leading-relaxed text-dark-4"
+                  >
+                    <span className="font-semibold text-dark">
+                      {line.title}
+                    </span>
+                    {" - "}
                     {line.to === null
                       ? (line.reason ?? "these lenses are no longer available")
                       : `lenses now ${formatPrice(line.to)} (was ${formatPrice(line.from)})`}
@@ -802,7 +809,7 @@ const Checkout = () => {
                             Deliver to the address above
                           </span>
                           <span className="mt-0.5 block text-[12px] text-dark-5">
-                            Untick this if the order should go somewhere else —
+                            Untick this if the order should go somewhere else -
                             a workplace, or a relative&apos;s house.
                           </span>
                         </span>
@@ -830,8 +837,8 @@ const Checkout = () => {
                       </p>
                       <p className="mt-1 text-[12.5px] leading-relaxed text-dark-5">
                         Bring your order number to {siteConfig.contact.address}{" "}
-                        Orders are held for 30 days. Call {siteConfig.contact.phone}{" "}
-                        if you need longer.
+                        Orders are held for 30 days. Call{" "}
+                        {siteConfig.contact.phone} if you need longer.
                       </p>
                     </div>
                   )}
@@ -849,7 +856,7 @@ const Checkout = () => {
                     onChange={(e) => setNotes(e.target.value)}
                     rows={5}
                     maxLength={1000}
-                    placeholder="e.g. My prescription is from January 2026 — I'll email a photo. Please call before delivery."
+                    placeholder="e.g. My prescription is from January 2026 - I'll email a photo. Please call before delivery."
                     className={textareaClasses}
                   />
                 </Panel>
@@ -881,49 +888,50 @@ const Checkout = () => {
                       return (
                         <li key={item.id} className="py-4">
                           <div className="flex items-center gap-3.5">
-                          <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-gray-3 bg-gray-1">
-                            <Image
-                              src={displayImage}
-                              alt={item.title}
-                              fill
-                              sizes="56px"
-                              className="object-cover"
-                            />
-                            <span className="absolute -right-1 -top-1 grid h-5 min-w-[20px] place-items-center rounded-full bg-blue px-1 text-[10px] font-bold text-white">
-                              {item.quantity}
-                            </span>
-                          </div>
+                            <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-gray-3 bg-gray-1">
+                              <Image
+                                src={displayImage}
+                                alt={item.title}
+                                fill
+                                sizes="56px"
+                                className="object-cover"
+                              />
+                              <span className="absolute -right-1 -top-1 grid h-5 min-w-[20px] place-items-center rounded-full bg-blue px-1 text-[10px] font-bold text-white">
+                                {item.quantity}
+                              </span>
+                            </div>
 
-                          <div className="min-w-0 flex-1">
-                            <Link
-                              href={productUrl}
-                              className="line-clamp-2 break-words text-[13px] font-medium capitalize text-dark transition-colors hover:text-blue"
-                            >
-                              {item.title}
-                            </Link>
-                            {item.color && (
-                              <p className="mt-0.5 text-[12px] text-dark-4">
-                                Colour: {item.color}
-                              </p>
-                            )}
-                            {/* The build changes the price materially, so it
+                            <div className="min-w-0 flex-1">
+                              <Link
+                                href={productUrl}
+                                className="line-clamp-2 break-words text-[13px] font-medium capitalize text-dark transition-colors hover:text-blue"
+                              >
+                                {item.title}
+                              </Link>
+                              {item.color && (
+                                <p className="mt-0.5 text-[12px] text-dark-4">
+                                  Colour: {item.color}
+                                </p>
+                              )}
+                              {/* The build changes the price materially, so it
                                 belongs on the line the customer confirms. */}
-                            {item.lens && (
-                              <p className="mt-0.5 text-[12px] font-medium text-blue">
-                                {item.lens.lensTypeName}
-                                {item.lens.designName
-                                  ? ` · ${item.lens.designName}`
-                                  : ""}
-                              </p>
-                            )}
-                          </div>
+                              {item.lens && (
+                                <p className="mt-0.5 text-[12px] font-medium text-blue">
+                                  {item.lens.lensTypeName}
+                                  {item.lens.designName
+                                    ? ` · ${item.lens.designName}`
+                                    : ""}
+                                </p>
+                              )}
+                            </div>
 
-                          <span className="shrink-0 text-[13.5px] font-semibold text-dark">
-                            {formatPrice(
-                              (item.discountedPrice + (item.lens?.price ?? 0)) *
-                                item.quantity,
-                            )}
-                          </span>
+                            <span className="shrink-0 text-[13.5px] font-semibold text-dark">
+                              {formatPrice(
+                                (item.discountedPrice +
+                                  (item.lens?.price ?? 0)) *
+                                  item.quantity,
+                              )}
+                            </span>
                           </div>
 
                           {/* Lenses can still be chosen here. A shopper who
@@ -963,7 +971,9 @@ const Checkout = () => {
                         ) : (
                           <Store className="h-4 w-4" />
                         )}
-                        {isDelivery ? "Island-wide delivery" : "Store collection"}
+                        {isDelivery
+                          ? "Island-wide delivery"
+                          : "Store collection"}
                       </span>
                       <span className="font-semibold text-green">Free</span>
                     </div>
@@ -1045,7 +1055,7 @@ const Checkout = () => {
                     PAYHERE_SANDBOX &&
                     paymentMethod === "payhere" && (
                       <p className="mt-3 rounded-lg border border-orange/30 bg-orange/10 px-3.5 py-2.5 text-[12px] font-medium text-dark">
-                        Sandbox mode — test cards only. No real money moves.
+                        Sandbox mode - test cards only. No real money moves.
                       </p>
                     )}
                 </Panel>
@@ -1078,7 +1088,7 @@ const Checkout = () => {
                     {paymentMethod === "payhere" && (
                       <p className="flex items-center justify-center gap-1.5 text-[11.5px] text-dark-5">
                         <ShieldCheck className="h-3.5 w-3.5" />
-                        Card details are entered on PayHere — we never see them
+                        Card details are entered on PayHere - we never see them
                       </p>
                     )}
                     <p className="text-[11.5px] text-dark-5">

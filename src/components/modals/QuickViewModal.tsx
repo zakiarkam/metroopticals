@@ -102,7 +102,7 @@ const QuickViewModal = () => {
   }, [normalizedImages.length, activePreview]);
 
   // Picking a colour brings up its photo, when the admin has tagged one.
-  // Only the pick jumps the preview — browsing thumbnails is left alone.
+  // Only the pick jumps the preview - browsing thumbnails is left alone.
   const colorImage = getColorImage(product?.colorStocks, selectedColor);
   useEffect(() => {
     if (!colorImage) return;

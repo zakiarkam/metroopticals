@@ -22,7 +22,7 @@ export const createPayHereSession = async (
  * Hands the browser over to PayHere.
  *
  * A throwaway form rather than a link, because the gateway reads its
- * parameters from a POST body — a query string would put the customer's
+ * parameters from a POST body - a query string would put the customer's
  * details and the signature into browser history and server logs on the way.
  */
 export const submitPayHereCheckout = (payload: PayHereCheckoutPayload) => {
@@ -44,7 +44,7 @@ export const submitPayHereCheckout = (payload: PayHereCheckoutPayload) => {
   form.submit();
 
   // Submission is already in flight by now, so taking the element away cannot
-  // stop it — but if it were ever refused (a policy that does not permit the
+  // stop it - but if it were ever refused (a policy that does not permit the
   // gateway's origin, say), the form would otherwise sit in the page holding
   // the customer's contact details and the signed hash.
   setTimeout(() => form.remove(), 2000);

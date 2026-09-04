@@ -45,6 +45,7 @@ import {
 } from "@/features/checkout/utils/payment-fee";
 import { quoteLensType } from "@/features/lenses/services/lens-service";
 import { valuesFromRow } from "@/features/lenses/utils/prescription";
+import { DESIGN_KIND_LABELS } from "@/features/lenses/utils/pricing";
 
 type OrderWithItemsAndUser = Order & {
   // A counter line can be a service, and a product can be deleted after the
@@ -176,7 +177,7 @@ export async function getOrderById(
       items: {
         include: {
           product: { include: { category: true } },
-          // Only whether a slip exists — never the storage key, which has no
+          // Only whether a slip exists - never the storage key, which has no
           // business leaving the server. The file is fetched by prescription
           // id from a route that authenticates the viewer.
           prescription: { select: { imageFile: true } },
@@ -230,11 +231,13 @@ export async function createOrder(userId: number, data: CreateOrderInput) {
     lens: {
       lensTypeId: number;
       lensName: string;
-      lensDesignId: number | null;
+      lensDesignKind: "SINGLE_VISION" | "BIFOCAL" | "PROGRESSIVE";
       lensDesignName: string | null;
       lensTintName: string | null;
       lensPrice: number;
       lensRx: Record<string, unknown> | null;
+      lensIsOrderLens: boolean;
+      lensLeadTimeDays: number | null;
       prescriptionId: number | null;
     } | null;
   }> = [];
@@ -251,16 +254,27 @@ export async function createOrder(userId: number, data: CreateOrderInput) {
         where: { id: { in: cartLineIds }, userId },
         include: {
           lensType: { select: { id: true, name: true, isActive: true } },
-          lensDesign: { select: { id: true, name: true, isActive: true } },
           lensTint: { select: { id: true, name: true } },
           prescription: {
             select: {
-              id: true, label: true, version: true,
-              rightSph: true, rightCyl: true, rightAxis: true, rightAdd: true,
-              rightPrism: true, rightBase: true,
-              leftSph: true, leftCyl: true, leftAxis: true, leftAdd: true,
-              leftPrism: true, leftBase: true,
-              pdSingle: true, pdRight: true, pdLeft: true,
+              id: true,
+              label: true,
+              version: true,
+              rightSph: true,
+              rightCyl: true,
+              rightAxis: true,
+              rightAdd: true,
+              rightPrism: true,
+              rightBase: true,
+              leftSph: true,
+              leftCyl: true,
+              leftAxis: true,
+              leftAdd: true,
+              leftPrism: true,
+              leftBase: true,
+              pdSingle: true,
+              pdRight: true,
+              pdLeft: true,
             },
           },
         },
@@ -336,34 +350,30 @@ export async function createOrder(userId: number, data: CreateOrderInput) {
     // order line as JSON, because the customer may have a version 3 on file
     // by the time this pair is remade and the lab needs what it was made to.
     let lens: (typeof validatedItems)[number]["lens"] = null;
-    const cartLine = item.cartItemId ? cartLineById.get(item.cartItemId) : undefined;
+    const cartLine = item.cartItemId
+      ? cartLineById.get(item.cartItemId)
+      : undefined;
 
     // The named basket line must actually be a line for THIS product. A
     // request pairing product A with a basket line for product B would
-    // otherwise write B's lens name and prescription onto A's invoice — the
+    // otherwise write B's lens name and prescription onto A's invoice - the
     // customer's own basket either way, but a wrong document all the same.
     if (cartLine && cartLine.productId !== item.productId) {
       throw new ValidationError(
-        "The order doesn't match your basket — refresh the page and try again",
+        "The order doesn't match your basket - refresh the page and try again",
       );
     }
 
     if (cartLine?.lensTypeId && cartLine.lensType) {
       if (!cartLine.lensType.isActive) {
         throw new ValidationError(
-          `${cartLine.lensType.name} lenses are no longer available — please choose another lens for ${product.title}`,
-        );
-      }
-
-      if (cartLine.lensDesign && !cartLine.lensDesign.isActive) {
-        throw new ValidationError(
-          `${cartLine.lensType.name} is no longer offered as ${cartLine.lensDesign.name} — please choose another for ${product.title}`,
+          `${cartLine.lensType.name} lenses are no longer available - please choose another lens for ${product.title}`,
         );
       }
 
       const quote = await quoteLensType(userId, {
         lensTypeId: cartLine.lensTypeId,
-        lensDesignId: cartLine.lensDesignId,
+        lensDesignKind: cartLine.lensDesignKind ?? "SINGLE_VISION",
         lensTintId: cartLine.lensTintId,
         prescriptionId: cartLine.prescriptionId,
       });
@@ -371,7 +381,7 @@ export async function createOrder(userId: number, data: CreateOrderInput) {
       if (!quote.priced) {
         throw new ValidationError(
           quote.reason ??
-            `We can't price the lenses for ${product.title} — please talk to us before ordering`,
+            `We can't price the lenses for ${product.title} - please talk to us before ordering`,
         );
       }
 
@@ -380,10 +390,16 @@ export async function createOrder(userId: number, data: CreateOrderInput) {
       lens = {
         lensTypeId: cartLine.lensTypeId,
         lensName: cartLine.lensType.name,
-        lensDesignId: cartLine.lensDesignId,
-        lensDesignName: cartLine.lensDesign?.name ?? null,
+        lensDesignKind: quote.designKind,
+        // Frozen as words as well as as a value: an invoice reprints exactly
+        // as it was issued, whatever the wording becomes later.
+        lensDesignName: DESIGN_KIND_LABELS[quote.designKind],
         lensTintName: cartLine.lensTint?.name ?? null,
         lensPrice: quote.total,
+        // Frozen with the price: an order lens is a promise about when the
+        // glasses will be ready, made on the day of sale.
+        lensIsOrderLens: quote.isOrderLens,
+        lensLeadTimeDays: quote.leadTimeDays,
         lensRx: cartLine.prescription
           ? {
               prescriptionId: cartLine.prescription.id,
@@ -410,131 +426,150 @@ export async function createOrder(userId: number, data: CreateOrderInput) {
   // The gateway's surcharge is worked out here from the method the customer
   // chose, never taken from the request: a checkout that posted its own total
   // could otherwise pay the card fee on a rupee.
-  const paymentFee = onlinePaymentFee(subtotal + shippingFee, data.paymentMethod);
+  const paymentFee = onlinePaymentFee(
+    subtotal + shippingFee,
+    data.paymentMethod,
+  );
   const totalAmount = roundMoney(subtotal + shippingFee + paymentFee);
 
   // Collecting at the shop has nothing to ship. The delivery columns are
   // cleared rather than filled in from the invoice, so no picking slip ever
-  // implies a courier run that was not ordered — but the name, email and
+  // implies a courier run that was not ordered - but the name, email and
   // phone stay, because that is who we call when the glasses are ready.
   const collecting = isPickup(data.shippingMethod);
   const fulfilment = {
     shippingName: orderData.shippingName || orderData.billingName,
     shippingEmail: orderData.shippingEmail || orderData.billingEmail,
     shippingPhone: orderData.shippingPhone || orderData.billingPhone,
-    shippingAddress: collecting ? null : orderData.shippingAddress ?? null,
-    shippingCity: collecting ? null : orderData.shippingCity ?? null,
-    shippingCountry: collecting ? null : orderData.shippingCountry ?? null,
-    shippingPostalCode: collecting ? null : orderData.shippingPostalCode ?? null,
+    shippingAddress: collecting ? null : (orderData.shippingAddress ?? null),
+    shippingCity: collecting ? null : (orderData.shippingCity ?? null),
+    shippingCountry: collecting ? null : (orderData.shippingCountry ?? null),
+    shippingPostalCode: collecting
+      ? null
+      : (orderData.shippingPostalCode ?? null),
   };
 
-  // Nothing has been collected yet on a card order — the customer has not
-  // even reached the gateway — so it is written as unpaid and stays that way
+  // Nothing has been collected yet on a card order - the customer has not
+  // even reached the gateway - so it is written as unpaid and stays that way
   // until the signed callback says otherwise.
   const awaitingOnlinePayment = isOnlinePayment(data.paymentMethod);
 
   // Create order in transaction
-  const order = await prisma.$transaction(async (tx) => {
-    const newOrder = await tx.order.create({
-      data: {
-        orderNumber: "PENDING",
-        userId,
-        status: "PENDING",
-        totalAmount,
-        shippingFee,
-        paymentFee,
-        subtotal,
-        ...orderData,
-        ...fulfilment,
-        items: {
-          create: validatedItems.map(
-            ({ productId, quantity, price, discountedPrice, color, lens }) => ({
-              productId,
-              quantity,
-              price,
-              ...(discountedPrice !== null ? { discountedPrice } : {}),
-              ...(color ? { color } : {}),
-              ...(lens
-                ? {
-                    lensTypeId: lens.lensTypeId,
-                    lensName: lens.lensName,
-                    lensDesignId: lens.lensDesignId,
-                    lensDesignName: lens.lensDesignName,
-                    lensTintName: lens.lensTintName,
-                    lensPrice: lens.lensPrice,
-                    lensRx: lens.lensRx ?? undefined,
-                    prescriptionId: lens.prescriptionId,
-                  }
-                : {}),
-            }),
-          ),
+  const order = await prisma.$transaction(
+    async (tx) => {
+      const newOrder = await tx.order.create({
+        data: {
+          orderNumber: "PENDING",
+          userId,
+          status: "PENDING",
+          totalAmount,
+          shippingFee,
+          paymentFee,
+          subtotal,
+          ...orderData,
+          ...fulfilment,
+          items: {
+            create: validatedItems.map(
+              ({
+                productId,
+                quantity,
+                price,
+                discountedPrice,
+                color,
+                lens,
+              }) => ({
+                productId,
+                quantity,
+                price,
+                ...(discountedPrice !== null ? { discountedPrice } : {}),
+                ...(color ? { color } : {}),
+                ...(lens
+                  ? {
+                      lensTypeId: lens.lensTypeId,
+                      lensName: lens.lensName,
+                      lensDesignKind: lens.lensDesignKind,
+                      lensDesignName: lens.lensDesignName,
+                      lensTintName: lens.lensTintName,
+                      lensPrice: lens.lensPrice,
+                      lensIsOrderLens: lens.lensIsOrderLens,
+                      lensLeadTimeDays: lens.lensLeadTimeDays,
+                      lensRx: lens.lensRx ?? undefined,
+                      prescriptionId: lens.prescriptionId,
+                    }
+                  : {}),
+              }),
+            ),
+          },
+        } as any,
+        include: {
+          items: { include: { product: true } },
+          user: true,
         },
-      } as any,
-      include: {
-        items: { include: { product: true } },
-        user: true,
-      },
-    });
-
-    // Update stock
-    for (const item of validatedItems) {
-      const updated = await tx.product.updateMany({
-        where: { id: item.productId, stock: { gte: item.quantity } },
-        data: { stock: { decrement: item.quantity } },
       });
-      if (updated.count === 0) {
-        throw new ValidationError("Insufficient stock for one of the items");
+
+      // Update stock
+      for (const item of validatedItems) {
+        const updated = await tx.product.updateMany({
+          where: { id: item.productId, stock: { gte: item.quantity } },
+          data: { stock: { decrement: item.quantity } },
+        });
+        if (updated.count === 0) {
+          throw new ValidationError("Insufficient stock for one of the items");
+        }
+
+        // The colourway's own count moves with the total. Strict: on the
+        // website the shopper can be told the colour just sold out and pick
+        // another, so a race on the last unit fails the order honestly.
+        await takeColorStock(tx, {
+          productId: item.productId,
+          color: item.color,
+          quantity: item.quantity,
+          strict: true,
+        });
+        await tx.product.updateMany({
+          where: { id: item.productId, stock: 0 },
+          data: { status: "OUT_OF_STOCK" },
+        });
+
+        // The same ledger the counter writes to, so the stock history explains
+        // every movement whichever way the item was sold.
+        await tx.stockMovement.create({
+          data: {
+            productId: item.productId,
+            delta: -item.quantity,
+            reason: "ONLINE_ORDER",
+            orderId: newOrder.id,
+          },
+        });
       }
 
-      // The colourway's own count moves with the total. Strict: on the
-      // website the shopper can be told the colour just sold out and pick
-      // another, so a race on the last unit fails the order honestly.
-      await takeColorStock(tx, {
-        productId: item.productId,
-        color: item.color,
-        quantity: item.quantity,
-        strict: true,
-      });
-      await tx.product.updateMany({
-        where: { id: item.productId, stock: 0 },
-        data: { status: "OUT_OF_STOCK" },
-      });
+      // A card payment has not happened yet, so the basket stays exactly as it
+      // is: an abandoned or refused payment leaves the shopper able to try
+      // again instead of staring at an empty cart. The gateway callback clears
+      // the lines it actually paid for, once the money is in.
+      if (!awaitingOnlinePayment) {
+        await tx.cartItem.deleteMany({ where: { userId } });
+      }
 
-      // The same ledger the counter writes to, so the stock history explains
-      // every movement whichever way the item was sold.
-      await tx.stockMovement.create({
-        data: {
-          productId: item.productId,
-          delta: -item.quantity,
-          reason: "ONLINE_ORDER",
-          orderId: newOrder.id,
+      const finalOrderNumber = formatOrderNumber(
+        newOrder.id,
+        newOrder.createdAt,
+      );
+
+      return (await tx.order.update({
+        where: { id: newOrder.id },
+        data: { orderNumber: finalOrderNumber },
+        include: {
+          items: { include: { product: true } },
+          user: true,
         },
-      });
-    }
-
-    // A card payment has not happened yet, so the basket stays exactly as it
-    // is: an abandoned or refused payment leaves the shopper able to try
-    // again instead of staring at an empty cart. The gateway callback clears
-    // the lines it actually paid for, once the money is in.
-    if (!awaitingOnlinePayment) {
-      await tx.cartItem.deleteMany({ where: { userId } });
-    }
-
-    const finalOrderNumber = formatOrderNumber(newOrder.id, newOrder.createdAt);
-
-    return (await tx.order.update({
-      where: { id: newOrder.id },
-      data: { orderNumber: finalOrderNumber },
-      include: {
-        items: { include: { product: true } },
-        user: true,
-      },
-    })) as OrderWithItemsAndUser;
-  },
-  // A 20s budget: the default 5s is ~15 database round trips, and a dev
-  // machine talking to a faraway database spends ~300ms on each one  the
-  // transaction would expire mid-checkout. Production never gets close.
-  { timeout: 20_000, maxWait: 10_000 });
+      })) as OrderWithItemsAndUser;
+    },
+    // A 20s budget: the default 5s is ~15 database round trips, and a dev
+    // machine talking to a faraway database spends ~300ms on each one  the
+    // transaction would expire mid-checkout. Production never gets close.
+    { timeout: 20_000, maxWait: 10_000 },
+  );
 
   // A card order is not news until it is paid for: telling the customer
   // "order placed" while they are still on the gateway, and telling the shop
@@ -552,7 +587,7 @@ export async function createOrder(userId: number, data: CreateOrderInput) {
  * the shop's copy, and the WhatsApp message.
  *
  * Split out of `createOrder` because a card order becomes real later than it
- * is created — the gateway callback calls this once the payment clears, so
+ * is created - the gateway callback calls this once the payment clears, so
  * both routes send the same three messages, in the same words.
  *
  * Every send is fire-and-forget and swallows its own failure: a mail provider
@@ -636,7 +671,7 @@ export function sendOrderPlacedNotifications(order: OrderWithItemsAndUser) {
  * Only reached with money still outstanding, which is why a card order maps
  * to CASH rather than ONLINE: a successful card payment writes its own row
  * from the gateway callback, so an order that still owes money at the door
- * was one whose card payment never landed — and what the courier took was
+ * was one whose card payment never landed - and what the courier took was
  * cash.
  */
 function paymentMethodForOrder(paymentMethod: string | null): PaymentMethod {
@@ -650,125 +685,133 @@ export async function updateOrderStatus(
 ) {
   let previousStatus: OrderStatus | null = null;
 
-  const updatedOrder = await prisma.$transaction(async (tx) => {
-    const existingOrder = await tx.order.findUnique({
-      where: { id: orderId },
-      include: { items: true, user: true },
-    });
+  const updatedOrder = await prisma.$transaction(
+    async (tx) => {
+      const existingOrder = await tx.order.findUnique({
+        where: { id: orderId },
+        include: { items: true, user: true },
+      });
 
-    if (!existingOrder) throw new NotFoundError("Order not found");
+      if (!existingOrder) throw new NotFoundError("Order not found");
 
-    previousStatus = existingOrder.status;
+      previousStatus = existingOrder.status;
 
-    // A counter bill is cancelled from the POS screen, which also reverses the
-    // money taken and writes the reason. Cancelling it here would put the
-    // stock back a second time and leave the payments standing.
-    if (existingOrder.channel === "POS" && data.status === "CANCELLED") {
-      throw new ValidationError(
-        "Cancel a counter bill from Counter sales, so the refund and the stock are handled together.",
-      );
-    }
+      // A counter bill is cancelled from the POS screen, which also reverses the
+      // money taken and writes the reason. Cancelling it here would put the
+      // stock back a second time and leave the payments standing.
+      if (existingOrder.channel === "POS" && data.status === "CANCELLED") {
+        throw new ValidationError(
+          "Cancel a counter bill from Counter sales, so the refund and the stock are handled together.",
+        );
+      }
 
-    // Cancelling put the goods back on the shelf. Re-opening the order would
-    // not take them off again, so the count would drift by one order every
-    // time someone toggled the status  and a re-opened counter bill would go
-    // back to counting as revenue while its receipt still said "cancelled".
-    if (existingOrder.status === "CANCELLED" && data.status !== "CANCELLED") {
-      throw new ValidationError(
-        "A cancelled order cannot be re-opened. Take the new sale as its own order.",
-      );
-    }
+      // Cancelling put the goods back on the shelf. Re-opening the order would
+      // not take them off again, so the count would drift by one order every
+      // time someone toggled the status  and a re-opened counter bill would go
+      // back to counting as revenue while its receipt still said "cancelled".
+      if (existingOrder.status === "CANCELLED" && data.status !== "CANCELLED") {
+        throw new ValidationError(
+          "A cancelled order cannot be re-opened. Take the new sale as its own order.",
+        );
+      }
 
-    // Every other step an order can take. Going backwards would email the
-    // customer the same news twice in the wrong order, and jumping straight
-    // to delivered would skip the moment the money is collected.
-    if (!canTransitionOrderStatus(existingOrder.status, data.status)) {
-      throw new ValidationError(
-        `An order that is ${existingOrder.status} cannot be marked ${data.status}.`,
-      );
-    }
+      // Every other step an order can take. Going backwards would email the
+      // customer the same news twice in the wrong order, and jumping straight
+      // to delivered would skip the moment the money is collected.
+      if (!canTransitionOrderStatus(existingOrder.status, data.status)) {
+        throw new ValidationError(
+          `An order that is ${existingOrder.status} cannot be marked ${data.status}.`,
+        );
+      }
 
-    const shouldRestock =
-      existingOrder.status !== "CANCELLED" &&
-      !existingOrder.voidedAt &&
-      data.status === "CANCELLED";
+      const shouldRestock =
+        existingOrder.status !== "CANCELLED" &&
+        !existingOrder.voidedAt &&
+        data.status === "CANCELLED";
 
-    if (shouldRestock) {
-      for (const item of existingOrder.items) {
-        // A service line has no product, and anything already returned is
-        // back on the shelf  putting it back again would inflate the count.
-        if (item.productId == null) continue;
-        const putBack = item.quantity - item.returnedQty;
-        if (putBack <= 0) continue;
+      if (shouldRestock) {
+        for (const item of existingOrder.items) {
+          // A service line has no product, and anything already returned is
+          // back on the shelf  putting it back again would inflate the count.
+          if (item.productId == null) continue;
+          const putBack = item.quantity - item.returnedQty;
+          if (putBack <= 0) continue;
 
-        await tx.product.update({
-          where: { id: item.productId },
-          data: { stock: { increment: putBack } },
-        });
-        // The units go back onto the colourway they were sold from.
-        await returnColorStock(tx, {
-          productId: item.productId,
-          color: item.color,
-          quantity: putBack,
-        });
-        await tx.product.updateMany({
-          where: { id: item.productId, stock: { gt: 0 }, status: "OUT_OF_STOCK" },
-          data: { status: "ACTIVE" },
-        });
-        await tx.stockMovement.create({
-          data: {
+          await tx.product.update({
+            where: { id: item.productId },
+            data: { stock: { increment: putBack } },
+          });
+          // The units go back onto the colourway they were sold from.
+          await returnColorStock(tx, {
             productId: item.productId,
-            delta: putBack,
-            reason: "VOID",
-            orderId: orderId,
-            note: "Order cancelled",
+            color: item.color,
+            quantity: putBack,
+          });
+          await tx.product.updateMany({
+            where: {
+              id: item.productId,
+              stock: { gt: 0 },
+              status: "OUT_OF_STOCK",
+            },
+            data: { status: "ACTIVE" },
+          });
+          await tx.stockMovement.create({
+            data: {
+              productId: item.productId,
+              delta: putBack,
+              reason: "VOID",
+              orderId: orderId,
+              note: "Order cancelled",
+            },
+          });
+        }
+      }
+
+      // Cash on delivery is collected at the door, and a bank transfer has
+      // cleared by the time the parcel goes out. Marking the order delivered is
+      // therefore the moment the money is in: without a payment row the day's
+      // takings would show the sale as never paid for.
+      const outstanding =
+        Math.round(
+          (existingOrder.totalAmount - existingOrder.amountPaid) * 100,
+        ) / 100;
+      const settlesBalance =
+        data.status === "DELIVERED" &&
+        existingOrder.channel === "ONLINE" &&
+        outstanding > 0.005;
+
+      if (settlesBalance) {
+        await tx.payment.create({
+          data: {
+            orderId,
+            method: paymentMethodForOrder(existingOrder.paymentMethod),
+            amount: outstanding,
+            reference: "Collected on delivery",
+            createdById: actorId ?? null,
           },
         });
       }
-    }
 
-    // Cash on delivery is collected at the door, and a bank transfer has
-    // cleared by the time the parcel goes out. Marking the order delivered is
-    // therefore the moment the money is in: without a payment row the day's
-    // takings would show the sale as never paid for.
-    const outstanding =
-      Math.round((existingOrder.totalAmount - existingOrder.amountPaid) * 100) /
-      100;
-    const settlesBalance =
-      data.status === "DELIVERED" &&
-      existingOrder.channel === "ONLINE" &&
-      outstanding > 0.005;
-
-    if (settlesBalance) {
-      await tx.payment.create({
+      return await tx.order.update({
+        where: { id: orderId },
         data: {
-          orderId,
-          method: paymentMethodForOrder(existingOrder.paymentMethod),
-          amount: outstanding,
-          reference: "Collected on delivery",
-          createdById: actorId ?? null,
+          status: data.status,
+          ...(shouldRestock ? { voidedAt: new Date() } : {}),
+          ...(settlesBalance
+            ? {
+                amountPaid: existingOrder.totalAmount,
+                paymentStatus: "PAID" as const,
+              }
+            : {}),
+        },
+        include: {
+          items: { include: { product: true } },
+          user: true,
         },
       });
-    }
-
-    return await tx.order.update({
-      where: { id: orderId },
-      data: {
-        status: data.status,
-        ...(shouldRestock ? { voidedAt: new Date() } : {}),
-        ...(settlesBalance
-          ? {
-              amountPaid: existingOrder.totalAmount,
-              paymentStatus: "PAID" as const,
-            }
-          : {}),
-      },
-      include: {
-        items: { include: { product: true } },
-        user: true,
-      },
-    });
-  }, { timeout: 20_000, maxWait: 10_000 });
+    },
+    { timeout: 20_000, maxWait: 10_000 },
+  );
 
   const statusHasChanged =
     previousStatus !== null && previousStatus !== data.status;

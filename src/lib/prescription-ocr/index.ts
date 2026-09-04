@@ -2,9 +2,9 @@
  * Reading a prescription off a photo.
  *
  * One interface, so the reader is a configuration detail rather than an
- * architecture decision. Today it is Gemini 2.5 Flash — a vision model that
+ * architecture decision. Today it is Gemini 2.5 Flash - a vision model that
  * can be told it is an optical dispenser and asked for our exact fields as
- * schema-enforced JSON — and swapping it later is one new file implementing
+ * schema-enforced JSON - and swapping it later is one new file implementing
  * `PrescriptionOcrProvider` plus an entry in the map below.
  *
  * Whatever the reader is, nothing downstream trusts it. An extraction only
@@ -32,7 +32,7 @@ export type OcrExtraction = {
   confidence: number | null;
   /** The date on the slip, "YYYY-MM-DD", when one was recognised. */
   issuedAt: string | null;
-  /** A human sentence worth showing — e.g. "this is not a prescription". */
+  /** A human sentence worth showing - e.g. "this is not a prescription". */
   warning: string | null;
   /** Untouched provider response, stored for debugging a bad read. */
   raw: unknown;

@@ -7,7 +7,11 @@ import {
   updateLensType,
 } from "@/features/lenses/services/lens-service";
 import { requireSuperAdmin } from "@/lib/middleware/auth";
-import { createSuccessResponse, handleError, ValidationError } from "@/lib/errors";
+import {
+  createSuccessResponse,
+  handleError,
+  ValidationError,
+} from "@/lib/errors";
 import { logApiAction, logApiError } from "@/lib/audit";
 
 type Context = { params: Promise<{ id: string }> };
@@ -73,7 +77,7 @@ export async function DELETE(request: NextRequest, context: Context) {
 
     return createSuccessResponse({
       message: result.deactivated
-        ? `Switched off — it stays on the ${result.sold} order ${result.sold === 1 ? "line" : "lines"} already sold with it`
+        ? `Switched off - it stays on the ${result.sold} order ${result.sold === 1 ? "line" : "lines"} already sold with it`
         : "Lens removed",
     });
   } catch (error) {

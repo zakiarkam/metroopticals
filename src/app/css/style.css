@@ -246,7 +246,7 @@ input[type="search"]::-webkit-search-results-decoration {
 }
 
 /* ==========================================================================
-   Home page intro — a gold eye that draws, focuses and blinks once while the
+   Home page intro - a gold eye that draws, focuses and blinks once while the
    wordmark comes into focus, then lifts away.
 
    Deliberately an overlay and never a gate: the home page renders behind it
@@ -254,7 +254,7 @@ input[type="search"]::-webkit-search-results-decoration {
    painted. Mounted by the home page alone and removed from the DOM by
    SiteIntro.tsx when it finishes.
 
-   The timings below are tuned against HOLD_MS/FADE_MS in that component —
+   The timings below are tuned against HOLD_MS/FADE_MS in that component -
    the blink spans the full hold and the hairline finishes with it, so both
    move together if the pace is changed.
    ========================================================================== */
@@ -287,7 +287,7 @@ input[type="search"]::-webkit-search-results-decoration {
   );
 }
 
-/* Replaces the failsafe outright — one `animation` property, so the normal
+/* Replaces the failsafe outright - one `animation` property, so the normal
    exit and the safety net can never fight over the same opacity. */
 .site-intro--leaving {
   animation: site-intro-leave 520ms ease forwards;
@@ -364,7 +364,7 @@ input[type="search"]::-webkit-search-results-decoration {
   animation: site-intro-blink 2000ms ease-in-out 0ms both;
 }
 
-/* The iris settles inwards — the contraction an eye makes as it focuses. */
+/* The iris settles inwards - the contraction an eye makes as it focuses. */
 .site-intro__iris,
 .site-intro__pupil,
 .site-intro__glint {
@@ -453,7 +453,7 @@ input[type="search"]::-webkit-search-results-decoration {
   }
 }
 
-/* Out of focus to sharp — what a lens does for the eye behind it. */
+/* Out of focus to sharp - what a lens does for the eye behind it. */
 @keyframes site-intro-sharpen {
   from {
     opacity: 0;

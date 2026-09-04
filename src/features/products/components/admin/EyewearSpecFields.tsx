@@ -229,11 +229,10 @@ function ColorStockRows({ form }: EyewearSpecFieldsProps) {
       </Button>
 
       <p className="mt-2 text-custom-xs text-dark-5">
-        Give each colour its quantity and the product stock adds itself up —
+        Give each colour its quantity and the product stock adds itself up -
         sold-out colours then show as such in the shop. Leave every quantity
         blank to keep one combined count. The photo button tags which gallery
-        image shows the colour; the shop jumps to it when the colour is
-        picked.
+        image shows the colour; the shop jumps to it when the colour is picked.
       </p>
     </div>
   );

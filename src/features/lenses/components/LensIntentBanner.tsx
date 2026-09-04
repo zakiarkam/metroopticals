@@ -43,7 +43,7 @@ export default function LensIntentBanner() {
       </span>
 
       <span className="min-w-0 flex-1 text-[12.5px] leading-relaxed text-dark-4">
-        Pick any frame and add it to your cart — the lens picker will already be
+        Pick any frame and add it to your cart - the lens picker will already be
         set to {lens.shortName}.
       </span>
 

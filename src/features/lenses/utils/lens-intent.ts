@@ -1,13 +1,13 @@
 "use client";
 
 /**
- * "I want this lens" — carried from a guide page to the frame the customer
+ * "I want this lens" - carried from a guide page to the frame the customer
  * eventually picks.
  *
  * A lens cannot be bought on its own, so the guide's call to action sends
  * people to the frames with the lens named in the URL. That intention has to
  * survive browsing the shop, opening a product, adding it to the basket and
- * finally opening the lens picker — several page loads later. So it is parked
+ * finally opening the lens picker - several page loads later. So it is parked
  * in `sessionStorage`: it belongs to this visit, it is not worth a database
  * row, and it must not outlive the tab.
  *

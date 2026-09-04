@@ -17,7 +17,7 @@ export const createPrescriptionSchema = z.object({
   values: prescriptionValuesSchema,
   source: z.enum(["MANUAL", "UPLOAD"]).default("MANUAL"),
   /**
-   * What the prescriber said to make. Null is a real answer — plenty of
+   * What the prescriber said to make. Null is a real answer - plenty of
    * customers do not know, and a reading addition alone does not settle it.
    */
   prescribedDesign: z
@@ -53,7 +53,7 @@ export const createPrescriptionSchema = z.object({
 
 /**
  * Only the things that can be changed without changing the glasses. Powers
- * are not here on purpose — editing those means a new version, which is what
+ * are not here on purpose - editing those means a new version, which is what
  * `supersedesId` on a create is for.
  */
 export const updatePrescriptionSchema = z.object({

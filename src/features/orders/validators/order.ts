@@ -7,8 +7,8 @@ import {
 
 /**
  * A phone number as a person types one: digits, and the punctuation phones
- * are written with. Deliberately loose — the shop calls these numbers, it
- * does not parse them — but tight enough that free text cannot be smuggled
+ * are written with. Deliberately loose - the shop calls these numbers, it
+ * does not parse them - but tight enough that free text cannot be smuggled
  * into a field that ends up on a picking slip and in a WhatsApp message.
  */
 const phone = z
@@ -39,7 +39,7 @@ export const createOrderSchema = z
           color: shortText(60).optional(),
           /**
            * Which basket line this is. Sent so the server can find the lens
-           * choice attached to it — the lens type, tint and prescription are
+           * choice attached to it - the lens type, tint and prescription are
            * never taken from the request, only the line's identity is, and
            * everything about the lenses is read back off our own row and
            * re-priced from the live price list.
@@ -66,7 +66,13 @@ export const createOrderSchema = z
     // is actually being delivered. A collection order has nothing to ship, so
     // demanding an address for it would only teach people to type "N/A".
     shippingName: optionalText(120),
-    shippingEmail: z.string().trim().email().max(120).optional().or(z.literal("")),
+    shippingEmail: z
+      .string()
+      .trim()
+      .email()
+      .max(120)
+      .optional()
+      .or(z.literal("")),
     shippingPhone: phone.optional().or(z.literal("")),
     shippingAddress: optionalText(200),
     shippingCity: optionalText(60),

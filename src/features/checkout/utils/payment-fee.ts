@@ -7,7 +7,7 @@ import { ONLINE_PAYMENT_METHOD } from "@/features/checkout/constants/payment";
  * be the one that decides: they read the same percentage out of the same
  * build-time variable and round it the same way, so the figure the shopper
  * agreed to is the figure on the invoice. The server still computes its own
- * total from the catalogue price — the browser's arithmetic is shown, never
+ * total from the catalogue price - the browser's arithmetic is shown, never
  * trusted.
  */
 

@@ -44,8 +44,8 @@ const nextConfig = {
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     minimumCacheTTL: 3600 * 24 * 365, // 1 year for production
-    // Nothing in the app serves SVG through the image optimizer — the upload
-    // route refuses SVG in every folder — so the risky format stays off.
+    // Nothing in the app serves SVG through the image optimizer - the upload
+    // route refuses SVG in every folder - so the risky format stays off.
     dangerouslyAllowSVG: false,
     contentDispositionType: "attachment",
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
@@ -62,8 +62,8 @@ const nextConfig = {
     return [
       {
         // Returns, refunds and the warranty used to be three-quarters of a
-        // page at /returns. They are now one complete Refund policy — the
-        // document a payment gateway looks for by name — so the old URL
+        // page at /returns. They are now one complete Refund policy - the
+        // document a payment gateway looks for by name - so the old URL
         // follows rather than going stale in inbound links and old invoices.
         source: "/returns",
         destination: "/refund-policy",

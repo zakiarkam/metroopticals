@@ -103,7 +103,7 @@ const AddProductDialog: React.FC<AddProductDialogProps> = ({
   const { brands: brandOptions } = useBrands();
   const { data: cachedCategories, error: categoriesError } = useCategoriesCache(
     { page: 1, limit: 200 },
-    { staleTimeMs: 10 * 60 * 1000, enabled: isOpen }
+    { staleTimeMs: 10 * 60 * 1000, enabled: isOpen },
   );
 
   const categories = cachedCategories?.categories || [];
@@ -133,7 +133,7 @@ const AddProductDialog: React.FC<AddProductDialogProps> = ({
   const watchedColorRows = form.watch("colorStocks");
 
   // Once any colour carries a count, the total is their sum and the stock
-  // box stops being editable — two numbers disagreeing helps no one.
+  // box stops being editable - two numbers disagreeing helps no one.
   const stockFromColors = colorRowsHaveCounts(watchedColorRows);
   const colorRowsTotal = sumColorRows(watchedColorRows);
 
@@ -315,7 +315,7 @@ const AddProductDialog: React.FC<AddProductDialogProps> = ({
     // Delete uploaded catalogue
     if (uploadedFiles.catalogue) {
       deletePromises.push(
-        uploadApi.deleteFile("product/catalogue", uploadedFiles.catalogue)
+        uploadApi.deleteFile("product/catalogue", uploadedFiles.catalogue),
       );
     }
 
@@ -461,14 +461,16 @@ const AddProductDialog: React.FC<AddProductDialogProps> = ({
 
                 {/* Brand (optional) */}
                 <FormField
-                                    control={form.control}
+                  control={form.control}
                   name="brandId"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Brand</FormLabel>
                       <Select
                         onValueChange={(val) =>
-                          field.onChange(val === "__none__" ? null : Number(val))
+                          field.onChange(
+                            val === "__none__" ? null : Number(val),
+                          )
                         }
                         value={
                           field.value !== null && field.value !== undefined
@@ -577,7 +579,7 @@ const AddProductDialog: React.FC<AddProductDialogProps> = ({
                               } else {
                                 const numValue = parseFloat(value);
                                 field.onChange(
-                                  isNaN(numValue) ? undefined : numValue
+                                  isNaN(numValue) ? undefined : numValue,
                                 );
                               }
                             }}

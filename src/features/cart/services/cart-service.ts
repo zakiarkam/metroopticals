@@ -24,18 +24,27 @@ const lensInclude = {
   lensType: {
     select: { id: true, name: true, slug: true, isActive: true },
   },
-  lensDesign: {
-    select: { id: true, name: true, kind: true, isActive: true },
-  },
   lensTint: { select: { id: true, name: true, hex: true, surcharge: true } },
   prescription: {
     select: {
-      id: true, label: true, version: true,
-      rightSph: true, rightCyl: true, rightAxis: true, rightAdd: true,
-      rightPrism: true, rightBase: true,
-      leftSph: true, leftCyl: true, leftAxis: true, leftAdd: true,
-      leftPrism: true, leftBase: true,
-      pdSingle: true, pdRight: true, pdLeft: true,
+      id: true,
+      label: true,
+      version: true,
+      rightSph: true,
+      rightCyl: true,
+      rightAxis: true,
+      rightAdd: true,
+      rightPrism: true,
+      rightBase: true,
+      leftSph: true,
+      leftCyl: true,
+      leftAxis: true,
+      leftAdd: true,
+      leftPrism: true,
+      leftBase: true,
+      pdSingle: true,
+      pdRight: true,
+      pdLeft: true,
     },
   },
 } as const;
@@ -62,22 +71,22 @@ export async function getCartItems(userId: number) {
  * What tells two lines of the same frame and colour apart.
  *
  * A bare frame signs as the empty string, which is what every row already in
- * the table carries — so repeat adds of a plain frame still collapse into one
+ * the table carries - so repeat adds of a plain frame still collapse into one
  * line exactly as they did before lenses existed.
  */
 export function lensSignature(selection: {
   lensTypeId?: number | null;
-  lensDesignId?: number | null;
+  lensDesignKind?: string | null;
   lensTintId?: number | null;
   prescriptionId?: number | null;
 }): string {
   if (!selection.lensTypeId) return "";
   return [
     `t${selection.lensTypeId}`,
-    // The build is part of what makes two lines different: the same frame
+    // How it is made is part of what tells two lines apart: the same frame
     // ordered once as single vision and once as a progressive is two pairs of
     // glasses, not one line of quantity two.
-    selection.lensDesignId ? `d${selection.lensDesignId}` : "d0",
+    `d${selection.lensDesignKind ?? "SINGLE_VISION"}`,
     selection.lensTintId ? `c${selection.lensTintId}` : "c0",
     selection.prescriptionId ? `p${selection.prescriptionId}` : "p0",
   ].join("|");
@@ -102,7 +111,9 @@ function assertLineWithinStock(
     );
   }
   throw new ValidationError(
-    color ? `Only ${ceiling} of the ${color} colour in stock` : `Only ${ceiling} in stock`,
+    color
+      ? `Only ${ceiling} of the ${color} colour in stock`
+      : `Only ${ceiling} in stock`,
   );
 }
 
@@ -328,7 +339,7 @@ export async function removeFromCart(userId: number, itemId: number) {
  * run the same `quoteLens`.
  *
  * Fitting lenses changes what the line *is*, so it may collide with another
- * line of the same frame, colour and lens choice — two identical pairs are one
+ * line of the same frame, colour and lens choice - two identical pairs are one
  * line of quantity two, not two lines.
  */
 export async function setCartItemLens(
@@ -355,21 +366,23 @@ export async function setCartItemLens(
   if (!data.lensTypeId) {
     return applyLensSelection(userId, cartItem, {
       lensTypeId: null,
-      lensDesignId: null,
+      lensDesignKind: null,
       lensTintId: null,
       prescriptionId: null,
       lensPrice: 0,
+      lensIsOrderLens: false,
+      lensLeadTimeDays: null,
     });
   }
 
   const quote = await quoteLensType(userId, {
     lensTypeId: data.lensTypeId,
-    lensDesignId: data.lensDesignId ?? null,
+    lensDesignKind: data.lensDesignKind,
     lensTintId: data.lensTintId ?? null,
     prescriptionId: data.prescriptionId ?? null,
   });
 
-  // A prescription outside the priced range is a real answer, not a failure —
+  // A prescription outside the priced range is a real answer, not a failure -
   // but it is not something that can be put in a basket and paid for.
   if (!quote.priced) {
     throw new ValidationError(
@@ -379,12 +392,14 @@ export async function setCartItemLens(
 
   return applyLensSelection(userId, cartItem, {
     lensTypeId: data.lensTypeId,
-    // Taken from the quote, not the request: a lens sold in only one build
-    // needs no choice made, and the quote is where that was resolved.
-    lensDesignId: quote.designId,
+    lensDesignKind: quote.designKind,
     lensTintId: data.lensTintId ?? null,
     prescriptionId: data.prescriptionId ?? null,
     lensPrice: quote.total,
+    // Copied off the quote so the basket can say "made to order" without
+    // re-pricing the line to find out.
+    lensIsOrderLens: quote.isOrderLens,
+    lensLeadTimeDays: quote.leadTimeDays,
   });
 }
 
@@ -394,10 +409,12 @@ async function applyLensSelection(
   cartItem: { id: number; productId: number; color: string; quantity: number },
   selection: {
     lensTypeId: number | null;
-    lensDesignId: number | null;
+    lensDesignKind: "SINGLE_VISION" | "BIFOCAL" | "PROGRESSIVE" | null;
     lensTintId: number | null;
     prescriptionId: number | null;
     lensPrice: number;
+    lensIsOrderLens: boolean;
+    lensLeadTimeDays: number | null;
   },
 ) {
   const signature = lensSignature(selection);
@@ -443,7 +460,7 @@ async function applyLensSelection(
  * Re-price every lens in the basket against today's price list.
  *
  * Run at checkout. A basket can sit for weeks while the shop edits what it
- * charges, and the customer must pay what is on the price list now — so this
+ * charges, and the customer must pay what is on the price list now - so this
  * returns the lines whose price moved, for the checkout to show before
  * anything is taken.
  */
@@ -453,10 +470,12 @@ export async function repriceCartLenses(userId: number) {
     select: {
       id: true,
       lensTypeId: true,
-      lensDesignId: true,
+      lensDesignKind: true,
       lensTintId: true,
       prescriptionId: true,
       lensPrice: true,
+      lensIsOrderLens: true,
+      lensLeadTimeDays: true,
       product: { select: { title: true } },
     },
   });
@@ -476,7 +495,7 @@ export async function repriceCartLenses(userId: number) {
     try {
       quote = await quoteLensType(userId, {
         lensTypeId: line.lensTypeId,
-        lensDesignId: line.lensDesignId,
+        lensDesignKind: line.lensDesignKind ?? "SINGLE_VISION",
         lensTintId: line.lensTintId,
         prescriptionId: line.prescriptionId,
       });
@@ -502,6 +521,22 @@ export async function repriceCartLenses(userId: number) {
         reason: quote.reason,
       });
       continue;
+    }
+
+    // The lead time can move without the price moving - a power the shop
+    // used to cut in-house becomes an ordered lens - so the flags are
+    // re-saved on their own, quietly, with no basket warning attached.
+    if (
+      quote.isOrderLens !== line.lensIsOrderLens ||
+      (quote.leadTimeDays ?? null) !== line.lensLeadTimeDays
+    ) {
+      await prisma.cartItem.update({
+        where: { id: line.id },
+        data: {
+          lensIsOrderLens: quote.isOrderLens,
+          lensLeadTimeDays: quote.leadTimeDays,
+        },
+      });
     }
 
     if (Math.abs(quote.total - line.lensPrice) > 0.005) {

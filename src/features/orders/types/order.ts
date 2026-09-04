@@ -28,14 +28,18 @@ export interface OrderItem {
   // and prescriptions gain new versions, and neither may rewrite an invoice.
   lensTypeId?: number | null;
   lensName?: string | null;
-  /** The build as sold — "Progressive — Free Form". */
-  lensDesignId?: number | null;
+  /** How it was made, and the words printed for it on the invoice. */
+  lensDesignKind?: "SINGLE_VISION" | "BIFOCAL" | "PROGRESSIVE" | null;
   lensDesignName?: string | null;
   lensTintName?: string | null;
   /** Price for the pair of lenses on this line, per frame. */
   lensPrice?: number;
   /** The powers exactly as sent to the lab. */
   lensRx?: Record<string, any> | null;
+  /** True when this pair was made to order rather than cut from stock. */
+  lensIsOrderLens?: boolean;
+  /** Working days quoted for it on the day of sale. */
+  lensLeadTimeDays?: number | null;
   prescriptionId?: number | null;
   /** True when the customer uploaded a slip the shop can check against. */
   prescriptionHasImage?: boolean;

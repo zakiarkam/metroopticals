@@ -106,7 +106,7 @@ type FooterSocial = { platform?: string; href?: string };
 const shopLink = (query: string) => `/shop-with-sidebar?${query}`;
 
 /**
- * The three documents a customer — and a payment gateway's activation review —
+ * The three documents a customer - and a payment gateway's activation review -
  * expects to find linked from the landing page. Hard-coded rather than pulled
  * from the editable footer columns: these have to be reachable even if someone
  * rearranges the columns in the storefront editor.
@@ -118,8 +118,7 @@ const POLICY_LINKS = [
 ];
 
 /** Only claim online card acceptance when the gateway is actually switched on. */
-const SHOWS_PAYMENT_LOGOS =
-  process.env.NEXT_PUBLIC_PAYHERE_ENABLED === "true";
+const SHOWS_PAYMENT_LOGOS = process.env.NEXT_PUBLIC_PAYHERE_ENABLED === "true";
 
 export default async function Footer() {
   // Catalogue-sourced columns need the live tables. Both are optional  a

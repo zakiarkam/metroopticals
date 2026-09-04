@@ -4,10 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { ValidationError } from "@/lib/errors";
 import { logger, serializeError } from "@/lib/logger";
 import { uploadFile } from "@/lib/storage/r2";
-import {
-  extractPrescription,
-  getOcrProvider,
-} from "@/lib/prescription-ocr";
+import { extractPrescription, getOcrProvider } from "@/lib/prescription-ocr";
 import type { PrescriptionValues } from "@/features/lenses/utils/prescription";
 import { EMPTY_PRESCRIPTION } from "@/features/lenses/utils/prescription";
 
@@ -29,24 +26,39 @@ function sniff(bytes: Buffer): string | null {
     return "image/jpeg";
   }
   if (
-    bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47
+    bytes[0] === 0x89 &&
+    bytes[1] === 0x50 &&
+    bytes[2] === 0x4e &&
+    bytes[3] === 0x47
   ) {
     return "image/png";
   }
   if (
-    bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46 &&
-    bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50
+    bytes[0] === 0x52 &&
+    bytes[1] === 0x49 &&
+    bytes[2] === 0x46 &&
+    bytes[3] === 0x46 &&
+    bytes[8] === 0x57 &&
+    bytes[9] === 0x45 &&
+    bytes[10] === 0x42 &&
+    bytes[11] === 0x50
   ) {
     return "image/webp";
   }
   if (
-    bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46
+    bytes[0] === 0x25 &&
+    bytes[1] === 0x50 &&
+    bytes[2] === 0x44 &&
+    bytes[3] === 0x46
   ) {
     return "application/pdf";
   }
   // HEIC/HEIF are ISO-BMFF: "ftyp" at offset 4, brand after it.
   if (
-    bytes[4] === 0x66 && bytes[5] === 0x74 && bytes[6] === 0x79 && bytes[7] === 0x70
+    bytes[4] === 0x66 &&
+    bytes[5] === 0x74 &&
+    bytes[6] === 0x79 &&
+    bytes[7] === 0x70
   ) {
     const brand = bytes.subarray(8, 12).toString("ascii");
     if (["heic", "heix", "hevc", "mif1", "msf1", "heim"].includes(brand)) {
@@ -58,13 +70,13 @@ function sniff(bytes: Buffer): string | null {
 
 export type ExtractionResult = {
   values: PrescriptionValues;
-  /** What the prescriber wrote to make — "Bifocals", "PAL" — or null. */
+  /** What the prescriber wrote to make - "Bifocals", "PAL" - or null. */
   prescribedDesign: "SINGLE_VISION" | "BIFOCAL" | "PROGRESSIVE" | null;
   /** Field names the reader supplied, so the form can mark them for review. */
   found: string[];
   confidence: number | null;
   issuedAt: string | null;
-  /** A sentence worth showing the customer — "this is not a prescription". */
+  /** A sentence worth showing the customer - "this is not a prescription". */
   warning: string | null;
   /** True when this came out of the cache and cost nothing. */
   cached: boolean;
@@ -91,14 +103,14 @@ const EXTENSION_BY_TYPE: Record<string, string> = {
  * Keep the slip, under a name nobody can guess.
  *
  * The shop has to be able to check the powers against the document before it
- * cuts lenses — a transposed digit is a wasted pair and a customer who cannot
+ * cuts lenses - a transposed digit is a wasted pair and a customer who cannot
  * see. So the file is kept; the care goes into who can reach it.
  *
  * The object store is served from a PUBLIC read URL, so an object's only
  * protection from a stranger is that its key cannot be guessed. Hence 32
  * random bytes rather than the file's hash: a content hash is reproducible by
  * anyone holding the same file, a random name is not reproducible at all.
- * Nothing ever builds the public URL — the file is read back server-side and
+ * Nothing ever builds the public URL - the file is read back server-side and
  * streamed by an authenticated route.
  *
  * A storage failure is logged and swallowed. Losing the picture is a nuisance
@@ -132,7 +144,7 @@ async function storeSlip(
  * Read a prescription off an uploaded file.
  *
  * The slip is kept so the shop can verify the powers against the document
- * before making the lenses — see `storeSlip` for how it is kept private.
+ * before making the lenses - see `storeSlip` for how it is kept private.
  *
  * The read is cached on the file's own SHA-256. A shopper who uploads, sees
  * the price, wonders about progressives and comes back gets the same values
@@ -160,8 +172,14 @@ export async function extractFromUpload({
     );
   }
   // The browser's own label is only trusted when the bytes agree with it.
-  if (declaredType && declaredType !== sniffed && !declaredType.startsWith("image/")) {
-    throw new ValidationError("That file does not look like what it claims to be");
+  if (
+    declaredType &&
+    declaredType !== sniffed &&
+    !declaredType.startsWith("image/")
+  ) {
+    throw new ValidationError(
+      "That file does not look like what it claims to be",
+    );
   }
 
   const fileHash = createHash("sha256").update(bytes).digest("hex");

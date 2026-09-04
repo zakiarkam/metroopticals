@@ -10,7 +10,7 @@ import { logApiAction, logApiError } from "@/lib/audit";
  * The uploaded prescription slip itself.
  *
  * This is the ONLY way the file is reachable. It is stored under a random,
- * unguessable key and its public URL is never built anywhere — so access is
+ * unguessable key and its public URL is never built anywhere - so access is
  * whatever this route decides it is:
  *
  *   - the customer it belongs to, and
@@ -60,7 +60,8 @@ export async function GET(
 
     // The row points at an object that is no longer there. A clear 404 beats
     // a 500 for something the shop can do nothing about.
-    if (!file) throw new NotFoundError("The prescription image is no longer stored");
+    if (!file)
+      throw new NotFoundError("The prescription image is no longer stored");
 
     if (isAdmin && !isOwner) {
       await logApiAction({

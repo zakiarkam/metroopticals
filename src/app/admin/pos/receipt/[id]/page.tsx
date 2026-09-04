@@ -3,7 +3,13 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, Download, MessageCircle, Plus, Printer } from "lucide-react";
+import {
+  ArrowLeft,
+  Download,
+  MessageCircle,
+  Plus,
+  Printer,
+} from "lucide-react";
 import { Toast } from "@/lib/utils/toast";
 import { formatPrice } from "@/lib/utils/price";
 import { getSaleById } from "@/features/pos/api/pos-api";
@@ -82,7 +88,10 @@ const ReceiptPage = () => {
 
   const whatsappHref = useMemo(() => {
     if (!sale) return null;
-    const phone = (sale.billingPhone || sale.customer?.phone || "").replace(/\D/g, "");
+    const phone = (sale.billingPhone || sale.customer?.phone || "").replace(
+      /\D/g,
+      "",
+    );
     if (!phone) return null;
 
     // Sri Lankan numbers are typed as 07x locally; wa.me needs the country code.
@@ -97,7 +106,7 @@ const ReceiptPage = () => {
       "",
       ...sale.items.map(
         (item) =>
-          `${item.title || item.product?.title || "Item"} × ${item.quantity} — ${formatPrice(
+          `${item.title || item.product?.title || "Item"} × ${item.quantity} - ${formatPrice(
             savedLineTotal(item),
           )}`,
       ),
@@ -176,7 +185,9 @@ const ReceiptPage = () => {
               onClick={() => {
                 if (!sale) return;
                 downloadBillPdf(sale, business).catch(() => {
-                  Toast.error("The PDF could not be created. Try printing instead.");
+                  Toast.error(
+                    "The PDF could not be created. Try printing instead.",
+                  );
                 });
               }}
               className="flex h-9 items-center gap-1.5 rounded-lg border border-gray-3 bg-gray-2 px-3 text-custom-xs font-medium text-dark transition hover:bg-gray-3 disabled:opacity-50"

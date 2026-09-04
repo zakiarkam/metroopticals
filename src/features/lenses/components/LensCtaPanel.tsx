@@ -20,8 +20,8 @@ const DESIGN_LABELS: Record<string, string> = {
 /**
  * The buy panel on a lens guide page.
  *
- * A lens cannot be bought on its own — it is ground to a prescription and
- * fitted into a frame — so the call to action is not "add to basket", it is
+ * A lens cannot be bought on its own - it is ground to a prescription and
+ * fitted into a frame - so the call to action is not "add to basket", it is
  * "choose the frame you want this in". The slug rides along in the link so
  * the shop knows which lens the customer came for and the lens picker opens
  * on it, instead of asking them to find it again in a list of nine.
@@ -64,7 +64,7 @@ export default function LensCtaPanel({
           </p>
 
           <p className="mt-2.5 text-[13px] leading-relaxed text-body">
-            Your own price depends on the powers on your prescription — stronger
+            Your own price depends on the powers on your prescription - stronger
             lenses are cut from a different blank and cost more. You will see
             the exact figure before you pay, never after.
           </p>
@@ -77,7 +77,7 @@ export default function LensCtaPanel({
       )}
 
       {/* Bifocal and progressive are not other lenses, they are other ways of
-          building this one — so they belong on this lens's page rather than
+          building this one - so they belong on this lens's page rather than
           sending the reader off to compare two things that are not
           alternatives. */}
       {pricing && pricing.designKinds.length > 0 && (
@@ -155,7 +155,7 @@ export default function LensCtaPanel({
       </div>
 
       <p className="mt-3 text-[11.5px] leading-relaxed text-dark-5">
-        Pick your frame, then add your prescription — type it in, upload a photo
+        Pick your frame, then add your prescription - type it in, upload a photo
         of it, or use one we already have on file.
       </p>
     </div>

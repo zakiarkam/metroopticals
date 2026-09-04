@@ -3,8 +3,11 @@ import { NotFoundError, ValidationError } from "@/lib/errors";
 import { logger } from "@/lib/logger";
 import { lensTypes as lensGuide } from "@/config/lenses";
 import {
+  designPriceFrom,
   priceFrom,
+  pricedDesignKinds,
   quoteLens,
+  type LensDesignKind,
   type LensQuote,
   type PriceableLensType,
 } from "@/features/lenses/utils/pricing";
@@ -21,6 +24,7 @@ import type {
 
 const bandSelect = {
   id: true,
+  category: true,
   label: true,
   sphMin: true,
   sphMax: true,
@@ -29,6 +33,8 @@ const bandSelect = {
   addMin: true,
   addMax: true,
   price: true,
+  isOrderLens: true,
+  leadTimeDays: true,
   sortOrder: true,
 } as const;
 
@@ -42,23 +48,8 @@ const tintSelect = {
   isActive: true,
 } as const;
 
-const designSelect = {
-  id: true,
-  kind: true,
-  name: true,
-  description: true,
-  sortOrder: true,
-  isActive: true,
-} as const;
-
 const lensTypeInclude = {
-  designs: {
-    select: {
-      ...designSelect,
-      powerPrices: { select: bandSelect, orderBy: { sortOrder: "asc" } },
-    },
-    orderBy: { sortOrder: "asc" },
-  },
+  powerPrices: { select: bandSelect, orderBy: { sortOrder: "asc" } },
   tints: { select: tintSelect, orderBy: { sortOrder: "asc" } },
 } as const;
 
@@ -68,7 +59,7 @@ const lensTypeInclude = {
  * The lens menu the storefront shows.
  *
  * Each type is joined to its guide entry in `src/config/lenses.ts` by slug, so
- * the picker can link to the page that explains what the lens actually does —
+ * the picker can link to the page that explains what the lens actually does -
  * which is the "Learn about different lens usages" link. A type with no guide
  * simply has no link.
  */
@@ -86,18 +77,15 @@ export async function getLensCatalogue({
     const tints = includeInactive
       ? row.tints
       : row.tints.filter((tint) => tint.isActive);
-    const designs = includeInactive
-      ? row.designs
-      : row.designs.filter((design) => design.isActive);
-
     return {
       ...row,
       tints,
-      designs,
       guideHref: guide ? `/lenses/${guide.slug}` : null,
       guideTagline: guide?.tagline ?? null,
       image: guide?.image ?? null,
-      priceFrom: priceFrom({ ...row, designs } as PriceableLensType),
+      priceFrom: priceFrom(row as PriceableLensType),
+      /** Which of the three ways the shop has actually priced this lens. */
+      designKinds: pricedDesignKinds(row as PriceableLensType),
     };
   });
 }
@@ -116,18 +104,31 @@ export async function getLensTypeById(id: number) {
 /** Powers from a saved row, or from the request when nothing is saved yet. */
 async function resolveValues(
   userId: number,
-  input: { prescriptionId?: number | null; prescription?: PrescriptionValues | null },
+  input: {
+    prescriptionId?: number | null;
+    prescription?: PrescriptionValues | null;
+  },
 ): Promise<PrescriptionValues | null> {
   if (input.prescriptionId) {
     const row = await prisma.prescription.findUnique({
       where: { id: input.prescriptionId },
       select: {
         userId: true,
-        rightSph: true, rightCyl: true, rightAxis: true, rightAdd: true,
-        rightPrism: true, rightBase: true,
-        leftSph: true, leftCyl: true, leftAxis: true, leftAdd: true,
-        leftPrism: true, leftBase: true,
-        pdSingle: true, pdRight: true, pdLeft: true,
+        rightSph: true,
+        rightCyl: true,
+        rightAxis: true,
+        rightAdd: true,
+        rightPrism: true,
+        rightBase: true,
+        leftSph: true,
+        leftCyl: true,
+        leftAxis: true,
+        leftAdd: true,
+        leftPrism: true,
+        leftBase: true,
+        pdSingle: true,
+        pdRight: true,
+        pdLeft: true,
       },
     });
 
@@ -146,16 +147,14 @@ async function resolveValues(
 /**
  * Price one lens type against one prescription.
  *
- * Everything is read from our own tables — there is no outside call here, and
+ * Everything is read from our own tables - there is no outside call here, and
  * that is the whole point: a shopper trying the same prescription against four
  * lens types costs four cheap queries, not four paid API calls.
  */
 export async function quoteLensType(
   userId: number,
   input: LensQuoteInput,
-): Promise<
-  LensQuote & { lensTypeId: number; lensTintId: number | null }
-> {
+): Promise<LensQuote & { lensTypeId: number; lensTintId: number | null }> {
   const lensType = await getLensTypeById(input.lensTypeId);
 
   if (!lensType.isActive) {
@@ -173,30 +172,12 @@ export async function quoteLensType(
     throw new ValidationError("That lens colour is no longer offered");
   }
 
-  const active = lensType.designs.filter((entry) => entry.isActive);
-
-  // No build named: a lens sold in exactly one way needs no choice made, so
-  // take it. Anything else has to be picked, or we would be quoting a
-  // progressive price for a single vision order.
-  const design = input.lensDesignId
-    ? lensType.designs.find((entry) => entry.id === input.lensDesignId)
-    : active.length === 1
-      ? active[0]
-      : null;
-
-  if (input.lensDesignId && !design) {
-    throw new ValidationError("That lens build is not available");
-  }
-  if (design && !design.isActive) {
-    throw new ValidationError("That lens build is no longer offered");
-  }
-
   const prescription = await resolveValues(userId, input);
 
   return {
     ...quoteLens({
       lensType: lensType as PriceableLensType,
-      design,
+      designKind: input.lensDesignKind,
       tint,
       prescription,
     }),
@@ -206,12 +187,13 @@ export async function quoteLensType(
 }
 
 /**
- * Price every build of every lens type against one prescription, in a single
- * round trip.
+ * Price every way of making every lens type against one prescription, in a
+ * single round trip.
  *
  * This is what makes "what would the progressive cost?" instant: the picker
- * asks once, gets the whole grid back — every coating crossed with every build
- * — and moving around it afterwards is a lookup rather than a request.
+ * asks once, gets the whole grid back - every coating crossed with single
+ * vision, bifocal and progressive - and moving around it afterwards is a
+ * lookup rather than a request.
  */
 export async function quoteLensTypes(
   userId: number,
@@ -225,23 +207,33 @@ export async function quoteLensTypes(
   });
 
   return lensTypes.map((lensType) => {
-    const designs = lensType.designs.filter((design) => design.isActive);
-    const priceable = { ...lensType, designs } as PriceableLensType;
+    const priceable = lensType as PriceableLensType;
+    // Only the ways this lens is actually priced. Quoting a progressive the
+    // shop has not priced would come back "call us" on a build it does not
+    // sell, which reads as a fault rather than as a choice it never offered.
+    const kinds = pricedDesignKinds(priceable);
 
     return {
       lensTypeId: lensType.id,
-      /** One entry per build, priced. Empty when the shop offers no builds. */
-      designs: designs.map((design) => ({
-        designId: design.id,
-        kind: design.kind,
-        name: design.name,
-        description: design.description,
-        ...quoteLens({ lensType: priceable, design, tint: null, prescription }),
+      /** One entry per way of making it, priced. */
+      designs: kinds.map((kind) => ({
+        kind,
+        priceFrom: designPriceFrom(priceable, kind),
+        ...quoteLens({
+          lensType: priceable,
+          designKind: kind,
+          tint: null,
+          prescription,
+        }),
       })),
       /** Per-colour surcharges, so the tint step can show its own prices. */
       tints: lensType.tints
         .filter((tint) => tint.isActive)
-        .map((tint) => ({ id: tint.id, name: tint.name, surcharge: tint.surcharge })),
+        .map((tint) => ({
+          id: tint.id,
+          name: tint.name,
+          surcharge: tint.surcharge,
+        })),
     };
   });
 }
@@ -253,7 +245,7 @@ const blankToNull = (value: string | null | undefined) =>
 
 /**
  * Two tints called "Grey" would hit the unique index and come back as a bare
- * "record already exists" — true, but useless to the admin staring at a list
+ * "record already exists" - true, but useless to the admin staring at a list
  * of twelve colours. Name the colour instead, before the database has to.
  */
 function assertNamesUnique(rows: Array<{ name: string }>, noun: string) {
@@ -262,7 +254,7 @@ function assertNamesUnique(rows: Array<{ name: string }>, noun: string) {
     const key = row.name.trim().toLowerCase();
     if (seen.has(key)) {
       throw new ValidationError(
-        `Two ${noun}s are both called "${row.name.trim()}" — give one a different name`,
+        `Two ${noun}s are both called "${row.name.trim()}" - give one a different name`,
       );
     }
     seen.add(key);
@@ -272,12 +264,8 @@ function assertNamesUnique(rows: Array<{ name: string }>, noun: string) {
 const assertTintNamesUnique = (rows: Array<{ name: string }>) =>
   assertNamesUnique(rows, "colour");
 
-const assertDesignNamesUnique = (rows: Array<{ name: string }>) =>
-  assertNamesUnique(rows, "build");
-
 export async function createLensType(data: CreateLensTypeInput) {
   assertTintNamesUnique(data.tints);
-  assertDesignNamesUnique(data.designs);
 
   const existing = await prisma.lensType.findUnique({
     where: { slug: data.slug },
@@ -298,26 +286,20 @@ export async function createLensType(data: CreateLensTypeInput) {
       basePrice: data.basePrice,
       sortOrder: data.sortOrder,
       isActive: data.isActive,
-      designs: {
-        create: data.designs.map((design, index) => ({
-          kind: design.kind,
-          name: design.name.trim(),
-          description: blankToNull(design.description),
-          sortOrder: design.sortOrder || index,
-          isActive: design.isActive,
-          powerPrices: {
-            create: design.powerPrices.map((band, bandIndex) => ({
-              label: blankToNull(band.label),
-              sphMin: band.sphMin,
-              sphMax: band.sphMax,
-              cylMin: band.cylMin,
-              cylMax: band.cylMax,
-              addMin: band.addMin ?? null,
-              addMax: band.addMax ?? null,
-              price: band.price,
-              sortOrder: band.sortOrder || bandIndex,
-            })),
-          },
+      powerPrices: {
+        create: data.powerPrices.map((band, index) => ({
+          category: band.category,
+          label: blankToNull(band.label),
+          sphMin: band.sphMin,
+          sphMax: band.sphMax,
+          cylMin: band.cylMin,
+          cylMax: band.cylMax,
+          addMin: band.addMin ?? null,
+          addMax: band.addMax ?? null,
+          price: band.price,
+          isOrderLens: band.isOrderLens,
+          leadTimeDays: band.leadTimeDays ?? null,
+          sortOrder: band.sortOrder || index,
         })),
       },
       tints: {
@@ -340,7 +322,7 @@ export async function createLensType(data: CreateLensTypeInput) {
  *
  * The lists are replaced rather than merged. A price list is edited as a grid
  * and saved as one, so replacing it is the only way the saved list is
- * guaranteed to be the list that was on screen — a merge would silently keep
+ * guaranteed to be the list that was on screen - a merge would silently keep
  * a row the admin had deleted. Rows that kept their id are updated in place,
  * so a band a cart line was quoted against survives a re-save.
  *
@@ -355,7 +337,6 @@ export async function updateLensType(id: number, data: UpdateLensTypeInput) {
   const current = await getLensTypeById(id);
 
   if (data.tints) assertTintNamesUnique(data.tints);
-  if (data.designs) assertDesignNamesUnique(data.designs);
 
   if (data.slug) {
     const clash = await prisma.lensType.findFirst({
@@ -369,17 +350,24 @@ export async function updateLensType(id: number, data: UpdateLensTypeInput) {
     }
   }
 
-  const designPlan = data.designs
+  const bandPlan = data.powerPrices
     ? planRows(
-        current.designs,
-        data.designs.map((design, index) => ({
-          id: design.id,
+        current.powerPrices,
+        data.powerPrices.map((band, index) => ({
+          id: band.id,
           values: {
-            kind: design.kind,
-            name: design.name.trim(),
-            description: blankToNull(design.description),
-            sortOrder: design.sortOrder || index,
-            isActive: design.isActive,
+            category: band.category,
+            label: blankToNull(band.label),
+            sphMin: band.sphMin,
+            sphMax: band.sphMax,
+            cylMin: band.cylMin,
+            cylMax: band.cylMax,
+            addMin: band.addMin ?? null,
+            addMax: band.addMax ?? null,
+            price: band.price,
+            isOrderLens: band.isOrderLens,
+            leadTimeDays: band.leadTimeDays ?? null,
+            sortOrder: band.sortOrder || index,
           },
         })),
       )
@@ -403,12 +391,6 @@ export async function updateLensType(id: number, data: UpdateLensTypeInput) {
     : null;
 
   assertNoRenameClash(
-    current.designs,
-    designPlan,
-    "build",
-    "Rename that one first, then save this.",
-  );
-  assertNoRenameClash(
     current.tints,
     tintPlan,
     "colour",
@@ -431,79 +413,55 @@ export async function updateLensType(id: number, data: UpdateLensTypeInput) {
           ...(data.requiresPrescription !== undefined
             ? { requiresPrescription: data.requiresPrescription }
             : {}),
-          ...(data.basePrice !== undefined ? { basePrice: data.basePrice } : {}),
-          ...(data.sortOrder !== undefined ? { sortOrder: data.sortOrder } : {}),
+          ...(data.basePrice !== undefined
+            ? { basePrice: data.basePrice }
+            : {}),
+          ...(data.sortOrder !== undefined
+            ? { sortOrder: data.sortOrder }
+            : {}),
           ...(data.isActive !== undefined ? { isActive: data.isActive } : {}),
         },
       });
 
-      if (data.designs && designPlan) {
-        if (designPlan.remove.length) {
-          await tx.lensDesign.deleteMany({
-            where: { id: { in: designPlan.remove }, lensTypeId: id },
-          });
-        }
+      if (data.powerPrices && bandPlan) {
+        // A full sheet is several hundred rows, and "price this whole block
+        // at 4500" rewrites every one of them. One UPDATE per row would spend
+        // the transaction budget the diff exists to protect, so past a point
+        // the lens's rows are thrown away and written back in two statements.
+        // Nothing points at a price row by id - the quote reports the row it
+        // matched but never stores it - so the new ids cost nothing.
+        const REWRITE_THRESHOLD = 25;
 
-        // Designs are created one at a time rather than with createMany,
-        // because each one's price rows need the id it comes back with.
-        const idByName = new Map(
-          current.designs.map((design) => [design.name.trim(), design.id]),
-        );
-
-        for (const row of designPlan.create) {
-          const created = await tx.lensDesign.create({
-            data: { ...row.values, lensTypeId: id },
-            select: { id: true, name: true },
-          });
-          idByName.set(created.name.trim(), created.id);
-        }
-
-        for (const row of designPlan.update) {
-          const updated = await tx.lensDesign.update({
-            where: { id: row.id },
-            data: row.values,
-            select: { id: true, name: true },
-          });
-          idByName.set(updated.name.trim(), updated.id);
-        }
-
-        // Now the bands, per design, with the same only-what-changed diff.
-        for (const design of data.designs) {
-          const designId = design.id ?? idByName.get(design.name.trim());
-          if (!designId) continue;
-
-          const held =
-            current.designs.find((entry) => entry.id === designId)?.powerPrices ??
-            [];
-
-          const bandPlan = planRows(
-            held,
-            design.powerPrices.map((band, index) => ({
-              id: band.id,
-              values: {
-                label: blankToNull(band.label),
-                sphMin: band.sphMin,
-                sphMax: band.sphMax,
-                cylMin: band.cylMin,
-                cylMax: band.cylMax,
-                addMin: band.addMin ?? null,
-                addMax: band.addMax ?? null,
-                price: band.price,
-                sortOrder: band.sortOrder || index,
-              },
+        if (bandPlan.update.length > REWRITE_THRESHOLD) {
+          await tx.lensPowerPrice.deleteMany({ where: { lensTypeId: id } });
+          await tx.lensPowerPrice.createMany({
+            data: data.powerPrices.map((band, index) => ({
+              lensTypeId: id,
+              category: band.category,
+              label: blankToNull(band.label),
+              sphMin: band.sphMin,
+              sphMax: band.sphMax,
+              cylMin: band.cylMin,
+              cylMax: band.cylMax,
+              addMin: band.addMin ?? null,
+              addMax: band.addMax ?? null,
+              price: band.price,
+              isOrderLens: band.isOrderLens,
+              leadTimeDays: band.leadTimeDays ?? null,
+              sortOrder: band.sortOrder || index,
             })),
-          );
-
+          });
+        } else {
           if (bandPlan.remove.length) {
             await tx.lensPowerPrice.deleteMany({
-              where: { id: { in: bandPlan.remove }, lensDesignId: designId },
+              where: { id: { in: bandPlan.remove }, lensTypeId: id },
             });
           }
           if (bandPlan.create.length) {
             await tx.lensPowerPrice.createMany({
               data: bandPlan.create.map((row) => ({
                 ...row.values,
-                lensDesignId: designId,
+                lensTypeId: id,
               })),
             });
           }
@@ -524,7 +482,10 @@ export async function updateLensType(id: number, data: UpdateLensTypeInput) {
         }
         if (tintPlan.create.length) {
           await tx.lensTint.createMany({
-            data: tintPlan.create.map((row) => ({ ...row.values, lensTypeId: id })),
+            data: tintPlan.create.map((row) => ({
+              ...row.values,
+              lensTypeId: id,
+            })),
           });
         }
         for (const row of tintPlan.update) {
@@ -622,7 +583,7 @@ function planRows<TRow extends { id: number }, TValues extends object>(
  * Retire a lens type.
  *
  * Deleted outright only while nothing has ever been sold with it. Once an
- * order line points at it, it is switched off instead — the invoice keeps its
+ * order line points at it, it is switched off instead - the invoice keeps its
  * own copy of the name and price, but throwing the row away would still lose
  * the shop its own history of what it used to sell.
  */
@@ -653,7 +614,7 @@ export async function deleteLensType(id: number) {
  * lens type or a new colour is added to the guide.
  *
  * Deliberately additive and nothing else. It creates what is missing and
- * touches nothing that exists — never a price, never a name someone has
+ * touches nothing that exists - never a price, never a name someone has
  * edited, never an `isActive` someone has switched. Running it twice does
  * nothing the second time, which is what makes it safe to run automatically.
  */
@@ -678,41 +639,31 @@ export async function syncLensTypesFromGuide() {
     if (!row) {
       try {
         await prisma.lensType.create({
-        data: {
-          slug: entry.slug,
-          name: entry.shortName || entry.name,
-          description: entry.tagline,
-          groupLabel: entry.group,
-          requiresPrescription: true,
-          // Priced by the shop before it is switched on — a lens with no price
-          // list and no base price quotes as "call us", never as free.
-          basePrice: 0,
-          isActive: false,
-          sortOrder: index * 10,
-          // Every lens starts as a single vision lens; bifocal and progressive
-          // builds are added by the shop when it prices them, because whether
-          // a coating is offered as a progressive is the shop's decision and
-          // its price is a separate row on the sheet.
-          designs: {
-            create: [
-              {
-                kind: "SINGLE_VISION" as const,
-                name: "Single Vision",
-                description: "One power across the whole lens.",
-                sortOrder: 0,
-              },
-            ],
+          data: {
+            slug: entry.slug,
+            name: entry.shortName || entry.name,
+            description: entry.tagline,
+            groupLabel: entry.group,
+            requiresPrescription: true,
+            // Priced by the shop before it is switched on - a lens with no price
+            // list and no base price quotes as "call us", never as free.
+            basePrice: 0,
+            isActive: false,
+            sortOrder: index * 10,
+            // No price rows: whether this coating is offered at all, and as a
+            // bifocal or a progressive, is the shop's decision and each block
+            // is a separate part of its sheet. A lens with nothing priced
+            // quotes as "call us", never as free.
+            tints: {
+              create: variants.map((variant, order) => ({
+                name: variant.name,
+                hex: variant.hex,
+                description: variant.summary,
+                surcharge: 0,
+                sortOrder: order * 10,
+              })),
+            },
           },
-          tints: {
-            create: variants.map((variant, order) => ({
-              name: variant.name,
-              hex: variant.hex,
-              description: variant.summary,
-              surcharge: 0,
-              sortOrder: order * 10,
-            })),
-          },
-        },
         });
         createdTypes += 1;
         createdTints += variants.length;
@@ -727,7 +678,9 @@ export async function syncLensTypesFromGuide() {
     // A colour the guide has gained since this lens was set up. Matched on the
     // name because that is what the unique index is on, and case-insensitively
     // because "Grey" and "grey" are one colour to a customer.
-    const held = new Set(row.tints.map((tint) => tint.name.trim().toLowerCase()));
+    const held = new Set(
+      row.tints.map((tint) => tint.name.trim().toLowerCase()),
+    );
 
     for (const [order, variant] of variants.entries()) {
       if (held.has(variant.name.trim().toLowerCase())) continue;
@@ -759,7 +712,7 @@ export async function syncLensTypesFromGuide() {
  * The guide is editorial and the price list is the shop's; this is the one
  * seam between them. Only lenses the shop has switched on come back, so a
  * guide page for a lens nobody has priced yet advertises no price and offers
- * to talk to us instead — which is the truth.
+ * to talk to us instead - which is the truth.
  *
  * Never throws. A guide page is worth reading with no prices on it; it is not
  * worth returning a 500 because the price list could not be reached.
@@ -771,7 +724,12 @@ export async function getGuideLensPricing(): Promise<
       id: number;
       priceFrom: number;
       designKinds: string[];
-      tints: { id: number; name: string; hex: string | null; surcharge: number }[];
+      tints: {
+        id: number;
+        name: string;
+        hex: string | null;
+        surcharge: number;
+      }[];
     }
   >
 > {
@@ -782,10 +740,8 @@ export async function getGuideLensPricing(): Promise<
         id: true,
         slug: true,
         basePrice: true,
-        designs: {
-          where: { isActive: true },
-          select: { kind: true, powerPrices: { select: { price: true } } },
-        },
+        requiresPrescription: true,
+        powerPrices: { select: { price: true, category: true } },
         tints: {
           where: { isActive: true },
           select: { id: true, name: true, hex: true, surcharge: true },
@@ -796,20 +752,19 @@ export async function getGuideLensPricing(): Promise<
 
     return new Map(
       rows.map((row) => {
-        const bands = row.designs.flatMap((design) => design.powerPrices);
         return [
           row.slug,
           {
             id: row.id,
-            priceFrom: bands.length
-              ? bands.reduce(
+            priceFrom: row.powerPrices.length
+              ? row.powerPrices.reduce(
                   (lowest, band) => Math.min(lowest, band.price),
                   Number.POSITIVE_INFINITY,
                 )
               : row.basePrice,
             // What the guide page can honestly advertise: whether the shop
-            // actually offers this coating as a bifocal or a progressive.
-            designKinds: [...new Set(row.designs.map((design) => design.kind))],
+            // actually prices this coating as a bifocal or a progressive.
+            designKinds: pricedDesignKinds(row as never) as string[],
             tints: row.tints,
           },
         ];

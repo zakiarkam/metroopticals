@@ -5,8 +5,8 @@ import { Check } from "lucide-react";
 import { getColorSwatch } from "@/features/products/utils/colors";
 
 /**
- * Colourway selector. Sold-out colours stay visible and selectable — hiding
- * them would read as "this frame only comes in black" — but they are struck
+ * Colourway selector. Sold-out colours stay visible and selectable - hiding
+ * them would read as "this frame only comes in black" - but they are struck
  * through, announced to screen readers, and the buy button goes to "Out of
  * stock" while one is selected.
  */
@@ -62,7 +62,7 @@ const ColorPicker = ({
               type="button"
               role="radio"
               aria-checked={selected}
-              aria-label={soldOut ? `${color} — out of stock` : color}
+              aria-label={soldOut ? `${color} - out of stock` : color}
               onClick={() => onChange(color)}
               className={`inline-flex min-h-[40px] items-center gap-2 rounded-xl border px-3 py-2 text-[13px] font-semibold transition-all ${
                 selected
@@ -94,9 +94,7 @@ const ColorPicker = ({
                 </span>
               ) : (
                 selected &&
-                !soldOut && (
-                  <Check className="h-3.5 w-3.5 shrink-0 text-blue" />
-                )
+                !soldOut && <Check className="h-3.5 w-3.5 shrink-0 text-blue" />
               )}
 
               <span className={soldOut ? "line-through decoration-dark-5" : ""}>

@@ -4,8 +4,8 @@ import type { Prisma } from "@prisma/client";
 /**
  * Per-colour bookkeeping, shared by every path that moves stock.
  *
- * `Product.stock` stays the authoritative total — the guarded decrements on
- * it are what stop overselling — and these helpers keep the per-colour rows
+ * `Product.stock` stays the authoritative total - the guarded decrements on
+ * it are what stop overselling - and these helpers keep the per-colour rows
  * beside it in step. A colour whose row has a NULL count (or no row at all)
  * is uncounted: it falls back to the total, every mover here leaves it
  * alone, and the product behaves exactly as it did before per-colour stock
@@ -27,7 +27,7 @@ async function findColorRow(tx: Tx, productId: number, color: string) {
 /**
  * Take units of one colourway off the shelf, inside a sale transaction.
  *
- * `strict` fails the sale when the colour's count cannot cover it — the
+ * `strict` fails the sale when the colour's count cannot cover it - the
  * website and the POS both use it, so a stale screen can never sell a
  * colourway past its count; the cashier's escape hatch for a shelf that
  * disagrees with the book is adding the line without a colour. Non-strict
@@ -55,7 +55,7 @@ export async function takeColorStock(
   if (taken.count === 0) {
     if (input.strict) {
       throw new ValidationError(
-        `The ${row.color} colour has just sold out — pick another colour`,
+        `The ${row.color} colour has just sold out - pick another colour`,
       );
     }
     await tx.productColorStock.update({
@@ -65,7 +65,7 @@ export async function takeColorStock(
   }
 }
 
-/** Put units of one colourway back — a void, a return, a cancelled order. */
+/** Put units of one colourway back - a void, a return, a cancelled order. */
 export async function returnColorStock(
   tx: Tx,
   input: {
@@ -97,7 +97,7 @@ export type ColorStockEntry = {
  * Make the rows agree with the product form: one row per submitted colour,
  * rows for dropped colours deleted, photo tags kept to images the gallery
  * actually holds. Returns the summed total when every colour is counted,
- * and null while any colour is not — a partial sum would understate the
+ * and null while any colour is not - a partial sum would understate the
  * shelf, so the total is only derived when it can be derived honestly.
  */
 export async function syncColorStocks(
@@ -123,8 +123,7 @@ export async function syncColorStocks(
     }
     // A tag pointing at a photo the gallery no longer holds would never
     // render; it is dropped rather than stored.
-    const image =
-      entry.image && gallery.has(entry.image) ? entry.image : null;
+    const image = entry.image && gallery.has(entry.image) ? entry.image : null;
     const stock = entry.stock ?? null;
 
     // Repeated colours collapse onto one row rather than racing the unique

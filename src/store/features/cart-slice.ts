@@ -29,10 +29,9 @@ type CartItem = {
     lensTypeId: number;
     lensTypeName: string;
     lensTypeSlug: string;
-    /** The build — single vision, bifocal, progressive. */
-    designId: number | null;
+    /** How the pair is made, and the words for it. */
+    designKind: "SINGLE_VISION" | "BIFOCAL" | "PROGRESSIVE";
     designName: string | null;
-    designKind: "SINGLE_VISION" | "BIFOCAL" | "PROGRESSIVE" | null;
     tintId: number | null;
     tintName: string | null;
     tintHex: string | null;
@@ -43,6 +42,9 @@ type CartItem = {
     summary: string | null;
     /** Price for the pair, tint included. */
     price: number;
+    /** Made to order rather than cut from stock, and how long that takes. */
+    isOrderLens?: boolean;
+    leadTimeDays?: number | null;
   } | null;
 };
 

@@ -54,7 +54,7 @@ const NEXT_STEPS = [
  * stop watching the page.
  *
  * The callback is server to server, so it usually lands before the customer's
- * browser finishes coming back — but it is a separate network path, and a
+ * browser finishes coming back - but it is a separate network path, and a
  * slow one is not a failed payment. Nothing here decides whether the order is
  * paid: the page only reads what the callback already wrote.
  */
@@ -223,14 +223,14 @@ const OrderConfirmationClient = () => {
       tone: "text-blue border-blue/30 bg-blue/10",
       spin: true,
       title: "Confirming your payment",
-      copy: "Hold on a moment — we're waiting for the payment to be confirmed. This page updates itself.",
+      copy: "Hold on a moment - we're waiting for the payment to be confirmed. This page updates itself.",
     },
     paid: {
       icon: CheckCircle2,
       tone: "text-green border-green/30 bg-green/10",
       spin: false,
       title: "Payment received",
-      copy: "Thank you — your payment went through and your order is confirmed. Our team will be in touch about your prescription within one working day.",
+      copy: "Thank you - your payment went through and your order is confirmed. Our team will be in touch about your prescription within one working day.",
     },
     unpaid: {
       icon: AlertTriangle,
@@ -238,7 +238,7 @@ const OrderConfirmationClient = () => {
       spin: false,
       title: isCancelled ? "Order cancelled" : "Payment not completed",
       copy: isCancelled
-        ? "This order was cancelled because the payment did not go through. Your basket is still waiting for you — nothing was charged."
+        ? "This order was cancelled because the payment did not go through. Your basket is still waiting for you - nothing was charged."
         : "We haven't received the payment for this order yet. Nothing has been charged. You can try again below, or pay another way.",
     },
     placed: {
@@ -246,7 +246,7 @@ const OrderConfirmationClient = () => {
       tone: "text-green border-green/30 bg-green/10",
       spin: false,
       title: "Order placed",
-      copy: "Thanks — we have it. Our team will be in touch about your prescription within one working day.",
+      copy: "Thanks - we have it. Our team will be in touch about your prescription within one working day.",
     },
   } as const;
 

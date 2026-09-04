@@ -30,7 +30,7 @@ export default function PrivacyPage() {
           paragraphs: [
             "When you create an account or place an order we keep your name, email address, phone number, and the billing and delivery addresses you give us. If you buy in the shop and give us your phone number, we keep that with your bill so we can tell you when your glasses are ready.",
             "If you bring us a prescription we keep it with your order, because we need it to make your lenses and to remake them under warranty.",
-            "The site also records the ordinary technical details every website sees — your IP address, the browser you used, and which pages you opened — in server logs we keep for security and troubleshooting.",
+            "The site also records the ordinary technical details every website sees - your IP address, the browser you used, and which pages you opened - in server logs we keep for security and troubleshooting.",
           ],
         },
         {
@@ -42,7 +42,7 @@ export default function PrivacyPage() {
             "Warranty, adjustments and remakes on glasses you bought from us.",
             "Keeping accounting records we are required by law to keep.",
             "Spotting and stopping fraud and abuse of the site.",
-            "Offers and news — only if you told us at the counter or online that you would like them. You can say no at any time, and we will stop.",
+            "Offers and news - only if you told us at the counter or online that you would like them. You can say no at any time, and we will stop.",
           ],
           paragraphs: [],
         },
@@ -60,9 +60,9 @@ export default function PrivacyPage() {
             "We do not sell, rent or trade your details to anyone, ever. We share only what a service needs to do its job:",
           ],
           bullets: [
-            "The courier delivering your order — your name, address and phone number.",
-            "PayHere, our payment gateway — your name, email, phone and the amount, so the payment page can be shown to you.",
-            "The services that send our email and WhatsApp messages — your name, contact details and order number.",
+            "The courier delivering your order - your name, address and phone number.",
+            "PayHere, our payment gateway - your name, email, phone and the amount, so the payment page can be shown to you.",
+            "The services that send our email and WhatsApp messages - your name, contact details and order number.",
             "The company that hosts this website and its database.",
             "The authorities, where the law requires it of us.",
           ],
@@ -71,7 +71,7 @@ export default function PrivacyPage() {
           heading: "Keeping it safe",
           paragraphs: [
             "The site is served only over HTTPS. Passwords are stored hashed, never as text we could read. Access to order and customer records is limited to staff accounts that need it, and every administrative action is logged.",
-            "No system is perfectly secure, and we will not pretend otherwise — but we do not hold card numbers, which is the single most useful thing anyone could steal from a shop like ours.",
+            "No system is perfectly secure, and we will not pretend otherwise - but we do not hold card numbers, which is the single most useful thing anyone could steal from a shop like ours.",
           ],
         },
         {
@@ -90,14 +90,14 @@ export default function PrivacyPage() {
           heading: "Virtual try-on",
           paragraphs: [
             "When you use Try on with your camera, the picture from your camera is handled on your own phone or computer, inside your browser. It is not uploaded, recorded or seen by us, and it is gone the moment you close the try-on. The same is true of a photo you choose instead of the camera.",
-            "The measurements it shows — your face width and the distance between your pupils — are worked out on your device and are not stored by us. If you save a picture, it goes to your own device or wherever you choose to share it, not to us.",
+            "The measurements it shows - your face width and the distance between your pupils - are worked out on your device and are not stored by us. If you save a picture, it goes to your own device or wherever you choose to share it, not to us.",
             "We count how often the try-on is opened and on which frames, and nothing more.",
           ],
         },
         {
           heading: "Children",
           paragraphs: [
-            "This site is not intended for children, and we do not knowingly collect details from anyone under 18. We are of course glad to make children's glasses — a parent or guardian places the order.",
+            "This site is not intended for children, and we do not knowingly collect details from anyone under 18. We are of course glad to make children's glasses - a parent or guardian places the order.",
           ],
         },
         {

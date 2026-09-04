@@ -29,7 +29,7 @@ axiosInstance.interceptors.request.use(
   },
   (error: AxiosError) => {
     return Promise.reject(error);
-  }
+  },
 );
 
 // Response interceptor
@@ -69,7 +69,7 @@ axiosInstance.interceptors.response.use(
       });
 
       throw new Error(
-        `API endpoint returned HTML. This usually means the route doesn't exist or isn't returning JSON. URL: ${url}`
+        `API endpoint returned HTML. This usually means the route doesn't exist or isn't returning JSON. URL: ${url}`,
       );
     }
 
@@ -126,7 +126,7 @@ axiosInstance.interceptors.response.use(
 
     // "You are not signed in" is a state the app handles, not a fault. Logged
     // as an error it became a red overlay in development and a stream of
-    // pointless entries in the client log — for something as ordinary as a
+    // pointless entries in the client log - for something as ordinary as a
     // session expiring while a tab was left open. The caller still gets the
     // rejection and still decides what to do about it.
     if (status === 401 || status === 403) {
@@ -143,7 +143,7 @@ axiosInstance.interceptors.response.use(
     });
 
     return Promise.reject(error);
-  }
+  },
 );
 
 export default axiosInstance;

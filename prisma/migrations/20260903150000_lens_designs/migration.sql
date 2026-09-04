@@ -2,7 +2,7 @@
 --
 -- The shop's price list is a grid. Coatings run across the top (uncoated,
 -- multicoat, photogrey, blue cut); down the side the SAME three designs repeat
--- for every one of them — CR SV, CR R/TOP, CR F/TOP, CR PROGR/FREE FORM,
+-- for every one of them - CR SV, CR R/TOP, CR F/TOP, CR PROGR/FREE FORM,
 -- CR PROGR/VISION MAX. So a "blue cut progressive" is not a lens type of its
 -- own, it is the blue cut lens built as a progressive.
 --

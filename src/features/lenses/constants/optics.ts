@@ -2,7 +2,7 @@
  * The numbers an optometrist actually writes, and the ranges a lens can
  * actually be made in.
  *
- * Every power on a spectacle prescription moves in quarter-dioptre steps —
+ * Every power on a spectacle prescription moves in quarter-dioptre steps -
  * that is the step the trial lens set is built in, and it is why a customer
  * typing "-2.30" has mistyped something. Keeping the option lists here means
  * the picker, the validator and the price list all agree on what a legal
@@ -74,16 +74,18 @@ export function roundToStep(value: number, step = DIOPTRE_STEP): number {
 
 /** True when the value sits exactly on a quarter-dioptre. */
 export function isOnDioptreStep(value: number): boolean {
-  return Math.abs(value / DIOPTRE_STEP - Math.round(value / DIOPTRE_STEP)) < 1e-6;
+  return (
+    Math.abs(value / DIOPTRE_STEP - Math.round(value / DIOPTRE_STEP)) < 1e-6
+  );
 }
 
 /**
- * "-2.25", "+0.50", "0.00" — the way a power is written on a slip, always to
+ * "-2.25", "+0.50", "0.00" - the way a power is written on a slip, always to
  * two decimals and always signed, because "2.25" and "-2.25" are different
  * glasses and an unsigned number on a form is an invitation to get it wrong.
  */
 export function formatDiopter(value: number | null | undefined): string {
-  if (value === null || value === undefined || Number.isNaN(value)) return "—";
+  if (value === null || value === undefined || Number.isNaN(value)) return "-";
   const fixed = Math.abs(value).toFixed(2);
   if (value > 0) return `+${fixed}`;
   if (value < 0) return `-${fixed}`;
@@ -92,12 +94,12 @@ export function formatDiopter(value: number | null | undefined): string {
 
 /** Axis is written as three digits with no sign: 005, 090, 180. */
 export function formatAxis(value: number | null | undefined): string {
-  if (value === null || value === undefined || Number.isNaN(value)) return "—";
+  if (value === null || value === undefined || Number.isNaN(value)) return "-";
   return String(Math.round(value)).padStart(3, "0");
 }
 
 export function formatPd(value: number | null | undefined): string {
-  if (value === null || value === undefined || Number.isNaN(value)) return "—";
+  if (value === null || value === undefined || Number.isNaN(value)) return "-";
   return `${Number(value.toFixed(1))} mm`;
 }
 

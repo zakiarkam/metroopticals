@@ -57,7 +57,9 @@ const PosStockTab: React.FC = () => {
 
   const [mode, setMode] = useState<"add" | "remove" | "set">("add");
   const [quantity, setQuantity] = useState("");
-  const [reason, setReason] = useState<"PURCHASE" | "ADJUSTMENT" | "RETURN">("PURCHASE");
+  const [reason, setReason] = useState<"PURCHASE" | "ADJUSTMENT" | "RETURN">(
+    "PURCHASE",
+  );
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -110,7 +112,8 @@ const PosStockTab: React.FC = () => {
       setTotalMovements(result.pagination.total);
     } catch (error: any) {
       Toast.error(
-        error?.response?.data?.message || "The stock history could not be loaded",
+        error?.response?.data?.message ||
+          "The stock history could not be loaded",
       );
     } finally {
       setLoadingLedger(false);
@@ -310,14 +313,20 @@ const PosStockTab: React.FC = () => {
                       <span className="text-custom-xs text-body">Reason</span>
                       <Select
                         value={reason}
-                        onValueChange={(value) => setReason(value as typeof reason)}
+                        onValueChange={(value) =>
+                          setReason(value as typeof reason)
+                        }
                       >
                         <SelectTrigger className="mt-1 h-10 text-custom-sm">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="PURCHASE">Stock received</SelectItem>
-                          <SelectItem value="RETURN">Customer return</SelectItem>
+                          <SelectItem value="PURCHASE">
+                            Stock received
+                          </SelectItem>
+                          <SelectItem value="RETURN">
+                            Customer return
+                          </SelectItem>
                           <SelectItem value="ADJUSTMENT">Correction</SelectItem>
                         </SelectContent>
                       </Select>
@@ -328,7 +337,7 @@ const PosStockTab: React.FC = () => {
                 <Input
                   value={note}
                   onChange={(event) => setNote(event.target.value)}
-                  placeholder="Note — supplier invoice number, who counted it"
+                  placeholder="Note - supplier invoice number, who counted it"
                   className="mt-3 h-10 text-custom-sm"
                 />
 
@@ -354,8 +363,12 @@ const PosStockTab: React.FC = () => {
         <div className="rounded-xl border border-gray-3 bg-gray-2 shadow-1">
           <div className="flex items-center gap-2 border-b border-gray-3 px-5 py-4">
             <TriangleAlert className="h-4 w-4 text-yellow-dark" />
-            <h3 className="text-custom-lg font-semibold text-dark">Running low</h3>
-            <span className="ml-auto text-custom-xs text-body">10 or fewer</span>
+            <h3 className="text-custom-lg font-semibold text-dark">
+              Running low
+            </h3>
+            <span className="ml-auto text-custom-xs text-body">
+              10 or fewer
+            </span>
           </div>
           <ul className="max-h-[420px] divide-y divide-gray-2 overflow-y-auto">
             {lowStock.length === 0 ? (
@@ -364,13 +377,19 @@ const PosStockTab: React.FC = () => {
               </li>
             ) : (
               lowStock.map((product) => (
-                <li key={product.id} className="flex items-center gap-3 px-5 py-3">
+                <li
+                  key={product.id}
+                  className="flex items-center gap-3 px-5 py-3"
+                >
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-custom-sm text-dark">
                       {product.title}
                     </p>
                     <p className="truncate text-custom-xs text-body">
-                      {product.sku || product.brand?.name || product.category?.name || ""}
+                      {product.sku ||
+                        product.brand?.name ||
+                        product.category?.name ||
+                        ""}
                     </p>
                   </div>
                   <span
@@ -397,7 +416,8 @@ const PosStockTab: React.FC = () => {
               Stock history
             </h3>
             <p className="text-custom-xs text-body">
-              {totalMovements} movement{totalMovements === 1 ? "" : "s"} on record
+              {totalMovements} movement{totalMovements === 1 ? "" : "s"} on
+              record
             </p>
           </div>
 
@@ -491,18 +511,26 @@ const PosStockTab: React.FC = () => {
 
                   <div>
                     <p className="text-custom-xs text-dark">
-                      {new Date(movement.createdAt).toLocaleDateString("en-GB", {
-                        day: "2-digit",
-                        month: "short",
-                        year: "numeric",
-                      })}
+                      {new Date(movement.createdAt).toLocaleDateString(
+                        "en-GB",
+                        {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                        },
+                      )}
                     </p>
                     <p className="text-custom-xs text-body">
-                      {new Date(movement.createdAt).toLocaleTimeString("en-GB", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                      {movement.createdBy?.name ? ` · ${movement.createdBy.name}` : ""}
+                      {new Date(movement.createdAt).toLocaleTimeString(
+                        "en-GB",
+                        {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        },
+                      )}
+                      {movement.createdBy?.name
+                        ? ` · ${movement.createdBy.name}`
+                        : ""}
                     </p>
                   </div>
                 </div>

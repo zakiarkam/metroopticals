@@ -58,8 +58,8 @@ const formatDate = (value: string | null) =>
 /**
  * The customer's prescriptions.
  *
- * Only the current version of each is listed. The older ones are still there —
- * an order was made to them — and open behind "Earlier versions", which is
+ * Only the current version of each is listed. The older ones are still there -
+ * an order was made to them - and open behind "Earlier versions", which is
  * also the honest way to show that an eye test a year ago said something
  * different.
  */
@@ -72,7 +72,9 @@ export default function MyPrescriptionsTab() {
   const [pendingRemove, setPendingRemove] = useState<SavedPrescription | null>(
     null,
   );
-  const [history, setHistory] = useState<Record<number, SavedPrescription[]>>({});
+  const [history, setHistory] = useState<Record<number, SavedPrescription[]>>(
+    {},
+  );
   const [openHistory, setOpenHistory] = useState<number | null>(null);
 
   const load = useCallback(async () => {
@@ -148,7 +150,7 @@ export default function MyPrescriptionsTab() {
       <EmptyState
         icon={<Eye className="h-7 w-7" />}
         title="No prescriptions saved yet"
-        description="When you add prescription lenses to a frame, we'll offer to save the powers here — so the next pair takes one tap instead of a form."
+        description="When you add prescription lenses to a frame, we'll offer to save the powers here - so the next pair takes one tap instead of a form."
         action={{ label: "Browse frames", href: "/shop-with-sidebar" }}
       />
     );
@@ -334,8 +336,8 @@ export default function MyPrescriptionsTab() {
           <CalendarClock className="mt-0.5 h-4 w-4 shrink-0 text-dark-4" />
           <p className="text-[12px] leading-relaxed text-dark-5">
             Prescriptions change. When you next order with different powers we
-            save them as a new version and keep the old one, so a pair made
-            last year can still be matched exactly.{" "}
+            save them as a new version and keep the old one, so a pair made last
+            year can still be matched exactly.{" "}
             <Link
               href="/contact"
               className="font-semibold text-blue underline underline-offset-4"

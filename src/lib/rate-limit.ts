@@ -23,7 +23,7 @@ export function rateLimit(key: string, limit: number, windowMs: number): void {
   const now = Date.now();
 
   // A live bucket is never evicted, whatever the map's size: dropping the
-  // bucket that is mid-count is exactly what a brute force wants — flood the
+  // bucket that is mid-count is exactly what a brute force wants - flood the
   // map with junk keys until the counter tracking you falls out.
   const bucket = buckets.get(key);
   if (bucket && bucket.resetAt > now) {
@@ -38,7 +38,7 @@ export function rateLimit(key: string, limit: number, windowMs: number): void {
 
   if (buckets.size >= MAX_BUCKETS) {
     prune(now);
-    // Saturated with live buckets — someone is minting keys as fast as they
+    // Saturated with live buckets - someone is minting keys as fast as they
     // can. Fail closed on NEW keys only: established counters keep counting,
     // and the flood rate-limits itself instead of everyone else.
     if (buckets.size >= MAX_BUCKETS) {
@@ -60,8 +60,10 @@ function readHeader(source: HeaderSource, name: string): string | null {
   if (typeof (headers as Headers).get === "function") {
     return (headers as Headers).get(name);
   }
-  const value = (headers as Record<string, string | string[] | undefined>)[name];
-  return Array.isArray(value) ? value[0] ?? null : value ?? null;
+  const value = (headers as Record<string, string | string[] | undefined>)[
+    name
+  ];
+  return Array.isArray(value) ? (value[0] ?? null) : (value ?? null);
 }
 
 // The trusted proxy appends the real client to x-forwarded-for, so the last
@@ -69,7 +71,10 @@ function readHeader(source: HeaderSource, name: string): string | null {
 export function getClientIp(source: HeaderSource): string {
   const forwarded = readHeader(source, "x-forwarded-for");
   if (forwarded) {
-    const parts = forwarded.split(",").map((p) => p.trim()).filter(Boolean);
+    const parts = forwarded
+      .split(",")
+      .map((p) => p.trim())
+      .filter(Boolean);
     if (parts.length) return parts[parts.length - 1];
   }
   return readHeader(source, "x-real-ip") ?? "unknown";

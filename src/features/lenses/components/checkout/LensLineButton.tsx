@@ -6,6 +6,7 @@ import { Eye, Glasses, Pencil } from "lucide-react";
 import LensPickerDialog, {
   type LensSelection,
 } from "@/features/lenses/components/checkout/LensPickerDialog";
+import OrderLensNote from "@/features/lenses/components/OrderLensNote";
 import { useCart } from "@/features/cart/hooks/use-cart";
 import { formatPrice } from "@/lib/utils/price";
 
@@ -16,7 +17,7 @@ export type LensLineItem = {
   lens?: {
     lensTypeId: number;
     lensTypeName: string;
-    designId: number | null;
+    designKind: "SINGLE_VISION" | "BIFOCAL" | "PROGRESSIVE";
     designName: string | null;
     tintId: number | null;
     tintName: string | null;
@@ -26,11 +27,14 @@ export type LensLineItem = {
     prescriptionVersion: number | null;
     summary: string | null;
     price: number;
+    /** Made to order rather than cut from stock, and how long that takes. */
+    isOrderLens?: boolean;
+    leadTimeDays?: number | null;
   } | null;
 };
 
 /**
- * The lens control for one basket line — choose lenses, change them, take
+ * The lens control for one basket line - choose lenses, change them, take
  * them off.
  *
  * One component in two shapes rather than two components: the cart row has
@@ -74,7 +78,7 @@ export default function LensLineButton({
         item.lens
           ? {
               lensTypeId: item.lens.lensTypeId,
-              lensDesignId: item.lens.designId,
+              lensDesignKind: item.lens.designKind,
               lensTintId: item.lens.tintId,
               prescriptionId: item.lens.prescriptionId,
             }
@@ -129,6 +133,12 @@ export default function LensLineButton({
                         : ""}
                     </p>
                   )}
+
+                  <OrderLensNote
+                    isOrderLens={item.lens.isOrderLens}
+                    leadTimeDays={item.lens.leadTimeDays}
+                    className="mt-2"
+                  />
                 </div>
               </div>
 
@@ -205,6 +215,12 @@ export default function LensLineButton({
               {item.lens.summary}
             </p>
           )}
+
+          <OrderLensNote
+            isOrderLens={item.lens.isOrderLens}
+            leadTimeDays={item.lens.leadTimeDays}
+            className="mt-1.5"
+          />
         </div>
       ) : (
         <button

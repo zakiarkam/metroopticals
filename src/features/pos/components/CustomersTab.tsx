@@ -27,11 +27,14 @@ type Sort = "recent" | "spend" | "visits" | "name";
 
 const lastSeen = (value?: string | null) => {
   if (!value) return "Never billed";
-  const days = Math.floor((Date.now() - new Date(value).getTime()) / 86_400_000);
+  const days = Math.floor(
+    (Date.now() - new Date(value).getTime()) / 86_400_000,
+  );
   if (days <= 0) return "Today";
   if (days === 1) return "Yesterday";
   if (days < 30) return `${days} days ago`;
-  if (days < 365) return `${Math.floor(days / 30)} month${days < 60 ? "" : "s"} ago`;
+  if (days < 365)
+    return `${Math.floor(days / 30)} month${days < 60 ? "" : "s"} ago`;
   return `${Math.floor(days / 365)} year${days < 730 ? "" : "s"} ago`;
 };
 
@@ -84,7 +87,10 @@ const CustomersTab: React.FC = () => {
       setSummary(result.summary);
       setTotalPages(result.pagination.totalPages);
     } catch (error: any) {
-      Toast.error(error?.response?.data?.message || "The customer book could not be loaded");
+      Toast.error(
+        error?.response?.data?.message ||
+          "The customer book could not be loaded",
+      );
     } finally {
       setLoading(false);
     }
@@ -101,7 +107,9 @@ const CustomersTab: React.FC = () => {
         marketingOptIn: !customer.marketingOptIn,
       });
       setRows((current) =>
-        current.map((row) => (row.id === customer.id ? { ...row, ...updated } : row)),
+        current.map((row) =>
+          row.id === customer.id ? { ...row, ...updated } : row,
+        ),
       );
       setSummary((current) => ({
         ...current,
@@ -113,7 +121,9 @@ const CustomersTab: React.FC = () => {
           : `${customer.name} removed from the marketing list`,
       );
     } catch (error: any) {
-      Toast.error(error?.response?.data?.message || "That change could not be saved");
+      Toast.error(
+        error?.response?.data?.message || "That change could not be saved",
+      );
     } finally {
       setSavingId(null);
     }
@@ -224,20 +234,30 @@ const CustomersTab: React.FC = () => {
                   className="grid grid-cols-[1.8fr_1.3fr_1fr_0.7fr_1fr_1fr_0.9fr_90px] items-center gap-4 border-b border-gray-2 px-5 py-3.5 text-custom-sm transition last:border-0 hover:bg-gray-1"
                 >
                   <div className="min-w-0">
-                    <p className="truncate font-medium text-dark">{customer.name}</p>
+                    <p className="truncate font-medium text-dark">
+                      {customer.name}
+                    </p>
                     <p className="truncate text-custom-xs text-body">
-                      {[customer.city, customer.address].filter(Boolean).join(" · ") || "No address"}
+                      {[customer.city, customer.address]
+                        .filter(Boolean)
+                        .join(" · ") || "No address"}
                     </p>
                   </div>
 
                   <div className="min-w-0">
                     <p className="truncate text-dark">{customer.phone}</p>
-                    <p className="truncate text-custom-xs text-body">{customer.email || "—"}</p>
+                    <p className="truncate text-custom-xs text-body">
+                      {customer.email || "-"}
+                    </p>
                   </div>
 
-                  <p className="text-custom-xs text-body">{lastSeen(customer.lastVisitAt)}</p>
+                  <p className="text-custom-xs text-body">
+                    {lastSeen(customer.lastVisitAt)}
+                  </p>
 
-                  <p className="tabular-nums text-dark">{customer.stats?.bills ?? 0}</p>
+                  <p className="tabular-nums text-dark">
+                    {customer.stats?.bills ?? 0}
+                  </p>
 
                   <p className="font-medium tabular-nums text-dark">
                     {formatPrice(customer.stats?.spent ?? 0)}
@@ -245,10 +265,14 @@ const CustomersTab: React.FC = () => {
 
                   <p
                     className={`tabular-nums ${
-                      (customer.stats?.owed ?? 0) > 0 ? "font-medium text-red" : "text-body"
+                      (customer.stats?.owed ?? 0) > 0
+                        ? "font-medium text-red"
+                        : "text-body"
                     }`}
                   >
-                    {(customer.stats?.owed ?? 0) > 0 ? formatPrice(customer.stats!.owed) : "—"}
+                    {(customer.stats?.owed ?? 0) > 0
+                      ? formatPrice(customer.stats!.owed)
+                      : "-"}
                   </p>
 
                   <button

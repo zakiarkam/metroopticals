@@ -19,18 +19,18 @@ export type SavedPrescription = {
   createdAt: string;
   updatedAt: string;
   values: PrescriptionValues;
-  /** "OD -2.25 / -0.75 x 090 · OS …" — ready to print in a list. */
+  /** "OD -2.25 / -0.75 x 090 · OS …" - ready to print in a list. */
   summary: string;
 };
 
 export type Extraction = {
   values: PrescriptionValues;
-  /** Read off the slip — "Bifocals", "PAL" — or null when it does not say. */
+  /** Read off the slip - "Bifocals", "PAL" - or null when it does not say. */
   prescribedDesign: "SINGLE_VISION" | "BIFOCAL" | "PROGRESSIVE" | null;
   found: string[];
   confidence: number | null;
   issuedAt: string | null;
-  /** A sentence worth showing — e.g. "this is not a spectacle prescription". */
+  /** A sentence worth showing - e.g. "this is not a spectacle prescription". */
   warning: string | null;
   cached: boolean;
   /** Whether the slip was kept for the shop to check against. */

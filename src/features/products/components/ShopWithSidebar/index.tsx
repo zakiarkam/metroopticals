@@ -112,7 +112,7 @@ const ShopToolbar = React.memo(function ShopToolbar({
         : "border-gray-3 bg-gray-1 text-dark hover:border-blue hover:text-blue"
     }`;
 
-  // "Showing 49–60 of 340" — the old copy printed the current page size against
+  // "Showing 49–60 of 340" - the old copy printed the current page size against
   // the total, so page five still claimed to be showing the first twelve.
   const count =
     total === 0 ? (
@@ -390,7 +390,6 @@ export default function ShopWithSidebar() {
       ]),
     );
 
-
     const [field, order] = sortBy.includes("-")
       ? sortBy.split("-")
       : [sortBy, "desc"];
@@ -578,7 +577,7 @@ export default function ShopWithSidebar() {
       <PageHero
         eyebrow="The collection"
         title="Shop all eyewear"
-        description="Prescription frames, sunglasses and lenses — filter by shape, size, brand or budget to narrow it down."
+        description="Prescription frames, sunglasses and lenses - filter by shape, size, brand or budget to narrow it down."
         crumbs={[{ label: "Shop" }]}
       />
 
@@ -685,7 +684,7 @@ export default function ShopWithSidebar() {
                 <EmptyState
                   icon={<PackageSearch className="h-7 w-7" />}
                   title="No frames match those filters"
-                  description="Try widening the price range or clearing a filter or two — there is a good chance we stock something close."
+                  description="Try widening the price range or clearing a filter or two - there is a good chance we stock something close."
                   action={
                     hasAnyFilter
                       ? { label: "Clear all filters", onClick: clearEverything }

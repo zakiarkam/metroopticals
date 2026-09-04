@@ -31,7 +31,7 @@ export default function SiteError({
         </h1>
         <p className="mt-3 text-custom-sm text-body">
           It is on our side, not yours. Try again in a moment, or go back to the
-          shop — nothing you were doing has been lost.
+          shop - nothing you were doing has been lost.
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           <button

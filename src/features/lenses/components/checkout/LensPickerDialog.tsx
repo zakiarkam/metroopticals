@@ -40,13 +40,21 @@ import {
   validatePrescription,
   type FieldErrors,
 } from "@/features/lenses/utils/prescription";
+import OrderLensNote from "@/features/lenses/components/OrderLensNote";
+import type { LensDesignKind, LensQuote } from "@/features/lenses/api/lens-api";
+import {
+  DESIGN_KIND_HINTS,
+  DESIGN_KIND_LABELS,
+  LENS_DESIGN_KINDS,
+  designNeedsAdd,
+} from "@/features/lenses/utils/pricing";
 import { formatPrice } from "@/lib/utils/price";
 import { siteConfig } from "@/config/site";
 
 export type LensSelection = {
   lensTypeId: number;
-  /** Which build — single vision, bifocal, progressive. */
-  lensDesignId: number | null;
+  /** How the pair is made - single vision, bifocal, progressive. */
+  lensDesignKind: LensDesignKind;
   lensTintId: number | null;
   prescriptionId: number | null;
 };
@@ -54,9 +62,9 @@ export type LensSelection = {
 /**
  * The four things a customer is actually deciding, in order.
  *
- * The picker has more internal steps than this — typing a prescription,
+ * The picker has more internal steps than this - typing a prescription,
  * choosing a saved one and reading one off a photo are three ways through the
- * same decision — so the rail groups them. Someone halfway through should be
+ * same decision - so the rail groups them. Someone halfway through should be
  * able to see how much is left and step back to anything they have already
  * answered, which is the difference between a form and a wizard you trust.
  */
@@ -107,9 +115,8 @@ export default function LensPickerDialog({
     lensType,
     lensTypeId,
     setLensTypeId,
-    design,
-    designId,
-    setDesignId,
+    designKind,
+    setDesignKind,
     tint,
     tintId,
     setTintId,
@@ -165,12 +172,13 @@ export default function LensPickerDialog({
     setErrors({});
     setSupersedesId(null);
     setSaveToAccount(true);
+    setDesignTouched(false);
     setLabel("My prescription");
   }, [open]);
 
   // Whether an ADD is needed is a property of the BUILD, not the coating: the
   // same blue cut lens needs one as a progressive and none as single vision.
-  const requiresAdd = Boolean(design && design.kind !== "SINGLE_VISION");
+  const requiresAdd = designNeedsAdd(designKind);
   const hasTints = (lensType?.tints.length ?? 0) > 0;
 
   /** A reading addition on the prescription means a second distance. */
@@ -180,7 +188,7 @@ export default function LensPickerDialog({
   /**
    * Which builds this prescription could actually be made as.
    *
-   * The build is not a shopping choice, it is part of the prescription — the
+   * The build is not a shopping choice, it is part of the prescription - the
    * optician decides it, and the customer usually cannot. So it is resolved
    * from what the prescription says rather than asked as its own step:
    *
@@ -190,52 +198,86 @@ export default function LensPickerDialog({
    *
    * Most of the time this leaves exactly one candidate and nothing is asked.
    */
-  const candidateDesigns = useMemo(() => {
-    const all = lensType?.designs ?? [];
-    if (!all.length) return [];
+  /**
+   * Whether the customer has answered the bifocal-or-progressive question
+   * themselves.
+   *
+   * An addition on the slip says a second distance is needed; it does NOT say
+   * how the lens is built, and the two are different glasses at very different
+   * prices. So when the prescriber did not name it and the shop makes both,
+   * the choice is put to the customer and the basket waits for an answer
+   * rather than quietly taking the cheaper one.
+   */
+  const [designTouched, setDesignTouched] = useState(false);
 
-    if (prescribedDesign) {
-      const named = all.filter((entry) => entry.kind === prescribedDesign);
-      if (named.length) return named;
+  /**
+   * Which ways this pair could actually be made.
+   *
+   * How a lens is built is not a shopping choice, it is part of the
+   * prescription - the optician decides it, and the customer usually cannot.
+   * So it is resolved from what the prescription says rather than asked as a
+   * step of its own:
+   *
+   *   - the prescriber named it  -> that one
+   *   - an ADD but nobody said   -> bifocal or progressive, to choose between
+   *   - no ADD                   -> single vision
+   *
+   * Narrowed to what the shop has actually priced, so a coating it only sells
+   * as a single vision lens never offers a progressive that quotes "call us".
+   */
+  const candidateKinds = useMemo<LensDesignKind[]>(() => {
+    const priced = lensType?.designKinds?.length
+      ? lensType.designKinds
+      : LENS_DESIGN_KINDS;
+
+    if (prescribedDesign && priced.includes(prescribedDesign)) {
+      return [prescribedDesign];
     }
 
     if (hasAdd) {
-      const multifocal = all.filter((entry) => entry.kind !== "SINGLE_VISION");
+      const multifocal = priced.filter((kind) => kind !== "SINGLE_VISION");
       if (multifocal.length) return multifocal;
     }
 
-    const single = all.filter((entry) => entry.kind === "SINGLE_VISION");
-    return single.length ? single : all;
+    return priced.includes("SINGLE_VISION") ? ["SINGLE_VISION"] : priced;
   }, [lensType, prescribedDesign, hasAdd]);
 
   /**
-   * Keep the chosen build inside what the prescription allows.
+   * Keep the chosen way inside what the prescription allows.
    *
-   * Editing the prescription — adding an ADD, or correcting bifocal to
-   * progressive — has to move the build with it, or the customer would be
-   * quoted for a lens their own prescription rules out.
+   * Editing the prescription - adding an ADD, or correcting bifocal to
+   * progressive - has to move it, or the customer would be quoted for a lens
+   * their own prescription rules out.
    */
   useEffect(() => {
-    if (!candidateDesigns.length) {
-      if (designId !== null) setDesignId(null);
-      return;
-    }
-
-    if (candidateDesigns.some((entry) => entry.id === designId)) return;
+    if (!candidateKinds.length) return;
+    if (candidateKinds.includes(designKind)) return;
 
     // Several to choose from and nothing chosen yet: the cheapest, so the
     // price shown is the one they can actually get for that money.
-    const cheapest = candidateDesigns.reduce((best, entry) => {
-      const a = lensTypeId ? quoteFor(lensTypeId, entry.id, null) : null;
-      const b = lensTypeId ? quoteFor(lensTypeId, best.id, null) : null;
+    const cheapest = candidateKinds.reduce((best, kind) => {
+      const a = lensTypeId ? quoteFor(lensTypeId, kind, null) : null;
+      const b = lensTypeId ? quoteFor(lensTypeId, best, null) : null;
       if (!a?.priced) return best;
-      if (!b?.priced) return entry;
-      return a.total < b.total ? entry : best;
-    }, candidateDesigns[0]);
+      if (!b?.priced) return kind;
+      return a.total < b.total ? kind : best;
+    }, candidateKinds[0]);
 
-    setDesignId(cheapest.id);
+    setDesignKind(cheapest);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [candidateDesigns, designId, lensTypeId]);
+  }, [candidateKinds, designKind, lensTypeId]);
+
+  /**
+   * The one question left to ask: an addition, nobody said how to build it,
+   * and the shop prices it both ways.
+   */
+  const mustPickDesign =
+    hasAdd &&
+    !prescribedDesign &&
+    !designTouched &&
+    candidateKinds.length > 1 &&
+    candidateKinds.every((kind) => kind !== "SINGLE_VISION");
+
   /** False for plano/fashion lenses, which skip the prescription steps whole. */
   const needsPrescription = lensType?.requiresPrescription !== false;
 
@@ -273,8 +315,8 @@ export default function LensPickerDialog({
   /**
    * Picking a lens type.
    *
-   * If a prescription is already in hand — the shopper is comparing types
-   * after entering it once — this jumps straight back to the review with the
+   * If a prescription is already in hand - the shopper is comparing types
+   * after entering it once - this jumps straight back to the review with the
    * new price, which is the whole reason the quotes are cached.
    */
   const chooseLensType = (id: number) => {
@@ -322,19 +364,19 @@ export default function LensPickerDialog({
       applyExtraction(extraction);
 
       if (extraction.warning) {
-        // The reader looked and disagrees about what this is — say so
+        // The reader looked and disagrees about what this is - say so
         // plainly rather than presenting an empty form as a partial success.
         toast(extraction.warning, { icon: "🤔", duration: 7000 });
       } else if (extraction.found.length === 0) {
         toast(
-          "We couldn't pick the numbers out of that one — please type them in below.",
+          "We couldn't pick the numbers out of that one - please type them in below.",
           { icon: "📝", duration: 6000 },
         );
       } else {
         const n = extraction.found.length;
         toast.success(
           extraction.cached
-            ? `We'd read this one before — ${n} ${n === 1 ? "value" : "values"} filled in below. Check each one.`
+            ? `We'd read this one before - ${n} ${n === 1 ? "value" : "values"} filled in below. Check each one.`
             : `Read ${n} ${n === 1 ? "value" : "values"} off your prescription. Check each highlighted box before continuing.`,
           { duration: 6000 },
         );
@@ -373,7 +415,7 @@ export default function LensPickerDialog({
           supersedesId,
         });
         rxId = created.id;
-        // On a re-test the superseded chain drops out of the picker — "use my
+        // On a re-test the superseded chain drops out of the picker - "use my
         // current prescription" has to mean the current one. A brand-new
         // prescription filters nothing: every other saved entry stays.
         setSaved([
@@ -391,7 +433,7 @@ export default function LensPickerDialog({
       // they are written as a one-off record rather than left floating.
       if (!rxId && lensType?.requiresPrescription) {
         const created = await createPrescription({
-          label: `${frameTitle} — ${new Date().toLocaleDateString("en-GB")}`,
+          label: `${frameTitle} - ${new Date().toLocaleDateString("en-GB")}`,
           values: normalisePrescription(values),
           source: method === "upload" ? "UPLOAD" : "MANUAL",
           ocrConfidence,
@@ -405,7 +447,7 @@ export default function LensPickerDialog({
 
       const ok = await onConfirm({
         lensTypeId,
-        lensDesignId: designId,
+        lensDesignKind: designKind,
         lensTintId: tintId,
         prescriptionId: rxId,
       });
@@ -505,12 +547,19 @@ export default function LensPickerDialog({
                 />
               )}
 
-              {intentSlug && lensType && step !== "type" && step !== "review" && (
-                <p className="mb-4 rounded-xl border border-blue/25 bg-blue/[0.06] px-4 py-3 text-[12.5px] leading-relaxed text-dark-3">
-                  Set to <strong className="font-semibold text-dark">{lensType.name}</strong>,
-                  the lens you came from. Use Back or the steps above to change it.
-                </p>
-              )}
+              {intentSlug &&
+                lensType &&
+                step !== "type" &&
+                step !== "review" && (
+                  <p className="mb-4 rounded-xl border border-blue/25 bg-blue/[0.06] px-4 py-3 text-[12.5px] leading-relaxed text-dark-3">
+                    Set to{" "}
+                    <strong className="font-semibold text-dark">
+                      {lensType.name}
+                    </strong>
+                    , the lens you came from. Use Back or the steps above to
+                    change it.
+                  </p>
+                )}
 
               {step === "tint" && lensType && (
                 <StepTint
@@ -600,10 +649,16 @@ export default function LensPickerDialog({
                 <StepReview
                   needsPrescription={needsPrescription}
                   lensTypeName={lensType?.name ?? ""}
-                  designName={design?.name ?? null}
-                  designChoices={candidateDesigns}
-                  designId={designId}
-                  onDesignChange={setDesignId}
+                  designChoices={candidateKinds}
+                  designKind={designKind}
+                  onDesignChange={(kind: LensDesignKind) => {
+                    setDesignTouched(true);
+                    setDesignKind(kind);
+                  }}
+                  mustPickDesign={mustPickDesign}
+                  designQuoteFor={(kind: LensDesignKind) =>
+                    lensTypeId ? quoteFor(lensTypeId, kind, tintId) : null
+                  }
                   prescribedDesign={prescribedDesign}
                   tintName={tint?.name ?? null}
                   tintHex={tint?.hex ?? null}
@@ -617,8 +672,8 @@ export default function LensPickerDialog({
                     null
                   }
                   savedVersion={
-                    saved.find((entry) => entry.id === prescriptionId)?.version ??
-                    null
+                    saved.find((entry) => entry.id === prescriptionId)
+                      ?.version ?? null
                   }
                   saveToAccount={saveToAccount}
                   setSaveToAccount={setSaveToAccount}
@@ -626,8 +681,8 @@ export default function LensPickerDialog({
                   setLabel={setLabel}
                   supersedesLabel={
                     supersedesId
-                      ? (saved.find((entry) => entry.id === supersedesId)?.label ??
-                        null)
+                      ? (saved.find((entry) => entry.id === supersedesId)
+                          ?.label ?? null)
                       : null
                   }
                   onChangeLens={() => setStep("type")}
@@ -683,7 +738,9 @@ export default function LensPickerDialog({
                 <button
                   type="button"
                   onClick={confirm}
-                  disabled={saving || quoting || !currentQuote?.priced}
+                  disabled={
+                    saving || quoting || !currentQuote?.priced || mustPickDesign
+                  }
                   className="inline-flex h-11 items-center gap-2 rounded-xl bg-blue px-6 text-[13.5px] font-bold text-white transition-colors hover:bg-blue-dark disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {saving && <Loader2 className="h-4 w-4 animate-spin" />}
@@ -906,9 +963,11 @@ function StepLensType({
                     </span>
                   </span>
 
-                  {type.designs.length > 1 && (
+                  {(type.designKinds?.length ?? 0) > 1 && (
                     <span className="mt-2 block text-[11.5px] text-dark-5">
-                      {type.designs.map((entry) => entry.name).join(" · ")}
+                      {type
+                        .designKinds!.map((kind) => DESIGN_KIND_LABELS[kind])
+                        .join(" · ")}
                     </span>
                   )}
 
@@ -958,8 +1017,8 @@ function StepTint({
     <div className="space-y-2.5">
       <p className="mb-1 text-[13px] leading-relaxed text-dark-5">
         {lensType.name} comes in {lensType.tints.length} colours. The tint is
-        what the lens looks like from the outside and how it filters light —
-        the prescription is identical in all of them.
+        what the lens looks like from the outside and how it filters light - the
+        prescription is identical in all of them.
       </p>
 
       {lensType.tints.map((tint) => {
@@ -994,7 +1053,9 @@ function StepTint({
             </span>
 
             <span className="shrink-0 text-[13.5px] font-bold text-dark">
-              {tint.surcharge > 0 ? `+ ${formatPrice(tint.surcharge)}` : "Included"}
+              {tint.surcharge > 0
+                ? `+ ${formatPrice(tint.surcharge)}`
+                : "Included"}
             </span>
 
             {selected && <Check className="h-4 w-4 shrink-0 text-blue" />}
@@ -1021,7 +1082,7 @@ function StepMethod({
       key: "manual" as const,
       icon: PencilLine,
       title: "Enter it manually",
-      hint: "Type the numbers off your prescription — takes about a minute.",
+      hint: "Type the numbers off your prescription - takes about a minute.",
       show: true,
     },
     {
@@ -1038,7 +1099,7 @@ function StepMethod({
       key: "upload" as const,
       icon: Camera,
       title: "Upload a photo",
-      hint: "We'll read what we can off it — you check every number after.",
+      hint: "We'll read what we can off it - you check every number after.",
       show: uploadEnabled,
     },
   ].filter((option) => option.show);
@@ -1067,7 +1128,9 @@ function StepMethod({
       ))}
 
       <div className="pt-3">
-        <p className="text-[13px] text-dark-5">Don&apos;t have a prescription?</p>
+        <p className="text-[13px] text-dark-5">
+          Don&apos;t have a prescription?
+        </p>
         <Link
           href="/contact"
           className="mt-0.5 inline-block text-[13px] font-semibold text-blue underline underline-offset-4 hover:text-blue-dark"
@@ -1091,7 +1154,7 @@ function StepSaved({
   saved: import("@/features/prescriptions/api/prescription-api").SavedPrescription[];
   selectedId: number | null;
   onSelect: (id: number) => void;
-  /** "My eyes have changed" — opens this one for a new version. */
+  /** "My eyes have changed" - opens this one for a new version. */
   onUpdate: (id: number) => void;
   onAddNew: () => void;
 }) {
@@ -1104,53 +1167,53 @@ function StepSaved({
 
         return (
           <div key={entry.id}>
-          <button
-            type="button"
-            onClick={() => onSelect(entry.id)}
-            aria-pressed={selected}
-            className={`w-full rounded-xl border px-4 py-3.5 text-left transition-colors ${
-              selected
-                ? "border-blue bg-blue/[0.08]"
-                : "border-gray-3 bg-gray-2 hover:border-blue/50"
-            }`}
-          >
-            <span className="flex items-center justify-between gap-3">
-              <span className="text-[14px] font-bold text-dark">
-                {entry.label}
+            <button
+              type="button"
+              onClick={() => onSelect(entry.id)}
+              aria-pressed={selected}
+              className={`w-full rounded-xl border px-4 py-3.5 text-left transition-colors ${
+                selected
+                  ? "border-blue bg-blue/[0.08]"
+                  : "border-gray-3 bg-gray-2 hover:border-blue/50"
+              }`}
+            >
+              <span className="flex items-center justify-between gap-3">
+                <span className="text-[14px] font-bold text-dark">
+                  {entry.label}
+                </span>
+                <span className="flex shrink-0 items-center gap-2">
+                  {entry.prescribedDesign && (
+                    <span className="rounded-full bg-blue/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-blue">
+                      {PRESCRIBED_LABELS[entry.prescribedDesign]}
+                    </span>
+                  )}
+                  {entry.version > 1 && (
+                    <span className="rounded-full bg-gray-3 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-dark-4">
+                      v{entry.version}
+                    </span>
+                  )}
+                  {expired && (
+                    <span className="rounded-full bg-orange/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-orange-dark">
+                      Out of date
+                    </span>
+                  )}
+                  {selected && <Check className="h-4 w-4 text-blue" />}
+                </span>
               </span>
-              <span className="flex shrink-0 items-center gap-2">
-                {entry.prescribedDesign && (
-                  <span className="rounded-full bg-blue/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-blue">
-                    {PRESCRIBED_LABELS[entry.prescribedDesign]}
-                  </span>
-                )}
-                {entry.version > 1 && (
-                  <span className="rounded-full bg-gray-3 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-dark-4">
-                    v{entry.version}
-                  </span>
-                )}
-                {expired && (
-                  <span className="rounded-full bg-orange/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-orange-dark">
-                    Out of date
-                  </span>
-                )}
-                {selected && <Check className="h-4 w-4 text-blue" />}
+
+              <span className="mt-1 block font-mono text-[12px] leading-relaxed text-dark-4">
+                {entry.summary}
               </span>
-            </span>
 
-            <span className="mt-1 block font-mono text-[12px] leading-relaxed text-dark-4">
-              {entry.summary}
-            </span>
-
-            <span className="mt-1 block text-[11px] text-dark-5">
-              Saved{" "}
-              {new Date(entry.createdAt).toLocaleDateString("en-GB", {
-                day: "numeric",
-                month: "short",
-                year: "numeric",
-              })}
-            </span>
-          </button>
+              <span className="mt-1 block text-[11px] text-dark-5">
+                Saved{" "}
+                {new Date(entry.createdAt).toLocaleDateString("en-GB", {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                })}
+              </span>
+            </button>
 
             {/* Outside the card's own button: a re-test is a different
                 intention from "use this one", and nesting buttons is invalid
@@ -1161,7 +1224,7 @@ function StepSaved({
               className="mt-1.5 inline-flex items-center gap-1.5 pl-4 text-[12px] font-semibold text-blue underline underline-offset-4 hover:text-blue-dark"
             >
               <PencilLine className="h-3.5 w-3.5" />
-              My eyes have changed — update these
+              My eyes have changed - update these
             </button>
           </div>
         );
@@ -1231,7 +1294,7 @@ function StepUpload({
             <p className="mx-auto mt-1.5 max-w-sm text-[12.5px] leading-relaxed text-dark-5">
               We read the powers off it in a few seconds and fill the form in
               for you to check. A clear, straight-on photo of the whole slip
-              works best — JPG, PNG, HEIC or PDF, up to 8MB.
+              works best - JPG, PNG, HEIC or PDF, up to 8MB.
             </p>
 
             <button
@@ -1263,7 +1326,7 @@ function StepUpload({
           The reading is a head start, not the source of truth: every value it
           fills in is highlighted for you to confirm before anything is priced.
           We keep the photo with your prescription so our optician can check it
-          against the numbers before your lenses are cut — you can delete it at
+          against the numbers before your lenses are cut - you can delete it at
           any time from your account.
         </p>
       </div>
@@ -1284,10 +1347,11 @@ function StepUpload({
 function StepReview({
   needsPrescription,
   lensTypeName,
-  designName,
   designChoices,
-  designId,
+  designKind,
   onDesignChange,
+  mustPickDesign,
+  designQuoteFor,
   prescribedDesign,
   tintName,
   tintHex,
@@ -1306,14 +1370,17 @@ function StepReview({
   onChangeLens,
   onEditRx,
 }: {
-  /** False for a plano lens — there is no prescription to show or to save. */
+  /** False for a plano lens - there is no prescription to show or to save. */
   needsPrescription: boolean;
   lensTypeName: string;
-  designName: string | null;
-  /** Builds this prescription allows. One means nothing to ask. */
-  designChoices: import("@/features/lenses/api/lens-api").LensDesign[];
-  designId: number | null;
-  onDesignChange: (id: number) => void;
+  /** The ways this prescription allows. One means nothing to ask. */
+  designChoices: LensDesignKind[];
+  designKind: LensDesignKind;
+  /** True while the bifocal-or-progressive question is still unanswered. */
+  mustPickDesign: boolean;
+  /** The price of one way of making it, for showing what each choice costs. */
+  designQuoteFor: (kind: LensDesignKind) => LensQuote | null;
+  onDesignChange: (kind: LensDesignKind) => void;
   prescribedDesign: "SINGLE_VISION" | "BIFOCAL" | "PROGRESSIVE" | null;
   tintName: string | null;
   tintHex: string | null;
@@ -1375,51 +1442,92 @@ function StepReview({
             <span className="font-semibold text-dark">{lensTypeName}</span>
           </div>
 
-          {/* Settled by the prescription, so it is stated rather than asked —
+          {/* Settled by the prescription, so it is stated rather than asked -
               unless the shop makes this kind more than one way, which is a
               real choice (a round top and a flat top bifocal are different
               lenses at different prices). */}
-          {designChoices.length <= 1
-            ? designName && (
-                <div className="flex items-center justify-between gap-3 text-[13.5px]">
-                  <span className="text-dark-4">Made as</span>
-                  <span className="font-semibold text-dark">
-                    {designName}
-                    {prescribedDesign && (
-                      <span className="ml-1.5 text-[11.5px] font-medium text-dark-5">
-                        (as prescribed)
+          {mustPickDesign ? (
+            /* Asked, not assumed. A reading addition says a second distance
+               is needed; it does not say whether the lens is built with a
+               line or without one, and that is the customer's own answer to
+               give. The basket waits for it. */
+            <div className="rounded-xl border border-blue/30 bg-white px-3.5 py-3">
+              <p className="text-[13px] font-bold text-dark">
+                Bifocal or progressive?
+              </p>
+              <p className="mt-0.5 text-[11.5px] leading-relaxed text-dark-5">
+                Your prescription has a reading addition, and it doesn&apos;t
+                say which to make. Both correct the same powers - a bifocal has
+                a visible line, a progressive blends between the distances.
+              </p>
+
+              <div className="mt-2.5 grid gap-2 sm:grid-cols-2">
+                {designChoices.map((kind) => {
+                  const kindQuote = designQuoteFor(kind);
+                  return (
+                    <button
+                      key={kind}
+                      type="button"
+                      onClick={() => onDesignChange(kind)}
+                      className="rounded-lg border border-gray-3 bg-white px-3 py-2.5 text-left transition-colors hover:border-blue hover:bg-blue/[0.05]"
+                    >
+                      <span className="block text-[12.5px] font-bold text-dark">
+                        {DESIGN_KIND_LABELS[kind]}
                       </span>
-                    )}
+                      <span className="mt-0.5 block text-[11.5px] font-semibold text-blue">
+                        {kindQuote?.priced
+                          ? formatPrice(kindQuote.total)
+                          : "Ask us for a price"}
+                      </span>
+                      <span className="mt-0.5 block text-[11px] leading-snug text-dark-5">
+                        {DESIGN_KIND_HINTS[kind]}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : designChoices.length <= 1 ? (
+            <div className="flex items-center justify-between gap-3 text-[13.5px]">
+              <span className="text-dark-4">Made as</span>
+              <span className="font-semibold text-dark">
+                {DESIGN_KIND_LABELS[designKind]}
+                {prescribedDesign && (
+                  <span className="ml-1.5 text-[11.5px] font-medium text-dark-5">
+                    (as prescribed)
                   </span>
-                </div>
-              )
-            : (
-                <div className="text-[13.5px]">
-                  <label
-                    htmlFor="review-design"
-                    className="mb-1.5 block text-dark-4"
-                  >
-                    Made as
-                    {!prescribedDesign && (
-                      <span className="ml-1.5 text-[11.5px] text-dark-5">
-                        — your prescription has a reading addition, so pick one
-                      </span>
-                    )}
-                  </label>
-                  <select
-                    id="review-design"
-                    value={designId ?? ""}
-                    onChange={(event) => onDesignChange(Number(event.target.value))}
-                    className="h-11 w-full cursor-pointer rounded-lg border border-gray-3 bg-white px-3 text-[13.5px] font-semibold text-dark outline-none focus:border-blue"
-                  >
-                    {designChoices.map((entry) => (
-                      <option key={entry.id} value={entry.id}>
-                        {entry.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
+                )}
+              </span>
+            </div>
+          ) : (
+            <div className="text-[13.5px]">
+              <label
+                htmlFor="review-design"
+                className="mb-1.5 block text-dark-4"
+              >
+                Made as
+                {!prescribedDesign && (
+                  <span className="ml-1.5 text-[11.5px] text-dark-5">
+                    - your prescription has a reading addition, so pick one
+                  </span>
+                )}
+              </label>
+              <select
+                id="review-design"
+                value={designKind}
+                onChange={(event) =>
+                  onDesignChange(event.target.value as LensDesignKind)
+                }
+                className="h-11 w-full cursor-pointer rounded-lg border border-gray-3 bg-white px-3 text-[13.5px] font-semibold text-dark outline-none focus:border-blue"
+              >
+                {designChoices.map((kind) => (
+                  <option key={kind} value={kind}>
+                    {DESIGN_KIND_LABELS[kind]}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {tintName && (
             <div className="flex items-center justify-between gap-3 text-[13.5px]">
@@ -1439,33 +1547,33 @@ function StepReview({
 
       {/* ------------------------ your prescription ---------------------- */}
       {needsPrescription && (
-      <section className="rounded-xl border border-gray-3 bg-gray-2">
-        <header className="flex items-center justify-between gap-3 border-b border-gray-3 px-4 py-3">
-          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-dark-4">
-            Your prescription
-            {fromSaved && savedLabel ? ` · ${savedLabel}` : ""}
-            {fromSaved && savedVersion && savedVersion > 1
-              ? ` (v${savedVersion})`
-              : ""}
-          </p>
-          <button
-            type="button"
-            onClick={onEditRx}
-            className="text-[12px] font-semibold text-blue underline underline-offset-4"
-          >
-            {fromSaved ? "Use another" : "Edit"}
-          </button>
-        </header>
+        <section className="rounded-xl border border-gray-3 bg-gray-2">
+          <header className="flex items-center justify-between gap-3 border-b border-gray-3 px-4 py-3">
+            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-dark-4">
+              Your prescription
+              {fromSaved && savedLabel ? ` · ${savedLabel}` : ""}
+              {fromSaved && savedVersion && savedVersion > 1
+                ? ` (v${savedVersion})`
+                : ""}
+            </p>
+            <button
+              type="button"
+              onClick={onEditRx}
+              className="text-[12px] font-semibold text-blue underline underline-offset-4"
+            >
+              {fromSaved ? "Use another" : "Edit"}
+            </button>
+          </header>
 
-        <p className="px-4 py-3.5 font-mono text-[12.5px] leading-relaxed text-dark-3">
-          {summary}
-        </p>
-      </section>
+          <p className="px-4 py-3.5 font-mono text-[12.5px] leading-relaxed text-dark-3">
+            {summary}
+          </p>
+        </section>
       )}
 
       {!needsPrescription && (
         <p className="rounded-xl border border-gray-3 bg-gray-2 px-4 py-3.5 text-[12.5px] leading-relaxed text-dark-4">
-          These are non-prescription lenses — no powers needed, nothing to
+          These are non-prescription lenses - no powers needed, nothing to
           enter. If you do wear a prescription, pick a prescription lens type
           instead.
         </p>
@@ -1521,6 +1629,13 @@ function StepReview({
             </div>
           </div>
 
+          <OrderLensNote
+            isOrderLens={quote.isOrderLens}
+            leadTimeDays={quote.leadTimeDays}
+            variant="panel"
+            className="mt-3"
+          />
+
           <p className="mt-2.5 text-[11px] leading-relaxed text-dark-5">
             Priced per pair, from the stronger of your two eyes.
           </p>
@@ -1530,8 +1645,8 @@ function StepReview({
       {supersedesLabel && (
         <p className="rounded-xl border border-blue/25 bg-blue/[0.06] px-4 py-3 text-[12.5px] leading-relaxed text-dark-3">
           These will be saved as a new version of{" "}
-          <strong className="font-semibold text-dark">{supersedesLabel}</strong>.
-          Your previous powers stay on file, so the pair you bought with them
+          <strong className="font-semibold text-dark">{supersedesLabel}</strong>
+          . Your previous powers stay on file, so the pair you bought with them
           can still be matched.
         </p>
       )}
@@ -1551,7 +1666,7 @@ function StepReview({
                 Save this to my account
               </span>
               <span className="mt-0.5 block text-[12px] leading-relaxed text-dark-5">
-                Next time — a new pair, or a spare in a year — you pick it off a
+                Next time - a new pair, or a spare in a year - you pick it off a
                 list instead of typing it again. When your eyes change we save
                 the new powers as a new version and keep the old one.
               </span>
@@ -1563,7 +1678,7 @@ function StepReview({
               value={label}
               onChange={(event) => setLabel(event.target.value)}
               maxLength={60}
-              placeholder="Name it — “Mine”, “Amma’s”, “Driving pair”"
+              placeholder="Name it - “Mine”, “Amma’s”, “Driving pair”"
               className="mt-3 h-11 w-full rounded-xl border border-gray-3 bg-white px-4 text-[13.5px] text-dark outline-none placeholder:text-dark-5 focus:border-blue"
             />
           )}

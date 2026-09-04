@@ -35,12 +35,16 @@ export const authOptions: NextAuthOptions = {
 
         const ip = getClientIp(req?.headers ?? {});
         rateLimit(`login-ip:${ip}`, 50, 15 * 60 * 1000);
-        rateLimit(`login:${credentials.email.trim().toLowerCase()}`, 10, 15 * 60 * 1000);
+        rateLimit(
+          `login:${credentials.email.trim().toLowerCase()}`,
+          10,
+          15 * 60 * 1000,
+        );
 
         try {
           const user = await verifyUser(
             credentials.email,
-            credentials.password
+            credentials.password,
           );
 
           if (user) {
@@ -108,7 +112,8 @@ export const authOptions: NextAuthOptions = {
 
       // Session updates and periodic refreshes re-read the user from the
       // database; client-supplied session data is never copied into the token.
-      const refreshedAt = typeof token.refreshedAt === "number" ? token.refreshedAt : 0;
+      const refreshedAt =
+        typeof token.refreshedAt === "number" ? token.refreshedAt : 0;
       const stale = Date.now() - refreshedAt > REFRESH_INTERVAL_MS;
       const tokenId =
         typeof token.id === "number" ? token.id : Number(token.id ?? NaN);
@@ -137,12 +142,19 @@ export const authOptions: NextAuthOptions = {
         // A session issued before the password last changed is the one that
         // must not survive the change.
         const issuedAt = typeof token.iat === "number" ? token.iat * 1000 : 0;
-        if (dbUser.passwordChangedAt && issuedAt < dbUser.passwordChangedAt.getTime()) {
+        if (
+          dbUser.passwordChangedAt &&
+          issuedAt < dbUser.passwordChangedAt.getTime()
+        ) {
           return { refreshedAt: Date.now() } as unknown as JWT;
         }
 
         // Staff sessions on a shared shop computer should not outlive the day.
-        if (dbUser.role !== "CUSTOMER" && issuedAt && Date.now() - issuedAt > 12 * 60 * 60 * 1000) {
+        if (
+          dbUser.role !== "CUSTOMER" &&
+          issuedAt &&
+          Date.now() - issuedAt > 12 * 60 * 60 * 1000
+        ) {
           return { refreshedAt: Date.now() } as unknown as JWT;
         }
         token.email = dbUser.email;
@@ -161,8 +173,8 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
     async session({ session, token }) {
-      // A retired session — account removed, password changed, a staff login
-      // older than a shift — is retired above by stripping the token's
+      // A retired session - account removed, password changed, a staff login
+      // older than a shift - is retired above by stripping the token's
       // identity, not by deleting the cookie. Handing back a session object
       // anyway gave it `id: NaN`, which every API route refuses but which
       // `useSession` still reports as *authenticated*: the browser believed it

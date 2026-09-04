@@ -23,7 +23,7 @@ import {
 } from "@/features/products/api/product-api";
 import { Toast } from "@/lib/utils/toast";
 
-/** Sentinel for "no specific colour" — Radix Select forbids an empty value. */
+/** Sentinel for "no specific colour" - Radix Select forbids an empty value. */
 const NO_COLOR = "__none__";
 
 interface StockDialogProps {
@@ -70,7 +70,9 @@ const StockDialog: React.FC<StockDialogProps> = ({
     )?.stock;
 
   const selectedColor = color === NO_COLOR ? undefined : color;
-  const selectedColorCount = selectedColor ? countFor(selectedColor) : undefined;
+  const selectedColorCount = selectedColor
+    ? countFor(selectedColor)
+    : undefined;
 
   // Removing stock is bounded by whichever count is being spent: the
   // colourway's when one is recorded, the total otherwise.
@@ -100,7 +102,7 @@ const StockDialog: React.FC<StockDialogProps> = ({
     const toastId = Toast.loading(
       `${type === "increment" ? "Adding" : "Removing"} ${count} unit${
         count > 1 ? "s" : ""
-      }...`
+      }...`,
     );
 
     try {
@@ -218,14 +220,12 @@ const StockDialog: React.FC<StockDialogProps> = ({
                         <SelectItem key={c} value={c}>
                           {c}
                           {recorded != null
-                            ? ` — ${recorded} in stock`
-                            : " — not counted yet"}
+                            ? ` - ${recorded} in stock`
+                            : " - not counted yet"}
                         </SelectItem>
                       );
                     })}
-                    <SelectItem value={NO_COLOR}>
-                      No specific colour
-                    </SelectItem>
+                    <SelectItem value={NO_COLOR}>No specific colour</SelectItem>
                   </SelectContent>
                 </Select>
                 <p className="mt-1.5 text-custom-xs text-dark-5">
@@ -310,8 +310,8 @@ const StockDialog: React.FC<StockDialogProps> = ({
             {isSubmitting
               ? "Processing..."
               : type === "increment"
-              ? "Add Stock"
-              : "Remove Stock"}
+                ? "Add Stock"
+                : "Remove Stock"}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -19,7 +19,11 @@ import {
   clearCart,
   setCartItemLens,
 } from "@/features/cart/api/cart-api";
-import { describePrescription, valuesFromRow } from "@/features/lenses/utils/prescription";
+import {
+  describePrescription,
+  valuesFromRow,
+} from "@/features/lenses/utils/prescription";
+import { DESIGN_KIND_LABELS } from "@/features/lenses/utils/pricing";
 import { toast } from "react-hot-toast";
 import { normalizeImageArray } from "@/lib/storageUtils";
 import { getEffectiveStock } from "@/features/products/utils/availability";
@@ -59,7 +63,7 @@ export const useCart = () => {
       const { cartItems: items } = await getCartItems();
       const mappedItems = items.map((item) => {
         // The line's ceiling is its own colourway's count, not the product
-        // total — a black frame in the cart is out of stock when black is,
+        // total - a black frame in the cart is out of stock when black is,
         // even while tortoise is still on the shelf.
         const lineStock = getEffectiveStock(
           item.product.stock,
@@ -88,9 +92,9 @@ export const useCart = () => {
                 lensTypeId: item.lensType.id,
                 lensTypeName: item.lensType.name,
                 lensTypeSlug: item.lensType.slug,
-                designId: item.lensDesign?.id ?? null,
-                designName: item.lensDesign?.name ?? null,
-                designKind: item.lensDesign?.kind ?? null,
+                designKind: item.lensDesignKind ?? "SINGLE_VISION",
+                designName:
+                  DESIGN_KIND_LABELS[item.lensDesignKind ?? "SINGLE_VISION"],
                 tintId: item.lensTint?.id ?? null,
                 tintName: item.lensTint?.name ?? null,
                 tintHex: item.lensTint?.hex ?? null,
@@ -101,13 +105,15 @@ export const useCart = () => {
                   ? describePrescription(valuesFromRow(item.prescription))
                   : null,
                 price: item.lensPrice ?? 0,
+                isOrderLens: Boolean(item.lensIsOrderLens),
+                leadTimeDays: item.lensLeadTimeDays ?? null,
               }
             : null,
         };
       });
       dispatch(syncCartItems(mappedItems));
     } catch (error) {
-      // A signed-out or expired session is not a cart failure — the basket is
+      // A signed-out or expired session is not a cart failure - the basket is
       // simply empty until they sign in again. Anything else is worth seeing.
       if ((error as any)?.response?.status !== 401) {
         console.error("Failed to load cart:", error);
@@ -189,14 +195,15 @@ export const useCart = () => {
         toast.error("Sign in to add items to your cart");
         if (typeof window !== "undefined") {
           const back = window.location.pathname + window.location.search;
-          window.location.assign(`/log-in?redirect=${encodeURIComponent(back)}`);
+          window.location.assign(
+            `/log-in?redirect=${encodeURIComponent(back)}`,
+          );
         }
         return false;
       }
 
       const loadingToast = toast.loading("Adding to cart...");
       try {
-
         const response = await addToCart({
           productId: product.id,
           quantity,
@@ -291,7 +298,6 @@ export const useCart = () => {
     async (id: number) => {
       const loadingToast = toast.loading("Removing item...");
       try {
-
         // Optimistic update
         dispatch(removeItemFromCart(id));
 
@@ -318,7 +324,7 @@ export const useCart = () => {
    * Fit lenses to a line, or take them off.
    *
    * The cart is reloaded rather than patched in place because the server may
-   * have merged this line into an identical one — two pairs of the same frame
+   * have merged this line into an identical one - two pairs of the same frame
    * with the same lenses are one line of quantity two.
    */
   const handleSetLens = useCallback(
@@ -326,7 +332,7 @@ export const useCart = () => {
       itemId: number,
       selection: {
         lensTypeId: number | null;
-        lensDesignId?: number | null;
+        lensDesignKind?: "SINGLE_VISION" | "BIFOCAL" | "PROGRESSIVE";
         lensTintId?: number | null;
         prescriptionId?: number | null;
       },
@@ -337,9 +343,7 @@ export const useCart = () => {
       try {
         await setCartItemLens(itemId, selection);
         toast.dismiss(loadingToast);
-        toast.success(
-          selection.lensTypeId ? "Lenses added" : "Lenses removed",
-        );
+        toast.success(selection.lensTypeId ? "Lenses added" : "Lenses removed");
         await loadCart();
         return true;
       } catch (error: any) {
@@ -356,7 +360,6 @@ export const useCart = () => {
   const handleClearCart = useCallback(async () => {
     const loadingToast = toast.loading("Clearing cart...");
     try {
-
       await clearCart();
       dispatch(removeAllItemsFromCart());
 

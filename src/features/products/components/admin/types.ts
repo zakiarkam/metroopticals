@@ -52,11 +52,13 @@ export const colorRowsHaveCounts = (rows: ColorStockRow[] | undefined) =>
   );
 
 /**
- * True when some colours are counted and others are not — an ambiguous form
+ * True when some colours are counted and others are not - an ambiguous form
  * the dialogs refuse, because a blank would otherwise silently become zero
  * and mark the colour sold out.
  */
-export const colorRowsPartiallyCounted = (rows: ColorStockRow[] | undefined) => {
+export const colorRowsPartiallyCounted = (
+  rows: ColorStockRow[] | undefined,
+) => {
   const named = namedColorRows(rows ?? []);
   const counted = named.filter((row) => row.stock.trim() !== "").length;
   return counted > 0 && counted < named.length;
@@ -106,14 +108,15 @@ export const toEyewearPayload = (v: EyewearFormFields): EyewearSpec => {
 };
 
 /**
- * The per-colour rows for the API — undefined only when the product has no
+ * The per-colour rows for the API - undefined only when the product has no
  * colours at all. A blank quantity is sent as null (the colour stays
  * uncounted and falls back to the product total), so a colour can carry a
  * photo before anyone has counted it.
  */
 export const toColorStocksPayload = (
   rows: ColorStockRow[] | undefined,
-): { color: string; stock: number | null; image: string | null }[]
+):
+  | { color: string; stock: number | null; image: string | null }[]
   | undefined => {
   const named = namedColorRows(rows ?? []);
   if (!named.length) return undefined;

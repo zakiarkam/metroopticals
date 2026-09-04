@@ -33,7 +33,7 @@ const ORDER_WITH_LINES = {
  *
  * Every guard here is about the same thing: a customer may only start a
  * payment for their own, still-open, card order. The amount comes from the
- * order row, so what the gateway is asked for is what the shop recorded — the
+ * order row, so what the gateway is asked for is what the shop recorded - the
  * browser has no say in it and never sees the merchant secret.
  */
 export async function startPayHerePayment(
@@ -70,7 +70,7 @@ export async function startPayHerePayment(
   }
 
   // PayHere validates these two and refuses the payment outright if either is
-  // blank — better to fail here, on our own page, than after the customer has
+  // blank - better to fail here, on our own page, than after the customer has
   // been thrown out to a gateway error screen.
   if (!order.billingEmail?.trim() || !order.billingPhone?.trim()) {
     throw new ValidationError(
@@ -121,7 +121,7 @@ export type PayHereOutcome =
  * Applies an already-authenticated PayHere callback to the order it names.
  *
  * The signature was checked before this ran; what is checked here is that the
- * *message matches the bill* — same currency, same amount to the cent. A
+ * *message matches the bill* - same currency, same amount to the cent. A
  * genuine notification for the wrong money is still not permission to mark an
  * order paid.
  */
@@ -148,7 +148,7 @@ export async function applyPayHereNotification(
 
   // Compared as the exact string that was signed, not as a rounded number.
   // The verifier has already pinned the amount to `1234.00` shape, so there
-  // is no formatting variance left to be tolerant of — and tolerance is
+  // is no formatting variance left to be tolerant of - and tolerance is
   // precisely what a boundary-shifted message needs to slip through.
   const expectedAmount = formatPayHereAmount(order.totalAmount);
   if (notification.amount !== expectedAmount) {
@@ -188,7 +188,7 @@ export async function applyPayHereNotification(
     case PAYHERE_STATUS.CANCELED:
     case PAYHERE_STATUS.FAILED: {
       // A failure that arrives after the bill was settled is not authority to
-      // unwind it — that would be a free way to cancel a paid order.
+      // unwind it - that would be a free way to cancel a paid order.
       if (order.paymentStatus === "PAID") {
         logger.warn("PayHere failure ignored on an already-paid order", {
           orderNumber: order.orderNumber,
@@ -197,7 +197,8 @@ export async function applyPayHereNotification(
         return { outcome: "ignored", orderId };
       }
 
-      if (order.status === "CANCELLED") return { outcome: "cancelled", orderId };
+      if (order.status === "CANCELLED")
+        return { outcome: "cancelled", orderId };
 
       // Cancelling through the normal path puts the stock back, writes the
       // ledger entry and tells the customer, exactly as an admin cancellation
@@ -220,7 +221,9 @@ export async function applyPayHereNotification(
   }
 }
 
-type OrderWithLines = Prisma.OrderGetPayload<{ include: typeof ORDER_WITH_LINES }>;
+type OrderWithLines = Prisma.OrderGetPayload<{
+  include: typeof ORDER_WITH_LINES;
+}>;
 
 /**
  * Records a successful charge, once.
@@ -238,7 +241,7 @@ async function settlePaidOrder(
 
   // A bill whose money was pulled back is settled by a person, not by another
   // callback. `payment_id` is outside the signature, so a captured success
-  // message can be replayed with a fresh one — and the one moment that would
+  // message can be replayed with a fresh one - and the one moment that would
   // do real harm is here, silently turning a chargeback back into a sale and
   // burying the alert that was raised for it.
   if (order.paymentStatus === "REFUNDED") {
@@ -266,7 +269,8 @@ async function settlePaidOrder(
       // A cancelled order that then reports a successful payment is a refund
       // problem for a person, not something to quietly re-open: the stock has
       // already gone back on the shelf.
-      const nextStatus = order.status === "PENDING" ? "CONFIRMED" : order.status;
+      const nextStatus =
+        order.status === "PENDING" ? "CONFIRMED" : order.status;
 
       const updated = await tx.order.update({
         where: { id: order.id },
@@ -279,7 +283,7 @@ async function settlePaidOrder(
       });
 
       // Now that the money is in, take the lines that were bought out of the
-      // basket — and only those, so anything added while the customer was on
+      // basket - and only those, so anything added while the customer was on
       // the gateway is still waiting for them.
       const boughtLines = order.items
         .filter((item) => item.productId != null)
@@ -316,7 +320,7 @@ async function settlePaidOrder(
   } catch (error) {
     // P2002 on `gatewayPaymentId`: this exact payment was already recorded by
     // an earlier delivery of the same callback. Nothing to do, and nothing
-    // wrong — acknowledge it so the gateway stops retrying.
+    // wrong - acknowledge it so the gateway stops retrying.
     if (
       error &&
       typeof error === "object" &&

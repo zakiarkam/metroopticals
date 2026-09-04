@@ -5,9 +5,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   getLensCatalogue,
   quoteLensTypes,
+  type LensDesignKind,
   type LensQuote,
   type LensType,
 } from "@/features/lenses/api/lens-api";
+import { LENS_DESIGN_KINDS } from "@/features/lenses/utils/pricing";
 import {
   getPrescriptions,
   type SavedPrescription,
@@ -68,7 +70,7 @@ export function invalidateLensCatalogue() {
  * One prescription, reduced to a string.
  *
  * Two prescriptions with the same powers price the same, so this is what the
- * quote cache is keyed on — which is how flipping between five lens types
+ * quote cache is keyed on - which is how flipping between five lens types
  * after entering a prescription costs one request rather than five.
  */
 function fingerprint(
@@ -79,11 +81,33 @@ function fingerprint(
   if (!values) return "none";
   const n = normalisePrescription(values);
   return JSON.stringify([
-    n.right.sph, n.right.cyl, n.right.axis, n.right.add, n.right.prism, n.right.base,
-    n.left.sph, n.left.cyl, n.left.axis, n.left.add, n.left.prism, n.left.base,
-    n.pdSingle, n.pdRight, n.pdLeft,
+    n.right.sph,
+    n.right.cyl,
+    n.right.axis,
+    n.right.add,
+    n.right.prism,
+    n.right.base,
+    n.left.sph,
+    n.left.cyl,
+    n.left.axis,
+    n.left.add,
+    n.left.prism,
+    n.left.base,
+    n.pdSingle,
+    n.pdRight,
+    n.pdLeft,
   ]);
 }
+
+/**
+ * The ways one lens is offered, agreeing with what the server quoted.
+ *
+ * An empty list is not "none": the server falls back to single vision for a
+ * lens priced flat, and reading it as none here would leave the cache waiting
+ * for quotes that are never asked for.
+ */
+const kindsOffered = (type: LensType): LensDesignKind[] =>
+  type.designKinds?.length ? type.designKinds : LENS_DESIGN_KINDS;
 
 export type LensPickerState = ReturnType<typeof useLensPicker>;
 
@@ -94,7 +118,7 @@ export function useLensPicker({
   open: boolean;
   initial?: {
     lensTypeId?: number | null;
-    lensDesignId?: number | null;
+    lensDesignKind?: LensDesignKind | null;
     lensTintId?: number | null;
     prescriptionId?: number | null;
   };
@@ -106,7 +130,8 @@ export function useLensPicker({
 
   const [step, setStep] = useState<PickerStep>("type");
   const [lensTypeId, setLensTypeId] = useState<number | null>(null);
-  const [designId, setDesignId] = useState<number | null>(null);
+  /** How the pair is to be made. Three values, not a row in a table. */
+  const [designKind, setDesignKind] = useState<LensDesignKind>("SINGLE_VISION");
   const [tintId, setTintId] = useState<number | null>(null);
   const [method, setMethod] = useState<PrescriptionMethod | null>(null);
   const [prescriptionId, setPrescriptionId] = useState<number | null>(null);
@@ -118,7 +143,7 @@ export function useLensPicker({
   /** Identifies the stored slip, so the saved prescription can point at it. */
   const [ocrFileHash, setOcrFileHash] = useState<string | null>(null);
   /**
-   * What the prescriber said to make. Null means nobody has said — a real
+   * What the prescriber said to make. Null means nobody has said - a real
    * answer, not a missing one, since plenty of customers do not know.
    */
   const [prescribedDesign, setPrescribedDesign] = useState<
@@ -129,7 +154,7 @@ export function useLensPicker({
 
   /**
    * Every quote we have already been given, keyed by prescription and lens
-   * type. Nothing in here is ever asked for twice — that is the point of it.
+   * type. Nothing in here is ever asked for twice - that is the point of it.
    */
   const quoteCache = useRef(new Map<string, LensQuote>());
   const [, forceRender] = useState(0);
@@ -172,7 +197,7 @@ export function useLensPicker({
     if (!open) return;
     setStep("type");
     setLensTypeId(initial?.lensTypeId ?? null);
-    setDesignId(initial?.lensDesignId ?? null);
+    setDesignKind(initial?.lensDesignKind ?? "SINGLE_VISION");
     setTintId(initial?.lensTintId ?? null);
     setPrescriptionId(initial?.prescriptionId ?? null);
     setMethod(initial?.prescriptionId ? "saved" : null);
@@ -190,7 +215,7 @@ export function useLensPicker({
   }, [
     open,
     initial?.lensTypeId,
-    initial?.lensDesignId,
+    initial?.lensDesignKind,
     initial?.lensTintId,
     initial?.prescriptionId,
   ]);
@@ -201,7 +226,7 @@ export function useLensPicker({
    * Someone who clicked "choose a frame for this lens" on the Blue Cut guide
    * has already made the first decision; making them find Blue Cut again in a
    * list of nine would be asking the same question twice. So the picker opens
-   * on the next step instead — and the Back button is right there, because it
+   * on the next step instead - and the Back button is right there, because it
    * is a preselection, not a commitment.
    */
   const [intentSlug, setIntentSlug] = useState<string | null>(null);
@@ -252,15 +277,15 @@ export function useLensPicker({
   const cacheKey = (
     key: string,
     typeId: number,
-    design: number | null,
+    kind: LensDesignKind,
     tint: number | null,
-  ) => `${key}|${typeId}|${design ?? 0}|${tint ?? 0}`;
+  ) => `${key}|${typeId}|${kind}|${tint ?? 0}`;
 
   /**
    * Price every lens type against the prescription we now have.
    *
    * Called once, when the customer finishes entering their prescription.
-   * After that, changing lens type is a map lookup — no request, and above
+   * After that, changing lens type is a map lookup - no request, and above
    * all no second call to the paid reader, which is what the customer would
    * otherwise pay for out of their own patience.
    *
@@ -291,8 +316,8 @@ export function useLensPicker({
 
       const missing = lensTypes.filter(
         (type) =>
-          !type.designs.every((design) =>
-            quoteCache.current.has(cacheKey(key, type.id, design.id, null)),
+          !kindsOffered(type).every((kind) =>
+            quoteCache.current.has(cacheKey(key, type.id, kind, null)),
           ),
       );
       if (!missing.length) return;
@@ -307,24 +332,26 @@ export function useLensPicker({
             : { prescription: normalisePrescription(rxValues) }),
         });
 
-        // One request comes back with the whole grid: every build of every
-        // lens, crossed with every colour. Moving around the picker after
-        // this is a map lookup, not another round trip.
+        // One request comes back with the whole grid: every lens, made each
+        // of the three ways, crossed with every colour. Moving around the
+        // picker after this is a map lookup, not another round trip.
         for (const entry of quotes) {
           for (const design of entry.designs ?? []) {
             const base = { ...entry, ...design } as LensQuote;
             quoteCache.current.set(
-              cacheKey(key, entry.lensTypeId, design.designId, null),
+              cacheKey(key, entry.lensTypeId, design.kind, null),
               base,
             );
 
             for (const tint of entry.tints ?? []) {
               quoteCache.current.set(
-                cacheKey(key, entry.lensTypeId, design.designId, tint.id),
+                cacheKey(key, entry.lensTypeId, design.kind, tint.id),
                 {
                   ...base,
                   tintSurcharge: tint.surcharge,
-                  total: base.priced ? round(base.lensPrice + tint.surcharge) : 0,
+                  total: base.priced
+                    ? round(base.lensPrice + tint.surcharge)
+                    : 0,
                 },
               );
             }
@@ -348,10 +375,10 @@ export function useLensPicker({
   const quoteFor = useCallback(
     (
       typeId: number,
-      design: number | null = null,
+      kind: LensDesignKind = "SINGLE_VISION",
       tint: number | null = null,
     ): LensQuote | null =>
-      quoteCache.current.get(cacheKey(rxKey, typeId, design, tint)) ?? null,
+      quoteCache.current.get(cacheKey(rxKey, typeId, kind, tint)) ?? null,
     [rxKey],
   );
 
@@ -366,8 +393,8 @@ export function useLensPicker({
       const type = lensTypes.find((entry) => entry.id === typeId);
       if (!type) return null;
 
-      const quotes = type.designs
-        .map((design) => quoteFor(typeId, design.id, null))
+      const quotes = kindsOffered(type)
+        .map((kind) => quoteFor(typeId, kind, null))
         .filter((quote): quote is LensQuote => Boolean(quote));
 
       const priced = quotes.filter((quote) => quote.priced);
@@ -390,7 +417,7 @@ export function useLensPicker({
    * lens list. Both used to stall on "working out the price" forever, because
    * the only call to `quoteAll` lived in the manual form's submit.
    *
-   * Never fired from the manual step — there the values change with every
+   * Never fired from the manual step - there the values change with every
    * keystroke, and quoting each one would be a request per click for prices
    * nobody is looking at yet.
    */
@@ -403,10 +430,22 @@ export function useLensPicker({
       step === "review" ||
       ((step === "type" || step === "tint") && prescriptionId !== null);
     if (!settled) return;
-    if (lensTypeId && quoteFor(lensTypeId, designId, tintId)) return;
+    if (lensTypeId && quoteFor(lensTypeId, designKind, tintId)) return;
     void quoteAll();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, loading, lensTypes.length, step, prescriptionId, lensTypeId, designId, tintId, quoting, quoteError, quoteFor]);
+  }, [
+    open,
+    loading,
+    lensTypes.length,
+    step,
+    prescriptionId,
+    lensTypeId,
+    designKind,
+    tintId,
+    quoting,
+    quoteError,
+    quoteFor,
+  ]);
 
   /* ------------------------------ derived ------------------------------ */
 
@@ -415,17 +454,14 @@ export function useLensPicker({
     [lensTypes, lensTypeId],
   );
 
-  const design = useMemo(
-    () => lensType?.designs.find((entry) => entry.id === designId) ?? null,
-    [lensType, designId],
-  );
-
   const tint = useMemo(
     () => lensType?.tints.find((entry) => entry.id === tintId) ?? null,
     [lensType, tintId],
   );
 
-  const currentQuote = lensTypeId ? quoteFor(lensTypeId, designId, tintId) : null;
+  const currentQuote = lensTypeId
+    ? quoteFor(lensTypeId, designKind, tintId)
+    : null;
 
   /** Lens types grouped under their headings, the way the picker shows them. */
   const grouped = useMemo(() => {
@@ -452,7 +488,7 @@ export function useLensPicker({
       setOcrFound(extraction.found);
       setOcrConfidence(extraction.confidence);
       setOcrIssuedAt(extraction.issuedAt ?? null);
-      // Only when the slip actually reached storage — pointing a saved
+      // Only when the slip actually reached storage - pointing a saved
       // prescription at a file that is not there would show the shop a
       // broken image and imply we lost it.
       setOcrFileHash(extraction.stored ? (extraction.fileHash ?? null) : null);
@@ -497,9 +533,8 @@ export function useLensPicker({
     lensTypeId,
     setLensTypeId,
     lensType,
-    designId,
-    setDesignId,
-    design,
+    designKind,
+    setDesignKind,
     tintId,
     setTintId,
     tint,

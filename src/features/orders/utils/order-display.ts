@@ -8,7 +8,10 @@
  * through here so a missing relation reads as the sale it was, not as "null".
  */
 
-type NamedParty = { name?: string | null; email?: string | null } | null | undefined;
+type NamedParty =
+  | { name?: string | null; email?: string | null }
+  | null
+  | undefined;
 
 type NameableOrder = {
   user?: NamedParty;
@@ -48,7 +51,7 @@ export function orderLineName(item: NameableItem): string {
 }
 
 /**
- * "Blue Cut (Grey) lenses" — what to print under the frame's name on a line
+ * "Blue Cut (Grey) lenses" - what to print under the frame's name on a line
  * that was sold with lenses. Empty string when it was sold bare, so callers
  * can render it unconditionally.
  */

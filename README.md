@@ -1,9 +1,9 @@
 # Metro Opticals
 
-E-commerce storefront and admin dashboard for **Metro Opticals** — prescription eyeglasses, sunglasses, contact lenses and eye care.
+E-commerce storefront and admin dashboard for **Metro Opticals** - prescription eyeglasses, sunglasses, contact lenses and eye care.
 
 Built with Next.js 15 (App Router), Prisma, PostgreSQL, NextAuth and Cloudflare
-R2. Deployed on Railway — see **[RAILWAY.md](RAILWAY.md)**.
+R2. Deployed on Railway - see **[RAILWAY.md](RAILWAY.md)**.
 
 ---
 
@@ -38,11 +38,11 @@ cp .env.example .env
 
 Then fill in `.env`. The values that must be set before the app will run:
 
-| Variable          | Notes                                                                               |
-| ----------------- | ----------------------------------------------------------------------------------- |
-| `DATABASE_URL`    | Postgres connection string used for queries and migrations                          |
-| `NEXTAUTH_URL`    | `http://localhost:4500` in development                                              |
-| `NEXTAUTH_SECRET` | At least 32 characters — `openssl rand -base64 32`. The app refuses to boot with less |
+| Variable          | Notes                                                                                 |
+| ----------------- | ------------------------------------------------------------------------------------- |
+| `DATABASE_URL`    | Postgres connection string used for queries and migrations                            |
+| `NEXTAUTH_URL`    | `http://localhost:4500` in development                                                |
+| `NEXTAUTH_SECRET` | At least 32 characters - `openssl rand -base64 32`. The app refuses to boot with less |
 
 Storage and email can be left blank while developing; uploads will fail with a
 clear error and emails are logged to the console while `USE_MOCK_EMAIL=true`.
@@ -63,7 +63,7 @@ npm run dev
 
 The app runs at <http://localhost:4500>.
 
-Seeded logins — **local development only**, never deployed:
+Seeded logins - **local development only**, never deployed:
 
 - Admin: `admin@metroopticals.lk` / `admin123`
 - Customer: `customer@example.com` / `customer123`
@@ -91,7 +91,7 @@ R2_SECRET_ACCESS_KEY="..."   # S3 API secret (64-char hex, shown once)
 
 `R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY` come from **Cloudflare dashboard →
 R2 → Manage API Tokens**. Note that a Cloudflare API token (`cfat_…`) is _not_
-the same as the S3 secret access key — the S3 API needs the latter.
+the same as the S3 secret access key - the S3 API needs the latter.
 
 ### Bucket layout
 
@@ -139,8 +139,8 @@ Card payments go through **PayHere**, Sri Lanka's card gateway, in LKR. The
 storefront offers three ways to pay: cash on hand, bank transfer, and online
 card. The card option only appears when `NEXT_PUBLIC_PAYHERE_ENABLED="true"`.
 
-**How the flow works.** The customer's browser posts a *server-signed* form to
-PayHere and pays there — no card details ever touch this site. PayHere then
+**How the flow works.** The customer's browser posts a _server-signed_ form to
+PayHere and pays there - no card details ever touch this site. PayHere then
 calls back to `/api/payments/payhere/notify` server to server, and **that
 callback is the only thing that marks an order paid**. The customer's return
 to the site proves nothing; the confirmation page just polls the order until
@@ -162,8 +162,8 @@ and rename the line with `NEXT_PUBLIC_PAYHERE_FEE_LABEL`.
    tunnel (`ngrok http 4500`) and set
    `PAYHERE_NOTIFY_URL="https://<tunnel>/api/payments/payhere/notify"`.
 3. Set `NEXT_PUBLIC_PAYHERE_ENABLED="true"` and `NEXT_PUBLIC_PAYHERE_MODE="sandbox"`,
-   then restart — both are build-time values.
-4. Check out with a PayHere test card — Visa `4916217501611292`, Mastercard
+   then restart - both are build-time values.
+4. Check out with a PayHere test card - Visa `4916217501611292`, Mastercard
    `5307732125531191`, Amex `346781005510225`; any name, CVV and future
    expiry are accepted. The order should land as **Confirmed / Card paid**,
    the confirmation email should arrive, and the cart should empty.
@@ -180,8 +180,8 @@ PayHere signs `merchant_id + order_id + amount + currency` with **no separator
 between the fields**, so the digest cannot tell one reading of that string from
 another: `512` + `3500.00` and `5123` + `500.00` concatenate identically and
 hash identically. A customer holding a form we signed for their own order could
-re-split it, be charged a fraction of the total, and hand PayHere's genuine —
-correctly signed — reply back to us as proof the full amount was paid.
+re-split it, be charged a fraction of the total, and hand PayHere's genuine -
+correctly signed - reply back to us as proof the full amount was paid.
 
 Two things stand between that and a working exploit, and both must be in place:
 
@@ -191,8 +191,8 @@ Two things stand between that and a working exploit, and both must be in place:
    id, so the callback PayHere sends for the shifted charge names no order we
    will accept. **Do not "tidy up" that padding.**
 2. **PayHere's domain restriction.** The attack only survives if the attacker
-   can intercept that callback, which means repointing `notify_url` — a field
-   that is *outside* the signature. Registering the domain under
+   can intercept that callback, which means repointing `notify_url` - a field
+   that is _outside_ the signature. Registering the domain under
    **Settings → Domains & Credentials** is what makes PayHere refuse a
    `return_url` / `cancel_url` / `notify_url` on any other host. Confirm this
    is active on the live account before taking real money, and keep
@@ -214,7 +214,7 @@ on every page, and share one layout in
 
 Store name, contact details, social links and bank details live in one place:
 [`src/config/site.ts`](src/config/site.ts). Update that file rather than editing
-components — the header, footer, contact page, emails, receipts and invoices
+components - the header, footer, contact page, emails, receipts and invoices
 all read from it.
 
 > **Before going live**, replace the placeholder values in `siteConfig.banking`
@@ -224,24 +224,24 @@ all read from it.
 
 ## Scripts
 
-| Command                     | Description                                                     |
-| --------------------------- | --------------------------------------------------------------- |
-| `npm run dev`               | Development server on port 4500                                 |
-| `npm run build`             | Production build                                                |
-| `npm run start`             | Serve the production build                                      |
-| `npm run lint`              | ESLint                                                          |
-| `npm run typecheck`         | `tsc --noEmit`                                                  |
-| `npm run deploy:release`    | Apply migrations, then bootstrap the admin (Railway pre-deploy) |
-| `npm run db:migrate`        | Create and apply a migration (local)                            |
-| `npm run db:migrate:deploy` | Apply pending migrations without creating one                   |
-| `npm run db:bootstrap`      | Create or promote the admin from `ADMIN_BOOTSTRAP_*`            |
-| `npm run db:push`           | Push the schema with no migration — **local experiments only**    |
-| `npm run db:studio`         | Open Prisma Studio                                              |
-| `npm run db:generate`       | Regenerate the Prisma client                                    |
-| `npm run clean`             | Remove `.next` and the module cache                             |
-| `npm run tryon:runtime`     | Copy the try-on runtime under `public/` for a dev server        |
-| `npm run tryon:publish`     | Publish the try-on runtime to R2 and print the URL to set       |
-| `npm run tryon:sample-frame`| Generate a to-scale sample frame GLB from catalogue millimetres |
+| Command                      | Description                                                     |
+| ---------------------------- | --------------------------------------------------------------- |
+| `npm run dev`                | Development server on port 4500                                 |
+| `npm run build`              | Production build                                                |
+| `npm run start`              | Serve the production build                                      |
+| `npm run lint`               | ESLint                                                          |
+| `npm run typecheck`          | `tsc --noEmit`                                                  |
+| `npm run deploy:release`     | Apply migrations, then bootstrap the admin (Railway pre-deploy) |
+| `npm run db:migrate`         | Create and apply a migration (local)                            |
+| `npm run db:migrate:deploy`  | Apply pending migrations without creating one                   |
+| `npm run db:bootstrap`       | Create or promote the admin from `ADMIN_BOOTSTRAP_*`            |
+| `npm run db:push`            | Push the schema with no migration - **local experiments only**  |
+| `npm run db:studio`          | Open Prisma Studio                                              |
+| `npm run db:generate`        | Regenerate the Prisma client                                    |
+| `npm run clean`              | Remove `.next` and the module cache                             |
+| `npm run tryon:runtime`      | Copy the try-on runtime under `public/` for a dev server        |
+| `npm run tryon:publish`      | Publish the try-on runtime to R2 and print the URL to set       |
+| `npm run tryon:sample-frame` | Generate a to-scale sample frame GLB from catalogue millimetres |
 
 ---
 
@@ -281,8 +281,8 @@ for `/api/health` to pass before taking traffic. A failed migration leaves the
 previous version running.
 
 Build and runtime settings are committed in [`railway.json`](railway.json).
-The full setup — environments, branch mapping, the variable list, migration
-and admin-password procedures, and troubleshooting — is in
+The full setup - environments, branch mapping, the variable list, migration
+and admin-password procedures, and troubleshooting - is in
 **[RAILWAY.md](RAILWAY.md)**.
 
 [`.github/workflows/ci.yml`](.github/workflows/ci.yml) is a quality gate only:
